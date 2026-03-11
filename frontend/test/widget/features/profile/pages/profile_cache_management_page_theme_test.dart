@@ -37,6 +37,64 @@ void main() {
   });
 
   group('ProfileCacheManagementPage theme', () {
+    testWidgets('uses profile-style horizontal gutters on mobile', (
+      tester,
+    ) async {
+      _setSurfaceSize(tester, const Size(560, 1600));
+      await tester.pumpWidget(_buildTestApp(themeMode: ThemeMode.light));
+      await tester.pumpAndSettle();
+
+      final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+      expect(cards, hasLength(4));
+      expect(cards.first.margin, const EdgeInsets.symmetric(horizontal: 4));
+
+      for (final card in cards.skip(1)) {
+        expect(
+          card.margin,
+          const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        );
+      }
+
+      final detailsRect = tester.getRect(find.text('DETAILS'));
+      final noticeRect = tester.getRect(
+        find.byKey(const Key('cache_manage_notice_box')),
+      );
+      final deepCleanRect = tester.getRect(
+        find.byKey(const Key('cache_manage_deep_clean_all')),
+      );
+
+      expect(noticeRect.left, closeTo(detailsRect.left, 0.1));
+      expect(deepCleanRect.left, closeTo(detailsRect.left, 0.1));
+    });
+
+    testWidgets('removes extra horizontal gutters on desktop', (tester) async {
+      _setSurfaceSize(tester, const Size(1024, 1600));
+      await tester.pumpWidget(_buildTestApp(themeMode: ThemeMode.light));
+      await tester.pumpAndSettle();
+
+      final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+      expect(cards, hasLength(4));
+      expect(cards.first.margin, EdgeInsets.zero);
+
+      for (final card in cards.skip(1)) {
+        expect(
+          card.margin,
+          const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+        );
+      }
+
+      final detailsRect = tester.getRect(find.text('DETAILS'));
+      final noticeRect = tester.getRect(
+        find.byKey(const Key('cache_manage_notice_box')),
+      );
+      final deepCleanRect = tester.getRect(
+        find.byKey(const Key('cache_manage_deep_clean_all')),
+      );
+
+      expect(noticeRect.left, closeTo(detailsRect.left, 0.1));
+      expect(deepCleanRect.left, closeTo(detailsRect.left, 0.1));
+    });
+
     testWidgets('renders semantic category icons', (tester) async {
       await tester.pumpWidget(_buildTestApp(themeMode: ThemeMode.light));
       await tester.pumpAndSettle();
@@ -150,12 +208,22 @@ void main() {
   });
 }
 
+void _setSurfaceSize(WidgetTester tester, Size size) {
+  tester.view.devicePixelRatio = 1.0;
+  tester.view.physicalSize = size;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+}
+
 Widget _buildTestApp({required ThemeMode themeMode}) {
   return ProviderScope(
     child: MaterialApp(
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: const ProfileCacheManagementPage(),

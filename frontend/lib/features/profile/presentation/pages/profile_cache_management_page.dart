@@ -92,6 +92,15 @@ class _ProfileCacheManagementPageState
     extends ConsumerState<ProfileCacheManagementPage> {
   late Future<_MediaCacheStats> _statsFuture;
 
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+
+  double _contentHorizontalInset(BuildContext context) =>
+      _isMobile(context) ? 4 : 0;
+
+  EdgeInsets _contentHorizontalPadding(BuildContext context) =>
+      EdgeInsets.symmetric(horizontal: _contentHorizontalInset(context));
+
   @override
   void initState() {
     super.initState();
@@ -444,6 +453,7 @@ class _ProfileCacheManagementPageState
   }
 
   Widget _buildDetailRow({
+    required BuildContext context,
     required _CacheCategory category,
     required IconData icon,
     required Color color,
@@ -456,7 +466,10 @@ class _ProfileCacheManagementPageState
     final l10n = AppLocalizations.of(context)!;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: EdgeInsets.symmetric(
+        horizontal: _contentHorizontalInset(context),
+        vertical: 6,
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Row(
@@ -585,9 +598,7 @@ class _ProfileCacheManagementPageState
                               const LinearProgressIndicator(minHeight: 2),
                             const SizedBox(height: 12),
                             Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
+                              margin: _contentHorizontalPadding(context),
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
@@ -694,9 +705,7 @@ class _ProfileCacheManagementPageState
                             ),
                             const SizedBox(height: 16),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
+                              padding: _contentHorizontalPadding(context),
                               child: Text(
                                 l10n.profile_cache_manage_details,
                                 style: theme.textTheme.titleSmall?.copyWith(
@@ -708,6 +717,7 @@ class _ProfileCacheManagementPageState
                             ),
                             const SizedBox(height: 8),
                             _buildDetailRow(
+                              context: context,
                               category: _CacheCategory.images,
                               icon: Icons.image_outlined,
                               color: imagesColor,
@@ -718,6 +728,7 @@ class _ProfileCacheManagementPageState
                                   _deleteCategory(stats, _CacheCategory.images),
                             ),
                             _buildDetailRow(
+                              context: context,
                               category: _CacheCategory.audio,
                               icon: Icons.headphones,
                               color: audioColor,
@@ -728,6 +739,7 @@ class _ProfileCacheManagementPageState
                                   _deleteCategory(stats, _CacheCategory.audio),
                             ),
                             _buildDetailRow(
+                              context: context,
                               category: _CacheCategory.other,
                               icon: Icons.folder_outlined,
                               color: otherColor,
@@ -739,9 +751,7 @@ class _ProfileCacheManagementPageState
                             ),
                             const SizedBox(height: 14),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
+                              padding: _contentHorizontalPadding(context),
                               child: Container(
                                 key: const Key('cache_manage_notice_box'),
                                 padding: const EdgeInsets.fromLTRB(
@@ -787,7 +797,12 @@ class _ProfileCacheManagementPageState
                             ),
                             const SizedBox(height: 18),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              padding: EdgeInsets.fromLTRB(
+                                _contentHorizontalPadding(context).left,
+                                0,
+                                _contentHorizontalPadding(context).right,
+                                24,
+                              ),
                               child: FilledButton.icon(
                                 key: const Key('cache_manage_deep_clean_all'),
                                 onPressed: _clearAll,
