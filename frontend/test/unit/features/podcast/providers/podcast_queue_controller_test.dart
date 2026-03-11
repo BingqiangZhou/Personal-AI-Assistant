@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
@@ -10,6 +10,8 @@ import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('PodcastQueueController.addToQueue', () {
     test('deduplicates in-flight requests for the same episode', () async {
       final repository = _FakePodcastRepository(
@@ -463,6 +465,34 @@ void main() {
       },
     );
   });
+
+  group('PodcastQueueController initial load', () {
+    test('moves to async error when queue request times out', () async {
+      final repository = _FakePodcastRepository()
+        ..getQueueCompleter = Completer<void>();
+      final container = ProviderContainer(
+        overrides: [
+          podcastRepositoryProvider.overrideWithValue(repository),
+          audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+          podcastQueueControllerProvider.overrideWith(
+            _TimeoutPodcastQueueController.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(podcastQueueControllerProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+
+      final state = container.read(podcastQueueControllerProvider);
+      expect(state.hasError, isTrue);
+      expect(state.error, isA<TimeoutException>());
+      expect(
+        container.read(podcastQueueOperationProvider),
+        const QueueOperationState.idle(),
+      );
+    });
+  });
 }
 
 PodcastQueueModel _queue({
@@ -576,6 +606,7 @@ class _FakePodcastRepository extends PodcastRepository {
   int addQueueItemCallCount = 0;
   int activateQueueEpisodeCallCount = 0;
   List<int>? lastReorderEpisodeIds;
+  Completer<void>? getQueueCompleter;
   Completer<void>? removeCompleter;
   Completer<void>? reorderCompleter;
   Object? removeError;
@@ -583,6 +614,10 @@ class _FakePodcastRepository extends PodcastRepository {
 
   @override
   Future<PodcastQueueModel> getQueue() async {
+    final completer = getQueueCompleter;
+    if (completer != null) {
+      await completer.future;
+    }
     if (_queuedGetQueueResponses.length > 1) {
       return _queuedGetQueueResponses.removeAt(0);
     }
@@ -692,4 +727,9 @@ class _FakeAudioPlayerNotifier extends AudioPlayerNotifier {
       clearCurrentQueueEpisodeId: true,
     );
   }
+}
+
+class _TimeoutPodcastQueueController extends PodcastQueueController {
+  @override
+  Duration get queueLoadTimeout => const Duration(milliseconds: 10);
 }

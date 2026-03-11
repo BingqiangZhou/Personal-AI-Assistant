@@ -15,6 +15,10 @@ import 'podcast_image_widget.dart';
 class PodcastQueueSheet extends ConsumerWidget {
   const PodcastQueueSheet({super.key});
 
+  static const BorderRadius _sheetBorderRadius = BorderRadius.vertical(
+    top: Radius.circular(28),
+  );
+
   static Future<void>? _activeShowFuture;
 
   static Future<void> show(
@@ -122,18 +126,23 @@ class PodcastQueueSheet extends ConsumerWidget {
 
     return SizedBox(
       height: MediaQuery.of(context).size.height * sheetHeightFactor,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.surfaceContainerLowest,
-              Theme.of(context).colorScheme.surface,
-            ],
+      child: ClipRRect(
+        key: const Key('podcast_queue_sheet_surface'),
+        borderRadius: _sheetBorderRadius,
+        clipBehavior: Clip.antiAlias,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.surfaceContainerLowest,
+                Theme.of(context).colorScheme.surface,
+              ],
+            ),
           ),
+          child: body,
         ),
-        child: body,
       ),
     );
   }

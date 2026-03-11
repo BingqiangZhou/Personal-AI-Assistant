@@ -79,20 +79,21 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   int _queueSyncInFlight = 0;
   static const Duration _queueRefreshThrottle = Duration(seconds: 20);
 
+  @visibleForTesting
+  Duration get queueLoadTimeout => const Duration(seconds: 12);
+
   @override
   FutureOr<PodcastQueueModel> build() async {
     _repository = ref.read(podcastRepositoryProvider);
-    _setQueueOperation(const QueueOperationState.initialLoading());
     try {
       return await _loadQueueInternal(
         forceRefresh: false,
         trackSyncing: false,
         setErrorStateOnFailure: false,
       );
-    } catch (_) {
-      return PodcastQueueModel.empty();
-    } finally {
-      _clearQueueOperation();
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
     }
   }
 
@@ -291,7 +292,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
 
     final loadFuture = () async {
       try {
-        final queue = await _repository.getQueue();
+        final queue = await _repository.getQueue().timeout(queueLoadTimeout);
         return _applyQueue(queue);
       } catch (error, stackTrace) {
         if (setErrorStateOnFailure || state.value == null) {
@@ -407,11 +408,6 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     final previousQueue = state.value;
     if (previousQueue != null) {
       final optimistic = _buildOptimisticRemovedQueue(previousQueue, episodeId);
-      final completer = Completer<void>();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!completer.isCompleted) completer.complete();
-      });
-      await completer.future;
       _applyOptimisticQueue(optimistic);
     }
 

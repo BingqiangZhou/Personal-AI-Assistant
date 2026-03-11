@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,7 +73,43 @@ void main() {
 
       expect(find.byType(PodcastQueueSheet), findsOneWidget);
       expect(queueController.queueOpenPreparationCalls, 1);
+
+      Navigator.of(tester.element(find.byType(PodcastQueueSheet))).pop();
+      await tester.pumpAndSettle();
     });
+
+    testWidgets(
+      'dock playlist button opens queue sheet before refresh finishes',
+      (tester) async {
+        _setMobileViewport(tester);
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(currentEpisode: _episode(), duration: 180000),
+        );
+        final queueController = PendingRefreshPodcastQueueController();
+        final uiNotifier = TestPodcastPlayerUiNotifier();
+
+        await tester.pumpWidget(
+          _createWidget(
+            audioNotifier: audioNotifier,
+            queueController: queueController,
+            uiNotifier: uiNotifier,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byKey(const Key('podcast_bottom_player_mini_playlist')),
+        );
+        await tester.pump();
+
+        expect(find.byType(PodcastQueueSheet), findsOneWidget);
+        expect(queueController.loadQueueCalls, 1);
+
+        queueController.completeLoad();
+        Navigator.of(tester.element(find.byType(PodcastQueueSheet))).pop();
+        await tester.pumpAndSettle();
+      },
+    );
 
     testWidgets('expanded header shows direct speed and sleep actions', (
       tester,
@@ -297,8 +335,13 @@ Widget _createWidget({
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const PodcastPlayerLayoutFrame(
-        child: Scaffold(body: SizedBox.shrink()),
+      home: Consumer(
+        builder: (context, ref, _) {
+          ref.watch(podcastQueueControllerProvider);
+          return const PodcastPlayerLayoutFrame(
+            child: Scaffold(body: SizedBox.shrink()),
+          );
+        },
       ),
     ),
   );
@@ -422,5 +465,23 @@ class TestPodcastQueueController extends PodcastQueueController {
   @override
   Future<PodcastQueueModel> activateEpisode(int episodeId) async {
     return PodcastQueueModel.empty();
+  }
+}
+
+class PendingRefreshPodcastQueueController extends TestPodcastQueueController {
+  final Completer<void> _loadCompleter = Completer<void>();
+
+  @override
+  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
+    loadQueueCalls += 1;
+    await _loadCompleter.future;
+    state = const AsyncValue.data(PodcastQueueModel());
+    return PodcastQueueModel.empty();
+  }
+
+  void completeLoad() {
+    if (!_loadCompleter.isCompleted) {
+      _loadCompleter.complete();
+    }
   }
 }

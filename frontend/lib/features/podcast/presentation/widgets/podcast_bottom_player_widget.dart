@@ -1040,23 +1040,18 @@ String _formatMilliseconds(int value) {
 
 Future<void> _showQueueSheet(BuildContext context, WidgetRef ref) async {
   final modalContext = _resolveNavigatorContext(context);
-  final queueController = ref.read(podcastQueueControllerProvider.notifier);
-  final queueState = ref.read(podcastQueueControllerProvider);
-
-  if (queueState.isLoading) {
-    await queueController.refreshQueueInBackground();
-  } else {
-    unawaited(queueController.refreshQueueInBackground());
-  }
-
   if (!modalContext.mounted) {
     return;
   }
 
-  await showModalBottomSheet<void>(
-    context: modalContext,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => const PodcastQueueSheet(),
+  final queueController = ref.read(podcastQueueControllerProvider.notifier);
+  final queueState = ref.read(podcastQueueControllerProvider);
+
+  final showFuture = PodcastQueueSheet.show(modalContext);
+  unawaited(
+    queueController
+        .loadQueue(forceRefresh: queueState.hasValue)
+        .catchError((_) => null),
   );
+  await showFuture;
 }

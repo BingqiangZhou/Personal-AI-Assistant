@@ -40,6 +40,22 @@ void main() {
       expect(find.byKey(const Key('queue_loading_content')), findsNothing);
     });
 
+    testWidgets('sheet surface clips with rounded top corners', (tester) async {
+      final controller = TestPodcastQueueController(_queue());
+      await tester.pumpWidget(_createWidget(controller));
+      await tester.pumpAndSettle();
+
+      final surface = tester.widget<ClipRRect>(
+        find.byKey(const Key('podcast_queue_sheet_surface')),
+      );
+
+      expect(surface.clipBehavior, Clip.antiAlias);
+      expect(
+        surface.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(28)),
+      );
+    });
+
     testWidgets(
       'uses custom left drag handle and does not overlap delete icon',
       (tester) async {
