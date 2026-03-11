@@ -103,7 +103,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
 
   Widget _buildLeftSidebar() {
     return Container(
-      width: 200,
+      key: const Key('podcast_episode_detail_wide_sidebar'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(

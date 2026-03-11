@@ -11,6 +11,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episo
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -779,7 +780,7 @@ void main() {
       expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
     });
 
-    testWidgets('desktop player aligns with the detail content pane', (
+    testWidgets('desktop player aligns with the widened detail rail', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
@@ -803,8 +804,12 @@ void main() {
       final expandedFinder = find.byKey(
         const Key('podcast_bottom_player_expanded'),
       );
+      final sidebarFinder = find.byKey(
+        const Key('podcast_episode_detail_wide_sidebar'),
+      );
       expect(hostFinder, findsOneWidget);
       expect(expandedFinder, findsOneWidget);
+      expect(sidebarFinder, findsOneWidget);
 
       final container = ProviderScope.containerOf(
         tester.element(hostFinder),
@@ -813,10 +818,16 @@ void main() {
       expect(container.read(currentRouteProvider), '/podcast/episodes/1/1');
 
       final playerRect = tester.getRect(hostFinder);
+      final sidebarRect = tester.getRect(sidebarFinder);
       final paneRect = tester.getRect(
         find.byKey(const Key('podcast_episode_detail_wide_right_pane')),
       );
-      expect(playerRect.left, closeTo(paneRect.left + 16, 0.5));
+      expect(
+        sidebarRect.width,
+        closeTo(kPodcastEpisodeDetailDesktopRailWidth, 0.5),
+      );
+      expect(sidebarRect.right, closeTo(playerRect.left, 0.5));
+      expect(playerRect.left, closeTo(paneRect.left, 0.5));
       expect(playerRect.right, closeTo(paneRect.right - 32, 0.5));
       expect(tester.getRect(hostFinder).bottom, closeTo(888, 0.5));
     });

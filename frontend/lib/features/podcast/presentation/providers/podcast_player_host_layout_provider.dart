@@ -271,7 +271,7 @@ PodcastPlayerViewportSpec resolvePodcastPlayerViewportSpec(
           rightInset = 12;
           break;
         case PodcastPlayerSurfaceContext.episodeDetail:
-          leftInset = 216;
+          leftInset = kPodcastEpisodeDetailDesktopRailWidth;
           rightInset = 32;
           break;
         case PodcastPlayerSurfaceContext.standard:

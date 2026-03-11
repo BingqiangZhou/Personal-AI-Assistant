@@ -2,12 +2,15 @@ part of 'podcast_episode_detail_page.dart';
 
 extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
   Widget _buildNewLayout(BuildContext context, dynamic episode) {
+    final hostLayout = ref.watch(podcastPlayerHostLayoutProvider);
+
     return LayoutBuilder(
       builder: (context, layoutConstraints) {
         // Use split-pane layout on desktop/tablet widths.
         final isWideScreen =
             layoutConstraints.maxWidth >
             _PodcastEpisodeDetailPageState._wideLayoutBreakpoint;
+        final wideSidebarWidth = _resolveWideSidebarWidth(context, hostLayout);
 
         if (isWideScreen) {
           return Stack(
@@ -16,7 +19,7 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: _PodcastEpisodeDetailPageState._wideSidebarWidth,
+                    width: wideSidebarWidth,
                     child: Column(
                       children: [
                         AnimatedContainer(
@@ -84,9 +87,7 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                 top: 0,
                 left: 0,
                 right: _isHeaderExpanded ? 0 : null,
-                width: _isHeaderExpanded
-                    ? null
-                    : _PodcastEpisodeDetailPageState._wideSidebarWidth,
+                width: _isHeaderExpanded ? null : wideSidebarWidth,
                 child: _buildAnimatedHeader(episode),
               ),
               if (!_isHeaderExpanded)

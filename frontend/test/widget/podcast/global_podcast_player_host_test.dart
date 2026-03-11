@@ -7,6 +7,7 @@ import 'package:personal_ai_assistant/core/providers/route_provider.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/global_podcast_player_host.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
@@ -156,10 +157,74 @@ void main() {
           route: '/podcast/episode/detail/1',
         );
         final miniRect = tester.getRect(miniFinder);
+        expect(expectedSpec.leftInset, kPodcastEpisodeDetailDesktopRailWidth);
         expect(miniRect.left, closeTo(expectedSpec.leftInset, 0.5));
         expect(miniRect.right, closeTo(1200 - expectedSpec.rightInset, 0.5));
       },
     );
+
+    testWidgets('wide home route keeps the home shell inset', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _createRouterHarness(
+          audioNotifier: _TestAudioPlayerNotifier(
+            AudioPlayerState(currentEpisode: _episode(), duration: 180000),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final hostFinder = find.byKey(const Key('global_podcast_player'));
+      final miniFinder = find.byKey(const Key('podcast_bottom_player_mini'));
+      final container = ProviderScope.containerOf(
+        tester.element(hostFinder),
+        listen: false,
+      );
+      final spec = resolvePodcastPlayerViewportSpec(
+        tester.element(hostFinder),
+        container.read(podcastPlayerHostLayoutProvider),
+        route: '/',
+      );
+
+      expect(spec.leftInset, 280);
+      expect(tester.getRect(miniFinder).left, closeTo(spec.leftInset, 0.5));
+    });
+
+    testWidgets('wide standard route keeps the standard inset', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _createRouterHarness(
+          audioNotifier: _TestAudioPlayerNotifier(
+            AudioPlayerState(currentEpisode: _episode(), duration: 180000),
+          ),
+          initialLocation: '/episodes',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final hostFinder = find.byKey(const Key('global_podcast_player'));
+      final miniFinder = find.byKey(const Key('podcast_bottom_player_mini'));
+      final container = ProviderScope.containerOf(
+        tester.element(hostFinder),
+        listen: false,
+      );
+      final spec = resolvePodcastPlayerViewportSpec(
+        tester.element(hostFinder),
+        container.read(podcastPlayerHostLayoutProvider),
+        route: '/episodes',
+      );
+
+      expect(spec.leftInset, 0);
+      expect(tester.getRect(miniFinder).left, closeTo(spec.leftInset, 0.5));
+    });
   });
 }
 

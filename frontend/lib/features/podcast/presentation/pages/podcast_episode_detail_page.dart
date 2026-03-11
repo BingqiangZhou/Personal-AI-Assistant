@@ -15,6 +15,7 @@ import '../providers/summary_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_transcription_model.dart';
+import '../constants/podcast_ui_constants.dart';
 import '../widgets/transcript_display_widget.dart';
 import '../widgets/shownotes_display_widget.dart';
 import '../widgets/transcription_status_widget.dart';
@@ -44,7 +45,6 @@ class _PodcastEpisodeDetailPageState
     extends ConsumerState<PodcastEpisodeDetailPage>
     with RouteAware {
   static const double _wideLayoutBreakpoint = 840.0;
-  static const double _wideSidebarWidth = 200.0;
   static const double _wideContentHorizontalInset = 16.0;
   static const double _wideContentRightInset = 16.0;
   int _selectedTabIndex =
@@ -527,6 +527,17 @@ class _PodcastEpisodeDetailPageState
       case TargetPlatform.fuchsia:
         return false;
     }
+  }
+
+  double _resolveWideSidebarWidth(
+    BuildContext context,
+    PodcastPlayerHostLayout hostLayout,
+  ) {
+    final viewportSpec = resolvePodcastPlayerViewportSpec(context, hostLayout);
+    final targetWidth = viewportSpec.leftInset - viewportSpec.rightInset;
+    return targetWidth > kPodcastEpisodeDetailDesktopRailWidth
+        ? targetWidth
+        : kPodcastEpisodeDetailDesktopRailWidth;
   }
 
   Widget _buildScrollToTopButton() {
