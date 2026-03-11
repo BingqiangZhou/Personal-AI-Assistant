@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.19.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.18.0...v0.19.0) - 2026-03-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.19.0))
+
+### 🎨 Styling
+
+- *(podcast)* Simplify expanded player overlay and compact spacing ([4f2f195](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4f2f195a9f0a53f46a580f8933a5d5028ad000c8))
+
+### 🚜 Refactor
+
+- *(podcast)* Separate audio state from UI state and remove standalone player page ([78474ca](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/78474ca4916ab9172c81f3518e91b8f228e60029))
+- *(podcast)* Restructure player from overlay to layout-frame architecture ([5fe61c8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5fe61c856f7265f96e560bc9e90a446aef8245d6))
+- *(podcast)* Redesign expanded player as overlay and add playback state badges ([16a431e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/16a431e43bdc85861f878e35c50d96bac2761f99))
+
+
+
 ## [0.18.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.17.0...v0.18.0) - 2026-03-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.18.0))
 
 ### 🐛 Bug Fixes
