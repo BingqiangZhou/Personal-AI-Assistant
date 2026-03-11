@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.18.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.17.0...v0.18.0) - 2026-03-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.18.0))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Add backward compatibility for summary keys and improve error handling ([4d98ba1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d98ba154ee5546f0314a3b0ed9c2543c5552e6f))
+
+### 🚜 Refactor
+
+- *(podcast)* Simplify header implementation with animation support and add density options ([f2bc9b4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f2bc9b4018c15cab8b508f208c22959ba3e0670e))
+
+
+
 ## [0.17.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.16.0...v0.17.0) - 2026-03-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.17.0))
 
 ### 🐛 Bug Fixes
