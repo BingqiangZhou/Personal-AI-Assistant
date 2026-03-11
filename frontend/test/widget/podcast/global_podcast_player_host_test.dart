@@ -7,12 +7,13 @@ import 'package:personal_ai_assistant/core/providers/route_provider.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/global_podcast_player_host.dart';
 
 void main() {
   group('GlobalPodcastPlayerHost', () {
-    testWidgets('collapsed dock stays anchored across routes', (tester) async {
+    testWidgets('collapsed dock updates spacing across routes', (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -27,11 +28,38 @@ void main() {
 
       await tester.tap(find.byKey(const Key('route_to_episodes')));
       await tester.pumpAndSettle();
-      expect(tester.getRect(dockFinder).top, closeTo(homeTop, 0.1));
+      expect(
+        tester.getRect(dockFinder).top,
+        closeTo(homeTop - kPodcastGlobalPlayerMobileViewportPadding, 0.1),
+      );
 
       await tester.tap(find.byKey(const Key('route_to_detail')));
       await tester.pumpAndSettle();
-      expect(tester.getRect(dockFinder).top, closeTo(homeTop, 0.1));
+      expect(
+        tester.getRect(dockFinder).top,
+        closeTo(homeTop - kPodcastGlobalPlayerMobileViewportPadding, 0.1),
+      );
+    });
+
+    testWidgets('mobile non-home route keeps mini player bottom spacing', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_createRouterHarness(initialLocation: '/detail'));
+      await tester.pumpAndSettle();
+
+      final miniPlayerRect = tester.getRect(
+        find.byKey(const Key('podcast_bottom_player_mini')),
+      );
+
+      expect(
+        844 - miniPlayerRect.bottom,
+        closeTo(kPodcastGlobalPlayerMobileViewportPadding, 0.1),
+      );
     });
 
     testWidgets('desktop host expands into the unified bottom sheet', (

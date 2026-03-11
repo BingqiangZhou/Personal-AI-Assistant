@@ -18,6 +18,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_searc
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
@@ -97,6 +98,41 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'mobile home shell mini player touches navigation dock and keeps dock bottom inset',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await _pumpHomePage(
+          tester,
+          audioNotifier: TestAudioPlayerNotifier(
+            AudioPlayerState(currentEpisode: _episode()),
+          ),
+          initialTab: 2,
+          route: '/profile',
+        );
+
+        final miniPlayerRect = tester.getRect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+        );
+        final navDockRect = tester.getRect(
+          find.byKey(const Key('custom_adaptive_navigation_mobile_dock')),
+        );
+
+        expect(miniPlayerRect.bottom, closeTo(navDockRect.top, 2.1));
+        expect(
+          navDockRect.bottom,
+          closeTo(
+            844 - kPodcastGlobalPlayerMobileViewportPadding,
+            0.1,
+          ),
+        );
+      },
+    );
 
     testWidgets('returning from covered route collapses expanded player', (
       tester,

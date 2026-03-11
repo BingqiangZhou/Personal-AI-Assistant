@@ -61,7 +61,7 @@ void main() {
 
       expect(accessoryRect.width, closeTo(390, 2));
       expect(accessoryRect.top, lessThan(dockRect.top));
-      expect(accessoryRect.bottom, lessThanOrEqualTo(dockRect.top + 1));
+      expect(accessoryRect.bottom, lessThanOrEqualTo(dockRect.top + 2));
       expect(tester.takeException(), isNull);
     });
 
@@ -90,7 +90,7 @@ void main() {
       expect(backdropRect.bottom, closeTo(844, 0.1));
       expect(backdropRect.top, lessThan(accessoryRect.top));
       expect(backdropRect.top, lessThan(dockRect.top));
-      expect(accessoryRect.bottom, lessThanOrEqualTo(dockRect.top + 1));
+      expect(accessoryRect.bottom, lessThanOrEqualTo(dockRect.top + 2));
 
       final mobileStack = tester
           .widgetList<Stack>(find.byType(Stack))

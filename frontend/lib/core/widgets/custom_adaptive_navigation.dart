@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 
 import '../localization/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -55,9 +56,11 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     final safeAreaBottom = MediaQuery.viewPaddingOf(context).bottom;
     final double dockBottomPadding = safeAreaBottom > 0.0
         ? safeAreaBottom
-        : 12.0;
-    // NavigationBar custom height is 60. We add an extra 4 pixels gap between the player and the navigation bar dock.
-    final double dockReserve = dockBottomPadding + 60.0 + 4.0;
+        : kPodcastGlobalPlayerMobileViewportPadding;
+    final double dockReserve =
+        dockBottomPadding +
+        kPodcastGlobalPlayerMobileDockHeight +
+        kPodcastGlobalPlayerMobileDockGap;
     final accessoryBodyPadding = bottomAccessory != null
         ? bottomAccessoryBodyPadding
         : 0.0;
@@ -114,11 +117,18 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             bottom: 0,
             child: SafeArea(
               top: false,
-              minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              minimum: const EdgeInsets.fromLTRB(
+                kPodcastGlobalPlayerMobileViewportPadding,
+                0,
+                kPodcastGlobalPlayerMobileViewportPadding,
+                kPodcastGlobalPlayerMobileViewportPadding,
+              ),
               child: Align(
                 child: _GlassDock(
                   key: const Key('custom_adaptive_navigation_mobile_dock'),
-                  width: width < 420 ? width - 24 : 396,
+                  width: width < 420
+                      ? width - (kPodcastGlobalPlayerMobileViewportPadding * 2)
+                      : 396,
                   child: _buildMobileNavBar(context),
                 ),
               ),
@@ -466,7 +476,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   Widget _buildMobileNavBar(BuildContext context) {
     return SizedBox(
       key: const Key('custom_adaptive_navigation_mobile_nav_bar'),
-      height: 60,
+      height: kPodcastGlobalPlayerMobileDockHeight,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(destinations.length, (index) {

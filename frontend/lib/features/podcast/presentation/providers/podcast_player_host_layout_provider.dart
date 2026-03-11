@@ -260,7 +260,10 @@ PodcastPlayerViewportSpec resolvePodcastPlayerViewportSpec(
     case PodcastPlayerLayoutMode.mobile:
       dockHorizontalPadding = 16;
       dockTopPadding = 0;
-      dockBottomSpacing = 12;
+      dockBottomSpacing =
+          surfaceContext == PodcastPlayerSurfaceContext.homeShell
+          ? kPodcastGlobalPlayerMobileDockGap
+          : kPodcastGlobalPlayerMobileViewportPadding;
       break;
     case PodcastPlayerLayoutMode.tablet:
       dockHorizontalPadding = 16;
