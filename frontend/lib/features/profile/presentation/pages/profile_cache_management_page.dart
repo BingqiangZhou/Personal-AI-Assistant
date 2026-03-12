@@ -7,6 +7,7 @@ import '../../../../core/providers/core_providers.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
+import '../../../podcast/presentation/constants/podcast_ui_constants.dart';
 import '../../../podcast/presentation/providers/podcast_discover_provider.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../podcast/presentation/providers/podcast_search_provider.dart'
@@ -45,8 +46,6 @@ class _CachePagePalette {
     required this.audio,
     required this.other,
     required this.emptySegment,
-    required this.cleanButtonBackground,
-    required this.cleanButtonForeground,
     required this.deepCleanBackground,
     required this.deepCleanForeground,
   });
@@ -55,8 +54,6 @@ class _CachePagePalette {
   final Color audio;
   final Color other;
   final Color emptySegment;
-  final Color cleanButtonBackground;
-  final Color cleanButtonForeground;
   final Color deepCleanBackground;
   final Color deepCleanForeground;
 
@@ -66,14 +63,8 @@ class _CachePagePalette {
     return _CachePagePalette(
       images: scheme.onSurfaceVariant,
       audio: scheme.tertiary,
-      other: scheme.outline,
+      other: scheme.secondary,
       emptySegment: scheme.surfaceContainerHighest,
-      cleanButtonBackground: isDark
-          ? scheme.surfaceContainerHigh
-          : scheme.surfaceContainerHighest,
-      cleanButtonForeground: isDark
-          ? scheme.onSurfaceVariant
-          : scheme.onSurfaceVariant,
       deepCleanBackground: isDark ? scheme.surface : scheme.onSurfaceVariant,
       deepCleanForeground: isDark ? scheme.onSurface : scheme.surface,
     );
@@ -90,13 +81,22 @@ class ProfileCacheManagementPage extends ConsumerStatefulWidget {
 
 class _ProfileCacheManagementPageState
     extends ConsumerState<ProfileCacheManagementPage> {
+  static const _emptyStats = _MediaCacheStats(
+    images: _CategoryStats(count: 0, bytes: 0),
+    audio: _CategoryStats(count: 0, bytes: 0),
+    other: _CategoryStats(count: 0, bytes: 0),
+    totalCount: 0,
+    totalBytes: 0,
+    objects: <CacheObject>[],
+  );
+
   late Future<_MediaCacheStats> _statsFuture;
 
   bool _isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 600;
 
   double _contentHorizontalInset(BuildContext context) =>
-      _isMobile(context) ? 4 : 0;
+      _isMobile(context) ? kPodcastRowCardHorizontalMargin : 0;
 
   EdgeInsets _contentHorizontalPadding(BuildContext context) =>
       EdgeInsets.symmetric(horizontal: _contentHorizontalInset(context));
@@ -188,14 +188,7 @@ class _ProfileCacheManagementPageState
         objects: objects,
       );
     } catch (_) {
-      return const _MediaCacheStats(
-        images: _CategoryStats(count: 0, bytes: 0),
-        audio: _CategoryStats(count: 0, bytes: 0),
-        other: _CategoryStats(count: 0, bytes: 0),
-        totalCount: 0,
-        totalBytes: 0,
-        objects: <CacheObject>[],
-      );
+      return _emptyStats;
     }
   }
 
@@ -452,12 +445,136 @@ class _ProfileCacheManagementPageState
     );
   }
 
+  Widget _buildHeaderPanel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isMobile = _isMobile(context);
+
+    return CompactHeaderPanel(
+      key: const Key('cache_manage_header_panel'),
+      title: l10n.profile_cache_manage_title,
+      leading: isMobile
+          ? null
+          : Tooltip(
+              message: MaterialLocalizations.of(context).backButtonTooltip,
+              child: IconButton.filledTonal(
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
+      trailing: HeaderCapsuleActionButton(
+        key: const Key('cache_manage_refresh_action'),
+        tooltip: l10n.refresh,
+        onPressed: _refresh,
+        icon: Icons.refresh_rounded,
+        circular: true,
+      ),
+    );
+  }
+
+  Widget _buildOverviewSection(
+    BuildContext context, {
+    required _MediaCacheStats stats,
+    required _CachePagePalette palette,
+  }) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: _contentHorizontalPadding(context),
+      child: Container(
+        key: const Key('cache_manage_overview_section'),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.22 : 0.58,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.profile_cache_manage_total_used,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _formatMB(stats.totalBytes).replaceAll(' MB', ''),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    'MB',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              AppLocalizations.of(
+                context,
+              )!.profile_cache_manage_item_count(stats.totalCount),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildSegmentBar(
+              imagesBytes: stats.images.bytes,
+              audioBytes: stats.audio.bytes,
+              otherBytes: stats.other.bytes,
+              palette: palette,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildLegendItem(
+                  palette.images,
+                  AppLocalizations.of(context)!.profile_cache_manage_images,
+                  dotKey: const Key('cache_legend_images'),
+                ),
+                _buildLegendItem(
+                  palette.audio,
+                  AppLocalizations.of(context)!.profile_cache_manage_audio,
+                  dotKey: const Key('cache_legend_audio'),
+                ),
+                _buildLegendItem(
+                  palette.other,
+                  AppLocalizations.of(context)!.profile_cache_manage_other,
+                  dotKey: const Key('cache_legend_other'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDetailRow({
     required BuildContext context,
     required _CacheCategory category,
     required IconData icon,
     required Color color,
-    required _CachePagePalette palette,
     required String title,
     required _CategoryStats stats,
     required VoidCallback onClean,
@@ -468,20 +585,25 @@ class _ProfileCacheManagementPageState
     return Card(
       margin: EdgeInsets.symmetric(
         horizontal: _contentHorizontalInset(context),
-        vertical: 6,
+        vertical: kPodcastRowCardVerticalMargin,
       ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+        side: BorderSide.none,
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -489,11 +611,16 @@ class _ProfileCacheManagementPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -510,22 +637,21 @@ class _ProfileCacheManagementPageState
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Text(
               _formatMB(stats.bytes),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(width: 12),
-            FilledButton.tonal(
+            const SizedBox(width: 10),
+            HeaderCapsuleActionButton(
               key: Key('cache_manage_clean_${category.name}'),
+              tooltip: l10n.profile_cache_manage_clean,
               onPressed: stats.count == 0 ? null : onClean,
-              style: FilledButton.styleFrom(
-                backgroundColor: palette.cleanButtonBackground,
-                foregroundColor: palette.cleanButtonForeground,
-              ),
-              child: Text(l10n.profile_cache_manage_clean),
+              icon: Icons.cleaning_services_outlined,
+              circular: true,
+              density: HeaderCapsuleActionButtonDensity.iconOnly,
             ),
           ],
         ),
@@ -533,306 +659,186 @@ class _ProfileCacheManagementPageState
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildContentPanel(
+    BuildContext context, {
+    required _MediaCacheStats stats,
+    required bool isLoading,
+  }) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = _CachePagePalette.of(theme);
 
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
+    return GlassPanel(
+      key: const Key('cache_manage_content_panel'),
+      padding: EdgeInsets.zero,
+      borderRadius: mindriverThemeOf(context).panelRadius,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppPageBackdrop(),
-          ResponsiveContainer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          if (isLoading) const LinearProgressIndicator(minHeight: 2),
+          Expanded(
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.of(context).pop(),
+                _buildOverviewSection(context, stats: stats, palette: palette),
+                const SizedBox(height: 14),
+                Padding(
+                  padding: _contentHorizontalPadding(context),
+                  child: Text(
+                    l10n.profile_cache_manage_details,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
                     ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        l10n.profile_cache_manage_title,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: l10n.refresh,
-                      onPressed: _refresh,
-                      icon: const Icon(Icons.refresh),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 8),
-                Expanded(
-                  child: FutureBuilder<_MediaCacheStats>(
-                    future: _statsFuture,
-                    builder: (context, snapshot) {
-                      const emptyStats = _MediaCacheStats(
-                        images: _CategoryStats(count: 0, bytes: 0),
-                        audio: _CategoryStats(count: 0, bytes: 0),
-                        other: _CategoryStats(count: 0, bytes: 0),
-                        totalCount: 0,
-                        totalBytes: 0,
-                        objects: <CacheObject>[],
-                      );
-                      final isLoading =
-                          snapshot.connectionState != ConnectionState.done;
-                      final stats = snapshot.data ?? emptyStats;
-
-                      final theme = Theme.of(context);
-                      final palette = _CachePagePalette.of(theme);
-                      final imagesColor = palette.images;
-                      final audioColor = palette.audio;
-                      final otherColor = palette.other;
-
-                      return RefreshIndicator(
-                        onRefresh: _refresh,
-                        child: ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            if (isLoading)
-                              const LinearProgressIndicator(minHeight: 2),
-                            const SizedBox(height: 12),
-                            Card(
-                              margin: _contentHorizontalPadding(context),
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  16,
-                                  16,
-                                  16,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.profile_cache_manage_total_used,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          _formatMB(
-                                            stats.totalBytes,
-                                          ).replaceAll(' MB', ''),
-                                          style: theme.textTheme.displaySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 6,
-                                          ),
-                                          child: Text(
-                                            'MB',
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      l10n.profile_cache_manage_item_count(
-                                        stats.totalCount,
-                                      ),
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildSegmentBar(
-                                      imagesBytes: stats.images.bytes,
-                                      audioBytes: stats.audio.bytes,
-                                      otherBytes: stats.other.bytes,
-                                      palette: palette,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        _buildLegendItem(
-                                          imagesColor,
-                                          l10n.profile_cache_manage_images,
-                                          dotKey: const Key(
-                                            'cache_legend_images',
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        _buildLegendItem(
-                                          audioColor,
-                                          l10n.profile_cache_manage_audio,
-                                          dotKey: const Key(
-                                            'cache_legend_audio',
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        _buildLegendItem(
-                                          otherColor,
-                                          l10n.profile_cache_manage_other,
-                                          dotKey: const Key(
-                                            'cache_legend_other',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Padding(
-                              padding: _contentHorizontalPadding(context),
-                              child: Text(
-                                l10n.profile_cache_manage_details,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            _buildDetailRow(
-                              context: context,
-                              category: _CacheCategory.images,
-                              icon: Icons.image_outlined,
-                              color: imagesColor,
-                              palette: palette,
-                              title: l10n.profile_cache_manage_images,
-                              stats: stats.images,
-                              onClean: () =>
-                                  _deleteCategory(stats, _CacheCategory.images),
-                            ),
-                            _buildDetailRow(
-                              context: context,
-                              category: _CacheCategory.audio,
-                              icon: Icons.headphones,
-                              color: audioColor,
-                              palette: palette,
-                              title: l10n.profile_cache_manage_audio,
-                              stats: stats.audio,
-                              onClean: () =>
-                                  _deleteCategory(stats, _CacheCategory.audio),
-                            ),
-                            _buildDetailRow(
-                              context: context,
-                              category: _CacheCategory.other,
-                              icon: Icons.folder_outlined,
-                              color: otherColor,
-                              palette: palette,
-                              title: l10n.profile_cache_manage_other,
-                              stats: stats.other,
-                              onClean: () =>
-                                  _deleteCategory(stats, _CacheCategory.other),
-                            ),
-                            const SizedBox(height: 14),
-                            Padding(
-                              padding: _contentHorizontalPadding(context),
-                              child: Container(
-                                key: const Key('cache_manage_notice_box'),
-                                padding: const EdgeInsets.fromLTRB(
-                                  12,
-                                  12,
-                                  12,
-                                  12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.onSurfaceVariant
-                                      .withValues(
-                                        alpha:
-                                            theme.brightness == Brightness.dark
-                                            ? 0.24
-                                            : 0.16,
-                                      ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      key: const Key(
-                                        'cache_manage_notice_icon',
-                                      ),
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        l10n.profile_cache_manage_notice,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                _contentHorizontalPadding(context).left,
-                                0,
-                                _contentHorizontalPadding(context).right,
-                                24,
-                              ),
-                              child: FilledButton.icon(
-                                key: const Key('cache_manage_deep_clean_all'),
-                                onPressed: _clearAll,
-                                icon: const Icon(Icons.cleaning_services),
-                                label: Text(
-                                  l10n.profile_cache_manage_deep_clean_all(
-                                    _formatBytes(stats.totalBytes),
-                                  ),
-                                ),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: palette.deepCleanBackground,
-                                  foregroundColor: palette.deepCleanForeground,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  textStyle: theme.textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w800),
-                                ),
-                              ),
-                            ),
-                          ],
+                _buildDetailRow(
+                  context: context,
+                  category: _CacheCategory.images,
+                  icon: Icons.image_outlined,
+                  color: palette.images,
+                  title: l10n.profile_cache_manage_images,
+                  stats: stats.images,
+                  onClean: () => _deleteCategory(stats, _CacheCategory.images),
+                ),
+                _buildDetailRow(
+                  context: context,
+                  category: _CacheCategory.audio,
+                  icon: Icons.headphones,
+                  color: palette.audio,
+                  title: l10n.profile_cache_manage_audio,
+                  stats: stats.audio,
+                  onClean: () => _deleteCategory(stats, _CacheCategory.audio),
+                ),
+                _buildDetailRow(
+                  context: context,
+                  category: _CacheCategory.other,
+                  icon: Icons.folder_outlined,
+                  color: palette.other,
+                  title: l10n.profile_cache_manage_other,
+                  stats: stats.other,
+                  onClean: () => _deleteCategory(stats, _CacheCategory.other),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: _contentHorizontalPadding(context),
+                  child: Container(
+                    key: const Key('cache_manage_notice_box'),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.24
+                            : 0.16,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          key: const Key('cache_manage_notice_icon'),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      );
-                    },
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.profile_cache_manage_notice,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    _contentHorizontalInset(context),
+                    0,
+                    _contentHorizontalInset(context),
+                    4,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      key: const Key('cache_manage_deep_clean_all'),
+                      onPressed: _clearAll,
+                      icon: const Icon(Icons.cleaning_services),
+                      label: Text(
+                        l10n.profile_cache_manage_deep_clean_all(
+                          _formatBytes(stats.totalBytes),
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: palette.deepCleanBackground,
+                        foregroundColor: palette.deepCleanForeground,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        color: Colors.transparent,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const AppPageBackdrop(),
+            SafeArea(
+              bottom: false,
+              child: ResponsiveContainer(
+                maxWidth: 1480,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeaderPanel(context),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: FutureBuilder<_MediaCacheStats>(
+                        future: _statsFuture,
+                        builder: (context, snapshot) {
+                          final isLoading =
+                              snapshot.connectionState != ConnectionState.done;
+                          final stats = snapshot.data ?? _emptyStats;
+
+                          return RefreshIndicator(
+                            onRefresh: _refresh,
+                            child: _buildContentPanel(
+                              context,
+                              stats: stats,
+                              isLoading: isLoading,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
