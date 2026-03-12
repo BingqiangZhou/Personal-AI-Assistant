@@ -25,20 +25,18 @@ void main() {
       final dockFinder = find.byKey(const Key('podcast_bottom_player_mini'));
       expect(dockFinder, findsOneWidget);
       final homeTop = tester.getRect(dockFinder).top;
+      final expectedNonHomeTop =
+          homeTop -
+          (kPodcastGlobalPlayerMobileViewportPadding -
+              kPodcastGlobalPlayerMobileDockGap);
 
       await tester.tap(find.byKey(const Key('route_to_episodes')));
       await tester.pumpAndSettle();
-      expect(
-        tester.getRect(dockFinder).top,
-        closeTo(homeTop - kPodcastGlobalPlayerMobileViewportPadding, 0.1),
-      );
+      expect(tester.getRect(dockFinder).top, closeTo(expectedNonHomeTop, 0.1));
 
       await tester.tap(find.byKey(const Key('route_to_detail')));
       await tester.pumpAndSettle();
-      expect(
-        tester.getRect(dockFinder).top,
-        closeTo(homeTop - kPodcastGlobalPlayerMobileViewportPadding, 0.1),
-      );
+      expect(tester.getRect(dockFinder).top, closeTo(expectedNonHomeTop, 0.1));
     });
 
     testWidgets('mobile non-home route keeps mini player bottom spacing', (

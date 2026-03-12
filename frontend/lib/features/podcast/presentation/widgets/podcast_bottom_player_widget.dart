@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/route_provider.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/app_shells.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../constants/playback_speed_options.dart';
 import '../navigation/podcast_navigation.dart';
@@ -311,6 +312,7 @@ class _PodcastExpandedOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final tokens = mindriverThemeOf(context);
     final mediaSize = MediaQuery.sizeOf(context);
     final maxPanelWidth = math.min(
       mediaSize.width - (viewportSpec.dockHorizontalPadding * 2),
@@ -339,23 +341,41 @@ class _PodcastExpandedOverlay extends ConsumerWidget {
               opacity: visible ? 1 : 0,
               child: Material(
                 key: visible ? const Key('podcast_player_mobile_sheet') : null,
-                color: theme.colorScheme.surface,
+                color: Colors.transparent,
                 elevation: 10,
-                shadowColor: theme.shadowColor.withValues(alpha: 0.16),
+                shadowColor: tokens.glassShadow.withValues(alpha: 0.28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     viewportSpec.mobileDrawerBorderRadius,
                   ),
                   side: BorderSide(
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.56,
-                    ),
+                    color: tokens.glassBorder.withValues(alpha: 0.56),
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: _ExpandedPanelContent(
-                  episode: episode,
-                  showPrimaryKeys: visible,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      viewportSpec.mobileDrawerBorderRadius,
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        tokens.glassSurfaceStrong.withValues(alpha: 0.96),
+                        theme.colorScheme.surface.withValues(alpha: 0.94),
+                        theme.colorScheme.primaryContainer.withValues(
+                          alpha: theme.brightness == Brightness.dark
+                              ? 0.42
+                              : 0.68,
+                        ),
+                      ],
+                    ),
+                  ),
+                  child: _ExpandedPanelContent(
+                    episode: episode,
+                    showPrimaryKeys: visible,
+                  ),
                 ),
               ),
             ),
@@ -429,7 +449,7 @@ class _ExpandedPanelContent extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.outlineVariant,
+                  color: mindriverThemeOf(context).glassBorder,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -457,27 +477,19 @@ class _ExpandedHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final playbackRate = ref.watch(audioPlaybackRateProvider);
-    final queueSheetOpen = ref.watch(podcastPlayerQueueSheetOpenProvider);
+    final theme = Theme.of(context);
     return Row(
       children: [
         Expanded(
           child: Text(
             l10n?.podcast_player_now_playing ?? 'Now Playing',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w800,
             ),
           ),
         ),
-        IconButton(
-          key: const Key('podcast_bottom_player_playlist'),
-          tooltip: l10n?.podcast_player_list ?? 'List',
-          onPressed: queueSheetOpen
-              ? null
-              : () => _showQueueSheet(context, ref),
-          icon: const Icon(Icons.playlist_play_rounded),
-        ),
+        _SleepTimerButton(onPressed: () => _showSleepSelector(context, ref)),
         IconButton(
           key: const Key('podcast_bottom_player_collapse'),
           tooltip: l10n?.podcast_player_collapse ?? 'Collapse',
@@ -502,73 +514,64 @@ class _ExpandedHero extends ConsumerWidget {
     final imageSize = 72.0;
     final currentLocation = ref.watch(currentRouteProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+    return Row(
+      key: const Key('podcast_bottom_player_expanded_hero'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _CoverImage(
+          imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
+          size: imageSize,
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _CoverImage(
-            imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
-            size: imageSize,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              key: const Key('podcast_bottom_player_expanded_title'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                String resolvedCurrentLocation = currentLocation;
-                try {
-                  resolvedCurrentLocation = GoRouterState.of(
-                    context,
-                  ).uri.toString();
-                } catch (_) {}
-                final episodeDetailPath =
-                    '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
-                if (resolvedCurrentLocation.startsWith(episodeDetailPath)) {
-                  return;
-                }
-                PodcastNavigation.goToEpisodeDetail(
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            key: const Key('podcast_bottom_player_expanded_title'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              String resolvedCurrentLocation = currentLocation;
+              try {
+                resolvedCurrentLocation = GoRouterState.of(
                   context,
-                  episodeId: episode.id,
-                  subscriptionId: episode.subscriptionId,
-                  episodeTitle: episode.title,
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    episode.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                ).uri.toString();
+              } catch (_) {}
+              final episodeDetailPath =
+                  '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
+              if (resolvedCurrentLocation.startsWith(episodeDetailPath)) {
+                return;
+              }
+              PodcastNavigation.goToEpisodeDetail(
+                context,
+                episodeId: episode.id,
+                subscriptionId: episode.subscriptionId,
+                episodeTitle: episode.title,
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  episode.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _buildEpisodeMetaLine(episode),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: textColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _buildEpisodeMetaLine(episode),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -632,57 +635,48 @@ class _ExpandedProgressSectionState
         ? _draftPositionMs.clamp(0, durationMs)
         : progress.positionMs;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.42),
+    return Column(
+      key: const Key('podcast_bottom_player_expanded_progress'),
+      children: [
+        SliderTheme(
+          data: theme.sliderTheme.copyWith(
+            activeTrackColor: theme.colorScheme.primary,
+            inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
+            thumbColor: theme.colorScheme.primary,
+            overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+            trackHeight: 3,
+          ),
+          child: Slider(
+            key: const Key('podcast_bottom_player_progress_slider'),
+            value: effectivePositionMs.clamp(0, durationMs).toDouble(),
+            max: durationMs.toDouble(),
+            onChangeStart: _startScrub,
+            onChanged: _updateScrub,
+            onChangeEnd: _finishScrub,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          SliderTheme(
-            data: theme.sliderTheme.copyWith(
-              activeTrackColor: theme.colorScheme.primary,
-              inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
-              thumbColor: theme.colorScheme.primary,
-              overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-              trackHeight: 3,
-            ),
-            child: Slider(
-              key: const Key('podcast_bottom_player_progress_slider'),
-              value: effectivePositionMs.clamp(0, durationMs).toDouble(),
-              max: durationMs.toDouble(),
-              onChangeStart: _startScrub,
-              onChanged: _updateScrub,
-              onChangeEnd: _finishScrub,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatMilliseconds(effectivePositionMs),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatMilliseconds(effectivePositionMs),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-                Text(
-                  _formatMilliseconds(progress.durationMs),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+              Text(
+                _formatMilliseconds(progress.durationMs),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -694,6 +688,8 @@ class _TransportRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
+        final queueSheetOpen = ref.watch(podcastPlayerQueueSheetOpenProvider);
+        final l10n = AppLocalizations.of(context);
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -718,8 +714,13 @@ class _TransportRow extends StatelessWidget {
               tooltipLocalizationKey: _TooltipKey.forward30,
             ),
             const SizedBox(width: 8),
-            _SleepTimerButton(
-              onPressed: () => _showSleepSelector(context, ref),
+            IconButton(
+              key: const Key('podcast_bottom_player_playlist'),
+              tooltip: l10n?.podcast_player_list ?? 'List',
+              onPressed: queueSheetOpen
+                  ? null
+                  : () => _showQueueSheet(context, ref),
+              icon: const Icon(Icons.playlist_play_rounded),
             ),
           ],
         );
@@ -773,11 +774,14 @@ class _SleepTimerButton extends ConsumerWidget {
       key: const Key('podcast_bottom_player_sleep'),
       tooltip: l10n?.podcast_player_sleep_mode ?? 'Sleep Mode',
       onPressed: onPressed,
-      icon: Icon(
-        isActive ? Icons.bedtime_rounded : Icons.bedtime_outlined,
-        color: isActive
-            ? theme.colorScheme.primary
-            : theme.colorScheme.onSurfaceVariant,
+      icon: Transform.flip(
+        flipX: true,
+        child: Icon(
+          isActive ? Icons.bedtime_rounded : Icons.bedtime_outlined,
+          color: isActive
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

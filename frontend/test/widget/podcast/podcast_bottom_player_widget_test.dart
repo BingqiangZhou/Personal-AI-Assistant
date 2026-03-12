@@ -212,6 +212,40 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      final sleepButton = find.byKey(const Key('podcast_bottom_player_sleep'));
+      final collapseButton = find.byKey(
+        const Key('podcast_bottom_player_collapse'),
+      );
+      final playlistButton = find.byKey(
+        const Key('podcast_bottom_player_playlist'),
+      );
+      final playPauseButton = find.byKey(
+        const Key('podcast_bottom_player_play_pause'),
+      );
+
+      expect(sleepButton, findsOneWidget);
+      expect(playlistButton, findsOneWidget);
+      expect(
+        (tester.getCenter(sleepButton).dy - tester.getCenter(collapseButton).dy)
+            .abs(),
+        lessThan(20),
+      );
+      expect(
+        tester.getCenter(sleepButton).dx < tester.getCenter(collapseButton).dx,
+        isTrue,
+      );
+      expect(
+        (tester.getCenter(playlistButton).dy -
+                tester.getCenter(playPauseButton).dy)
+            .abs(),
+        lessThan(20),
+      );
+      expect(
+        tester.getCenter(playlistButton).dx >
+            tester.getCenter(playPauseButton).dx,
+        isTrue,
+      );
+
       await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
       await tester.pumpAndSettle();
       expect(find.text('Playback Speed'), findsOneWidget);
@@ -221,6 +255,45 @@ void main() {
       await tester.tap(find.byKey(const Key('podcast_bottom_player_sleep')));
       await tester.pumpAndSettle();
       expect(find.text('Sleep Timer'), findsOneWidget);
+    });
+
+    testWidgets('expanded content is no longer wrapped by internal cards', (
+      tester,
+    ) async {
+      _setMobileViewport(tester);
+      final audioNotifier = TestAudioPlayerNotifier(
+        AudioPlayerState(currentEpisode: _episode(), duration: 180000),
+      );
+      final queueController = TestPodcastQueueController();
+      final uiNotifier = TestPodcastPlayerUiNotifier(
+        const PodcastPlayerUiState(
+          presentation: PodcastPlayerPresentation.expanded,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _createWidget(
+          audioNotifier: audioNotifier,
+          queueController: queueController,
+          uiNotifier: uiNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('podcast_player_mobile_sheet')),
+        findsOneWidget,
+      );
+
+      final heroWidget = tester.widget(
+        find.byKey(const Key('podcast_bottom_player_expanded_hero')),
+      );
+      final progressWidget = tester.widget(
+        find.byKey(const Key('podcast_bottom_player_expanded_progress')),
+      );
+
+      expect(heroWidget, isA<Row>());
+      expect(progressWidget, isA<Column>());
     });
 
     testWidgets('speed sheet uses server-backed initial selection state', (
