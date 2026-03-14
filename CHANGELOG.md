@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.20.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.20.0...v0.20.1) - 2026-03-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.20.1))
+
+### 🚜 Refactor
+
+- *(core)* Standardize breakpoints, add error logging, and remove unused code ([3ab20b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3ab20b5057d180c3c94b6647c767083b4a07c626))
+- *(core)* Add retry logic, shared HTTP session, and improve resource management ([a0290e1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a0290e114c0643516747b5a5c35b649e666f42fe))
+- *(ui)* Extract reusable widgets and improve code organization ([3900ef0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3900ef037c4998a598ddcf983d88387c3b1f75d8))
+
+
+
 ## [0.20.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.19.1...v0.20.0) - 2026-03-12 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.20.0))
 
 ### 🚀 Features
