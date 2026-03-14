@@ -31,28 +31,12 @@ class AppLoggerConfig {
       infoEnabled = false,
       warningEnabled = false,
       errorEnabled = false;
-
-  AppLoggerConfig copyWith({
-    bool? debugEnabled,
-    bool? infoEnabled,
-    bool? warningEnabled,
-    bool? errorEnabled,
-  }) {
-    return AppLoggerConfig(
-      debugEnabled: debugEnabled ?? this.debugEnabled,
-      infoEnabled: infoEnabled ?? this.infoEnabled,
-      warningEnabled: warningEnabled ?? this.warningEnabled,
-      errorEnabled: errorEnabled ?? this.errorEnabled,
-    );
-  }
 }
 
 class AppLogger {
   AppLogger._();
 
   static AppLoggerConfig _config = const AppLoggerConfig.production();
-
-  static AppLoggerConfig get config => _config;
 
   static void configure(AppLoggerConfig config) {
     _config = config;
@@ -102,43 +86,5 @@ class AppLogger {
     }
   }
 
-  static void network(String method, String url, {dynamic data, String? tag}) {
-    if (!_config.debugEnabled) {
-      return;
-    }
-    final prefix = _prefix(tag);
-    debugPrint('${prefix}NETWORK: $method $url');
-    if (data != null) {
-      debugPrint('$prefix  Data: $data');
-    }
-  }
-
-  static void networkResponse(
-    String url,
-    int statusCode, {
-    dynamic data,
-    String? tag,
-  }) {
-    if (!_config.debugEnabled) {
-      return;
-    }
-    final prefix = _prefix(tag);
-    debugPrint('${prefix}NETWORK_RESPONSE: $url - $statusCode');
-    if (data != null) {
-      debugPrint('$prefix  Response: $data');
-    }
-  }
-
-  static void performance(String operation, Duration duration, {String? tag}) {
-    if (!_config.debugEnabled) {
-      return;
-    }
-    debugPrint(
-      '${_prefix(tag)}PERF: $operation took ${duration.inMilliseconds}ms',
-    );
-  }
-
   static String _prefix(String? tag) => tag != null ? '[$tag] ' : '';
 }
-
-typedef Log = AppLogger;

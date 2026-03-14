@@ -4,10 +4,14 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.exceptions import HTTPException
-from app.domains.podcast.conversation_service import _is_retryable_http_status as conversation_retryable
+from app.domains.podcast.conversation_service import (
+    _is_retryable_http_status as conversation_retryable,
+)
 from app.domains.podcast.services import summary_generation_service as summary_module
 from app.domains.podcast.services.summary_generation_service import (
     SummaryModelManager,
+)
+from app.domains.podcast.services.summary_generation_service import (
     _is_retryable_http_status as summary_retryable,
 )
 

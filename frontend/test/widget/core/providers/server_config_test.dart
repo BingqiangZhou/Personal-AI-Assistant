@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
@@ -57,7 +54,11 @@ class MockLocalStorageService implements LocalStorageService {
   Future<bool> containsKey(String key) async => false;
 
   @override
-  Future<void> cacheData(String key, dynamic data, {Duration? expiration}) async {}
+  Future<void> cacheData(
+    String key,
+    dynamic data, {
+    Duration? expiration,
+  }) async {}
 
   @override
   Future<T?> getCachedData<T>(String key) async => null;
@@ -92,9 +93,7 @@ void main() {
 
     test('should initialize with default server URL', () {
       final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(mockStorage)],
       );
 
       final state = container.read(serverConfigProvider);
@@ -102,16 +101,13 @@ void main() {
       expect(state.serverUrl, isNotEmpty);
       expect(state.isLoading, isFalse);
       expect(state.error, isNull);
-      expect(state.testSuccess, isFalse);
 
       container.dispose();
     });
 
     test('should update server URL successfully', () async {
       final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(mockStorage)],
       );
 
       final notifier = container.read(serverConfigProvider.notifier);
@@ -129,9 +125,7 @@ void main() {
 
     test('should normalize server URL by removing trailing slashes', () async {
       final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(mockStorage)],
       );
 
       final notifier = container.read(serverConfigProvider.notifier);
@@ -147,9 +141,7 @@ void main() {
 
     test('should remove /api/v1 suffix if present', () async {
       final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(mockStorage)],
       );
 
       final notifier = container.read(serverConfigProvider.notifier);
@@ -160,105 +152,6 @@ void main() {
       final state = container.read(serverConfigProvider);
 
       expect(state.serverUrl, 'http://192.168.1.100:8000');
-
-      container.dispose();
-    });
-
-    test('should handle URL with /api/v1 in test connection', () async {
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
-      );
-
-      final notifier = container.read(serverConfigProvider.notifier);
-
-      // testConnection should also remove /api/v1 suffix
-      // Note: This test will fail with connection error since server doesn't exist,
-      // but we're testing URL normalization logic
-      try {
-        await notifier.testConnection('http://192.168.1.100:8000/api/v1');
-      } catch (e) {
-        // Expected to fail with connection error
-      }
-
-      // The test should have attempted to connect to the base URL
-      // Error message should indicate connection failure, not 404
-      final state = container.read(serverConfigProvider);
-
-      // If we got a 404, that means the URL normalization failed
-      if (state.error != null && state.error!.contains('404')) {
-        fail('testConnection should remove /api/v1 suffix before testing');
-      }
-
-      container.dispose();
-    });
-
-    test('should test connection against /api/v1/health', () async {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-      addTearDown(() async {
-        await server.close(force: true);
-      });
-
-      late String requestPath;
-      unawaited(() async {
-        final request = await server.first;
-        requestPath = request.uri.path;
-        request.response
-          ..statusCode = HttpStatus.ok
-          ..write('{"status":"healthy"}');
-        await request.response.close();
-      }());
-
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      final notifier = container.read(serverConfigProvider.notifier);
-      final success = await notifier.testConnection(
-        'http://127.0.0.1:${server.port}',
-      );
-
-      expect(success, isTrue);
-      expect(requestPath, '/api/v1/health');
-    });
-
-    test('should clear error when clearError is called', () {
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
-      );
-
-      final notifier = container.read(serverConfigProvider.notifier);
-
-      // First set an error state
-      notifier.clearError();
-
-      final state = container.read(serverConfigProvider);
-
-      expect(state.error, isNull);
-
-      container.dispose();
-    });
-
-    test('should clear test success when clearTestSuccess is called', () {
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(mockStorage),
-        ],
-      );
-
-      final notifier = container.read(serverConfigProvider.notifier);
-
-      notifier.clearTestSuccess();
-
-      final state = container.read(serverConfigProvider);
-
-      expect(state.testSuccess, isFalse);
 
       container.dispose();
     });

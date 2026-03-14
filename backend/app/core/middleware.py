@@ -5,9 +5,10 @@ import random
 import time
 from collections import deque
 
-from app.core.config import get_settings
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+from app.core.config import get_settings
 
 
 logger = logging.getLogger(__name__)

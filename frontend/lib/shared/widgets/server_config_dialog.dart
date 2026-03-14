@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
@@ -26,6 +25,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   late TextEditingController _serverUrlController;
   ConnectionStatus _connectionStatus = ConnectionStatus.unverified;
   String? _connectionMessage;
+  late final ServerHealthService _healthService;
   Timer? _debounceTimer;
   StreamSubscription? _healthCheckSubscription;
   List<String> _serverHistory = [];
@@ -44,8 +44,12 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   void initState() {
     super.initState();
     _serverUrlController = TextEditingController(text: widget.initialUrl ?? '');
+    _healthService = ref.read(serverHealthServiceFactoryProvider)();
     if (_serverUrlController.text.isEmpty) {
-      _loadServerUrl();
+      final serverConfigState = ref.read(serverConfigProvider);
+      if (serverConfigState.serverUrl.isNotEmpty) {
+        _serverUrlController.text = serverConfigState.serverUrl;
+      }
     }
     _loadServerHistory();
   }
@@ -54,16 +58,9 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   void dispose() {
     _debounceTimer?.cancel();
     _healthCheckSubscription?.cancel();
+    _healthService.dispose();
     _serverUrlController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadServerUrl() async {
-    // Load from provider state which already handles storage
-    final serverConfigState = ref.read(serverConfigProvider);
-    if (serverConfigState.serverUrl.isNotEmpty) {
-      _serverUrlController.text = serverConfigState.serverUrl;
-    }
   }
 
   Future<void> _loadServerHistory() async {
@@ -136,7 +133,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                               icon: const Icon(Icons.close),
                               onPressed: () {
                                 _serverUrlController.clear();
-                                _onServerUrlChanged('', setState);
+                                _onServerUrlChanged('');
                               },
                               tooltip: l10n.clear,
                             )
@@ -144,7 +141,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                     },
                   ),
                 ),
-                onChanged: (value) => _onServerUrlChanged(value, setState),
+                onChanged: _onServerUrlChanged,
               ),
               const SizedBox(height: 8),
 
@@ -177,7 +174,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                       label: Text(url, style: const TextStyle(fontSize: 11)),
                       onPressed: () {
                         _serverUrlController.text = url;
-                        _onServerUrlChanged(url, setState);
+                        _onServerUrlChanged(url);
                       },
                       labelStyle: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
@@ -201,7 +198,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                   OutlinedButton.icon(
                     onPressed: () {
                       _serverUrlController.text = _localServerUrl;
-                      _onServerUrlChanged(_localServerUrl, setState);
+                      _onServerUrlChanged(_localServerUrl);
                     },
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(36),
@@ -241,22 +238,51 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   }
 
   Widget _buildConnectionStatusPanel() {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final accent = theme.brightness == Brightness.dark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.primary;
+
+    late final IconData statusIcon;
+    late final Color statusColor;
+    late final String statusText;
+
+    switch (_connectionStatus) {
+      case ConnectionStatus.unverified:
+        statusIcon = Icons.help_outline;
+        statusColor = theme.colorScheme.onSurfaceVariant;
+        statusText = l10n.connection_status_unverified;
+      case ConnectionStatus.verifying:
+        statusIcon = Icons.sync;
+        statusColor = accent;
+        statusText = l10n.connection_status_verifying;
+      case ConnectionStatus.success:
+        statusIcon = Icons.check_circle;
+        statusColor = theme.colorScheme.tertiary;
+        statusText = l10n.connection_status_success;
+      case ConnectionStatus.failed:
+        statusIcon = Icons.error;
+        statusColor = theme.colorScheme.error;
+        statusText = l10n.connection_status_failed;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: _getStatusColor().withValues(alpha: 0.08),
+        color: statusColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getStatusColor().withValues(alpha: 0.3)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_getStatusIcon(), color: _getStatusColor(), size: 16),
+          Icon(statusIcon, color: statusColor, size: 16),
           const SizedBox(width: 8),
           Text(
-            _getStatusText(),
+            statusText,
             style: TextStyle(
-              color: _getStatusColor(),
+              color: statusColor,
               fontWeight: FontWeight.w500,
               fontSize: 14,
             ),
@@ -269,7 +295,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                 _connectionMessage!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: _getStatusColor().withValues(alpha: 0.8),
+                  color: statusColor.withValues(alpha: 0.8),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -280,81 +306,35 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     );
   }
 
-  IconData _getStatusIcon() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return Icons.help_outline;
-      case ConnectionStatus.verifying:
-        return Icons.sync;
-      case ConnectionStatus.success:
-        return Icons.check_circle;
-      case ConnectionStatus.failed:
-        return Icons.error;
-    }
-  }
-
-  Color _getStatusColor() {
-    final theme = Theme.of(context);
-    final accent = theme.brightness == Brightness.dark
-        ? theme.colorScheme.tertiary
-        : theme.colorScheme.primary;
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return theme.colorScheme.onSurfaceVariant;
-      case ConnectionStatus.verifying:
-        return accent;
-      case ConnectionStatus.success:
-        return theme.colorScheme.tertiary;
-      case ConnectionStatus.failed:
-        return theme.colorScheme.error;
-    }
-  }
-
-  String _getStatusText() {
-    final l10n = AppLocalizations.of(context)!;
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return l10n.connection_status_unverified;
-      case ConnectionStatus.verifying:
-        return l10n.connection_status_verifying;
-      case ConnectionStatus.success:
-        return l10n.connection_status_success;
-      case ConnectionStatus.failed:
-        return l10n.connection_status_failed;
-    }
-  }
-
-  void _onServerUrlChanged(String value, StateSetter setDialogState) {
+  void _onServerUrlChanged(String value) {
     _debounceTimer?.cancel();
     _healthCheckSubscription?.cancel();
 
     if (value.trim().isEmpty) {
-      setDialogState(() {
+      setState(() {
         _connectionStatus = ConnectionStatus.unverified;
         _connectionMessage = null;
       });
       return;
     }
 
-    setDialogState(() {
+    setState(() {
       _connectionStatus = ConnectionStatus.verifying;
       _connectionMessage = null;
     });
 
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _verifyServerConnection(value, setDialogState);
+      _verifyServerConnection(value);
     });
   }
 
-  void _verifyServerConnection(String baseUrl, StateSetter setDialogState) {
-    final healthService = ServerHealthService(Dio());
-
-    _healthCheckSubscription = healthService
+  void _verifyServerConnection(String baseUrl) {
+    _healthCheckSubscription = _healthService
         .verifyConnection(baseUrl)
         .listen(
           (result) {
             if (mounted) {
-              setDialogState(() {
+              setState(() {
                 _connectionStatus = result.status;
                 _connectionMessage = result.message;
                 if (result.responseTimeMs != null) {
@@ -366,7 +346,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
           },
           onError: (e) {
             if (mounted) {
-              setDialogState(() {
+              setState(() {
                 _connectionStatus = ConnectionStatus.failed;
                 _connectionMessage = '连接错误: $e';
               });

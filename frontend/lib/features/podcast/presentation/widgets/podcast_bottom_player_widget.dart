@@ -26,16 +26,25 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
     super.key,
     this.applySafeArea = true,
     this.viewportSpec,
+    this.episodeOverride,
+    this.layoutOverride,
+    this.isExpandedOverride,
   });
 
   final bool applySafeArea;
   final PodcastPlayerViewportSpec? viewportSpec;
+  final PodcastEpisodeModel? episodeOverride;
+  final PodcastPlayerHostLayout? layoutOverride;
+  final bool? isExpandedOverride;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episode = ref.watch(audioCurrentEpisodeProvider);
-    final layout = ref.watch(podcastPlayerHostLayoutProvider);
-    final isExpanded = ref.watch(podcastPlayerExpandedProvider);
+    final PodcastEpisodeModel? episode =
+        episodeOverride ?? ref.watch(audioCurrentEpisodeProvider);
+    final PodcastPlayerHostLayout layout =
+        layoutOverride ?? ref.watch(podcastPlayerHostLayoutProvider);
+    final bool isExpanded =
+        isExpandedOverride ?? ref.watch(podcastPlayerExpandedProvider);
     if (episode == null || !layout.miniPlayerVisible) {
       return const SizedBox.shrink();
     }
@@ -127,6 +136,9 @@ class PodcastPlayerLayoutFrame extends ConsumerWidget {
             child: PodcastBottomPlayerWidget(
               applySafeArea: applyMiniPlayerSafeArea,
               viewportSpec: spec,
+              episodeOverride: episode,
+              layoutOverride: layout,
+              isExpandedOverride: isExpanded,
             ),
           ),
         if (canShowExpandedOverlay)
@@ -1176,17 +1188,15 @@ Future<void> _showQueueSheet(BuildContext context, WidgetRef ref) async {
   uiNotifier.openQueueSheet();
   try {
     final showFuture = PodcastQueueSheet.show(modalContext);
-    unawaited(
-      () async {
-        try {
-          await queueController.loadQueue(forceRefresh: queueState.hasValue);
-        } catch (error) {
-          logger.AppLogger.warning(
-            '[PodcastQueueSheet] Prefetch queue failed: $error',
-          );
-        }
-      }(),
-    );
+    unawaited(() async {
+      try {
+        await queueController.loadQueue(forceRefresh: queueState.hasValue);
+      } catch (error) {
+        logger.AppLogger.warning(
+          '[PodcastQueueSheet] Prefetch queue failed: $error',
+        );
+      }
+    }());
     await showFuture;
   } finally {
     uiNotifier.closeQueueSheet();
