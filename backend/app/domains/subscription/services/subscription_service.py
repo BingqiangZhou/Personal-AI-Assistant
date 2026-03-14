@@ -53,7 +53,7 @@ class SubscriptionService:
         update_day_of_week = None
 
         settings_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
@@ -83,7 +83,7 @@ class SubscriptionService:
             select(UserSubscription).where(
                 UserSubscription.user_id == self.user_id,
                 UserSubscription.subscription_id == existing.id,
-            )
+            ),
         )
         user_sub = user_sub_result.scalar_one_or_none()
 
@@ -131,7 +131,7 @@ class SubscriptionService:
                 update_frequency=update_frequency,
                 update_time=update_time,
                 update_day_of_week=update_day_of_week,
-            )
+            ),
         )
 
         status = "success"
@@ -176,7 +176,7 @@ class SubscriptionService:
         source_type: str | None = None,
     ) -> tuple:
         return await self.repo.get_user_subscriptions(
-            self.user_id, page, size, status, source_type
+            self.user_id, page, size, status, source_type,
         )
 
     async def get_subscription(self, sub_id: int):
@@ -196,7 +196,7 @@ class SubscriptionService:
         bookmarked_only: bool = False,
     ) -> tuple:
         return await self.repo.get_subscription_items(
-            sub_id, self.user_id, page, size, unread_only, bookmarked_only
+            sub_id, self.user_id, page, size, unread_only, bookmarked_only,
         )
 
     async def get_all_items(
@@ -207,7 +207,7 @@ class SubscriptionService:
         bookmarked_only: bool = False,
     ) -> tuple:
         return await self.repo.get_all_user_items(
-            self.user_id, page, size, unread_only, bookmarked_only
+            self.user_id, page, size, unread_only, bookmarked_only,
         )
 
     async def get_unread_count(self) -> int:
@@ -239,7 +239,7 @@ class SubscriptionService:
                         "status": status,
                         "id": sub.id,
                         "message": message,
-                    }
+                    },
                 )
             except ValueError as exc:
                 results.append(
@@ -248,7 +248,7 @@ class SubscriptionService:
                         "title": sub_data.title,
                         "status": "skipped",
                         "message": str(exc),
-                    }
+                    },
                 )
             except Exception as exc:
                 results.append(
@@ -257,7 +257,7 @@ class SubscriptionService:
                         "title": sub_data.title,
                         "status": "error",
                         "message": str(exc),
-                    }
+                    },
                 )
         return results
 
@@ -339,7 +339,7 @@ class SubscriptionService:
                             "image_url": entry.image_url,
                             "tags": entry.tags,
                             "published_at": entry.published_at,
-                        }
+                        },
                     )
                     if entry.published_at and (
                         latest_published_at is None or entry.published_at > latest_published_at
@@ -454,7 +454,7 @@ class SubscriptionService:
         head = SubElement(opml, "head")
         SubElement(head, "title").text = "Stella RSS Subscriptions"
         SubElement(head, "dateCreated").text = datetime.now(UTC).strftime(
-            "%a, %d %b %Y %H:%M:%S GMT"
+            "%a, %d %b %Y %H:%M:%S GMT",
         )
         SubElement(head, "ownerName").text = "Stella Admin"
 

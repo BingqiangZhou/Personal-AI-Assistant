@@ -31,7 +31,7 @@ async def test_fetch_subscription_uses_batch_upsert_and_single_commit():
     )
     service.repo.get_subscription_by_id = AsyncMock(return_value=sub)
     service.repo.create_or_update_items_batch = AsyncMock(
-        return_value=([object(), object()], [object()])
+        return_value=([object(), object()], [object()]),
     )
     service.repo.update_fetch_status = AsyncMock()
 
@@ -88,7 +88,7 @@ async def test_fetch_subscription_skips_invalid_entries_and_keeps_batch_commit()
     )
     service.repo.get_subscription_by_id = AsyncMock(return_value=sub)
     service.repo.create_or_update_items_batch = AsyncMock(
-        return_value=([object()], [object()])
+        return_value=([object()], [object()]),
     )
 
     class BrokenEntry:
@@ -113,8 +113,8 @@ async def test_fetch_subscription_skips_invalid_entries_and_keeps_batch_commit()
                 content="ok",
                 link="https://example.com/good",
                 published_at=datetime.now(UTC),
-            )
-        ]
+            ),
+        ],
     )
     result_payload.entries.append(BrokenEntry())
 

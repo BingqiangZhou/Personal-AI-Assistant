@@ -1,5 +1,4 @@
-"""
-Podcast Subscription Service - Manages podcast subscriptions.
+"""Podcast Subscription Service - Manages podcast subscriptions.
 
 播客订阅服务 - 管理播客订阅
 """
@@ -32,8 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSubscriptionService:
-    """
-    Service for managing podcast subscriptions.
+    """Service for managing podcast subscriptions.
 
     Handles:
     - Adding new subscriptions
@@ -52,12 +50,12 @@ class PodcastSubscriptionService:
         parser: SecureRSSParser | None = None,
         subscription_repo: SubscriptionRepository | None = None,
     ):
-        """
-        Initialize subscription service.
+        """Initialize subscription service.
 
         Args:
             db: Database session
             user_id: Current user ID
+
         """
         self.db = db
         self.user_id = user_id
@@ -67,10 +65,9 @@ class PodcastSubscriptionService:
         self.subscription_repo = subscription_repo or SubscriptionRepository(db)
 
     async def add_subscription(
-        self, feed_url: str
+        self, feed_url: str,
     ) -> tuple[Subscription, list[PodcastEpisode]]:
-        """
-        Add a new podcast subscription.
+        """Add a new podcast subscription.
 
         Args:
             feed_url: RSS feed URL
@@ -80,6 +77,7 @@ class PodcastSubscriptionService:
 
         Raises:
             ValueError: If feed cannot be parsed or limit reached
+
         """
         # 1. Validate and parse RSS feed
         success, feed, error = await self.parser.fetch_and_parse_feed(feed_url)
@@ -90,7 +88,7 @@ class PodcastSubscriptionService:
         existing_subs = await self.repo.get_user_subscriptions(self.user_id)
         if len(existing_subs) >= settings.MAX_PODCAST_SUBSCRIPTIONS:
             raise ValueError(
-                f"Maximum subscription limit reached: {settings.MAX_PODCAST_SUBSCRIPTIONS}"
+                f"Maximum subscription limit reached: {settings.MAX_PODCAST_SUBSCRIPTIONS}",
             )
 
         # 3. Create or update subscription
@@ -138,24 +136,24 @@ class PodcastSubscriptionService:
             )
 
         logger.info(
-            f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes"
+            f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes",
         )
         return subscription, new_episodes
 
     async def add_subscriptions_batch(
-        self, subscriptions_data: list[PodcastSubscriptionCreate]
+        self, subscriptions_data: list[PodcastSubscriptionCreate],
     ) -> list[dict[str, Any]]:
-        """
-        Batch add podcast subscriptions.
+        """Batch add podcast subscriptions.
 
         Args:
             subscriptions_data: List of subscription data
 
         Returns:
             List of result dictionaries
+
         """
         logger.info(
-            f"Starting batch subscription addition: {len(subscriptions_data)} items"
+            f"Starting batch subscription addition: {len(subscriptions_data)} items",
         )
         results = []
 
@@ -163,7 +161,7 @@ class PodcastSubscriptionService:
             try:
                 # Check if already exists
                 existing = await self.repo.get_subscription_by_url(
-                    self.user_id, sub_data.feed_url
+                    self.user_id, sub_data.feed_url,
                 )
                 if existing:
                     results.append(
@@ -171,13 +169,13 @@ class PodcastSubscriptionService:
                             "source_url": sub_data.feed_url,
                             "status": "skipped",
                             "message": "Subscription already exists",
-                        }
+                        },
                     )
                     continue
 
                 # Add subscription
                 subscription, new_episodes = await self.add_subscription(
-                    sub_data.feed_url
+                    sub_data.feed_url,
                 )
 
                 results.append(
@@ -187,7 +185,7 @@ class PodcastSubscriptionService:
                         "id": subscription.id,
                         "title": subscription.title,
                         "new_episodes": len(new_episodes),
-                    }
+                    },
                 )
 
             except Exception as e:
@@ -202,16 +200,15 @@ class PodcastSubscriptionService:
                         "source_url": sub_data.feed_url,
                         "status": "error",
                         "message": str(e),
-                    }
+                    },
                 )
 
         return results
 
     async def list_subscriptions(
-        self, filters: dict | None = None, page: int = 1, size: int = 20
+        self, filters: dict | None = None, page: int = 1, size: int = 20,
     ) -> tuple[list[dict], int]:
-        """
-        List user subscriptions with pagination.
+        """List user subscriptions with pagination.
 
         Args:
             filters: Optional filters
@@ -220,6 +217,7 @@ class PodcastSubscriptionService:
 
         Returns:
             Tuple of (subscriptions list, total count)
+
         """
         cache_filters = self._build_subscription_cache_filters(filters)
         cached = await safe_cache_get(
@@ -244,7 +242,7 @@ class PodcastSubscriptionService:
             total,
             episode_counts,
         ) = await self.repo.get_user_subscriptions_paginated(
-            self.user_id, page=page, size=size, filters=filters
+            self.user_id, page=page, size=size, filters=filters,
         )
 
         # Batch fetch recent episodes
@@ -259,7 +257,7 @@ class PodcastSubscriptionService:
         for ep_list in episodes_batch.values():
             all_episode_ids.extend([ep.id for ep in ep_list])
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, all_episode_ids
+            self.user_id, all_episode_ids,
         )
 
         # Build response
@@ -289,7 +287,7 @@ class PodcastSubscriptionService:
             if not metadata["image_url"]:
                 config = sub.config or {}
                 logger.warning(
-                    f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}"
+                    f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}",
                 )
 
             # Latest episode
@@ -333,7 +331,7 @@ class PodcastSubscriptionService:
                     ],
                     "created_at": sub.created_at,
                     "updated_at": sub.updated_at,
-                }
+                },
             )
 
         await safe_cache_write(
@@ -351,21 +349,21 @@ class PodcastSubscriptionService:
         return results, total
 
     async def get_subscription_details(self, subscription_id: int) -> dict | None:
-        """
-        Get subscription details with episodes.
+        """Get subscription details with episodes.
 
         Args:
             subscription_id: Subscription ID
 
         Returns:
             Subscription details dict or None
+
         """
         sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
         if not sub:
             return None
 
         episodes = await self.repo.get_subscription_episodes(
-            subscription_id, limit=settings.PODCAST_EPISODE_BATCH_SIZE
+            subscription_id, limit=settings.PODCAST_EPISODE_BATCH_SIZE,
         )
         pending_count = len([e for e in episodes if not e.ai_summary])
 
@@ -407,8 +405,7 @@ class PodcastSubscriptionService:
         }
 
     async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
-        """
-        Refresh podcast subscription to get latest episodes.
+        """Refresh podcast subscription to get latest episodes.
 
         Args:
             subscription_id: Subscription ID
@@ -418,6 +415,7 @@ class PodcastSubscriptionService:
 
         Raises:
             ValueError: If subscription not found or refresh fails
+
         """
         # Import here to avoid circular dependency
 
@@ -468,12 +466,12 @@ class PodcastSubscriptionService:
         if feed.image_url or feed.author or feed.categories:
             await self.repo.update_subscription_metadata(subscription_id, metadata)
             logger.debug(
-                f"Updated subscription {subscription_id} metadata: image_url={feed.image_url}"
+                f"Updated subscription {subscription_id} metadata: image_url={feed.image_url}",
             )
 
         # Update last fetch time
         await self.repo.update_subscription_fetch_time(
-            subscription_id, feed.last_fetched
+            subscription_id, feed.last_fetched,
         )
 
         # Invalidate related caches in best-effort mode.
@@ -484,16 +482,15 @@ class PodcastSubscriptionService:
 
         if len(new_episodes) > 0:
             logger.info(
-                f"User {self.user_id} refreshed subscription: {sub.title}, found {len(new_episodes)} new episodes"
+                f"User {self.user_id} refreshed subscription: {sub.title}, found {len(new_episodes)} new episodes",
             )
 
         return new_episodes
 
     async def reparse_subscription(
-        self, subscription_id: int, force_all: bool = False
+        self, subscription_id: int, force_all: bool = False,
     ) -> dict:
-        """
-        Re-parse all episodes for a subscription.
+        """Re-parse all episodes for a subscription.
 
         Args:
             subscription_id: Subscription ID
@@ -501,13 +498,14 @@ class PodcastSubscriptionService:
 
         Returns:
             Dict with parsing statistics
+
         """
         sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
         if not sub:
             raise ValueError("Subscription not found")
 
         logger.info(
-            f"User {self.user_id} starting re-parse of subscription: {sub.title}"
+            f"User {self.user_id} starting re-parse of subscription: {sub.title}",
         )
 
         # Parse RSS feed
@@ -519,7 +517,7 @@ class PodcastSubscriptionService:
         existing_item_links = set()
         if not force_all:
             existing_episodes = await self.repo.get_subscription_episodes(
-                subscription_id, limit=None
+                subscription_id, limit=None,
             )
             existing_item_links = {
                 ep.item_link for ep in existing_episodes if ep.item_link
@@ -570,7 +568,7 @@ class PodcastSubscriptionService:
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
         await self.repo.update_subscription_fetch_time(
-            subscription_id, feed.last_fetched
+            subscription_id, feed.last_fetched,
         )
 
         # Invalidate related caches in best-effort mode.
@@ -594,8 +592,7 @@ class PodcastSubscriptionService:
         return result
 
     async def remove_subscription(self, subscription_id: int) -> bool:
-        """
-        Unsubscribe current user from a subscription.
+        """Unsubscribe current user from a subscription.
 
         If this was the last subscriber, the shared subscription source
         and related data are deleted by cascade.
@@ -605,6 +602,7 @@ class PodcastSubscriptionService:
 
         Returns:
             True if unsubscribed successfully
+
         """
         try:
             sub = await self._validate_and_get_subscription(subscription_id)
@@ -623,7 +621,7 @@ class PodcastSubscriptionService:
                 operation="remove_subscription",
             )
             logger.info(
-                f"User {self.user_id} unsubscribed from subscription {subscription_id}"
+                f"User {self.user_id} unsubscribed from subscription {subscription_id}",
             )
             return True
 
@@ -632,16 +630,16 @@ class PodcastSubscriptionService:
             raise
 
     async def remove_subscriptions_bulk(
-        self, subscription_ids: list[int]
+        self, subscription_ids: list[int],
     ) -> dict[str, Any]:
-        """
-        Bulk remove subscriptions.
+        """Bulk remove subscriptions.
 
         Args:
             subscription_ids: List of subscription IDs
 
         Returns:
             Dict with operation results
+
         """
         success_count = 0
         failed_count = 0
@@ -656,7 +654,7 @@ class PodcastSubscriptionService:
                         {
                             "subscription_id": subscription_id,
                             "error": f"Subscription {subscription_id} not found or access denied",
-                        }
+                        },
                     )
                     failed_count += 1
                     continue
@@ -664,7 +662,7 @@ class PodcastSubscriptionService:
                 success_count += 1
                 deleted_subscription_ids.append(subscription_id)
                 logger.info(
-                    f"User {self.user_id} bulk removed subscription {subscription_id} successfully"
+                    f"User {self.user_id} bulk removed subscription {subscription_id} successfully",
                 )
 
             except Exception as e:
@@ -713,7 +711,7 @@ class PodcastSubscriptionService:
         }
 
     async def _validate_and_get_subscription(
-        self, subscription_id: int, check_source_type: bool = False
+        self, subscription_id: int, check_source_type: bool = False,
     ) -> Subscription | None:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
@@ -728,7 +726,7 @@ class PodcastSubscriptionService:
                     Subscription.id == subscription_id,
                     UserSubscription.user_id == self.user_id,
                     UserSubscription.is_archived.is_(False),
-                )
+                ),
             )
         )
 
@@ -739,7 +737,7 @@ class PodcastSubscriptionService:
         return result.scalar_one_or_none()
 
     async def _invalidate_subscription_related_caches(
-        self, subscription_id: int, *, operation: str
+        self, subscription_id: int, *, operation: str,
     ) -> None:
         """Invalidate caches without failing the business operation."""
         await safe_cache_invalidate(

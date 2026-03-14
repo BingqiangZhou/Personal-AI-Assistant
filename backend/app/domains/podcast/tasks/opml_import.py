@@ -27,7 +27,7 @@ def process_opml_subscription_episodes(
                 subscription_id=subscription_id,
                 user_id=user_id,
                 source_url=source_url,
-            )
+            ),
         )
         log_task_run(
             task_name=task_name,

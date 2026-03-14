@@ -22,7 +22,6 @@ dependencies = [
     "celery>=5.6.2",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
-    "httpx>=0.28.1",
     "aiohttp>=3.13.3",
     "feedparser>=6.0.12",
     "python-dotenv>=1.2.2",
@@ -47,6 +46,7 @@ dev = [
     "locust>=2.43.3",
     "ruff>=0.15.5",
     "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
 ]
 
 [build-system]

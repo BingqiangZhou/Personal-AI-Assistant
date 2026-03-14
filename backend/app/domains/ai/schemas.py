@@ -1,5 +1,4 @@
-"""
-AI模型配置的Pydantic模式定义
+"""AI模型配置的Pydantic模式定义
 """
 
 from datetime import datetime
@@ -13,6 +12,7 @@ from app.domains.ai.models import ModelType
 # 基础模式
 class AIModelConfigBase(BaseModel):
     """AI模型配置基础模式"""
+
     name: str = Field(..., min_length=1, max_length=100, description="模型名称")
     display_name: str = Field(..., min_length=1, max_length=200, description="显示名称")
     description: str | None = Field(None, description="模型描述")
@@ -33,39 +33,40 @@ class AIModelConfigBase(BaseModel):
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
 
-    @field_validator('temperature')
+    @field_validator("temperature")
     @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
                 temp = float(v)
                 if not 0 <= temp <= 2:
-                    raise ValueError('温度参数必须在0-2之间')
+                    raise ValueError("温度参数必须在0-2之间")
             except ValueError as err:
-                raise ValueError('温度参数必须是数字') from err
+                raise ValueError("温度参数必须是数字") from err
         return v
 
-    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator("cost_per_input_token", "cost_per_output_token")
     @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
                 float(v)
                 if float(v) < 0:
-                    raise ValueError('成本不能为负数')
+                    raise ValueError("成本不能为负数")
             except ValueError as err:
-                raise ValueError('成本必须是数字') from err
+                raise ValueError("成本必须是数字") from err
         return v
 
 
 # 请求模式
 class AIModelConfigCreate(AIModelConfigBase):
     """创建AI模型配置请求模式"""
-    pass
+
 
 
 class AIModelConfigUpdate(BaseModel):
     """更新AI模型配置请求模式"""
+
     display_name: str | None = Field(None, min_length=1, max_length=200)
     description: str | None = None
     api_url: str | None = Field(None, min_length=1, max_length=500)
@@ -83,34 +84,35 @@ class AIModelConfigUpdate(BaseModel):
     is_active: bool | None = None
     is_default: bool | None = None
 
-    @field_validator('temperature')
+    @field_validator("temperature")
     @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
                 temp = float(v)
                 if not 0 <= temp <= 2:
-                    raise ValueError('温度参数必须在0-2之间')
+                    raise ValueError("温度参数必须在0-2之间")
             except ValueError as err:
-                raise ValueError('温度参数必须是数字') from err
+                raise ValueError("温度参数必须是数字") from err
         return v
 
-    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator("cost_per_input_token", "cost_per_output_token")
     @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
                 float(v)
                 if float(v) < 0:
-                    raise ValueError('成本不能为负数')
+                    raise ValueError("成本不能为负数")
             except ValueError as err:
-                raise ValueError('成本必须是数字') from err
+                raise ValueError("成本必须是数字") from err
         return v
 
 
 # 响应模式
 class AIModelConfigResponse(AIModelConfigBase):
     """AI模型配置响应模式"""
+
     id: int
     api_key_encrypted: bool
     usage_count: int
@@ -128,6 +130,7 @@ class AIModelConfigResponse(AIModelConfigBase):
 
 class AIModelConfigList(BaseModel):
     """AI模型配置列表响应模式"""
+
     models: list[AIModelConfigResponse]
     total: int
     page: int
@@ -138,6 +141,7 @@ class AIModelConfigList(BaseModel):
 # 统计模式
 class ModelUsageStats(BaseModel):
     """模型使用统计模式"""
+
     model_id: int
     model_name: str
     model_type: str
@@ -153,12 +157,14 @@ class ModelUsageStats(BaseModel):
 # 测试模式
 class ModelTestRequest(BaseModel):
     """模型测试请求模式"""
+
     model_id: int
     test_data: dict[str, Any] | None = Field(default=dict, description="测试数据")
 
 
 class ModelTestResponse(BaseModel):
     """模型测试响应模式"""
+
     success: bool
     response_time_ms: float
     result: str | None = None
@@ -168,6 +174,7 @@ class ModelTestResponse(BaseModel):
 # 预设模型配置
 class PresetModelConfig(BaseModel):
     """预设模型配置"""
+
     name: str
     display_name: str
     description: str
@@ -183,6 +190,7 @@ class PresetModelConfig(BaseModel):
 # 导出配置
 class APIKeyValidationRequest(BaseModel):
     """API密钥验证请求"""
+
     api_url: str
     api_key: str
     model_id: str | None = None
@@ -191,6 +199,7 @@ class APIKeyValidationRequest(BaseModel):
 
 class APIKeyValidationResponse(BaseModel):
     """API密钥验证响应"""
+
     valid: bool
     error_message: str | None = None
     test_result: str | None = None

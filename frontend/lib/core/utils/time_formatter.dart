@@ -101,6 +101,23 @@ class TimeFormatter {
     return DateFormat('HH:mm').format(dateTime);
   }
 
+  /// 格式化日期（年月日）
+  ///
+  /// 返回格式: yyyy-MM-dd
+  /// 自动处理 UTC 时间转换为本地时间
+  static String formatDate(dynamic dateTimeInput) {
+    DateTime dateTime;
+    if (dateTimeInput is String) {
+      dateTime = parseUtcTime(dateTimeInput);
+    } else if (dateTimeInput is DateTime) {
+      dateTime = toLocalTime(dateTimeInput);
+    } else {
+      return '未知日期';
+    }
+
+    return DateFormat('yyyy-MM-dd').format(dateTime);
+  }
+
   /// 格式化时长为 mm:ss 或 hh:mm:ss。
   static String formatDuration(
     Duration duration, {

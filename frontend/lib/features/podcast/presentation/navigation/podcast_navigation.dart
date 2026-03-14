@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../data/models/podcast_subscription_model.dart';
+import '../widgets/shared/episode_card_utils.dart';
 
 /// Navigation arguments for podcast episodes page
 class PodcastEpisodesPageArgs {
@@ -161,7 +162,7 @@ class PodcastNavigation {
     GoRouter.of(routingContext).pushNamed(
       'dailyReport',
       queryParameters: {
-        if (date != null) 'date': _formatDateOnly(date),
+        if (date != null) 'date': EpisodeCardUtils.formatDate(date),
         if (source != null && source.isNotEmpty) 'source': source,
       },
     );
@@ -171,9 +172,4 @@ class PodcastNavigation {
   static void popToList(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.settings.name == 'podcast');
   }
-}
-
-String _formatDateOnly(DateTime value) {
-  final local = value.isUtc ? value.toLocal() : value;
-  return '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
 }

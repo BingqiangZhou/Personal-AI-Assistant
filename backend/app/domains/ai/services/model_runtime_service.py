@@ -132,7 +132,7 @@ class AIModelRuntimeService:
                 )
 
         raise ValidationError(
-            f"All transcription models failed. Last error: {str(last_error)}"
+            f"All transcription models failed. Last error: {last_error!s}",
         )
 
     async def call_text_generation_with_fallback(
@@ -182,7 +182,7 @@ class AIModelRuntimeService:
                 )
 
         raise ValidationError(
-            f"All text generation models failed. Last error: {str(last_error)}"
+            f"All text generation models failed. Last error: {last_error!s}",
         )
 
     async def _resolve_candidate_models(
@@ -254,7 +254,7 @@ class AIModelRuntimeService:
                         result = await response.json()
                         if "text" not in result:
                             raise Exception(
-                                "Invalid response format: missing 'text' field"
+                                "Invalid response format: missing 'text' field",
                             )
                         return result["text"].strip()
             except (aiohttp.ClientError, TimeoutError, RetryableModelError) as exc:

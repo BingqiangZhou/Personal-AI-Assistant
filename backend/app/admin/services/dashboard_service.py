@@ -18,16 +18,16 @@ class AdminDashboardService:
         apikey_count = int(
             (await self.db.execute(select(func.count()).select_from(AIModelConfig)))
             .scalar()
-            or 0
+            or 0,
         )
         subscription_count = int(
             (await self.db.execute(select(func.count()).select_from(Subscription)))
             .scalar()
-            or 0
+            or 0,
         )
         user_count = int(
             (await self.db.execute(select(func.count()).select_from(User))).scalar()
-            or 0
+            or 0,
         )
         return {
             "apikey_count": apikey_count,

@@ -1,5 +1,4 @@
-"""
-Date and time utility functions.
+"""Date and time utility functions.
 
 This module provides utility functions for handling datetime operations,
 including timezone management, formatting, and conversions.
@@ -14,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def remove_timezone(dt: datetime | None) -> datetime | None:
-    """
-    Remove timezone information from a datetime object.
+    """Remove timezone information from a datetime object.
 
     This is useful when working with databases that don't support
     timezone-aware datetime objects (e.g., SQLite or certain PostgreSQL configurations).
@@ -33,6 +31,7 @@ def remove_timezone(dt: datetime | None) -> datetime | None:
 
         >>> remove_timezone(None)
         None
+
     """
     if dt is None:
         return None
@@ -44,10 +43,9 @@ def remove_timezone(dt: datetime | None) -> datetime | None:
 
 
 def ensure_timezone_aware(
-    dt: datetime | None, tz: timezone = UTC
+    dt: datetime | None, tz: timezone = UTC,
 ) -> datetime | None:
-    """
-    Ensure a datetime object is timezone-aware.
+    """Ensure a datetime object is timezone-aware.
 
     Args:
         dt: Datetime object
@@ -55,6 +53,7 @@ def ensure_timezone_aware(
 
     Returns:
         Timezone-aware datetime object, or None if input is None
+
     """
     if dt is None:
         return None
@@ -66,14 +65,14 @@ def ensure_timezone_aware(
 
 
 def to_isoformat(dt: datetime | None) -> str | None:
-    """
-    Convert datetime to ISO format string, handling None gracefully.
+    """Convert datetime to ISO format string, handling None gracefully.
 
     Args:
         dt: Datetime object
 
     Returns:
         ISO format string, or None if input is None
+
     """
     if dt is None:
         return None
@@ -82,14 +81,14 @@ def to_isoformat(dt: datetime | None) -> str | None:
 
 
 def parse_isoformat(dt_str: str | None) -> datetime | None:
-    """
-    Parse ISO format string to datetime, handling None gracefully.
+    """Parse ISO format string to datetime, handling None gracefully.
 
     Args:
         dt_str: ISO format datetime string
 
     Returns:
         Datetime object, or None if input is None or invalid
+
     """
     if dt_str is None:
         return None
@@ -102,10 +101,9 @@ def parse_isoformat(dt_str: str | None) -> datetime | None:
 
 
 def format_datetime(
-    dt: datetime | None, format_str: str = "%Y-%m-%d %H:%M:%S"
+    dt: datetime | None, format_str: str = "%Y-%m-%d %H:%M:%S",
 ) -> str | None:
-    """
-    Format datetime to string using specified format.
+    """Format datetime to string using specified format.
 
     Args:
         dt: Datetime object
@@ -113,6 +111,7 @@ def format_datetime(
 
     Returns:
         Formatted string, or None if input is None
+
     """
     if dt is None:
         return None
@@ -121,24 +120,24 @@ def format_datetime(
 
 
 def get_current_timestamp() -> datetime:
-    """
-    Get current timestamp as timezone-aware datetime.
+    """Get current timestamp as timezone-aware datetime.
 
     Returns:
         Current datetime in UTC
+
     """
     return datetime.now(UTC)
 
 
 def calculate_age(dt: datetime) -> float | None:
-    """
-    Calculate the age of a datetime in seconds.
+    """Calculate the age of a datetime in seconds.
 
     Args:
         dt: Datetime object (should be in the past)
 
     Returns:
         Age in seconds, or None if dt is None or in the future
+
     """
     if dt is None:
         return None
@@ -160,8 +159,7 @@ def calculate_age(dt: datetime) -> float | None:
 
 
 def is_expired(dt: datetime, max_age_seconds: float) -> bool:
-    """
-    Check if a datetime is expired based on max age.
+    """Check if a datetime is expired based on max age.
 
     Args:
         dt: Datetime to check
@@ -169,6 +167,7 @@ def is_expired(dt: datetime, max_age_seconds: float) -> bool:
 
     Returns:
         True if datetime is older than max_age, False otherwise
+
     """
     age = calculate_age(dt)
     if age is None:
@@ -178,8 +177,7 @@ def is_expired(dt: datetime, max_age_seconds: float) -> bool:
 
 
 def sanitize_published_date(published_at: datetime | None) -> datetime | None:
-    """
-    Sanitize podcast episode published date by removing timezone.
+    """Sanitize podcast episode published date by removing timezone.
 
     This is a common operation for podcast feeds to ensure compatibility
     with databases that don't support timezone-aware datetimes.
@@ -194,26 +192,26 @@ def sanitize_published_date(published_at: datetime | None) -> datetime | None:
         >>> dt = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
         >>> sanitize_published_date(dt)
         datetime.datetime(2024, 1, 1, 12, 0)
+
     """
     return remove_timezone(published_at)
 
 
 def bulk_remove_timezone(dates: list[datetime | None]) -> list[datetime | None]:
-    """
-    Remove timezone from multiple datetime objects.
+    """Remove timezone from multiple datetime objects.
 
     Args:
         dates: List of datetime objects
 
     Returns:
         List of datetime objects without timezone
+
     """
     return [remove_timezone(dt) for dt in dates]
 
 
 def ensure_timezone_aware_fetch_time(fetch_time: datetime | None) -> datetime | None:
-    """
-    Ensure fetch time is timezone-aware in UTC.
+    """Ensure fetch time is timezone-aware in UTC.
 
     Unlike sanitize_published_date() (which removes timezones for RSS feed compatibility),
     this function ENSURES timezones are present for internal timestamp tracking.
@@ -243,6 +241,7 @@ def ensure_timezone_aware_fetch_time(fetch_time: datetime | None) -> datetime | 
         >>> # None input
         >>> ensure_timezone_aware_fetch_time(None)
         None
+
     """
     if fetch_time is None:
         return None

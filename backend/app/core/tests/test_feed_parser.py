@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
+import aiohttp
 import pytest
 
 from app.domains.subscription.parsers.feed_parser import (
@@ -92,7 +92,7 @@ class TestFeedParser:
         config = FeedParserConfig(
             max_entries=50,
             strip_html=False,
-            strict_mode=True
+            strict_mode=True,
         )
         parser = FeedParser(config)
         assert parser.config.max_entries == 50
@@ -249,7 +249,7 @@ class TestFeedParser:
         # Mock HTTP error
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(
-            side_effect=httpx.RequestError("Connection failed")
+            side_effect=aiohttp.ClientError("Connection failed"),
         )
         parser._client = mock_client
 
@@ -266,12 +266,13 @@ class TestFeedParser:
 
         # Mock HTTP 404 error
         mock_response = MagicMock()
-        mock_response.status_code = 404
+        mock_response.status = 404
 
-        error = httpx.HTTPStatusError(
-            "Not Found",
-            request=MagicMock(),
-            response=mock_response
+        error = aiohttp.ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=404,
+            message="Not Found",
         )
 
         mock_client = AsyncMock()
@@ -286,7 +287,7 @@ class TestFeedParser:
     @pytest.mark.asyncio
     async def test_convenience_function_parse_feed_url(self):
         """Test convenience function for parsing feed from URL."""
-        with patch.object(FeedParser, 'parse_feed') as mock_parse:
+        with patch.object(FeedParser, "parse_feed") as mock_parse:
             mock_result = FeedParseResult(feed_info=FeedInfo(), entries=[])
             mock_parse.return_value = mock_result
 
@@ -371,7 +372,7 @@ class TestFeedEntry:
         entry = FeedEntry(
             id="test-id",
             title="Test Entry",
-            content="Test content"
+            content="Test content",
         )
 
         assert entry.id == "test-id"
@@ -384,7 +385,7 @@ class TestFeedEntry:
         entry = FeedEntry(
             id="",
             title="",
-            content=""
+            content="",
         )
 
         assert entry.title == "Untitled"
@@ -396,7 +397,7 @@ class TestFeedEntry:
             id="test",
             title="Test",
             content="Content",
-            tags=["tag1", "tag2", "tag1"]  # Duplicate
+            tags=["tag1", "tag2", "tag1"],  # Duplicate
         )
 
         assert len(entry.tags) == 3  # Preserves list order
@@ -407,7 +408,7 @@ class TestFeedEntry:
             id="test",
             title="Test",
             content="Content",
-            tags=["python", "programming", "python"]
+            tags=["python", "programming", "python"],
         )
 
         unique = entry.get_unique_tags()

@@ -1,5 +1,4 @@
-"""
-Podcast Search Service - Handles podcast content search and recommendations.
+"""Podcast Search Service - Handles podcast content search and recommendations.
 
 播客搜索服务 - 处理播客内容搜索和推荐
 """
@@ -21,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSearchService:
-    """
-    Service for searching podcast content and generating recommendations.
+    """Service for searching podcast content and generating recommendations.
 
     Handles:
     - Searching episodes by title, description, summary
@@ -37,12 +35,12 @@ class PodcastSearchService:
         repo: PodcastSearchRepository | None = None,
         redis: PodcastRedis | None = None,
     ):
-        """
-        Initialize search service.
+        """Initialize search service.
 
         Args:
             db: Database session
             user_id: Current user ID
+
         """
         self.db = db
         self.user_id = user_id
@@ -50,10 +48,9 @@ class PodcastSearchService:
         self.redis = redis or get_shared_redis()
 
     async def search_podcasts(
-        self, query: str, search_in: str = "all", page: int = 1, size: int = 20
+        self, query: str, search_in: str = "all", page: int = 1, size: int = 20,
     ) -> tuple[list[PodcastEpisodeProjection], int]:
-        """
-        Search podcast content.
+        """Search podcast content.
 
         Args:
             query: Search query string
@@ -63,6 +60,7 @@ class PodcastSearchService:
 
         Returns:
             Tuple of (results list, total count)
+
         """
         # Try cache first
         cached = await safe_cache_get(
@@ -87,13 +85,13 @@ class PodcastSearchService:
         logger.info(f"Cache MISS for search: {query}, querying database")
 
         episodes, total = await self.repo.search_episodes(
-            self.user_id, query=query, search_in=search_in, page=page, size=size
+            self.user_id, query=query, search_in=search_in, page=page, size=size,
         )
 
         # Batch fetch playback states
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, episode_ids
+            self.user_id, episode_ids,
         )
 
         # Build response
@@ -125,14 +123,14 @@ class PodcastSearchService:
         return results, total
 
     async def get_recommendations(self, limit: int = 10) -> list[dict]:
-        """
-        Get podcast recommendations based on user history.
+        """Get podcast recommendations based on user history.
 
         Args:
             limit: Maximum number of recommendations
 
         Returns:
             List of recommendation dicts
+
         """
         # Get user's liked episodes (high completion rate)
         liked_episodes = await self.repo.get_liked_episodes(self.user_id, limit=20)
@@ -154,13 +152,13 @@ class PodcastSearchService:
                     else None,
                     "recommendation_reason": "Based on your listening history",
                     "match_score": 0.85,
-                }
+                },
             )
 
         return recommendations
 
     def _build_episode_response(
-        self, episodes: list[PodcastEpisode], playback_states: dict[int, Any]
+        self, episodes: list[PodcastEpisode], playback_states: dict[int, Any],
     ) -> list[PodcastEpisodeProjection]:
         """Build typed episode projections with playback states."""
         return build_episode_responses(

@@ -23,7 +23,7 @@ def mock_service():
 
 
 def test_get_subscription_schedule_returns_assembled_response(
-    client: TestClient, mock_service: AsyncMock
+    client: TestClient, mock_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_service.get_subscription_schedule.return_value = ScheduleConfigProjection(
@@ -47,7 +47,7 @@ def test_get_subscription_schedule_returns_assembled_response(
 
 
 def test_get_all_subscription_schedules_returns_projection_list(
-    client: TestClient, mock_service: AsyncMock
+    client: TestClient, mock_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_service.get_all_subscription_schedules.return_value = [
@@ -60,7 +60,7 @@ def test_get_all_subscription_schedules_returns_projection_list(
             fetch_interval=7200,
             next_update_at=now,
             last_updated_at=now,
-        )
+        ),
     ]
 
     response = client.get("/api/v1/subscriptions/podcasts/schedule/all")

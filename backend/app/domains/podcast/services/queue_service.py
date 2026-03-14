@@ -126,7 +126,7 @@ class PodcastQueueService:
                     image_url=episode.image_url if episode else None,
                     subscription_title=subscription.title if subscription else None,
                     subscription_image_url=subscription_image,
-                )
+                ),
             )
 
         return PodcastQueueProjection(

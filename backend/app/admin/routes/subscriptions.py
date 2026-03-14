@@ -103,7 +103,7 @@ async def edit_subscription(
             source_url=source_url,
         )
         return json_payload(
-            require_payload(payload, detail="Subscription not found")
+            require_payload(payload, detail="Subscription not found"),
         )
     except HTTPException:
         raise
@@ -161,7 +161,7 @@ async def delete_subscription(
     try:
         payload = await service.delete_subscription(request=request, user=user, sub_id=sub_id)
         return json_payload(
-            require_payload(payload, detail="Subscription not found")
+            require_payload(payload, detail="Subscription not found"),
         )
     except HTTPException:
         raise
@@ -181,7 +181,7 @@ async def refresh_subscription(
     try:
         payload = await service.refresh_subscription(request=request, user=user, sub_id=sub_id)
         return json_payload(
-            require_payload(payload, detail="Subscription not found")
+            require_payload(payload, detail="Subscription not found"),
         )
     except HTTPException:
         raise

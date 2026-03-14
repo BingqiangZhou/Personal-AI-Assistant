@@ -61,7 +61,7 @@ def test_get_daily_report_by_date_success(client: TestClient, mock_service: Asyn
                 "is_carryover": False,
                 "episode_created_at": now,
                 "episode_published_at": now,
-            }
+            },
         ],
     }
 
@@ -74,12 +74,12 @@ def test_get_daily_report_by_date_success(client: TestClient, mock_service: Asyn
     assert data["total_items"] == 1
     assert data["items"][0]["episode_id"] == 11
     mock_service.get_daily_report.assert_awaited_once_with(
-        target_date=date(2026, 2, 20)
+        target_date=date(2026, 2, 20),
     )
 
 
 def test_generate_daily_report_without_date(
-    client: TestClient, mock_service: AsyncMock
+    client: TestClient, mock_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_service.generate_daily_report.return_value = {
@@ -99,7 +99,7 @@ def test_generate_daily_report_without_date(
                 "is_carryover": False,
                 "episode_created_at": now,
                 "episode_published_at": now,
-            }
+            },
         ],
     }
 
@@ -138,7 +138,7 @@ def test_generate_daily_report_by_date_success(
                 "is_carryover": False,
                 "episode_created_at": now,
                 "episode_published_at": now,
-            }
+            },
         ],
     }
 
@@ -177,12 +177,12 @@ def test_generate_daily_report_with_rebuild_flag(
                 "is_carryover": False,
                 "episode_created_at": now,
                 "episode_published_at": now,
-            }
+            },
         ],
     }
 
     response = client.post(
-        "/api/v1/podcasts/reports/daily/generate?date=2026-02-20&rebuild=true"
+        "/api/v1/podcasts/reports/daily/generate?date=2026-02-20&rebuild=true",
     )
 
     assert response.status_code == 200
@@ -206,7 +206,7 @@ def test_list_daily_report_dates_with_pagination(
                 "report_date": date(2026, 2, 20),
                 "total_items": 8,
                 "generated_at": now,
-            }
+            },
         ],
         "total": 31,
         "page": 2,

@@ -1,5 +1,4 @@
-"""
-Secure RSS Parser for Podcast Subscriptions
+"""Secure RSS Parser for Podcast Subscriptions
 
 This module provides secure RSS/Atom feed parsing with explicit XXE/SSRF protection
 and follows the architecture defined in security.py.
@@ -30,6 +29,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PodcastEpisode:
     """Structured podcast episode data"""
+
     title: str
     description: str
     audio_url: str
@@ -44,6 +44,7 @@ class PodcastEpisode:
 @dataclass
 class PodcastFeed:
     """Structured podcast feed data"""
+
     title: str
     link: str
     description: str
@@ -59,8 +60,7 @@ class PodcastFeed:
 
 
 class SecureRSSParser:
-    """
-    Secure parser with complete validation pipeline
+    """Secure parser with complete validation pipeline
     """
 
     def __init__(
@@ -81,11 +81,11 @@ class SecureRSSParser:
         max_episodes: int | None = None,
         newer_than: datetime | None = None,
     ) -> tuple[bool, PodcastFeed | None, str | None]:
-        """
-        Complete pipeline: fetch → validate → parse
+        """Complete pipeline: fetch → validate → parse
 
         Returns:
             Tuple[success, feed_data, error_message]
+
         """
         # Step 0: Detect platform
         platform = PlatformDetector.detect_platform(feed_url)
@@ -105,9 +105,9 @@ class SecureRSSParser:
         # Step 3: Security validation
         validator = PodcastContentValidator()
         validation_result = await validator.validate_rss_feed(feed_url, xml_content)
-        if not validation_result['valid']:
+        if not validation_result["valid"]:
             logger.warning(f"Feed validation failed: {validation_result['error']}")
-            return False, None, validation_result['error']
+            return False, None, validation_result["error"]
 
         # Step 4: Parse safely
         try:
@@ -145,13 +145,13 @@ class SecureRSSParser:
         async with session.get(
             url,
             headers={
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
             },
         ) as resp:
             if resp.status != 200:
                 return None, f"HTTP {resp.status}"
 
-            size = int(resp.headers.get('Content-Length', 0))
+            size = int(resp.headers.get("Content-Length", 0))
             if size > self.security.MAX_RSS_SIZE:
                 return None, f"Feed too large: {size} bytes"
 
@@ -160,12 +160,12 @@ class SecureRSSParser:
                 return None, "Content exceeds size limit"
 
             try:
-                text_content = content.decode('utf-8')
+                text_content = content.decode("utf-8")
             except UnicodeDecodeError:
                 try:
-                    text_content = content.decode('latin-1')
+                    text_content = content.decode("latin-1")
                 except UnicodeDecodeError:
-                    text_content = content.decode('utf-8', errors='ignore')
+                    text_content = content.decode("utf-8", errors="ignore")
 
             return text_content, None
 
@@ -182,43 +182,43 @@ class SecureRSSParser:
         root = fromstring(xml_content)
 
         # Basic feed info
-        channel = root.find('channel') if root.tag == 'rss' else root
+        channel = root.find("channel") if root.tag == "rss" else root
         if channel is None:
             raise ValueError("Invalid RSS structure")
 
-        title = self._safe_text(channel.findtext('title', 'Unknown'))
-        link = self._safe_text(channel.findtext('link', ''))
-        description = self._sanitize_description(channel.findtext('description', ''))
+        title = self._safe_text(channel.findtext("title", "Unknown"))
+        link = self._safe_text(channel.findtext("link", ""))
+        description = self._sanitize_description(channel.findtext("description", ""))
 
         # Extract iTunes namespace information
-        itunes_ns = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+        itunes_ns = {"itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd"}
 
         # Author
-        author = self._safe_text(channel.findtext('itunes:author', '', namespaces=itunes_ns))
+        author = self._safe_text(channel.findtext("itunes:author", "", namespaces=itunes_ns))
 
         # Language
-        language = self._safe_text(channel.findtext('language', ''))
+        language = self._safe_text(channel.findtext("language", ""))
 
         # Categories
         categories = []
-        for category in channel.findall('itunes:category', namespaces=itunes_ns):
-            if category.get('text'):
-                categories.append(category.get('text'))
+        for category in channel.findall("itunes:category", namespaces=itunes_ns):
+            if category.get("text"):
+                categories.append(category.get("text"))
 
         # Explicit content
-        explicit_text = self._safe_text(channel.findtext('itunes:explicit', '', namespaces=itunes_ns))
-        explicit = explicit_text.lower() == 'true' if explicit_text else None
+        explicit_text = self._safe_text(channel.findtext("itunes:explicit", "", namespaces=itunes_ns))
+        explicit = explicit_text.lower() == "true" if explicit_text else None
 
         # Podcast image - extract from multiple sources
         image_url = self._extract_channel_image_url(channel, itunes_ns)
 
         # Podcast type
-        podcast_type = self._safe_text(channel.findtext('itunes:type', '', namespaces=itunes_ns))
+        podcast_type = self._safe_text(channel.findtext("itunes:type", "", namespaces=itunes_ns))
 
         cutoff_time = ensure_timezone_aware_fetch_time(newer_than)
         episodes = []
 
-        for item in channel.findall('item'):
+        for item in channel.findall("item"):
             episode = self._parse_episode(item)
             if episode:
                 published_at = ensure_timezone_aware_fetch_time(episode.published_at)
@@ -243,16 +243,15 @@ class SecureRSSParser:
             explicit=explicit,
             image_url=image_url,
             podcast_type=podcast_type or None,
-            platform=platform
+            platform=platform,
         )
 
     async def close(self) -> None:
         """Allow callers to use a unified parser cleanup path."""
-        return None
+        return
 
     def _extract_channel_image_url(self, channel, itunes_ns: dict) -> str | None:
-        """
-        Extract podcast/channel image URL from multiple possible tag formats.
+        """Extract podcast/channel image URL from multiple possible tag formats.
 
         Tries in order:
         1. itunes:image (href attribute)
@@ -267,19 +266,20 @@ class SecureRSSParser:
 
         Returns:
             Image URL string or None
+
         """
         # Method 1: iTunes namespace image (most common for podcasts)
-        image_element = channel.find('itunes:image', namespaces=itunes_ns)
+        image_element = channel.find("itunes:image", namespaces=itunes_ns)
         if image_element is not None:
-            href = image_element.get('href')
+            href = image_element.get("href")
             if href:
                 logger.debug(f"Found image via itunes:image: {href}")
                 return href
 
         # Method 2: Standard RSS <image><url> tag
-        image_element = channel.find('image')
+        image_element = channel.find("image")
         if image_element is not None:
-            url_element = image_element.find('url')
+            url_element = image_element.find("url")
             if url_element is not None and url_element.text:
                 url = url_element.text.strip()
                 if url and self._is_valid_image_url(url):
@@ -287,22 +287,22 @@ class SecureRSSParser:
                     return url
 
         # Method 3: Media namespace thumbnail
-        media_ns = {'media': 'http://search.yahoo.com/mrss/'}
-        thumbnail = channel.find('media:thumbnail', namespaces=media_ns)
+        media_ns = {"media": "http://search.yahoo.com/mrss/"}
+        thumbnail = channel.find("media:thumbnail", namespaces=media_ns)
         if thumbnail is not None:
-            url = thumbnail.get('url')
+            url = thumbnail.get("url")
             if url and self._is_valid_image_url(url):
                 logger.debug(f"Found image via media:thumbnail: {url}")
                 return url
 
         # Method 4: Atom link with image type
-        atom_ns = {'atom': 'http://www.w3.org/2005/Atom'}
-        for link in channel.findall('atom:link', namespaces=atom_ns):
-            rel = link.get('rel', '')
-            link_type = link.get('type', '')
-            href = link.get('href', '')
+        atom_ns = {"atom": "http://www.w3.org/2005/Atom"}
+        for link in channel.findall("atom:link", namespaces=atom_ns):
+            rel = link.get("rel", "")
+            link_type = link.get("type", "")
+            href = link.get("href", "")
             if (
-                (rel == 'self' or 'image' in link_type.lower())
+                (rel == "self" or "image" in link_type.lower())
                 and href
                 and self._is_valid_image_url(href)
             ):
@@ -310,18 +310,18 @@ class SecureRSSParser:
                 return href
 
         # Method 5: Google Play namespace
-        gplay_ns = {'gplay': 'http://www.google.com/schemas/play-podcasts/1.0'}
-        gplay_image = channel.find('gplay:image', namespaces=gplay_ns)
+        gplay_ns = {"gplay": "http://www.google.com/schemas/play-podcasts/1.0"}
+        gplay_image = channel.find("gplay:image", namespaces=gplay_ns)
         if gplay_image is not None:
-            href = gplay_image.get('href')
+            href = gplay_image.get("href")
             if href and self._is_valid_image_url(href):
                 logger.debug(f"Found image via googleplay:image: {href}")
                 return href
 
         # Method 6: Simple image tag with src attribute (non-standard but some feeds use it)
-        simple_image = channel.find('image')
+        simple_image = channel.find("image")
         if simple_image is not None:
-            src = simple_image.get('src')
+            src = simple_image.get("src")
             if src and self._is_valid_image_url(src):
                 logger.debug(f"Found image via <image src>: {src}")
                 return src
@@ -333,38 +333,38 @@ class SecureRSSParser:
         """Parse a single episode item"""
         try:
             # Namespaces for iTunes and other extensions
-            itunes_ns = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+            itunes_ns = {"itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd"}
 
             # Title (safe)
-            title = self._safe_text(item.findtext('title', 'Untitled'))
+            title = self._safe_text(item.findtext("title", "Untitled"))
 
             # Description - prefer content:encoded over description, use raw HTML without sanitization
-            content_encoded = item.findtext('content:encoded', '', namespaces={'content': 'http://purl.org/rss/1.0/modules/content/'})
-            raw_desc = content_encoded or item.findtext('description', '')
-            description = raw_desc if raw_desc else ''  # Use raw HTML directly
+            content_encoded = item.findtext("content:encoded", "", namespaces={"content": "http://purl.org/rss/1.0/modules/content/"})
+            raw_desc = content_encoded or item.findtext("description", "")
+            description = raw_desc or ""  # Use raw HTML directly
 
             # Extract image URL from description or iTunes namespace
             episode_image_url = None
 
             # First, try to extract from iTunes:image namespace
-            episode_image = item.find('itunes:image', namespaces=itunes_ns)
+            episode_image = item.find("itunes:image", namespaces=itunes_ns)
             if episode_image is not None:
-                episode_image_url = episode_image.get('href')
+                episode_image_url = episode_image.get("href")
 
             # If no iTunes image, try to extract from description (for xyzfm and other platforms)
             if not episode_image_url:
                 episode_image_url = self._extract_first_image_from_text(raw_desc)
 
             # Published date
-            pub_date = item.findtext('pubDate')
+            pub_date = item.findtext("pubDate")
             published_at = self._parse_date(pub_date)
 
             # Find enclosure (audio)
-            enclosure = item.find('enclosure')
+            enclosure = item.find("enclosure")
             if enclosure is None:
                 return None  # Not a podcast episode
 
-            audio_url = enclosure.get('url')
+            audio_url = enclosure.get("url")
             if not audio_url:
                 return None
 
@@ -375,23 +375,23 @@ class SecureRSSParser:
                 return None
 
             # Duration
-            duration_text = item.findtext('itunes:duration', None, namespaces=itunes_ns)
+            duration_text = item.findtext("itunes:duration", None, namespaces=itunes_ns)
             duration = self._parse_duration(duration_text)
 
             # Transcript URL (if available)
             transcript_url = None
             # Check for podcast namespace transcript
-            transcript_element = item.find('podcast:transcript', namespaces={'podcast': 'https://podcastindex.org/namespace/1.0'})
+            transcript_element = item.find("podcast:transcript", namespaces={"podcast": "https://podcastindex.org/namespace/1.0"})
             if transcript_element is not None:
-                transcript_url = transcript_element.get('url')
+                transcript_url = transcript_element.get("url")
             # Also check for simple transcript URL in custom element
             if not transcript_url:
-                transcript_text = item.findtext('transcript_url')
+                transcript_text = item.findtext("transcript_url")
                 if transcript_text:
                     transcript_url = transcript_text
 
             # GUID - 使用更唯一的生成策略
-            guid_element = item.find('guid')
+            guid_element = item.find("guid")
             if guid_element is not None and guid_element.text:
                 # 优先使用 RSS 提供的 guid
                 guid = guid_element.text
@@ -402,7 +402,7 @@ class SecureRSSParser:
                 guid = f"gen_{audio_url_hash}"
 
             # Item link (episode detail page link)
-            link_element = item.find('link')
+            link_element = item.find("link")
             raw_link = link_element.text if link_element is not None else None
             item_link = self._safe_text(raw_link) if raw_link else None
 
@@ -415,7 +415,7 @@ class SecureRSSParser:
                 transcript_url=transcript_url,
                 guid=guid,
                 image_url=episode_image_url,
-                link=item_link if item_link else None
+                link=item_link or None,
             )
 
         except Exception as e:
@@ -427,12 +427,11 @@ class SecureRSSParser:
         if not text:
             return ""
         # Remove null bytes and control characters
-        text = text.replace('\x00', '').replace('\r', '')
+        text = text.replace("\x00", "").replace("\r", "")
         return text.strip()[:500]  # Limit length
 
     def _sanitize_description(self, text: str | None) -> str:
-        """
-        Sanitize description for podcast episodes.
+        """Sanitize description for podcast episodes.
 
         For HTML content (shownotes):
         - Apply security cleaning (remove dangerous tags/attributes)
@@ -468,11 +467,11 @@ class SecureRSSParser:
 
         try:
             # Format: HH:MM:SS or MMM:SS or seconds
-            if ':' in duration_text:
-                parts = duration_text.split(':')
+            if ":" in duration_text:
+                parts = duration_text.split(":")
                 if len(parts) == 3:  # HH:MM:SS
                     return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-                elif len(parts) == 2:  # MM:SS
+                if len(parts) == 2:  # MM:SS
                     return int(parts[0]) * 60 + int(parts[1])
             else:
                 return int(duration_text)
@@ -487,7 +486,7 @@ class SecureRSSParser:
         import re
 
         # Pattern 1: Markdown images: ![alt](url)
-        markdown_pattern = r'!\[.*?\]\((https?://[^\s\)]+)\)'
+        markdown_pattern = r"!\[.*?\]\((https?://[^\s\)]+)\)"
         markdown_match = re.search(markdown_pattern, text)
         if markdown_match:
             url = markdown_match.group(1)
@@ -505,7 +504,7 @@ class SecureRSSParser:
                 return url
 
         # Pattern 3: Plain image URLs (standalone URLs ending with image extensions)
-        url_pattern = r'(https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)'
+        url_pattern = r"(https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)"
         url_match = re.search(url_pattern, text, re.IGNORECASE)
         if url_match:
             url = url_match.group(1)
@@ -521,15 +520,15 @@ class SecureRSSParser:
             return False
 
         # Basic URL validation
-        if not url.startswith(('http://', 'https://')):
+        if not url.startswith(("http://", "https://")):
             return False
 
         # Check for common image file extensions
-        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+        image_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
         url_lower = url.lower()
 
         # Either ends with image extension or contains image-like patterns
         has_extension = any(url_lower.endswith(ext) for ext in image_extensions)
-        has_image_keywords = any(keyword in url_lower for keyword in ['image', 'img', 'photo', 'pic', 'cover'])
+        has_image_keywords = any(keyword in url_lower for keyword in ["image", "img", "photo", "pic", "cover"])
 
         return has_extension or has_image_keywords

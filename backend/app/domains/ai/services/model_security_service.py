@@ -45,7 +45,7 @@ class AIModelSecurityService:
         except Exception as exc:
             logger.error("Failed to decrypt API key for model %s: %s", model.name, exc)
             raise ValidationError(
-                f"Failed to decrypt API key for model {model.name}"
+                f"Failed to decrypt API key for model {model.name}",
             ) from exc
 
     async def clear_default_models(self, model_type: ModelType) -> None:

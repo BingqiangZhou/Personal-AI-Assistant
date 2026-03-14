@@ -1,5 +1,4 @@
-"""
-单元测试 - Podcast专业化服务
+"""单元测试 - Podcast专业化服务
 
 Unit tests for Podcast specialized services
 """
@@ -53,7 +52,7 @@ class TestPodcastSubscriptionService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository"
+            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -62,7 +61,7 @@ class TestPodcastSubscriptionService:
     @pytest.fixture
     def mock_redis(self):
         with patch(
-            "app.domains.podcast.services.subscription_service.get_shared_redis"
+            "app.domains.podcast.services.subscription_service.get_shared_redis",
         ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
@@ -71,7 +70,7 @@ class TestPodcastSubscriptionService:
     @pytest.fixture
     def mock_parser(self):
         with patch(
-            "app.domains.podcast.services.subscription_service.SecureRSSParser"
+            "app.domains.podcast.services.subscription_service.SecureRSSParser",
         ) as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
@@ -113,7 +112,7 @@ class TestPodcastSubscriptionService:
                     "id": 1,
                     "title": "cached",
                     "source_url": "https://example.com/feed.xml",
-                }
+                },
             ],
             "total": 1,
         }
@@ -147,7 +146,7 @@ class TestPodcastEpisodeService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.episode_service.PodcastEpisodeRepository"
+            "app.domains.podcast.services.episode_service.PodcastEpisodeRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -156,7 +155,7 @@ class TestPodcastEpisodeService:
     @pytest.fixture
     def mock_redis(self):
         with patch(
-            "app.domains.podcast.services.episode_service.get_shared_redis"
+            "app.domains.podcast.services.episode_service.get_shared_redis",
         ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
@@ -188,7 +187,7 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_page_lightweight_prefers_one_line_summary(
-        self, service, mock_repo, monkeypatch
+        self, service, mock_repo, monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
         now = datetime.now(UTC)
@@ -204,7 +203,7 @@ class TestPodcastEpisodeService:
                         "More details."
                     ),
                     transcript_content="transcript",
-                )
+                ),
             ],
             1,
         )
@@ -218,7 +217,7 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_cursor_lightweight_falls_back_to_collapsed_description(
-        self, service, mock_repo, monkeypatch
+        self, service, mock_repo, monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
         now = datetime.now(UTC)
@@ -230,7 +229,7 @@ class TestPodcastEpisodeService:
                     description=raw_description,
                     ai_summary=None,
                     transcript_content="transcript",
-                )
+                ),
             ],
             1,
             False,
@@ -238,7 +237,7 @@ class TestPodcastEpisodeService:
         )
 
         results, total, has_more, next_cursor = await service.list_feed_by_cursor(
-            size=20
+            size=20,
         )
 
         assert total == 1
@@ -250,7 +249,7 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_page_non_lightweight_rewrites_description_only_for_feed(
-        self, service, mock_repo, monkeypatch
+        self, service, mock_repo, monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", False)
         now = datetime.now(UTC)
@@ -318,7 +317,7 @@ class TestPodcastPlaybackService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.playback_service.PodcastPlaybackRepository"
+            "app.domains.podcast.services.playback_service.PodcastPlaybackRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -347,7 +346,7 @@ class TestPodcastPlaybackService:
 
     @pytest.mark.asyncio
     async def test_update_playback_progress_returns_projection(
-        self, service, mock_repo
+        self, service, mock_repo,
     ):
         episode = Mock(audio_duration=200)
         playback = Mock(
@@ -378,7 +377,7 @@ class TestPodcastQueueService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.queue_service.PodcastQueueRepository"
+            "app.domains.podcast.services.queue_service.PodcastQueueRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -392,7 +391,7 @@ class TestPodcastQueueService:
     async def test_get_queue_returns_projection(self, service, mock_repo):
         now = datetime.now(UTC)
         subscription = Mock(
-            title="Podcast", config={"image_url": "https://example.com/sub.jpg"}
+            title="Podcast", config={"image_url": "https://example.com/sub.jpg"},
         )
         episode = Mock(
             title="Episode 1",
@@ -405,7 +404,7 @@ class TestPodcastQueueService:
         )
         queue_item = Mock(id=1, episode_id=5, position=0, episode=episode)
         queue = Mock(
-            current_episode_id=5, revision=2, updated_at=now, items=[queue_item]
+            current_episode_id=5, revision=2, updated_at=now, items=[queue_item],
         )
         playback_state = Mock(current_position=30)
         mock_repo.get_queue_with_items.return_value = queue
@@ -428,7 +427,7 @@ class TestPodcastSearchService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.search_service.PodcastSearchRepository"
+            "app.domains.podcast.services.search_service.PodcastSearchRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -437,7 +436,7 @@ class TestPodcastSearchService:
     @pytest.fixture
     def mock_redis(self):
         with patch(
-            "app.domains.podcast.services.search_service.get_shared_redis"
+            "app.domains.podcast.services.search_service.get_shared_redis",
         ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
@@ -487,7 +486,7 @@ class TestPodcastSyncService:
     @pytest.fixture
     def mock_transcription_service(self):
         with patch(
-            "app.domains.podcast.services.transcription_runtime_service.DatabaseBackedTranscriptionService"
+            "app.domains.podcast.services.transcription_runtime_service.DatabaseBackedTranscriptionService",
         ) as mock:
             service_instance = AsyncMock()
             mock.return_value = service_instance

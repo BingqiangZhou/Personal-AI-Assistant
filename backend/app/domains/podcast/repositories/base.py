@@ -46,20 +46,20 @@ class BasePodcastRepository:
         return int(await self.db.scalar(fallback_count_query) or 0)
 
     async def get_playback_state(
-        self, user_id: int, episode_id: int
+        self, user_id: int, episode_id: int,
     ) -> PodcastPlaybackState | None:
         """Get playback state for one user and episode."""
         stmt = select(PodcastPlaybackState).where(
             and_(
                 PodcastPlaybackState.user_id == user_id,
                 PodcastPlaybackState.episode_id == episode_id,
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_playback_states_batch(
-        self, user_id: int, episode_ids: list[int]
+        self, user_id: int, episode_ids: list[int],
     ) -> dict[int, PodcastPlaybackState]:
         """Batch fetch playback states for multiple episodes."""
         if not episode_ids:
@@ -69,7 +69,7 @@ class BasePodcastRepository:
             and_(
                 PodcastPlaybackState.user_id == user_id,
                 PodcastPlaybackState.episode_id.in_(episode_ids),
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         states = result.scalars().all()

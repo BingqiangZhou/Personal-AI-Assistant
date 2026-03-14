@@ -1,5 +1,4 @@
-"""
-Podcast Playback Service - Manages playback progress and state.
+"""Podcast Playback Service - Manages playback progress and state.
 
 播客播放服务 - 管理播放进度和状态
 """
@@ -22,8 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastPlaybackService:
-    """
-    Service for managing podcast playback state.
+    """Service for managing podcast playback state.
 
     Handles:
     - Updating playback progress
@@ -40,12 +38,12 @@ class PodcastPlaybackService:
         repo: PodcastPlaybackRepository | None = None,
         redis: PodcastRedis | None = None,
     ):
-        """
-        Initialize playback service.
+        """Initialize playback service.
 
         Args:
             db: Database session
             user_id: Current user ID
+
         """
         self.db = db
         self.user_id = user_id
@@ -59,8 +57,7 @@ class PodcastPlaybackService:
         is_playing: bool = False,
         playback_rate: float = 1.0,
     ) -> PodcastPlaybackStateProjection:
-        """
-        Update playback progress for an episode.
+        """Update playback progress for an episode.
 
         Args:
             episode_id: Episode ID
@@ -73,6 +70,7 @@ class PodcastPlaybackService:
 
         Raises:
             ValueError: If episode not found
+
         """
         # Get episode to verify access
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
@@ -80,7 +78,7 @@ class PodcastPlaybackService:
             raise ValueError("Episode not found")
 
         playback = await self.repo.update_playback_progress(
-            self.user_id, episode_id, progress_seconds, is_playing, playback_rate
+            self.user_id, episode_id, progress_seconds, is_playing, playback_rate,
         )
         await self._invalidate_stats_cache()
 
@@ -140,16 +138,16 @@ class PodcastPlaybackService:
         )
 
     async def get_playback_state(
-        self, episode_id: int
+        self, episode_id: int,
     ) -> PodcastPlaybackStateProjection | None:
-        """
-        Get playback state for an episode.
+        """Get playback state for an episode.
 
         Args:
             episode_id: Episode ID
 
         Returns:
             Playback state dict or None
+
         """
         playback = await self.repo.get_playback_state(self.user_id, episode_id)
         if not playback:
@@ -179,37 +177,37 @@ class PodcastPlaybackService:
         )
 
     async def get_playback_states_batch(
-        self, episode_ids: list[int]
+        self, episode_ids: list[int],
     ) -> dict[int, PodcastPlaybackState]:
-        """
-        Batch fetch playback states for multiple episodes.
+        """Batch fetch playback states for multiple episodes.
 
         Args:
             episode_ids: List of episode IDs
 
         Returns:
             Dictionary mapping episode_id to playback state
+
         """
         return await self.repo.get_playback_states_batch(self.user_id, episode_ids)
 
     async def get_recent_play_dates(self, days: int = 30) -> set[date]:
-        """
-        Get dates when user listened to podcasts.
+        """Get dates when user listened to podcasts.
 
         Args:
             days: Number of days to look back
 
         Returns:
             Set of dates
+
         """
         return await self.repo.get_recent_play_dates(self.user_id, days)
 
     async def calculate_listening_streak(self) -> int:
-        """
-        Calculate consecutive days of listening.
+        """Calculate consecutive days of listening.
 
         Returns:
             Number of consecutive days
+
         """
         recent_plays = await self.repo.get_recent_play_dates(self.user_id, days=30)
 
@@ -230,25 +228,25 @@ class PodcastPlaybackService:
         return streak
 
     async def get_recently_played(self, limit: int = 5) -> list[dict[str, Any]]:
-        """
-        Get recently played episodes.
+        """Get recently played episodes.
 
         Args:
             limit: Maximum number of episodes
 
         Returns:
             List of recently played episode dicts
+
         """
         return await self.repo.get_recently_played(self.user_id, limit)
 
     async def get_liked_episodes(self, limit: int = 20) -> list[PodcastEpisode]:
-        """
-        Get user's liked episodes (high completion rate).
+        """Get user's liked episodes (high completion rate).
 
         Args:
             limit: Maximum number of episodes
 
         Returns:
             List of liked episodes
+
         """
         return await self.repo.get_liked_episodes(self.user_id, limit)

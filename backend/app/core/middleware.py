@@ -39,7 +39,7 @@ class PerformanceMetricsStore:
         self.status_counts: dict[str, dict[str, int]] = {}
         self.latency_samples: dict[str, deque[float]] = {}
         self.global_latency_samples: deque[float] = deque(
-            maxlen=self._max_latency_samples
+            maxlen=self._max_latency_samples,
         )
 
     @staticmethod
@@ -51,7 +51,7 @@ class PerformanceMetricsStore:
         return ordered[index]
 
     def track_request(
-        self, key: str, duration_ms: float, status_code: int | None = None
+        self, key: str, duration_ms: float, status_code: int | None = None,
     ) -> None:
         self.request_counts[key] = self.request_counts.get(key, 0) + 1
 

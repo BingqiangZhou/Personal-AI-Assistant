@@ -1,5 +1,4 @@
-"""
-Podcast Security Module - XXE/SSRF Protection & Content Validation
+"""Podcast Security Module - XXE/SSRF Protection & Content Validation
 
 **Security Features:**
 1. XXE Attack Prevention - defusedxml-based safe parsing
@@ -28,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSecurityValidator:
-    """
-    Comprehensive security validation for podcast operations
+    """Comprehensive security validation for podcast operations
     """
 
     # Maximum safe limits
@@ -42,28 +40,28 @@ class PodcastSecurityValidator:
 
     # Suspicious patterns that indicate XXE attempts
     XXE_PATTERNS = [
-        r'<!ENTITY\s+',
-        r'<!DOCTYPE\s+.*\[',
+        r"<!ENTITY\s+",
+        r"<!DOCTYPE\s+.*\[",
         r'SYSTEM\s+["\']',
         r'PUBLIC\s+["\']',
     ]
 
     # Dangerous URL patterns for SSRF
     DANGEROUS_HOSTS = {
-        'localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254',  # Metadata endpoints
-        '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16',  # Private networks
+        "localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254",  # Metadata endpoints
+        "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",  # Private networks
     }
 
     @classmethod
     def validate_rss_xml(cls, xml_content: str) -> tuple[bool, str | None]:
-        """
-        Safe RSS XML validation using defusedxml
+        """Safe RSS XML validation using defusedxml
 
         Args:
             xml_content: Raw RSS XML string
 
         Returns:
             Tuple of (is_valid, error_message)
+
         """
         if len(xml_content) > cls.MAX_RSS_SIZE:
             return False, f"RSS too large: {len(xml_content)} bytes"
@@ -82,7 +80,7 @@ class PodcastSecurityValidator:
             root = fromstring(xml_content)
 
             # Verify it looks like RSS/Atom
-            if root.tag not in ['rss', 'feed', 'channel']:
+            if root.tag not in ["rss", "feed", "channel"]:
                 return False, "Invalid RSS/Atom format"
 
             return True, None
@@ -96,14 +94,14 @@ class PodcastSecurityValidator:
 
     @classmethod
     def validate_audio_url(cls, url: str) -> tuple[bool, str | None]:
-        """
-        Validate audio URL for SSRF protection
+        """Validate audio URL for SSRF protection
 
         Args:
             url: Audio file URL
 
         Returns:
             Tuple of (is_valid, error_message)
+
         """
         try:
             parsed = urlparse(url)
@@ -141,27 +139,27 @@ class PodcastSecurityValidator:
         hostname_lower = hostname.lower()
 
         # Exact matches
-        dangerous_exact = {'localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '::1'}
+        dangerous_exact = {"localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254", "::1"}
         if hostname_lower in dangerous_exact:
             return True
 
         # Private network checks (simplified - real implementation would use ipaddress module)
-        if re.match(r'^10\.', hostname_lower):
+        if re.match(r"^10\.", hostname_lower):
             return True
-        if re.match(r'^172\.(1[6-9]|2[0-9]|3[0-1])\.', hostname_lower):
+        if re.match(r"^172\.(1[6-9]|2[0-9]|3[0-1])\.", hostname_lower):
             return True
-        return bool(re.match(r'^192\.168\.', hostname_lower))
+        return bool(re.match(r"^192\.168\.", hostname_lower))
 
     @classmethod
     async def validate_audio_download(cls, url: str) -> tuple[bool, str | None, bytes | None]:
-        """
-        Safely download audio with size limits and validation
+        """Safely download audio with size limits and validation
 
         Args:
             url: Audio URL to download
 
         Returns:
             Tuple of (success, error_message, data)
+
         """
         # Validate URL first
         valid, error = cls.validate_audio_url(url)
@@ -171,10 +169,10 @@ class PodcastSecurityValidator:
         try:
             timeout = aiohttp.ClientTimeout(total=300)  # 5 minute total timeout
             async with aiohttp.ClientSession(timeout=timeout) as session, session.get(
-                url
+                url,
             ) as response:
                     # Check content length before downloading
-                    content_length = response.headers.get('Content-Length')
+                    content_length = response.headers.get("Content-Length")
                     if content_length:
                         size = int(content_length)
                         if size > cls.MAX_AUDIO_SIZE:
@@ -197,8 +195,7 @@ class PodcastSecurityValidator:
 
     @classmethod
     def sanitize_html_content(cls, html: str) -> str:
-        """
-        Clean HTML content before processing while preserving safe HTML tags.
+        """Clean HTML content before processing while preserving safe HTML tags.
 
         This method removes dangerous tags (script, iframe, etc.) but preserves
         safe HTML tags like p, br, a, img, h1-h6, ul, ol, li, table, etc.
@@ -209,11 +206,11 @@ class PodcastSecurityValidator:
         if not html:
             return ""
 
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
 
         # Remove dangerous tags completely
-        dangerous_tags = ['script', 'style', 'iframe', 'object', 'embed',
-                         'form', 'input', 'button', 'select', 'textarea']
+        dangerous_tags = ["script", "style", "iframe", "object", "embed",
+                         "form", "input", "button", "select", "textarea"]
         for tag_name in dangerous_tags:
             for tag in soup.find_all(tag_name):
                 tag.decompose()
@@ -222,41 +219,40 @@ class PodcastSecurityValidator:
         for tag in soup.find_all(True):
             # Remove event handler attributes
             attrs_to_remove = [attr for attr in tag.attrs
-                             if attr.lower().startswith('on')]
+                             if attr.lower().startswith("on")]
             for attr in attrs_to_remove:
                 del tag[attr]
 
             # Remove style attributes with javascript:
-            if 'style' in tag.attrs:
-                style = tag['style']
-                if 'javascript:' in style.lower():
-                    del tag['style']
+            if "style" in tag.attrs:
+                style = tag["style"]
+                if "javascript:" in style.lower():
+                    del tag["style"]
 
             # For anchor tags, add rel="nofollow noopener" for security
-            if tag.name == 'a' and 'href' in tag.attrs:
-                tag['rel'] = 'nofollow noopener'
+            if tag.name == "a" and "href" in tag.attrs:
+                tag["rel"] = "nofollow noopener"
 
         # Return the cleaned HTML as string (preserves safe tags)
         cleaned_html = str(soup)
 
         # Clean up extra whitespace but preserve HTML structure
-        cleaned_html = re.sub(r'\s+', ' ', cleaned_html)
+        cleaned_html = re.sub(r"\s+", " ", cleaned_html)
 
         return cleaned_html.strip()
 
 
 class PodcastContentValidator:
-    """
-    High-level content validation interface
+    """High-level content validation interface
     """
 
     @staticmethod
     async def validate_rss_feed(feed_url: str, xml_content: str) -> dict:
-        """
-        Complete RSS feed validation pipeline
+        """Complete RSS feed validation pipeline
 
         Returns:
             dict with validation results and metadata
+
         """
         security = PodcastSecurityValidator
 
@@ -269,33 +265,33 @@ class PodcastContentValidator:
                 root = fromstring(xml_content)
 
                 # Extract basic info
-                title = root.findtext('.//title', 'Unknown')
-                link = root.findtext('.//link', '')
+                title = root.findtext(".//title", "Unknown")
+                link = root.findtext(".//link", "")
 
                 # Detect audio enclosures
-                enclosures = root.findall('.//enclosure')
-                has_audio = any(e.get('type', '').startswith('audio/') for e in enclosures)
+                enclosures = root.findall(".//enclosure")
+                has_audio = any(e.get("type", "").startswith("audio/") for e in enclosures)
 
                 return {
-                    'valid': True,
-                    'title': title,
-                    'link': link,
-                    'has_audio': has_audio,
-                    'episode_count': len(enclosures),
-                    'security_scan': 'passed'
+                    "valid": True,
+                    "title": title,
+                    "link": link,
+                    "has_audio": has_audio,
+                    "episode_count": len(enclosures),
+                    "security_scan": "passed",
                 }
             except Exception as e:
-                return {'valid': False, 'error': f'Parse failed: {e}'}
+                return {"valid": False, "error": f"Parse failed: {e}"}
 
-        return {'valid': False, 'error': xml_error}
+        return {"valid": False, "error": xml_error}
 
     @staticmethod
     def detect_xxe_attempts(xml_content: str) -> list[str]:
-        """
-        Scan for XXE attack attempts
+        """Scan for XXE attack attempts
 
         Returns:
             List of detected threat patterns
+
         """
         threats = []
         for pattern in PodcastSecurityValidator.XXE_PATTERNS:

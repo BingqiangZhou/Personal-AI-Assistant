@@ -62,7 +62,7 @@ async def start_transcription(
     transcription_request: PodcastTranscriptionRequest,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     """Start transcription task via shared workflow service."""
@@ -104,7 +104,7 @@ async def get_transcription(
     ),
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     """Get detailed transcription info for one episode."""
@@ -117,7 +117,7 @@ async def get_transcription(
             )
 
         transcription_service = transcription_workflow.transcription_service_factory(
-            transcription_workflow.db
+            transcription_workflow.db,
         )
         task = await transcription_service.get_episode_transcription(episode_id)
         if not task:
@@ -174,15 +174,15 @@ async def get_transcription(
             )
 
         response_data["formatted_created_at"] = task.created_at.strftime(
-            "%Y-%m-%d %H:%M:%S"
+            "%Y-%m-%d %H:%M:%S",
         )
         if task.started_at:
             response_data["formatted_started_at"] = task.started_at.strftime(
-                "%Y-%m-%d %H:%M:%S"
+                "%Y-%m-%d %H:%M:%S",
             )
         if task.completed_at:
             response_data["formatted_completed_at"] = task.completed_at.strftime(
-                "%Y-%m-%d %H:%M:%S"
+                "%Y-%m-%d %H:%M:%S",
             )
 
         return PodcastTranscriptionDetailResponse(**response_data)
@@ -205,7 +205,7 @@ async def delete_transcription(
     episode_id: int,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     """Delete transcription task and cleanup redis state."""
@@ -241,7 +241,7 @@ async def get_transcription_status(
     task_id: int,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     """Get real-time task status."""
@@ -285,7 +285,7 @@ async def schedule_episode_transcription_endpoint(
     frequency: str = Body("manual", description="hourly, daily, weekly, manual"),
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -318,7 +318,7 @@ async def get_episode_transcript_endpoint(
     episode_id: int,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -348,7 +348,7 @@ async def batch_transcribe_subscription_endpoint(
     skip_existing: bool = Body(True, description="Skip episodes already transcribed"),
     subscription_service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -375,7 +375,7 @@ async def get_transcription_schedule_status(
     episode_id: int,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -388,7 +388,7 @@ async def get_transcription_schedule_status(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         logger.error(
-            "Failed to get transcription status for episode %s: %s", episode_id, exc
+            "Failed to get transcription status for episode %s: %s", episode_id, exc,
         )
         raise HTTPException(
             status_code=500,
@@ -406,7 +406,7 @@ async def cancel_transcription_endpoint(
     episode_id: int,
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -433,7 +433,7 @@ async def check_and_transcribe_new_episodes(
     hours_since_published: int = Body(24, description="Hours window for new episodes"),
     subscription_service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:
@@ -459,7 +459,7 @@ async def check_and_transcribe_new_episodes(
 async def get_pending_transcriptions(
     episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
-        get_transcription_workflow_service
+        get_transcription_workflow_service,
     ),
 ):
     try:

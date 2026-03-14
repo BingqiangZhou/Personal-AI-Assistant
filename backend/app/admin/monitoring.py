@@ -24,7 +24,7 @@ class SystemMonitorService:
         uname = platform.uname()
         boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=UTC)
         uptime_seconds = max(
-            0.0, (datetime.now(UTC) - boot_time).total_seconds()
+            0.0, (datetime.now(UTC) - boot_time).total_seconds(),
         )
         return {
             "hostname": uname.node,
@@ -88,7 +88,7 @@ class SystemMonitorService:
                     "used_bytes": usage.used,
                     "free_bytes": usage.free,
                     "percent": usage.percent,
-                }
+                },
             )
 
         io_counters = psutil.disk_io_counters()
@@ -122,7 +122,7 @@ class SystemMonitorService:
                     "errout": getattr(counters, "errout", 0),
                     "dropin": getattr(counters, "dropin", 0),
                     "dropout": getattr(counters, "dropout", 0),
-                }
+                },
             )
 
         return {

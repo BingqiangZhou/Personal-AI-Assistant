@@ -31,7 +31,7 @@ async def _insert_run_async(
                     duration_ms=duration_ms,
                     error_message=error_message,
                     metadata_json=metadata or {},
-                )
+                ),
             )
             await session.commit()
     finally:

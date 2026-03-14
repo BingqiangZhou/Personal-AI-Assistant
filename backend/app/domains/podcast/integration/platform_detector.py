@@ -1,5 +1,4 @@
-"""
-Podcast Platform Detection Utility
+"""Podcast Platform Detection Utility
 
 Detects and validates podcast platform sources (Xiaoyuzhou, Ximalaya, etc.)
 """
@@ -10,6 +9,7 @@ from urllib.parse import urlparse
 
 class PodcastPlatform:
     """Podcast platform identifiers"""
+
     XIAOYUZHOU = "xiaoyuzhou"
     XIMALAYA = "ximalaya"
     GENERIC = "generic"
@@ -21,25 +21,25 @@ class PlatformDetector:
     # Platform URL patterns
     PLATFORM_PATTERNS = {
         PodcastPlatform.XIAOYUZHOU: [
-            r'xiaoyuzhou\.fm',
-            r'xiaoyuzhoufm\.com',
+            r"xiaoyuzhou\.fm",
+            r"xiaoyuzhoufm\.com",
         ],
         PodcastPlatform.XIMALAYA: [
-            r'ximalaya\.com',
-            r'xmcdn\.com',
+            r"ximalaya\.com",
+            r"xmcdn\.com",
         ],
     }
 
     @classmethod
     def detect_platform(cls, feed_url: str) -> str:
-        """
-        Detect platform from feed URL
+        """Detect platform from feed URL
 
         Args:
             feed_url: RSS feed URL
 
         Returns:
             Platform identifier (xiaoyuzhou, ximalaya, or generic)
+
         """
         try:
             parsed = urlparse(feed_url)
@@ -57,8 +57,7 @@ class PlatformDetector:
 
     @classmethod
     def validate_platform_url(cls, feed_url: str, platform: str) -> tuple[bool, str | None]:
-        """
-        Validate URL format for specific platform
+        """Validate URL format for specific platform
 
         Args:
             feed_url: RSS feed URL
@@ -66,24 +65,24 @@ class PlatformDetector:
 
         Returns:
             Tuple of (is_valid, error_message)
+
         """
         if platform == PodcastPlatform.XIMALAYA:
             return cls._validate_ximalaya_url(feed_url)
-        elif platform == PodcastPlatform.XIAOYUZHOU:
+        if platform == PodcastPlatform.XIAOYUZHOU:
             return cls._validate_xiaoyuzhou_url(feed_url)
-        else:
-            return True, None
+        return True, None
 
     @classmethod
     def _validate_ximalaya_url(cls, url: str) -> tuple[bool, str | None]:
         """Validate Ximalaya RSS feed URL format"""
         # Expected format: https://www.ximalaya.com/album/{album_id}.xml
-        pattern = r'https?://(?:www\.)?ximalaya\.com/album/\d+\.xml'
+        pattern = r"https?://(?:www\.)?ximalaya\.com/album/\d+\.xml"
         if re.match(pattern, url, re.IGNORECASE):
             return True, None
 
         # Also accept generic ximalaya RSS URLs
-        if 'ximalaya.com' in url.lower() and ('.xml' in url or 'rss' in url.lower()):
+        if "ximalaya.com" in url.lower() and (".xml" in url or "rss" in url.lower()):
             return True, None
 
         return False, "Invalid Ximalaya RSS URL format. Expected: https://www.ximalaya.com/album/{album_id}.xml"
@@ -91,6 +90,6 @@ class PlatformDetector:
     @classmethod
     def _validate_xiaoyuzhou_url(cls, url: str) -> tuple[bool, str | None]:
         """Validate Xiaoyuzhou RSS feed URL format"""
-        if 'xiaoyuzhou' in url.lower() and ('.xml' in url or 'rss' in url.lower()):
+        if "xiaoyuzhou" in url.lower() and (".xml" in url or "rss" in url.lower()):
             return True, None
         return False, "Invalid Xiaoyuzhou RSS URL format"

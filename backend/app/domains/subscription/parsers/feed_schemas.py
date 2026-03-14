@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class ParseErrorCode(StrEnum):
     """Parse error codes / 解析错误代码"""
+
     NETWORK_ERROR = "network_error"
     PARSE_ERROR = "parse_error"
     INVALID_FORMAT = "invalid_format"
@@ -21,6 +22,7 @@ class ParseErrorCode(StrEnum):
 
 class ParseError(BaseModel):
     """Parse error details / 解析错误详情"""
+
     code: ParseErrorCode
     message: str
     entry_id: str | None = None
@@ -29,6 +31,7 @@ class ParseError(BaseModel):
 
 class FeedInfo(BaseModel):
     """Basic feed information / Feed 基本信息"""
+
     title: str = ""
     description: str = ""
     link: str = ""
@@ -49,6 +52,7 @@ class FeedInfo(BaseModel):
 
 class FeedEntry(BaseModel):
     """Single feed entry / 单个 Feed 条目"""
+
     # Required fields
     id: str
     title: str
@@ -113,6 +117,7 @@ class FeedEntry(BaseModel):
 
 class FeedParseResult(BaseModel):
     """Complete feed parse result / Feed 解析结果"""
+
     # Feed metadata
     feed_info: FeedInfo
     entries: list[FeedEntry] = Field(default_factory=list)
@@ -135,7 +140,7 @@ class FeedParseResult(BaseModel):
         error = ParseError(
             code=code,
             message=message,
-            details=kwargs if kwargs else None
+            details=kwargs or None,
         )
         self.errors.append(error)
         if code in (ParseErrorCode.NETWORK_ERROR, ParseErrorCode.PARSE_ERROR):
@@ -156,6 +161,7 @@ class FeedParseResult(BaseModel):
 
 class FeedParserConfig(BaseModel):
     """Feed parser configuration / Feed 解析器配置"""
+
     # Parsing limits
     max_entries: int = 100
     max_content_length: int = 100000  # 100KB max content size
@@ -177,6 +183,7 @@ class FeedParserConfig(BaseModel):
 
 class FeedParseOptions(BaseModel):
     """Options for a single parse operation / 单次解析选项"""
+
     max_entries: int | None = None  # Override default max_entries
     fields: list[str] | None = None  # Specific fields to extract (None = all)
 

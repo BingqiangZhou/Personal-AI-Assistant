@@ -1,5 +1,4 @@
-"""
-Integration tests for podcast subscription service platform support
+"""Integration tests for podcast subscription service platform support
 """
 
 from datetime import UTC, datetime
@@ -23,7 +22,7 @@ class TestPodcastSubscriptionPlatform:
     def mock_repo(self):
         """Mock repository"""
         with patch(
-            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository"
+            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository",
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -33,7 +32,7 @@ class TestPodcastSubscriptionPlatform:
     def mock_parser(self):
         """Mock RSS parser"""
         with patch(
-            "app.domains.podcast.integration.secure_rss_parser.SecureRSSParser"
+            "app.domains.podcast.integration.secure_rss_parser.SecureRSSParser",
         ) as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
@@ -68,7 +67,7 @@ class TestPodcastSubscriptionPlatform:
 
     @pytest.mark.asyncio
     async def test_add_subscription_stores_ximalaya_platform(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Test adding Ximalaya subscription stores platform in metadata"""
         feed_url = "https://www.ximalaya.com/album/51076156.xml"
@@ -92,7 +91,7 @@ class TestPodcastSubscriptionPlatform:
 
     @pytest.mark.asyncio
     async def test_add_subscription_stores_xiaoyuzhou_platform(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Test adding Xiaoyuzhou subscription stores platform in metadata"""
         feed_url = "https://feed.xyzfm.space/mcklbwxjdvfu"
@@ -116,7 +115,7 @@ class TestPodcastSubscriptionPlatform:
 
     @pytest.mark.asyncio
     async def test_add_subscription_stores_generic_platform(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Test adding generic RSS subscription stores generic platform"""
         feed_url = "https://example.com/podcast.rss"
@@ -140,7 +139,7 @@ class TestPodcastSubscriptionPlatform:
 
     @pytest.mark.asyncio
     async def test_add_subscription_includes_all_metadata_with_platform(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Test subscription metadata includes platform along with other fields"""
         feed_url = "https://www.ximalaya.com/album/123.xml"
@@ -201,7 +200,7 @@ class TestPodcastSubscriptionPlatform:
 
     @pytest.mark.asyncio
     async def test_refresh_subscription_preserves_platform(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Test refreshing subscription preserves platform information"""
         subscription_id = 1
@@ -223,12 +222,12 @@ class TestPodcastSubscriptionPlatform:
 
         # Verify platform is preserved during refresh
         mock_repo.update_subscription_fetch_time.assert_called_once_with(
-            subscription_id, mock_feed.last_fetched
+            subscription_id, mock_feed.last_fetched,
         )
 
     @pytest.mark.asyncio
     async def test_refresh_subscription_succeeds_when_redis_unavailable(
-        self, service, mock_repo, mock_parser
+        self, service, mock_repo, mock_parser,
     ):
         """Refresh should still succeed when Redis invalidation fails."""
         subscription_id = 1
@@ -245,13 +244,13 @@ class TestPodcastSubscriptionPlatform:
         mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         service.redis.invalidate_episode_list = AsyncMock(
-            side_effect=RuntimeError("redis unavailable")
+            side_effect=RuntimeError("redis unavailable"),
         )
         service.redis.invalidate_subscription_list = AsyncMock(
-            side_effect=RuntimeError("redis unavailable")
+            side_effect=RuntimeError("redis unavailable"),
         )
 
         await service.refresh_subscription(subscription_id)
         mock_repo.update_subscription_fetch_time.assert_called_once_with(
-            subscription_id, mock_feed.last_fetched
+            subscription_id, mock_feed.last_fetched,
         )

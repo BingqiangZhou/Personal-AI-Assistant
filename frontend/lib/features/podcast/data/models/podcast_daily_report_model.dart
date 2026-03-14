@@ -1,17 +1,12 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/utils/time_formatter.dart';
+
 DateTime? _parseDateOnly(String? value) {
   if (value == null || value.isEmpty) {
     return null;
   }
   return DateTime.tryParse(value);
-}
-
-String? _formatDateOnly(DateTime? value) {
-  if (value == null) {
-    return null;
-  }
-  return '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 }
 
 class PodcastDailyReportItem extends Equatable {
@@ -117,7 +112,7 @@ class PodcastDailyReportResponse extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'available': available,
-      'report_date': _formatDateOnly(reportDate),
+      'report_date': reportDate != null ? TimeFormatter.formatDate(reportDate) : null,
       'timezone': timezone,
       'schedule_time_local': scheduleTimeLocal,
       'generated_at': generatedAt?.toIso8601String(),
@@ -163,7 +158,7 @@ class PodcastDailyReportDateItem extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
-      'report_date': _formatDateOnly(reportDate),
+      'report_date': TimeFormatter.formatDate(reportDate),
       'total_items': totalItems,
       'generated_at': generatedAt?.toIso8601String(),
     };

@@ -41,15 +41,15 @@ async def test_import_opml_queues_episode_processing_via_orchestration_service()
                 source_type="podcast-rss",
                 description="",
                 image_url=None,
-            )
-        ]
+            ),
+        ],
     )
 
     podcast_service = Mock()
     podcast_service.repo = Mock()
     podcast_service.repo.get_subscription_by_url = AsyncMock(return_value=None)
     podcast_service.repo.create_or_update_subscription = AsyncMock(
-        return_value=subscription
+        return_value=subscription,
     )
 
     with patch(
@@ -73,5 +73,5 @@ async def test_import_opml_queues_episode_processing_via_orchestration_service()
             "subscription_id": 99,
             "user_id": 42,
             "source_url": "https://example.com/feed.xml",
-        }
+        },
     ]

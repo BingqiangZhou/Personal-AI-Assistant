@@ -29,6 +29,7 @@ import '../widgets/scrollable_content_wrapper.dart';
 import '../services/content_image_share_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/utils/time_formatter.dart';
+import '../widgets/shared/episode_card_utils.dart';
 
 part 'podcast_episode_detail_page_layout.dart';
 part 'podcast_episode_detail_page_header.dart';

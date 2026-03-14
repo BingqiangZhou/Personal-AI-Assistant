@@ -40,10 +40,9 @@ class AuthenticationService:
         self,
         email: str,
         password: str,
-        username: str | None = None
+        username: str | None = None,
     ) -> User:
-        """
-        Register a new user.
+        """Register a new user.
 
         Args:
             email: User's email address
@@ -56,6 +55,7 @@ class AuthenticationService:
         Raises:
             ConflictError: If user already exists
             BadRequestError: If password is too weak
+
         """
         # Validate password strength
         if len(password) < 8:
@@ -64,7 +64,7 @@ class AuthenticationService:
         # Generate username from email if not provided
         if not username:
             # Extract username from email (part before @)
-            username = email.split('@')[0]
+            username = email.split("@", maxsplit=1)[0]
             # Ensure uniqueness by adding number if needed
             base_username = username
             counter = 1
@@ -77,7 +77,7 @@ class AuthenticationService:
         if existing_user:
             if existing_user.email == email:
                 raise ConflictError("Email already registered")
-            elif existing_user.username == username:
+            if existing_user.username == username:
                 raise ConflictError("Username already taken")
 
         # Create new user
@@ -89,7 +89,7 @@ class AuthenticationService:
             hashed_password=hashed_password,
             status="active",
             is_verified=False,
-            is_superuser=False
+            is_superuser=False,
         )
 
         try:
@@ -104,10 +104,9 @@ class AuthenticationService:
     async def authenticate_user(
         self,
         email_or_username: str,
-        password: str
+        password: str,
     ) -> User | None:
-        """
-        Authenticate user with email/username and password.
+        """Authenticate user with email/username and password.
 
         Args:
             email_or_username: User's email or username
@@ -115,6 +114,7 @@ class AuthenticationService:
 
         Returns:
             User instance if authentication successful, None otherwise
+
         """
         # Get user by email or username
         user = await self._get_user_by_email_or_username(email_or_username, email_or_username)
@@ -142,10 +142,9 @@ class AuthenticationService:
         device_info: dict[str, Any] | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
-        remember_me: bool = False
+        remember_me: bool = False,
     ) -> dict[str, Any]:
-        """
-        Create user session with tokens and concurrent session limit.
+        """Create user session with tokens and concurrent session limit.
 
         Security features:
         - Maximum 5 concurrent active sessions per user
@@ -160,6 +159,7 @@ class AuthenticationService:
 
         Returns:
             Dictionary containing access and refresh tokens
+
         """
         # Security: Limit concurrent sessions (max 5 per user)
         max_concurrent_sessions = 5
@@ -170,9 +170,9 @@ class AuthenticationService:
                 and_(
                     UserSession.user_id == user.id,
                     UserSession.is_active,
-                    UserSession.expires_at > datetime.now(UTC)
-                )
-            ).order_by(UserSession.created_at)
+                    UserSession.expires_at > datetime.now(UTC),
+                ),
+            ).order_by(UserSession.created_at),
         )
         active_sessions = existing_sessions.scalars().all()
 
@@ -186,19 +186,19 @@ class AuthenticationService:
 
         # Create tokens
         access_token = create_access_token(
-            data={"sub": str(user.id), "email": user.email}
+            data={"sub": str(user.id), "email": user.email},
         )
 
         # Set refresh token expiry based on remember_me
         refresh_expiry_days = 30 if remember_me else settings.REFRESH_TOKEN_EXPIRE_DAYS
         refresh_token = create_refresh_token(
             data={"sub": str(user.id), "email": user.email},
-            expires_delta=timedelta(days=refresh_expiry_days)
+            expires_delta=timedelta(days=refresh_expiry_days),
         )
 
         # Calculate expiry times
         refresh_expires_at = datetime.now(UTC) + timedelta(
-            days=refresh_expiry_days
+            days=refresh_expiry_days,
         )
 
         # Create session record
@@ -211,7 +211,7 @@ class AuthenticationService:
             user_agent=user_agent,
             expires_at=refresh_expires_at,  # Fix: session expires at same time as refresh token (7 days)
             last_activity_at=datetime.now(UTC),
-            is_active=True
+            is_active=True,
         )
 
         try:
@@ -224,7 +224,7 @@ class AuthenticationService:
 
         # Calculate UTC expiration time for frontend
         access_token_expires_at = datetime.now(UTC) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
 
         return {
@@ -234,12 +234,11 @@ class AuthenticationService:
             "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             "expires_at": access_token_expires_at.isoformat(),
             "server_time": datetime.now(UTC).isoformat(),
-            "session_id": session.id
+            "session_id": session.id,
         }
 
     async def refresh_access_token(self, refresh_token: str) -> dict[str, Any]:
-        """
-        Refresh access token using refresh token with sliding session expiration.
+        """Refresh access token using refresh token with sliding session expiration.
 
         This implements a sliding session mechanism where:
         - The refresh token expiration is extended each time it's used
@@ -256,6 +255,7 @@ class AuthenticationService:
         Raises:
             UnauthorizedError: If refresh token is invalid
             NotFoundError: If session not found
+
         """
         # Verify refresh token
         try:
@@ -288,7 +288,7 @@ class AuthenticationService:
 
         # Create new access token
         new_access_token = create_access_token(
-            data={"sub": str(user.id), "email": user.email}
+            data={"sub": str(user.id), "email": user.email},
         )
 
         # Determine refresh expiry days based on current session
@@ -305,12 +305,12 @@ class AuthenticationService:
         # Create new refresh token (sliding session - extend expiration)
         new_refresh_token = create_refresh_token(
             data={"sub": str(user.id), "email": user.email},
-            expires_delta=timedelta(days=refresh_expiry_days)
+            expires_delta=timedelta(days=refresh_expiry_days),
         )
 
         # Calculate new expiration times
         refresh_expires_at = datetime.now(UTC) + timedelta(
-            days=refresh_expiry_days
+            days=refresh_expiry_days,
         )
 
         # Update session with sliding expiration
@@ -323,7 +323,7 @@ class AuthenticationService:
 
         # Calculate UTC expiration time for frontend
         access_token_expires_at = datetime.now(UTC) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
 
         return {
@@ -332,12 +332,11 @@ class AuthenticationService:
             "token_type": "bearer",
             "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             "expires_at": access_token_expires_at.isoformat(),
-            "server_time": datetime.now(UTC).isoformat()
+            "server_time": datetime.now(UTC).isoformat(),
         }
 
     async def logout_user(self, refresh_token: str) -> bool:
-        """
-        Logout user by invalidating session.
+        """Logout user by invalidating session.
 
         Args:
             refresh_token: Refresh token to invalidate
@@ -347,6 +346,7 @@ class AuthenticationService:
 
         Raises:
             NotFoundError: If session not found
+
         """
         session = await self._get_valid_session_by_refresh_token(refresh_token)
         if not session:
@@ -360,22 +360,22 @@ class AuthenticationService:
         return True
 
     async def logout_all_sessions(self, user_id: int) -> bool:
-        """
-        Logout user from all devices.
+        """Logout user from all devices.
 
         Args:
             user_id: User ID
 
         Returns:
             True if logout successful
+
         """
         result = await self.db.execute(
             select(UserSession).where(
                 and_(
                     UserSession.user_id == user_id,
-                    UserSession.is_active
-                )
-            )
+                    UserSession.is_active,
+                ),
+            ),
         )
         sessions = result.scalars().all()
 
@@ -387,11 +387,11 @@ class AuthenticationService:
         return True
 
     async def cleanup_expired_sessions(self) -> int:
-        """
-        Clean up expired sessions.
+        """Clean up expired sessions.
 
         Returns:
             Number of sessions cleaned up
+
         """
         result = await self.db.execute(
             select(UserSession).where(
@@ -399,10 +399,10 @@ class AuthenticationService:
                     UserSession.expires_at < datetime.now(UTC),
                     and_(
                         UserSession.last_activity_at < datetime.now(UTC) - timedelta(days=30),
-                        not UserSession.is_active
-                    )
-                )
-            )
+                        not UserSession.is_active,
+                    ),
+                ),
+            ),
         )
         sessions = result.scalars().all()
 
@@ -415,8 +415,7 @@ class AuthenticationService:
         return count
 
     async def create_password_reset_token(self, email: str) -> dict[str, Any]:
-        """
-        Create a password reset token for the given email.
+        """Create a password reset token for the given email.
 
         Args:
             email: User's email address
@@ -426,6 +425,7 @@ class AuthenticationService:
 
         Raises:
             NotFoundError: If user with given email doesn't exist
+
         """
         # Check if user exists
         user = await self._get_user_by_email(email)
@@ -433,7 +433,7 @@ class AuthenticationService:
             # Don't reveal if email exists or not for security
             return {
                 "message": "If an account with this email exists, a password reset link has been sent.",
-                "token": None  # Don't return actual token in production
+                "token": None,  # Don't return actual token in production
             }
 
         # Invalidate any existing unused tokens for this email
@@ -448,7 +448,7 @@ class AuthenticationService:
             email=email,
             token=reset_token,
             expires_at=expires_at,
-            is_used=False
+            is_used=False,
         )
 
         try:
@@ -460,13 +460,13 @@ class AuthenticationService:
             await email_service.send_password_reset_email(
                 email=email,
                 token=reset_token,
-                expires_at=expires_at
+                expires_at=expires_at,
             )
 
             return {
                 "message": "If an account with this email exists, a password reset link has been sent.",
                 "token": reset_token,  # Only for development, remove in production
-                "expires_at": expires_at.isoformat()
+                "expires_at": expires_at.isoformat(),
             }
 
         except IntegrityError as err:
@@ -474,8 +474,7 @@ class AuthenticationService:
             raise BadRequestError("Failed to create password reset token") from err
 
     async def reset_password(self, token: str, new_password: str) -> dict[str, Any]:
-        """
-        Reset user password using the given token.
+        """Reset user password using the given token.
 
         Args:
             token: Password reset token
@@ -487,6 +486,7 @@ class AuthenticationService:
         Raises:
             BadRequestError: If token is invalid or expired
             NotFoundError: If token doesn't exist
+
         """
         # Validate password strength
         if len(new_password) < 8:
@@ -517,13 +517,13 @@ class AuthenticationService:
         await self.db.commit()
 
         return {
-            "message": "Password has been successfully reset. Please login with your new password."
+            "message": "Password has been successfully reset. Please login with your new password.",
         }
 
     async def _get_user_by_email(self, email: str) -> User | None:
         """Get user by email."""
         result = await self.db.execute(
-            select(User).where(User.email == email)
+            select(User).where(User.email == email),
         )
         return result.scalar_one_or_none()
 
@@ -534,9 +534,9 @@ class AuthenticationService:
                 and_(
                     PasswordReset.email == email,
                     not PasswordReset.is_used,
-                    PasswordReset.expires_at > datetime.now(UTC)
-                )
-            )
+                    PasswordReset.expires_at > datetime.now(UTC),
+                ),
+            ),
         )
         tokens = result.scalars().all()
 
@@ -553,23 +553,23 @@ class AuthenticationService:
                 and_(
                     PasswordReset.token == token,
                     not PasswordReset.is_used,
-                    PasswordReset.expires_at > datetime.now(UTC)
-                )
-            )
+                    PasswordReset.expires_at > datetime.now(UTC),
+                ),
+            ),
         )
         return result.scalar_one_or_none()
 
     async def _get_user_by_username(self, username: str) -> User | None:
         """Get user by username."""
         result = await self.db.execute(
-            select(User).where(User.username == username)
+            select(User).where(User.username == username),
         )
         return result.scalar_one_or_none()
 
     async def _get_user_by_email_or_username(
         self,
         email: str | None = None,
-        username: str | None = None
+        username: str | None = None,
     ) -> User | None:
         """Get user by email or username."""
         conditions = []
@@ -582,20 +582,20 @@ class AuthenticationService:
             return None
 
         result = await self.db.execute(
-            select(User).where(or_(*conditions))
+            select(User).where(or_(*conditions)),
         )
         return result.scalar_one_or_none()
 
     async def _get_user_by_id(self, user_id: int) -> User | None:
         """Get user by ID."""
         result = await self.db.execute(
-            select(User).where(User.id == user_id)
+            select(User).where(User.id == user_id),
         )
         return result.scalar_one_or_none()
 
     async def _get_valid_session_by_refresh_token(
         self,
-        refresh_token: str
+        refresh_token: str,
     ) -> UserSession | None:
         """Get valid session by refresh token."""
         result = await self.db.execute(
@@ -603,8 +603,8 @@ class AuthenticationService:
                 and_(
                     UserSession.refresh_token == refresh_token,
                     UserSession.is_active,
-                    UserSession.expires_at > datetime.now(UTC)
-                )
-            )
+                    UserSession.expires_at > datetime.now(UTC),
+                ),
+            ),
         )
         return result.scalar_one_or_none()

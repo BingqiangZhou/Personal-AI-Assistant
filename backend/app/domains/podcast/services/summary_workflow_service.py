@@ -33,7 +33,7 @@ class SummaryWorkflowService:
             PodcastSummaryRepository
         ),
         summary_service_factory: Callable[
-            [AsyncSession], PodcastSummaryGenerationService
+            [AsyncSession], PodcastSummaryGenerationService,
         ] = PodcastSummaryGenerationService,
     ):
         self.db = db
@@ -96,7 +96,7 @@ class SummaryWorkflowService:
             .values(
                 status="summary_generating",
                 updated_at=accepted_at,
-            )
+            ),
         )
         await self.db.execute(
             update(TranscriptionTask)
@@ -104,7 +104,7 @@ class SummaryWorkflowService:
             .values(
                 summary_error_message=None,
                 updated_at=accepted_at,
-            )
+            ),
         )
         await self.db.commit()
         return {
@@ -158,7 +158,7 @@ class SummaryWorkflowService:
         """Run the pending-summary batch flow shared by Celery handlers."""
         await self._reset_stale_summary_claims()
         claimed_episode_ids = await self._claim_pending_summary_episode_ids(
-            limit=max_episodes_per_run
+            limit=max_episodes_per_run,
         )
         processed_count = 0
         failed_count = 0
@@ -233,7 +233,7 @@ class SummaryWorkflowService:
                     PodcastEpisode.status == "summary_generating",
                     PodcastEpisode.ai_summary.is_(None),
                     PodcastEpisode.updated_at < stale_before,
-                )
+                ),
             )
             .values(
                 status="summary_failed",
@@ -257,7 +257,7 @@ class SummaryWorkflowService:
                         TranscriptionTask.id.is_(None),
                         ~TranscriptionTask.status.in_(["pending", "in_progress"]),
                     ),
-                )
+                ),
             )
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
             .limit(limit)
@@ -274,7 +274,7 @@ class SummaryWorkflowService:
             .values(
                 status="summary_generating",
                 updated_at=datetime.now(UTC),
-            )
+            ),
         )
         await self.db.commit()
         return episode_ids
@@ -286,7 +286,7 @@ class SummaryWorkflowService:
             .values(
                 status="pending_summary",
                 updated_at=datetime.now(UTC),
-            )
+            ),
         )
         await self.db.commit()
 
@@ -298,7 +298,7 @@ class SummaryWorkflowService:
             .values(
                 status="summary_failed",
                 updated_at=failed_at,
-            )
+            ),
         )
         await self.db.execute(
             update(TranscriptionTask)
@@ -306,6 +306,6 @@ class SummaryWorkflowService:
             .values(
                 summary_error_message=error,
                 updated_at=failed_at,
-            )
+            ),
         )
         await self.db.commit()

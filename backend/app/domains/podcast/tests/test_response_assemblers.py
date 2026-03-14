@@ -113,7 +113,7 @@ def test_build_playback_history_list_response_uses_lightweight_items():
                 "playback_position": 45,
                 "last_played_at": now,
                 "published_at": now,
-            }
+            },
         ],
         total=1,
         page=1,
@@ -149,8 +149,8 @@ def test_build_conversation_responses_wrap_payloads():
                 "message_count": 2,
                 "created_at": now,
                 "updated_at": now,
-            }
-        ]
+            },
+        ],
     )
     history = build_conversation_history_response(
         episode_id=9,
@@ -162,7 +162,7 @@ def test_build_conversation_responses_wrap_payloads():
                 "content": "Hello",
                 "conversation_turn": 0,
                 "created_at": now.isoformat(),
-            }
+            },
         ],
     )
     send = build_conversation_send_response(
@@ -173,7 +173,7 @@ def test_build_conversation_responses_wrap_payloads():
             "conversation_turn": 1,
             "processing_time": 0.2,
             "created_at": now.isoformat(),
-        }
+        },
     )
     clear = build_conversation_clear_response(
         episode_id=9,
@@ -202,7 +202,7 @@ def test_build_stats_and_report_responses():
             "recently_played": [],
             "top_categories": [],
             "listening_streak": 5,
-        }
+        },
     )
     profile_stats = build_podcast_profile_stats_response(
         {
@@ -211,7 +211,7 @@ def test_build_stats_and_report_responses():
             "summaries_generated": 4,
             "pending_summaries": 2,
             "played_episodes": 6,
-        }
+        },
     )
     report = build_daily_report_response(
         {
@@ -231,9 +231,9 @@ def test_build_stats_and_report_responses():
                     "is_carryover": False,
                     "episode_created_at": now,
                     "episode_published_at": now,
-                }
+                },
             ],
-        }
+        },
     )
     report_dates = build_daily_report_dates_response(
         {
@@ -242,13 +242,13 @@ def test_build_stats_and_report_responses():
                     "report_date": now.date(),
                     "total_items": 1,
                     "generated_at": now,
-                }
+                },
             ],
             "total": 1,
             "page": 1,
             "size": 30,
             "pages": 1,
-        }
+        },
     )
 
     assert stats.listening_streak == 5
@@ -293,7 +293,7 @@ def test_build_summary_and_playback_responses():
             "last_updated_at": now,
             "progress_percentage": 12.5,
             "remaining_time": 240,
-        }
+        },
     )
     effective_rate = build_effective_playback_rate_response(
         {
@@ -301,7 +301,7 @@ def test_build_summary_and_playback_responses():
             "subscription_playback_rate": 1.25,
             "effective_playback_rate": 1.25,
             "source": "subscription",
-        }
+        },
     )
 
     assert summary.word_count == 3
@@ -341,7 +341,7 @@ def test_build_playback_and_queue_responses_from_projections():
             last_updated_at=now,
             progress_percentage=50.0,
             remaining_time=80,
-        )
+        ),
     )
     queue = build_queue_response(
         PodcastQueueProjection.model_validate(
@@ -362,10 +362,10 @@ def test_build_playback_and_queue_responses_from_projections():
                         "image_url": None,
                         "subscription_title": "Podcast",
                         "subscription_image_url": None,
-                    }
+                    },
                 ],
-            }
-        )
+            },
+        ),
     )
 
     assert playback.episode_id == 7
@@ -387,8 +387,8 @@ def test_build_pending_and_model_responses():
                 "provider": "openai",
                 "model_id": "gpt-test",
                 "is_default": True,
-            }
-        ]
+            },
+        ],
     )
 
     assert pending.count == 2

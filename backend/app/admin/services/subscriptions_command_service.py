@@ -93,7 +93,7 @@ class AdminSubscriptionsCommandService:
         }
 
         setting_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
         )
         setting = setting_result.scalar_one_or_none()
         if setting:
@@ -105,7 +105,7 @@ class AdminSubscriptionsCommandService:
                     value=settings_data,
                     description="RSS subscription update frequency settings",
                     category="subscription",
-                )
+                ),
             )
 
         update_stmt = (
@@ -113,9 +113,9 @@ class AdminSubscriptionsCommandService:
             .where(
                 UserSubscription.subscription_id.in_(
                     select(Subscription.id).where(
-                        Subscription.source_type.in_(["rss", "podcast-rss"])
-                    )
-                )
+                        Subscription.source_type.in_(["rss", "podcast-rss"]),
+                    ),
+                ),
             )
             .values(
                 update_frequency=settings_data["update_frequency"],
@@ -152,7 +152,7 @@ class AdminSubscriptionsCommandService:
         source_url: str | None,
     ) -> dict | None:
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id == sub_id)
+            select(Subscription).where(Subscription.id == sub_id),
         )
         subscription = result.scalar_one_or_none()
         if not subscription:
@@ -255,7 +255,7 @@ class AdminSubscriptionsCommandService:
                 }, 400
 
             logger.info(
-                "RSS feed test successful for %s by user %s", source_url, username
+                "RSS feed test successful for %s by user %s", source_url, username,
             )
             return {
                 "success": True,
@@ -276,7 +276,7 @@ class AdminSubscriptionsCommandService:
         )
 
         result = await self.db.execute(
-            select(Subscription).order_by(Subscription.created_at.desc())
+            select(Subscription).order_by(Subscription.created_at.desc()),
         )
         subscriptions = result.scalars().all()
         if not subscriptions:
@@ -372,7 +372,7 @@ class AdminSubscriptionsCommandService:
                         "title": subscription.title,
                         "source_url": subscription.source_url,
                         "error": f"Unexpected error: {result}",
-                    }
+                    },
                 )
                 if subscription.status == SubscriptionStatus.ACTIVE:
                     subscriptions_to_disable.append(subscription.id)
@@ -389,7 +389,7 @@ class AdminSubscriptionsCommandService:
                     "title": result["title"],
                     "source_url": result["source_url"],
                     "error": result["error"],
-                }
+                },
             )
             subscription = subscriptions[index]
             if subscription.status == SubscriptionStatus.ACTIVE:
@@ -399,7 +399,7 @@ class AdminSubscriptionsCommandService:
             await self.db.execute(
                 update(Subscription)
                 .where(Subscription.id.in_(subscriptions_to_disable))
-                .values(status=SubscriptionStatus.ERROR)
+                .values(status=SubscriptionStatus.ERROR),
             )
             await self.db.commit()
             disabled_count = len(subscriptions_to_disable)
@@ -435,7 +435,7 @@ class AdminSubscriptionsCommandService:
 
     async def delete_subscription(self, *, request, user, sub_id: int) -> dict | None:
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id == sub_id)
+            select(Subscription).where(Subscription.id == sub_id),
         )
         subscription = result.scalar_one_or_none()
         if not subscription:
@@ -456,7 +456,7 @@ class AdminSubscriptionsCommandService:
 
     async def refresh_subscription(self, *, request, user, sub_id: int) -> dict | None:
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id == sub_id)
+            select(Subscription).where(Subscription.id == sub_id),
         )
         subscription = result.scalar_one_or_none()
         if not subscription:
@@ -481,7 +481,7 @@ class AdminSubscriptionsCommandService:
     async def batch_refresh_subscriptions(self, *, request, user) -> None:
         ids = await self._load_request_ids(request)
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id.in_(ids))
+            select(Subscription).where(Subscription.id.in_(ids)),
         )
         subscriptions = result.scalars().all()
         for subscription in subscriptions:
@@ -501,7 +501,7 @@ class AdminSubscriptionsCommandService:
     async def batch_toggle_subscriptions(self, *, request, user) -> None:
         ids = await self._load_request_ids(request)
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id.in_(ids))
+            select(Subscription).where(Subscription.id.in_(ids)),
         )
         subscriptions = result.scalars().all()
         for subscription in subscriptions:
@@ -521,7 +521,7 @@ class AdminSubscriptionsCommandService:
     async def batch_delete_subscriptions(self, *, request, user) -> None:
         ids = await self._load_request_ids(request)
         result = await self.db.execute(
-            select(Subscription).where(Subscription.id.in_(ids))
+            select(Subscription).where(Subscription.id.in_(ids)),
         )
         subscriptions = result.scalars().all()
 
@@ -559,30 +559,30 @@ class AdminSubscriptionsCommandService:
             if subscription.source_type == "podcast-rss":
                 ep_result = await self.db.execute(
                     select(PodcastEpisode.id).where(
-                        PodcastEpisode.subscription_id == sub_id
-                    )
+                        PodcastEpisode.subscription_id == sub_id,
+                    ),
                 )
                 episode_ids = [row[0] for row in ep_result.fetchall()]
                 if episode_ids:
                     await self.db.execute(
                         delete(PodcastConversation).where(
-                            PodcastConversation.episode_id.in_(episode_ids)
-                        )
+                            PodcastConversation.episode_id.in_(episode_ids),
+                        ),
                     )
                     await self.db.execute(
                         delete(PodcastPlaybackState).where(
-                            PodcastPlaybackState.episode_id.in_(episode_ids)
-                        )
+                            PodcastPlaybackState.episode_id.in_(episode_ids),
+                        ),
                     )
                     await self.db.execute(
                         delete(TranscriptionTask).where(
-                            TranscriptionTask.episode_id.in_(episode_ids)
-                        )
+                            TranscriptionTask.episode_id.in_(episode_ids),
+                        ),
                     )
                 await self.db.execute(
                     delete(PodcastEpisode).where(
-                        PodcastEpisode.subscription_id == sub_id
-                    )
+                        PodcastEpisode.subscription_id == sub_id,
+                    ),
                 )
             await self.db.execute(delete(Subscription).where(Subscription.id == sub_id))
 

@@ -37,7 +37,7 @@ class AdminSetupAuthService:
 
     async def get_existing_admin_user(self, username: str, email: str) -> User | None:
         result = await self.db.execute(
-            select(User).where((User.username == username) | (User.email == email))
+            select(User).where((User.username == username) | (User.email == email)),
         )
         return result.scalar_one_or_none()
 

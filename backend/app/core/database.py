@@ -1,5 +1,4 @@
-"""
-Database configuration and session management.
+"""Database configuration and session management.
 
 The runtime is intentionally lazy so importing the app for tests, snapshots, or
 scripts does not require a production database URL or eagerly construct an
@@ -36,7 +35,7 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 _engine_url: str | None = None
 _worker_runtime_lock = asyncio.Lock()
 _worker_runtimes: dict[
-    str, tuple[int | None, async_sessionmaker[AsyncSession], AsyncEngine]
+    str, tuple[int | None, async_sessionmaker[AsyncSession], AsyncEngine],
 ] = {}
 
 
@@ -80,7 +79,7 @@ def _build_engine_kwargs(database_url: str) -> dict[str, Any]:
                     },
                     "timeout": settings.DATABASE_CONNECT_TIMEOUT,
                 },
-            }
+            },
         )
         return common
 
@@ -241,7 +240,7 @@ async def init_db(run_metadata_sync: bool = False) -> None:
     async with engine.begin() as conn:
         if not run_metadata_sync:
             logger.info(
-                "Database connectivity verified; schema is managed by Alembic migrations."
+                "Database connectivity verified; schema is managed by Alembic migrations.",
             )
             return
 
@@ -257,12 +256,12 @@ async def init_db(run_metadata_sync: bool = False) -> None:
                 try:
                     result = await conn.execute(
                         text(
-                            "SELECT 1 FROM information_schema.tables WHERE table_name = 'users'"
-                        )
+                            "SELECT 1 FROM information_schema.tables WHERE table_name = 'users'",
+                        ),
                     )
                     if result.first():
                         logger.info(
-                            "Database tables verified to exist (ignoring ENUM duplicate error)"
+                            "Database tables verified to exist (ignoring ENUM duplicate error)",
                         )
                     else:
                         raise ValueError("Tables do not exist after ENUM error") from exc

@@ -21,7 +21,7 @@ def _is_played(playback: Any, audio_duration: int | None) -> bool:
         playback
         and playback.current_position
         and audio_duration
-        and playback.current_position >= audio_duration * 0.9
+        and playback.current_position >= audio_duration * 0.9,
     )
 
 
@@ -79,7 +79,7 @@ def build_episode_response(
             "playback_position": playback.current_position if playback else None,
             "is_playing": playback.is_playing if playback else False,
             "playback_rate": playback.playback_rate if playback else 1.0,
-        }
+        },
     )
     return PodcastEpisodeProjection.model_validate(payload)
 

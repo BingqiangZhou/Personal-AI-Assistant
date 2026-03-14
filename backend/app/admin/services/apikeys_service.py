@@ -50,7 +50,7 @@ class AdminApiKeysService:
         result = await self.db.execute(
             query.order_by(AIModelConfig.priority.asc(), AIModelConfig.created_at.desc())
             .limit(per_page)
-            .offset(offset)
+            .offset(offset),
         )
         apikeys = result.scalars().all()
 
@@ -121,7 +121,7 @@ class AdminApiKeysService:
                 }, 400
 
             result = await self.db.execute(
-                select(AIModelConfig).where(AIModelConfig.id == key_id)
+                select(AIModelConfig).where(AIModelConfig.id == key_id),
             )
             model_config = result.scalar_one_or_none()
             if not model_config:
@@ -251,7 +251,7 @@ class AdminApiKeysService:
 
     async def toggle_apikey(self, *, request, user, key_id: int) -> dict | None:
         result = await self.db.execute(
-            select(AIModelConfig).where(AIModelConfig.id == key_id)
+            select(AIModelConfig).where(AIModelConfig.id == key_id),
         )
         model_config = result.scalar_one_or_none()
         if not model_config:
@@ -289,7 +289,7 @@ class AdminApiKeysService:
         priority: int | None,
     ) -> dict | None:
         result = await self.db.execute(
-            select(AIModelConfig).where(AIModelConfig.id == key_id)
+            select(AIModelConfig).where(AIModelConfig.id == key_id),
         )
         model_config = result.scalar_one_or_none()
         if not model_config:
@@ -352,7 +352,7 @@ class AdminApiKeysService:
 
     async def delete_apikey(self, *, request, user, key_id: int) -> dict | None:
         result = await self.db.execute(
-            select(AIModelConfig).where(AIModelConfig.id == key_id)
+            select(AIModelConfig).where(AIModelConfig.id == key_id),
         )
         model_config = result.scalar_one_or_none()
         if not model_config:
@@ -391,7 +391,7 @@ class AdminApiKeysService:
             select(AIModelConfig).order_by(
                 AIModelConfig.priority.asc(),
                 AIModelConfig.created_at.desc(),
-            )
+            ),
         )
         apikeys = result.scalars().all()
 
@@ -435,7 +435,7 @@ class AdminApiKeysService:
                         )
                     else:
                         key_data["api_key_encrypted_export"] = encrypt_data_with_password(
-                            key.api_key, export_password
+                            key.api_key, export_password,
                         )
                     key_data["api_key_encrypted_flag"] = True
                 except Exception:  # noqa: BLE001
@@ -536,7 +536,7 @@ class AdminApiKeysService:
                 missing_fields = [f for f in required_fields if not key_data.get(f)]
                 if missing_fields:
                     errors.append(
-                        f"Row {idx + 1}: Missing required fields: {', '.join(missing_fields)}"
+                        f"Row {idx + 1}: Missing required fields: {', '.join(missing_fields)}",
                     )
                     error_count += 1
                     continue
@@ -553,7 +553,7 @@ class AdminApiKeysService:
                     api_key_plaintext = key_data.get("api_key")
                     if not api_key_plaintext:
                         errors.append(
-                            f"Row {idx + 1}: Missing api_key in plaintext export"
+                            f"Row {idx + 1}: Missing api_key in plaintext export",
                         )
                         error_count += 1
                         continue
@@ -561,17 +561,17 @@ class AdminApiKeysService:
                     encrypted_dict = key_data.get("api_key_encrypted_export")
                     if not encrypted_dict:
                         errors.append(
-                            f"Row {idx + 1}: Missing api_key_encrypted_export"
+                            f"Row {idx + 1}: Missing api_key_encrypted_export",
                         )
                         error_count += 1
                         continue
                     try:
                         api_key_plaintext = decrypt_data_with_password(
-                            encrypted_dict, import_password
+                            encrypted_dict, import_password,
                         )
                     except ValueError as exc:
                         errors.append(
-                            f"Row {idx + 1}: Failed to decrypt API key: {exc}"
+                            f"Row {idx + 1}: Failed to decrypt API key: {exc}",
                         )
                         error_count += 1
                         continue
@@ -630,7 +630,7 @@ class AdminApiKeysService:
                         priority=key_data.get("priority", 1),
                         description=key_data.get("description"),
                         is_active=key_data.get("is_active", True),
-                    )
+                    ),
                 )
                 success_count += 1
             except Exception as exc:  # noqa: BLE001

@@ -23,7 +23,7 @@ def mock_service():
 
 
 def test_get_queue_returns_assembled_response(
-    client: TestClient, mock_service: AsyncMock
+    client: TestClient, mock_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_service.get_queue.return_value = PodcastQueueProjection.model_validate(
@@ -44,9 +44,9 @@ def test_get_queue_returns_assembled_response(
                     "image_url": None,
                     "subscription_title": "Podcast",
                     "subscription_image_url": None,
-                }
+                },
             ],
-        }
+        },
     )
 
     response = client.get("/api/v1/podcasts/queue")
@@ -60,7 +60,7 @@ def test_get_queue_returns_assembled_response(
 
 
 def test_add_queue_item_preserves_not_found_mapping(
-    client: TestClient, mock_service: AsyncMock
+    client: TestClient, mock_service: AsyncMock,
 ):
     mock_service.add_to_queue.side_effect = ValueError("EPISODE_NOT_FOUND")
 

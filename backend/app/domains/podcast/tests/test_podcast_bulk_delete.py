@@ -67,7 +67,7 @@ async def test_remove_subscriptions_bulk_continues_on_exception(
     service: PodcastSubscriptionService,
 ):
     service.remove_subscription = AsyncMock(
-        side_effect=[True, RuntimeError("db down"), True]
+        side_effect=[True, RuntimeError("db down"), True],
     )
 
     result = await service.remove_subscriptions_bulk([1, 2, 3])
@@ -125,10 +125,10 @@ async def test_remove_subscription_succeeds_when_redis_unavailable(
 ):
     service._validate_and_get_subscription = AsyncMock(return_value=_subscription(1))
     service.redis.invalidate_episode_list = AsyncMock(
-        side_effect=RuntimeError("redis unavailable")
+        side_effect=RuntimeError("redis unavailable"),
     )
     service.redis.invalidate_subscription_list = AsyncMock(
-        side_effect=RuntimeError("redis unavailable")
+        side_effect=RuntimeError("redis unavailable"),
     )
     delete_mock = AsyncMock(return_value=True)
 
@@ -145,10 +145,10 @@ async def test_bulk_delete_succeeds_when_redis_unavailable(
 ):
     service._validate_and_get_subscription = AsyncMock(return_value=_subscription(1))
     service.redis.invalidate_episode_list = AsyncMock(
-        side_effect=RuntimeError("redis unavailable")
+        side_effect=RuntimeError("redis unavailable"),
     )
     service.redis.invalidate_subscription_list = AsyncMock(
-        side_effect=RuntimeError("redis unavailable")
+        side_effect=RuntimeError("redis unavailable"),
     )
     delete_mock = AsyncMock(return_value=True)
 

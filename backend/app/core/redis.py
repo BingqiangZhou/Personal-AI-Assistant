@@ -1,5 +1,4 @@
-"""
-Redis Helper - Simplified for Personal Use
+"""Redis Helper - Simplified for Personal Use
 
 Uses single Redis DB for all personal-scale operations:
 - Cache: Podcast episode metadata
@@ -47,8 +46,7 @@ class RedisJSONEncoder(json.JSONEncoder):
 
 
 class PodcastRedis:
-    """
-    Simple Redis wrapper for podcast features
+    """Simple Redis wrapper for podcast features
     """
 
     _runtime_metrics: dict[str, Any] = {
@@ -336,7 +334,7 @@ class PodcastRedis:
             expire_started = perf_counter()
             await client.expire(key, ttl)
             self._record_command_timing(
-                "EXPIRE", (perf_counter() - expire_started) * 1000
+                "EXPIRE", (perf_counter() - expire_started) * 1000,
             )
         return result
 
@@ -369,7 +367,7 @@ class PodcastRedis:
         return await self.cache_get(key)
 
     async def set_ai_summary(
-        self, episode_id: int, summary: str, version: str = "v1"
+        self, episode_id: int, summary: str, version: str = "v1",
     ) -> None:
         """Cache AI summary (7 days)"""
         key = f"podcast:summary:{episode_id}:{version}"
@@ -382,7 +380,7 @@ class PodcastRedis:
         return float(progress) if progress else None
 
     async def set_user_progress(
-        self, user_id: int, episode_id: int, progress: float
+        self, user_id: int, episode_id: int, progress: float,
     ) -> None:
         """Set user progress (30 days)"""
         key = f"podcast:progress:{user_id}:{episode_id}"
@@ -446,7 +444,7 @@ class PodcastRedis:
             expire_started = perf_counter()
             await client.expire(index_key, 1800)
             self._record_command_timing(
-                "EXPIRE", (perf_counter() - expire_started) * 1000
+                "EXPIRE", (perf_counter() - expire_started) * 1000,
             )
         return cached
 
@@ -498,14 +496,14 @@ class PodcastRedis:
     # === Episode List Cache ===
 
     async def get_episode_list(
-        self, subscription_id: int, page: int, size: int
+        self, subscription_id: int, page: int, size: int,
     ) -> dict | None:
         """Get cached episode list (10 minutes TTL)"""
         key = f"podcast:episodes:{subscription_id}:{page}:{size}"
         return await self.cache_get_json(key)
 
     async def set_episode_list(
-        self, subscription_id: int, page: int, size: int, data: dict
+        self, subscription_id: int, page: int, size: int, data: dict,
     ) -> bool:
         """Cache episode list (10 minutes TTL)"""
         client = await self._get_client()
@@ -520,7 +518,7 @@ class PodcastRedis:
             expire_started = perf_counter()
             await client.expire(index_key, 1800)
             self._record_command_timing(
-                "EXPIRE", (perf_counter() - expire_started) * 1000
+                "EXPIRE", (perf_counter() - expire_started) * 1000,
             )
         return cached
 
@@ -540,14 +538,14 @@ class PodcastRedis:
     # === Search Results Cache ===
 
     def _hash_search_query(
-        self, query: str, search_in: str, page: int, size: int
+        self, query: str, search_in: str, page: int, size: int,
     ) -> str:
         """Generate hash key for search query"""
         query_str = f"{query}:{search_in}:{page}:{size}".lower()
         return hashlib.sha256(query_str.encode("utf-8")).hexdigest()
 
     async def get_search_results(
-        self, query: str, search_in: str, page: int, size: int
+        self, query: str, search_in: str, page: int, size: int,
     ) -> dict | None:
         """Get cached search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
@@ -555,7 +553,7 @@ class PodcastRedis:
         return await self.cache_get_json(key)
 
     async def set_search_results(
-        self, query: str, search_in: str, page: int, size: int, data: dict
+        self, query: str, search_in: str, page: int, size: int, data: dict,
     ) -> bool:
         """Cache search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
@@ -572,10 +570,9 @@ class PodcastRedis:
     # === Lock Operations ===
 
     async def acquire_lock(
-        self, lock_name: str, expire: int = 300, value: str = "1"
+        self, lock_name: str, expire: int = 300, value: str = "1",
     ) -> bool:
-        """
-        Acquire distributed lock
+        """Acquire distributed lock
         Returns True if lock acquired
         """
         client = await self._get_client()
@@ -697,17 +694,16 @@ class PodcastRedis:
         started = perf_counter()
         result = await client.zremrangebyscore(key, min_score, max_score)
         self._record_command_timing(
-            "ZREMRANGEBYSCORE", (perf_counter() - started) * 1000
+            "ZREMRANGEBYSCORE", (perf_counter() - started) * 1000,
         )
         return int(result or 0)
 
     # === Rate Limiting ===
 
     async def check_rate_limit(
-        self, user_id: int, action: str, limit: int, window: int
+        self, user_id: int, action: str, limit: int, window: int,
     ) -> bool:
-        """
-        Simple rate limiting using Redis
+        """Simple rate limiting using Redis
         Returns True if allowed
         """
         client = await self._get_client()

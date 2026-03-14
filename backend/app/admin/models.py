@@ -28,14 +28,15 @@ class AdminAuditLog(Base):
 
     # Indexes for efficient querying
     __table_args__ = (
-        Index('idx_user_action', 'user_id', 'action'),
-        Index('idx_resource', 'resource_type', 'resource_id'),
-        Index('idx_created_at_desc', 'created_at'),
+        Index("idx_user_action", "user_id", "action"),
+        Index("idx_resource", "resource_type", "resource_id"),
+        Index("idx_created_at_desc", "created_at"),
     )
 
 
 class SystemSettings(Base):
     """System settings model for storing configuration values."""
+
     __tablename__ = "system_settings"
 
     id = Column(Integer, primary_key=True, index=True)

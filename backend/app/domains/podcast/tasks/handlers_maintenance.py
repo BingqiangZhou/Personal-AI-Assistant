@@ -25,7 +25,7 @@ async def cleanup_old_playback_states_handler(session) -> dict:
 async def cleanup_old_transcription_temp_files_handler(session, days: int = 7) -> dict:
     """Clean stale transcription temporary files."""
     return await PodcastTaskOrchestrationService(
-        session
+        session,
     ).cleanup_old_transcription_temp_files(days=days)
 
 

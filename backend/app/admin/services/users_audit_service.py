@@ -56,7 +56,7 @@ class AdminUsersAuditService:
 
     async def get_users_context(self, *, page: int, per_page: int) -> dict:
         total_count = int(
-            (await self.db.execute(select(func.count()).select_from(User))).scalar() or 0
+            (await self.db.execute(select(func.count()).select_from(User))).scalar() or 0,
         )
         total_pages = (total_count + per_page - 1) // per_page if total_count else 0
         offset = (page - 1) * per_page
@@ -65,7 +65,7 @@ class AdminUsersAuditService:
                 select(User)
                 .order_by(User.created_at.desc())
                 .limit(per_page)
-                .offset(offset)
+                .offset(offset),
             )
         ).scalars().all()
         return {
@@ -147,7 +147,7 @@ class AdminUsersAuditService:
     ) -> dict:
         """Reset a user's password and write the admin audit log."""
         target_user, new_password = await self.reset_user_password(
-            target_user_id=target_user_id
+            target_user_id=target_user_id,
         )
         if not target_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")

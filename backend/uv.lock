@@ -1702,7 +1702,6 @@ dependencies = [
     { name = "feedparser" },
     { name = "ffmpeg-python" },
     { name = "gunicorn" },
-    { name = "httpx" },
     { name = "itsdangerous" },
     { name = "jinja2" },
     { name = "openai" },
@@ -1724,6 +1723,7 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "aiosqlite" },
+    { name = "httpx" },
     { name = "locust" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1745,7 +1745,7 @@ requires-dist = [
     { name = "feedparser", specifier = ">=6.0.12" },
     { name = "ffmpeg-python", specifier = ">=0.2.0" },
     { name = "gunicorn", specifier = ">=25.1.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "locust", marker = "extra == 'dev'", specifier = ">=2.43.3" },

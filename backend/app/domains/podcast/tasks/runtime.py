@@ -62,7 +62,7 @@ def log_task_run(
             finished_at=finished_at,
             error_message=error_message,
             metadata=metadata,
-        )
+        ),
     )
 
 

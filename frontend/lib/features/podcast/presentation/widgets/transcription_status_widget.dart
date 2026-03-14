@@ -639,7 +639,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               Text(
                 AppLocalizations.of(
                   context,
-                )!.transcription_completed_at(_formatDateTime(completedAt)),
+                )!.transcription_completed_at(TimeFormatter.formatFullDateTime(completedAt)),
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -979,16 +979,5 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   String _formatAccuracy(double? accuracy) {
     if (accuracy == null) return '--';
     return '${(accuracy * 100).toStringAsFixed(0)}%';
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    // 确保使用本地时间，而不是 UTC 时间
-    final localDate = dateTime.isUtc ? dateTime.toLocal() : dateTime;
-    final year = localDate.year;
-    final month = localDate.month.toString().padLeft(2, '0');
-    final day = localDate.day.toString().padLeft(2, '0');
-    final hour = localDate.hour.toString().padLeft(2, '0');
-    final minute = localDate.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
   }
 }

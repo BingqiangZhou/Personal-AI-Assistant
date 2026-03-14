@@ -1,5 +1,4 @@
-"""
-Transcription State Manager - Redis-based caching and locking
+"""Transcription State Manager - Redis-based caching and locking
 
 Provides fast state management for podcast transcription tasks:
 - Task locks to prevent duplicate processing
@@ -79,8 +78,7 @@ class TranscriptionStateKeys:
 
 
 class TranscriptionStateManager:
-    """
-    Redis-based state manager for transcription tasks
+    """Redis-based state manager for transcription tasks
 
     Provides:
     1. Distributed locks to prevent duplicate processing
@@ -103,25 +101,25 @@ class TranscriptionStateManager:
     # === Redis Cache Access (convenience methods) ===
 
     async def cache_get(self, key: str) -> str | None:
-        """
-        Get value from Redis cache
+        """Get value from Redis cache
 
         Args:
             key: Cache key
 
         Returns:
             Value if found, None otherwise
+
         """
         return await self.redis.cache_get(key)
 
     async def cache_set(self, key: str, value: str, ttl: int = 3600) -> None:
-        """
-        Set value in Redis cache
+        """Set value in Redis cache
 
         Args:
             key: Cache key
             value: Value to store
             ttl: Time to live in seconds (default 1 hour)
+
         """
         await self.redis.cache_set(key, value, ttl=ttl)
 
@@ -153,11 +151,11 @@ class TranscriptionStateManager:
     @staticmethod
     def _legacy_task_lock_value_key(episode_id: int) -> str:
         return TranscriptionStateKeys.LEGACY_TASK_LOCK_VALUE.format(
-            episode_id=episode_id
+            episode_id=episode_id,
         )
 
     async def _resolve_lock_owner(
-        self, episode_id: int
+        self, episode_id: int,
     ) -> tuple[int | None, str | None, str | None]:
         lock_key = self._task_lock_key(episode_id)
         lock_value = await self.redis.cache_get(lock_key)
@@ -181,8 +179,7 @@ class TranscriptionStateManager:
         task_id: int,
         expire_seconds: int = 3600,
     ) -> bool:
-        """
-        Acquire a lock for processing an episode
+        """Acquire a lock for processing an episode
 
         Args:
             episode_id: Episode to lock
@@ -191,6 +188,7 @@ class TranscriptionStateManager:
 
         Returns:
             True if lock acquired, False if already locked
+
         """
         lock_value = self._build_lock_owner_value(task_id)
         lock_name = self._task_lock_name(episode_id)
@@ -205,7 +203,7 @@ class TranscriptionStateManager:
             )
             if acquired:
                 await self.redis.sorted_set_add(
-                    self._lock_index_key(), str(episode_id), time.time()
+                    self._lock_index_key(), str(episode_id), time.time(),
                 )
                 await self.redis.delete_keys(legacy_key)
                 logger.info(
@@ -216,7 +214,7 @@ class TranscriptionStateManager:
                 return True
 
             owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
-                episode_id
+                episode_id,
             )
             if owner_task_id == task_id:
                 logger.info(
@@ -254,7 +252,7 @@ class TranscriptionStateManager:
             )
             if retry_acquired:
                 await self.redis.sorted_set_add(
-                    self._lock_index_key(), str(episode_id), time.time()
+                    self._lock_index_key(), str(episode_id), time.time(),
                 )
                 logger.info(
                     "[LOCK] Re-acquired reclaimed lock for episode %s, task %s",
@@ -282,8 +280,7 @@ class TranscriptionStateManager:
             return False
 
     async def release_task_lock(self, episode_id: int, task_id: int) -> bool:
-        """
-        Release a task lock
+        """Release a task lock
 
         Args:
             episode_id: Episode to unlock
@@ -291,12 +288,13 @@ class TranscriptionStateManager:
 
         Returns:
             True if lock was released, False otherwise
+
         """
         try:
             lock_key = self._task_lock_key(episode_id)
             legacy_key = self._legacy_task_lock_value_key(episode_id)
             owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
-                episode_id
+                episode_id,
             )
 
             if owner_task_id is not None and owner_task_id != task_id:
@@ -325,14 +323,14 @@ class TranscriptionStateManager:
             return False
 
     async def is_episode_locked(self, episode_id: int) -> int | None:
-        """
-        Check if an episode is locked and return the owning task ID
+        """Check if an episode is locked and return the owning task ID
 
         Args:
             episode_id: Episode to check
 
         Returns:
             Task ID if locked, None if not locked
+
         """
         try:
             owner_task_id, _, _ = await self._resolve_lock_owner(episode_id)
@@ -346,40 +344,40 @@ class TranscriptionStateManager:
         self,
         episode_id: int,
         task_id: int,
-        ttl_seconds: int = 300
+        ttl_seconds: int = 300,
     ) -> None:
-        """
-        Map an episode to its active task ID
+        """Map an episode to its active task ID
 
         Args:
             episode_id: Episode ID
             task_id: Active transcription task ID
             ttl_seconds: Cache TTL (default 5 minutes)
+
         """
         key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
         await self.redis.cache_set(key, str(task_id), ttl=ttl_seconds)
         logger.debug(f"Mapped episode {episode_id} to task {task_id}")
 
     async def get_episode_task(self, episode_id: int) -> int | None:
-        """
-        Get the active task ID for an episode
+        """Get the active task ID for an episode
 
         Args:
             episode_id: Episode ID
 
         Returns:
             Task ID if found, None otherwise
+
         """
         key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
         task_id_str = await self.redis.cache_get(key)
         return int(task_id_str) if task_id_str else None
 
     async def clear_episode_task(self, episode_id: int) -> None:
-        """
-        Clear the episode-to-task mapping (e.g., when task completes or lock is stale)
+        """Clear the episode-to-task mapping (e.g., when task completes or lock is stale)
 
         Args:
             episode_id: Episode ID to clear
+
         """
         key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
         await self.redis.cache_delete(key)
@@ -395,10 +393,9 @@ class TranscriptionStateManager:
         message: str,
         current_chunk: int = 0,
         total_chunks: int = 0,
-        ttl_seconds: int = 3600
+        ttl_seconds: int = 3600,
     ) -> None:
-        """
-        Cache task progress for fast polling
+        """Cache task progress for fast polling
 
         Args:
             task_id: Task ID
@@ -408,6 +405,7 @@ class TranscriptionStateManager:
             current_chunk: Current chunk being processed
             total_chunks: Total number of chunks
             ttl_seconds: Cache TTL (default 1 hour)
+
         """
         key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
 
@@ -418,7 +416,7 @@ class TranscriptionStateManager:
             "message": message,
             "current_chunk": current_chunk,
             "total_chunks": total_chunks,
-            "updated_at": datetime.now(UTC).isoformat()
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
         await self.redis.cache_set(key, json.dumps(progress_data), ttl=ttl_seconds)
@@ -442,14 +440,14 @@ class TranscriptionStateManager:
             logger.info(f"转录进度 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
 
     async def get_task_progress(self, task_id: int) -> dict[str, Any] | None:
-        """
-        Get cached task progress
+        """Get cached task progress
 
         Args:
             task_id: Task ID
 
         Returns:
             Progress data dict or None if not found
+
         """
         key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
         data = await self.redis.cache_get(key)
@@ -462,11 +460,11 @@ class TranscriptionStateManager:
         return None
 
     async def clear_task_progress(self, task_id: int) -> None:
-        """
-        Clear cached task progress
+        """Clear cached task progress
 
         Args:
             task_id: Task ID to clear
+
         """
         # Clear progress data
         progress_key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
@@ -486,36 +484,36 @@ class TranscriptionStateManager:
         task_id: int,
         status: str,
         progress: float,
-        ttl_seconds: int = 900
+        ttl_seconds: int = 900,
     ) -> None:
-        """
-        Set lightweight task status for dashboard queries
+        """Set lightweight task status for dashboard queries
 
         Args:
             task_id: Task ID
             status: Current status
             progress: Progress percentage
             ttl_seconds: Cache TTL (default 15 minutes)
+
         """
         key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
 
         status_data = {
             "status": status,
             "progress": progress,
-            "updated_at": datetime.now(UTC).isoformat()
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
         await self.redis.cache_set(key, json.dumps(status_data), ttl=ttl_seconds)
 
     async def get_task_status(self, task_id: int) -> dict[str, Any] | None:
-        """
-        Get lightweight task status
+        """Get lightweight task status
 
         Args:
             task_id: Task ID
 
         Returns:
             Status data dict or None if not found
+
         """
         key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
         data = await self.redis.cache_get(key)
@@ -530,12 +528,12 @@ class TranscriptionStateManager:
     # === Cleanup ===
 
     async def clear_task_state(self, task_id: int, episode_id: int) -> None:
-        """
-        Clear all Redis state for a completed task
+        """Clear all Redis state for a completed task
 
         Args:
             task_id: Task ID
             episode_id: Episode ID
+
         """
         try:
             # Release lock
@@ -562,15 +560,15 @@ class TranscriptionStateManager:
         self,
         task_id: int,
         episode_id: int,
-        error_message: str
+        error_message: str,
     ) -> None:
-        """
-        Mark task as failed and clear locks
+        """Mark task as failed and clear locks
 
         Args:
             task_id: Task ID
             episode_id: Episode ID
             error_message: Error message
+
         """
         # Update progress to failed state (short TTL)
         await self.set_task_progress(
@@ -578,7 +576,7 @@ class TranscriptionStateManager:
             "failed",
             0,
             error_message,
-            ttl_seconds=300  # 5 minutes
+            ttl_seconds=300,  # 5 minutes
         )
 
         # Clear locks immediately
@@ -594,11 +592,11 @@ class TranscriptionStateManager:
     # === Batch Operations ===
 
     async def get_active_tasks_count(self) -> int:
-        """
-        Get count of tasks currently in progress (from Redis)
+        """Get count of tasks currently in progress (from Redis)
 
         Returns:
             Number of active tasks
+
         """
         try:
             await self.redis.sorted_set_remove_by_score(
@@ -612,14 +610,14 @@ class TranscriptionStateManager:
             return 0
 
     async def cleanup_stale_locks(self, max_age_seconds: int = 7200) -> int:
-        """
-        Cleanup stale locks older than max_age_seconds (2 hours default)
+        """Cleanup stale locks older than max_age_seconds (2 hours default)
 
         Args:
             max_age_seconds: Maximum age of locks to keep
 
         Returns:
             Number of locks cleaned up
+
         """
         try:
             stale_episode_ids = await self.redis.sorted_set_range_by_score(
@@ -632,7 +630,7 @@ class TranscriptionStateManager:
             for episode_id_str in stale_episode_ids:
                 if not episode_id_str.isdigit():
                     await self.redis.sorted_set_remove(
-                        self._lock_index_key(), episode_id_str
+                        self._lock_index_key(), episode_id_str,
                     )
                     continue
 
@@ -641,7 +639,7 @@ class TranscriptionStateManager:
                 ttl = await self.redis.get_ttl(lock_key)
                 if ttl in (-2,) or (ttl != -1 and ttl <= max_age_seconds):
                     await self.redis.sorted_set_remove(
-                        self._lock_index_key(), episode_id_str
+                        self._lock_index_key(), episode_id_str,
                     )
                     continue
 

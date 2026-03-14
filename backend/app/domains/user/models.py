@@ -22,6 +22,7 @@ from app.core.database import Base
 
 class UserStatus(StrEnum):
     """User status."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     SUSPENDED = "suspended"
@@ -65,8 +66,8 @@ class User(Base):
             "default_playback_rate >= 0.5 AND default_playback_rate <= 3.0",
             name="ck_users_default_playback_rate_range",
         ),
-        Index('idx_email_status', 'email', 'status'),
-        Index('idx_username_status', 'username', 'status'),
+        Index("idx_email_status", "email", "status"),
+        Index("idx_username_status", "username", "status"),
     )
 
     @property
@@ -94,8 +95,8 @@ class UserSession(Base):
 
     # Indexes
     __table_args__ = (
-        Index('idx_user_active', 'user_id', 'is_active'),
-        Index('idx_user_sessions_token_expires', 'session_token', 'expires_at'),
+        Index("idx_user_active", "user_id", "is_active"),
+        Index("idx_user_sessions_token_expires", "session_token", "expires_at"),
     )
 
 
@@ -114,7 +115,7 @@ class PasswordReset(Base):
 
     # Indexes
     __table_args__ = (
-        Index('idx_email_token', 'email', 'token'),
-        Index('idx_password_reset_token_expires', 'token', 'expires_at'),
-        Index('idx_email_unused', 'email', 'is_used'),
+        Index("idx_email_token", "email", "token"),
+        Index("idx_password_reset_token_expires", "token", "expires_at"),
+        Index("idx_email_unused", "email", "is_used"),
     )

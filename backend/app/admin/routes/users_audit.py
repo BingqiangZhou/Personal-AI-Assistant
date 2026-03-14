@@ -106,7 +106,7 @@ async def toggle_user(
                 request=request,
                 user=user,
                 target_user_id=user_id,
-            )
+            ),
         )
     except HTTPException:
         raise
@@ -132,7 +132,7 @@ async def reset_user_password(
                 request=request,
                 user=user,
                 target_user_id=user_id,
-            )
+            ),
         )
     except HTTPException:
         raise

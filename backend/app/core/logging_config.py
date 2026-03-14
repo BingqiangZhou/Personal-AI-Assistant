@@ -1,5 +1,4 @@
-"""
-统一日志配置模块
+"""统一日志配置模块
 
 功能:
 1. 按日期分割的日志文件 (app-YYYY-MM-DD.log)
@@ -97,10 +96,9 @@ def setup_logging(
     log_dir: str = DEFAULT_LOG_DIR,
     retention_days: int = DEFAULT_RETENTION_DAYS,
     timezone: str = DEFAULT_TIMEZONE,
-    app_name: str = "app"
+    app_name: str = "app",
 ) -> None:
-    """
-    配置应用日志系统
+    """配置应用日志系统
 
     Args:
         log_level: 日志级别 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -108,6 +106,7 @@ def setup_logging(
         retention_days: 日志保留天数
         timezone: 时区 (如 Asia/Shanghai)
         app_name: 应用名称，用于日志文件命名
+
     """
     # 创建日志目录
     log_path = Path(log_dir)
@@ -124,7 +123,7 @@ def setup_logging(
     formatter = TimezoneFormatter(
         fmt=log_format,
         datefmt=date_format,
-        timezone_str=timezone
+        timezone_str=timezone,
     )
 
     # 清除现有的 handlers
@@ -134,8 +133,8 @@ def setup_logging(
 
     # 1. 控制台处理器 (使用彩色输出，如果可用)
     # Ensure UTF-8 encoding for console output (critical in Docker / Windows containers)
-    if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
     console_handler.setFormatter(formatter)
@@ -149,7 +148,7 @@ def setup_logging(
         when="midnight",
         interval=1,
         backupCount=retention_days,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     # 设置文件名后缀为日期
     file_handler.suffix = "%Y-%m-%d"
@@ -165,7 +164,7 @@ def setup_logging(
         when="midnight",
         interval=1,
         backupCount=retention_days,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     error_handler.suffix = "%Y-%m-%d"
     error_handler.setLevel(logging.ERROR)
@@ -188,21 +187,20 @@ def setup_logging(
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    获取命名的日志记录器
+    """获取命名的日志记录器
 
     Args:
         name: 日志记录器名称 (通常使用 __name__)
 
     Returns:
         logging.Logger: 配置好的日志记录器
+
     """
     return logging.getLogger(name)
 
 
 def get_log_files(log_dir: str = DEFAULT_LOG_DIR, app_name: str = "app") -> dict:
-    """
-    获取当前日志文件列表
+    """获取当前日志文件列表
 
     Args:
         log_dir: 日志目录
@@ -210,11 +208,12 @@ def get_log_files(log_dir: str = DEFAULT_LOG_DIR, app_name: str = "app") -> dict
 
     Returns:
         dict: 包含 normal 和 error 日志文件列表
+
     """
     log_path = Path(log_dir)
     result = {
         "normal": [],
-        "error": []
+        "error": [],
     }
 
     if log_path.exists():
@@ -232,8 +231,7 @@ def get_log_files(log_dir: str = DEFAULT_LOG_DIR, app_name: str = "app") -> dict
 
 # 从环境变量读取配置
 def setup_logging_from_env(app_name: str = "app") -> None:
-    """
-    从环境变量读取配置并设置日志
+    """从环境变量读取配置并设置日志
 
     环境变量:
         LOG_LEVEL: 日志级别 (默认: INFO)
@@ -251,7 +249,7 @@ def setup_logging_from_env(app_name: str = "app") -> None:
         log_dir=log_dir,
         retention_days=retention_days,
         timezone=timezone,
-        app_name=app_name
+        app_name=app_name,
     )
 
 

@@ -183,26 +183,25 @@ async def login(
                 csrf_token=csrf_token,
             )
             return response
-        else:
-            # Check if global 2FA is enabled but user hasn't set up 2FA
-            # 检查全局2FA是否开启但用户未设置2FA
-            if admin_2fa_enabled and not user.is_2fa_enabled:
-                # Create session first (user is authenticated)
-                response = service.build_setup_redirect(user.id)
-                logger.info(f"User {username} logged in but required to set up 2FA")
-                return response
-
-            # No 2FA required, create session directly
-            response = service.build_session_redirect(user.id, url="/super")
-
-            # Log login with 2FA status
-            if user.is_2fa_enabled and not admin_2fa_enabled:
-                logger.info(f"User {username} logged in with 2FA enabled but global 2FA is disabled")
-            elif not admin_2fa_enabled:
-                logger.info(f"User {username} logged in without 2FA (global disabled)")
-            else:
-                logger.info(f"User {username} logged in without 2FA configured")
+        # Check if global 2FA is enabled but user hasn't set up 2FA
+        # 检查全局2FA是否开启但用户未设置2FA
+        if admin_2fa_enabled and not user.is_2fa_enabled:
+            # Create session first (user is authenticated)
+            response = service.build_setup_redirect(user.id)
+            logger.info(f"User {username} logged in but required to set up 2FA")
             return response
+
+        # No 2FA required, create session directly
+        response = service.build_session_redirect(user.id, url="/super")
+
+        # Log login with 2FA status
+        if user.is_2fa_enabled and not admin_2fa_enabled:
+            logger.info(f"User {username} logged in with 2FA enabled but global 2FA is disabled")
+        elif not admin_2fa_enabled:
+            logger.info(f"User {username} logged in without 2FA (global disabled)")
+        else:
+            logger.info(f"User {username} logged in without 2FA configured")
+        return response
 
     except Exception as e:
         logger.error(f"Login error: {e}")

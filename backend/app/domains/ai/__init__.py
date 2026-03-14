@@ -5,7 +5,7 @@ from .services import AIModelConfigService, TextGenerationService
 
 
 __all__ = [
-    "ContentSanitizer",
     "AIModelConfigService",
+    "ContentSanitizer",
     "TextGenerationService",
 ]

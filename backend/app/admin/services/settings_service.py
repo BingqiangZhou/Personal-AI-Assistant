@@ -116,7 +116,7 @@ class AdminSettingsService:
                     value={"value": chunk_size_mb, "min": 5, "max": 25},
                     description="Audio chunk size in MB / 音频切块大小(MB)",
                     category="audio",
-                )
+                ),
             )
 
         threads_setting = await self._get_setting("audio.max_concurrent_threads")
@@ -133,7 +133,7 @@ class AdminSettingsService:
                     value={"value": max_concurrent_threads, "min": 1, "max": 16},
                     description="Maximum concurrent processing threads / 最大并发处理线程数",
                     category="audio",
-                )
+                ),
             )
 
         await self.db.commit()
@@ -180,7 +180,7 @@ class AdminSettingsService:
         setting = await self._get_setting("rss.frequency_settings")
         if setting and setting.value:
             default_frequency = setting.value.get(
-                "update_frequency", UpdateFrequency.HOURLY.value
+                "update_frequency", UpdateFrequency.HOURLY.value,
             )
             default_update_time = setting.value.get("update_time", "00:00")
             default_day_of_week = setting.value.get("update_day_of_week", 1)
@@ -199,7 +199,7 @@ class AdminSettingsService:
                     UserSubscription.update_day_of_week,
                 )
                 .order_by(func.count().desc())
-                .limit(1)
+                .limit(1),
             )
             row = recent_result.first()
             if row:
@@ -239,14 +239,14 @@ class AdminSettingsService:
                     value=settings_data,
                     description="RSS subscription update frequency settings",
                     category="subscription",
-                )
+                ),
             )
 
         user_subscriptions = (
             await self.db.execute(
                 select(UserSubscription)
                 .join(Subscription, Subscription.id == UserSubscription.subscription_id)
-                .where(Subscription.source_type.in_(["rss", "podcast-rss"]))
+                .where(Subscription.source_type.in_(["rss", "podcast-rss"])),
             )
         ).scalars().all()
 
@@ -397,6 +397,6 @@ class AdminSettingsService:
 
     async def _get_setting(self, key: str) -> SystemSettings | None:
         result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == key)
+            select(SystemSettings).where(SystemSettings.key == key),
         )
         return result.scalar_one_or_none()

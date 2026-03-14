@@ -1,5 +1,4 @@
-"""
-Podcast Integration Module
+"""Podcast Integration Module
 
 Platform-specific integrations for RSS parsing and security validations.
 """
@@ -20,9 +19,9 @@ from app.domains.podcast.integration.security import (
 
 __all__ = [
     "PlatformDetector",
-    "PodcastPlatform",
-    "SecureRSSParser",
-    "PodcastFeed",
-    "PodcastSecurityValidator",
     "PodcastContentValidator",
+    "PodcastFeed",
+    "PodcastPlatform",
+    "PodcastSecurityValidator",
+    "SecureRSSParser",
 ]

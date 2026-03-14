@@ -1,5 +1,4 @@
-"""
-AI Model Testing Utilities
+"""AI Model Testing Utilities
 
 Provides functions for testing AI model configurations and validating API keys.
 Extracted from services.py for better separation of concerns.
@@ -23,10 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 async def test_transcription_model(
-    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None
+    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None,
 ) -> str:
-    """
-    测试转录模型
+    """测试转录模型
     使用实际的音频文件进行测试，并与期望文本对比
     """
     from difflib import SequenceMatcher
@@ -34,7 +32,7 @@ async def test_transcription_model(
     # 获取测试资源路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
     test_resources_dir = os.path.join(
-        os.path.dirname(os.path.dirname(current_dir)), "core", "test_resources"
+        os.path.dirname(os.path.dirname(current_dir)), "core", "test_resources",
     )
 
     example_txt_path = os.path.join(test_resources_dir, "example.txt")
@@ -77,7 +75,7 @@ async def test_transcription_model(
                     api_endpoint = model.api_url
 
                 async with session.post(
-                    api_endpoint, headers=headers, data=data
+                    api_endpoint, headers=headers, data=data,
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
@@ -103,7 +101,7 @@ async def test_transcription_model(
 
                     # 计算相似度
                     similarity = SequenceMatcher(
-                        None, expected_clean, transcribed_clean
+                        None, expected_clean, transcribed_clean,
                     ).ratio()
                     similarity_percent = similarity * 100
 
@@ -121,13 +119,13 @@ async def test_transcription_model(
                     return "".join(result_parts)
 
     except aiohttp.ClientError as e:
-        return f"❌ 网络错误: {str(e)}"
+        return f"❌ 网络错误: {e!s}"
     except Exception as e:
-        return f"❌ 测试失败: {str(e)}"
+        return f"❌ 测试失败: {e!s}"
 
 
 async def test_text_generation_model(
-    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None
+    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None,
 ) -> str:
     """测试文本生成模型"""
     # 修复：如果 test_data 为 None，使用空字典
@@ -155,7 +153,7 @@ async def test_text_generation_model(
     async with (
         aiohttp.ClientSession(timeout=timeout) as session,
         session.post(
-            f"{model.api_url}/chat/completions", headers=headers, json=data
+            f"{model.api_url}/chat/completions", headers=headers, json=data,
         ) as response,
     ):
         if response.status != 200:
@@ -178,7 +176,7 @@ async def test_text_generation_model(
 
 
 async def validate_api_key(
-    api_url: str, api_key: str, model_id: str | None, model_type: ModelType
+    api_url: str, api_key: str, model_id: str | None, model_type: ModelType,
 ) -> APIKeyValidationResponse:
     """验证API密钥"""
     start_time = time.time()
@@ -213,61 +211,61 @@ async def validate_api_key(
             timeout = aiohttp.ClientTimeout(total=600)
 
             logger.info(
-                f"Validating API key against URL: {target_url} with model: {model_id}"
+                f"Validating API key against URL: {target_url} with model: {model_id}",
             )
 
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 try:
                     async with session.post(
-                        target_url, headers=headers, json=data
+                        target_url, headers=headers, json=data,
                     ) as response:
                         logger.info(f"First request status: {response.status}")
                         if response.status == 200:
                             res_json = await response.json()
-                            if "choices" in res_json and res_json["choices"]:
+                            if res_json.get("choices"):
                                 result = res_json["choices"][0]["message"]["content"]
                                 logger.info(
-                                    f"Validation successful, got result: {result}"
+                                    f"Validation successful, got result: {result}",
                                 )
                             else:
                                 result = "Connection successful but no content returned"
                                 logger.info(
-                                    "Validation successful but no content returned"
+                                    "Validation successful but no content returned",
                                 )
                         elif response.status in [401, 403, 400, 404]:
                             # 2. 失败则尝试 api-key header (Azure/MIMO style)
                             logger.info(
-                                f"Standard auth failed ({response.status}), retrying with api-key header"
+                                f"Standard auth failed ({response.status}), retrying with api-key header",
                             )
                             headers = {
                                 "api-key": api_key,
                                 "Content-Type": "application/json",
                             }
                             async with session.post(
-                                target_url, headers=headers, json=data
+                                target_url, headers=headers, json=data,
                             ) as response2:
                                 logger.info(
-                                    f"Second request status: {response2.status}"
+                                    f"Second request status: {response2.status}",
                                 )
                                 if response2.status == 200:
                                     res_json = await response2.json()
-                                    if "choices" in res_json and res_json["choices"]:
+                                    if res_json.get("choices"):
                                         result = res_json["choices"][0]["message"][
                                             "content"
                                         ]
                                         logger.info(
-                                            f"Validation successful via api-key, got result: {result}"
+                                            f"Validation successful via api-key, got result: {result}",
                                         )
                                     else:
                                         result = "Connection successful (via api-key) but no content returned"
                                         logger.info(
-                                            "Validation successful via api-key but no content returned"
+                                            "Validation successful via api-key but no content returned",
                                         )
                                 else:
                                     text = await response2.text()
                                     error_message = f"Validation failed: {response.status} (Bearer) / {response2.status} (api-key) - {text}"
                                     logger.error(
-                                        f"Validation failed with api-key: {error_message}"
+                                        f"Validation failed with api-key: {error_message}",
                                     )
                         else:
                             text = await response.text()
@@ -275,13 +273,13 @@ async def validate_api_key(
                                 f"Validation failed: {response.status} - {text}"
                             )
                             logger.error(
-                                f"Validation failed with Bearer: {error_message}"
+                                f"Validation failed with Bearer: {error_message}",
                             )
                 except aiohttp.ClientConnectionError as e:
                     # Specific connection errors (DNS, connection refused, etc.)
-                    error_message = f"Connection error: Unable to connect to {target_url}. Please check the URL and network connection. Details: {type(e).__name__}: {str(e)}"
+                    error_message = f"Connection error: Unable to connect to {target_url}. Please check the URL and network connection. Details: {type(e).__name__}: {e!s}"
                     logger.error(
-                        f"ClientConnectionError to {target_url}: {type(e).__name__}: {str(e)}",
+                        f"ClientConnectionError to {target_url}: {type(e).__name__}: {e!s}",
                         exc_info=True,
                     )
                 except aiohttp.ClientResponseError as e:
@@ -294,40 +292,40 @@ async def validate_api_key(
                 except aiohttp.ClientPayloadError as e:
                     # Payload encoding/decoding errors
                     error_message = (
-                        f"Payload error: Invalid response data. Details: {str(e)}"
+                        f"Payload error: Invalid response data. Details: {e!s}"
                     )
                     logger.error(
-                        f"ClientPayloadError to {target_url}: {str(e)}", exc_info=True
+                        f"ClientPayloadError to {target_url}: {e!s}", exc_info=True,
                     )
                 except TimeoutError:
                     # Timeout errors
                     error_message = f"Timeout error: Request to {target_url} timed out after 600 seconds"
                     logger.error(
-                        f"TimeoutError connecting to {target_url}", exc_info=True
+                        f"TimeoutError connecting to {target_url}", exc_info=True,
                     )
                 except aiohttp.ClientError as e:
                     # Other aiohttp client errors
-                    error_message = f"Client error: {type(e).__name__}: {str(e)}"
+                    error_message = f"Client error: {type(e).__name__}: {e!s}"
                     logger.error(
-                        f"ClientError to {target_url}: {type(e).__name__}: {str(e)}",
+                        f"ClientError to {target_url}: {type(e).__name__}: {e!s}",
                         exc_info=True,
                     )
                 except Exception as e:
                     # Catch-all for unexpected errors
-                    error_message = f"Unexpected error: {type(e).__name__}: {str(e)}"
+                    error_message = f"Unexpected error: {type(e).__name__}: {e!s}"
                     logger.error(
-                        f"Unexpected error to {target_url}: {type(e).__name__}: {str(e)}",
+                        f"Unexpected error to {target_url}: {type(e).__name__}: {e!s}",
                         exc_info=True,
                     )
 
     except Exception as e:
-        error_message = f"System error: {str(e)}"
-        logger.error(f"System error in validate_api_key: {str(e)}", exc_info=True)
+        error_message = f"System error: {e!s}"
+        logger.error(f"System error in validate_api_key: {e!s}", exc_info=True)
 
     response_time = (time.time() - start_time) * 1000
 
     logger.info(
-        f"Validation completed in {response_time}ms, valid: {error_message is None}"
+        f"Validation completed in {response_time}ms, valid: {error_message is None}",
     )
 
     return APIKeyValidationResponse(

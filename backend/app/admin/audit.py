@@ -24,8 +24,7 @@ async def log_admin_action(
     status: str = "success",
     error_message: str | None = None,
 ) -> AdminAuditLog:
-    """
-    Log an admin action to the audit log.
+    """Log an admin action to the audit log.
 
     Args:
         db: Database session
@@ -42,6 +41,7 @@ async def log_admin_action(
 
     Returns:
         Created audit log entry
+
     """
     try:
         # Extract IP and user agent from request if provided
@@ -72,7 +72,7 @@ async def log_admin_action(
 
         logger.info(
             f"Audit log created: user={username}, action={action}, "
-            f"resource={resource_type}:{resource_id}, status={status}"
+            f"resource={resource_type}:{resource_id}, status={status}",
         )
 
         return audit_log

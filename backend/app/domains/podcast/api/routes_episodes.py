@@ -90,7 +90,7 @@ async def get_podcast_feed(
     )
     if should_use_first_page_keyset:
         episodes, total, has_more, next_cursor_values = await service.list_feed_by_cursor(
-            size=resolved_size
+            size=resolved_size,
         )
         next_page = None
         next_cursor = (
@@ -290,7 +290,7 @@ async def generate_summary(
             )
 
         accepted = await summary_workflow.accept_episode_summary_generation(
-            episode_id
+            episode_id,
         )
 
         if not accepted["already_queued"]:

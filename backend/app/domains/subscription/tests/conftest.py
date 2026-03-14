@@ -22,7 +22,7 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 class TestBase:
     """Base class for test models."""
-    pass
+
 
 
 # Create test engine

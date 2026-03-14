@@ -29,6 +29,7 @@ router = APIRouter()
 # Additional request/response models
 class CategoryCreate(BaseModel):
     """Request model for creating a category."""
+
     name: str = Field(..., min_length=1, max_length=100)
     description: str | None = None
     color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
@@ -36,6 +37,7 @@ class CategoryCreate(BaseModel):
 
 class CategoryResponse(BaseModel):
     """Response model for category."""
+
     id: int
     name: str
     description: str | None
@@ -45,6 +47,7 @@ class CategoryResponse(BaseModel):
 
 class CategoryUpdate(BaseModel):
     """Request model for updating a category."""
+
     name: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = None
     color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
@@ -52,6 +55,7 @@ class CategoryUpdate(BaseModel):
 
 class FetchResponse(BaseModel):
     """Response model for fetch operation."""
+
     subscription_id: int
     status: str
     new_items: int | None = None
@@ -62,6 +66,7 @@ class FetchResponse(BaseModel):
 
 class BatchSubscriptionResponse(BaseModel):
     """Response model for batch subscription creation."""
+
     results: list[dict[str, Any]]
     total_requested: int
     success_count: int
@@ -75,7 +80,7 @@ async def list_subscriptions(
     pagination: PaginationParams = Depends(),
     status: str | None = Query(None, description="Filter by status"),
     source_type: str | None = Query(None, description="Filter by source type"),
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """List user's subscriptions."""
     items, total, item_counts = await service.list_subscriptions(
@@ -85,20 +90,19 @@ async def list_subscriptions(
         source_type=source_type,
     )
     return assemble_paginated_subscription_response(
-        items, total, item_counts, pagination.page, pagination.size
+        items, total, item_counts, pagination.page, pagination.size,
     )
 
 
 @router.post("/", response_model=SubscriptionResponse)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Create a new subscription.
 
     If duplicate URL or title is found, returns the existing subscription with a message.
     """
-
     # Check for duplicate before creation
 
 
@@ -114,21 +118,21 @@ async def create_subscription(
 @router.post("/batch", response_model=BatchSubscriptionResponse)
 async def create_subscriptions_batch(
     subscriptions_data: list[SubscriptionCreate],
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Batch create subscriptions."""
     results = await service.create_subscriptions_batch(subscriptions_data)
-    
+
     success_count = sum(1 for r in results if r["status"] == "success")
     skipped_count = sum(1 for r in results if r["status"] == "skipped")
     error_count = sum(1 for r in results if r["status"] == "error")
-    
+
     return BatchSubscriptionResponse(
         results=results,
         total_requested=len(subscriptions_data),
         success_count=success_count,
         skipped_count=skipped_count,
-        error_count=error_count
+        error_count=error_count,
     )
 
 
@@ -140,7 +144,7 @@ router.include_router(podcast_router)
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 async def get_subscription(
     subscription_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get subscription by ID."""
     result = await service.get_subscription(subscription_id)
@@ -154,7 +158,7 @@ async def get_subscription(
 async def update_subscription(
     subscription_id: int,
     subscription_data: SubscriptionUpdate,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Update subscription."""
     result = await service.update_subscription(subscription_id, subscription_data)
@@ -167,7 +171,7 @@ async def update_subscription(
 @router.delete("/{subscription_id}")
 async def delete_subscription(
     subscription_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Delete subscription."""
     success = await service.delete_subscription(subscription_id)
@@ -179,7 +183,7 @@ async def delete_subscription(
 @router.post("/{subscription_id}/fetch", response_model=FetchResponse)
 async def fetch_subscription_items(
     subscription_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Manually trigger subscription fetch (RSS feeds only)."""
     try:
@@ -188,12 +192,12 @@ async def fetch_subscription_items(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"Fetch failed: {e!s}") from e
 
 
 @router.post("/fetch-all", response_model=list[FetchResponse])
 async def fetch_all_subscriptions(
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Fetch all active RSS subscriptions."""
     results = await service.fetch_all_subscriptions()
@@ -207,7 +211,7 @@ async def get_subscription_items(
     pagination: PaginationParams = Depends(),
     unread_only: bool = Query(False, description="Only show unread items"),
     bookmarked_only: bool = Query(False, description="Only show bookmarked items"),
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get items from a subscription."""
     items, total = await service.get_subscription_items(
@@ -230,7 +234,7 @@ async def get_all_items(
     pagination: PaginationParams = Depends(),
     unread_only: bool = Query(False, description="Only show unread items"),
     bookmarked_only: bool = Query(False, description="Only show bookmarked items"),
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get all items from all subscriptions."""
     items, total = await service.get_all_items(
@@ -250,7 +254,7 @@ async def get_all_items(
 @router.post("/items/{item_id}/read")
 async def mark_item_as_read(
     item_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Mark an item as read."""
     result = await service.mark_item_as_read(item_id)
@@ -262,7 +266,7 @@ async def mark_item_as_read(
 @router.post("/items/{item_id}/unread")
 async def mark_item_as_unread(
     item_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Mark an item as unread."""
     result = await service.mark_item_as_unread(item_id)
@@ -274,7 +278,7 @@ async def mark_item_as_unread(
 @router.post("/items/{item_id}/bookmark")
 async def toggle_bookmark(
     item_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Toggle item bookmark status."""
     result = await service.toggle_bookmark(item_id)
@@ -286,7 +290,7 @@ async def toggle_bookmark(
 @router.delete("/items/{item_id}")
 async def delete_item(
     item_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Delete an item."""
     success = await service.delete_item(item_id)
@@ -297,7 +301,7 @@ async def delete_item(
 
 @router.get("/items/unread-count")
 async def get_unread_count(
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get total unread items count."""
     count = await service.get_unread_count()
@@ -307,7 +311,7 @@ async def get_unread_count(
 # Category endpoints
 @router.get("/categories/", response_model=list[CategoryResponse])
 async def list_categories(
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get all user's categories."""
     categories = await service.list_categories()
@@ -317,7 +321,7 @@ async def list_categories(
 @router.post("/categories/", response_model=CategoryResponse)
 async def create_category(
     category_data: CategoryCreate,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Create a new category."""
     category = await service.create_category(
@@ -332,7 +336,7 @@ async def create_category(
 async def update_category(
     category_id: int,
     category_data: CategoryUpdate,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Update category."""
     update_data = category_data.model_dump(exclude_unset=True)
@@ -345,7 +349,7 @@ async def update_category(
 @router.delete("/categories/{category_id}")
 async def delete_category(
     category_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Delete category."""
     success = await service.delete_category(category_id)
@@ -358,7 +362,7 @@ async def delete_category(
 async def add_subscription_to_category(
     subscription_id: int,
     category_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Add subscription to category."""
     success = await service.add_subscription_to_category(subscription_id, category_id)
@@ -371,7 +375,7 @@ async def add_subscription_to_category(
 async def remove_subscription_from_category(
     subscription_id: int,
     category_id: int,
-    service: SubscriptionService = Depends(get_subscription_service)
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Remove subscription from category."""
     success = await service.remove_subscription_from_category(subscription_id, category_id)

@@ -1,5 +1,4 @@
-"""
-存储清理服务 / Storage Cleanup Service
+"""存储清理服务 / Storage Cleanup Service
 
 提供存储信息查询和缓存文件清理功能
 Provides storage information query and cache file cleanup functionality
@@ -27,14 +26,14 @@ class StorageCleanupService:
         self.db = db
 
     def _get_directory_size(self, directory_path: str) -> tuple[int, int]:
-        """
-        获取目录大小和文件数量
+        """获取目录大小和文件数量
 
         Args:
             directory_path: 目录路径
 
         Returns:
             (文件数量, 总大小(字节))
+
         """
         file_count = 0
         total_size = 0
@@ -62,14 +61,14 @@ class StorageCleanupService:
         return file_count, total_size
 
     def _get_disk_usage(self, path: str) -> dict:
-        """
-        获取磁盘使用情况
+        """获取磁盘使用情况
 
         Args:
             path: 路径
 
         Returns:
             磁盘使用信息字典
+
         """
         try:
             usage = shutil.disk_usage(path)
@@ -80,7 +79,7 @@ class StorageCleanupService:
                 "total_human": self._format_bytes(usage.total),
                 "used": usage.used,
                 "used_human": self._format_bytes(usage.used),
-                "usage_percent": round((usage.used / usage.total) * 100, 2) if usage.total > 0 else 0
+                "usage_percent": round((usage.used / usage.total) * 100, 2) if usage.total > 0 else 0,
             }
         except Exception as e:
             logger.error(f"获取磁盘使用情况失败: {e}")
@@ -91,31 +90,31 @@ class StorageCleanupService:
                 "total_human": "未知",
                 "used": 0,
                 "used_human": "未知",
-                "usage_percent": 0
+                "usage_percent": 0,
             }
 
     def _format_bytes(self, bytes_size: int) -> str:
-        """
-        格式化字节大小为人类可读格式
+        """格式化字节大小为人类可读格式
 
         Args:
             bytes_size: 字节大小
 
         Returns:
             格式化后的字符串 (例如: "1.5 GB")
+
         """
-        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        for unit in ["B", "KB", "MB", "GB", "TB"]:
             if bytes_size < 1024.0:
                 return f"{bytes_size:.1f} {unit}"
             bytes_size /= 1024.0
         return f"{bytes_size:.1f} PB"
 
     async def get_storage_info(self) -> dict:
-        """
-        获取存储信息
+        """获取存储信息
 
         Returns:
             存储信息字典，包含 storage、temp 和 disk 信息
+
         """
         logger.info("📊 开始获取存储信息...")
 
@@ -136,36 +135,36 @@ class StorageCleanupService:
                 "total_size": storage_size,
                 "total_size_human": self._format_bytes(storage_size),
                 "path": storage_path,
-                "last_updated": datetime.now(UTC).isoformat()
+                "last_updated": datetime.now(UTC).isoformat(),
             },
             "temp": {
                 "file_count": temp_count,
                 "total_size": temp_size,
                 "total_size_human": self._format_bytes(temp_size),
                 "path": temp_path,
-                "last_updated": datetime.now(UTC).isoformat()
+                "last_updated": datetime.now(UTC).isoformat(),
             },
-            "disk": disk_info
+            "disk": disk_info,
         }
 
         logger.info(
             f"📊 存储信息: Storage={storage_count}文件/{self._format_bytes(storage_size)}, "
             f"Temp={temp_count}文件/{self._format_bytes(temp_size)}, "
-            f"磁盘剩余={disk_info['free_human']}"
+            f"磁盘剩余={disk_info['free_human']}",
         )
 
         return result
 
     async def get_cleanup_config(self) -> dict:
-        """
-        获取自动清理配置
+        """获取自动清理配置
 
         Returns:
             配置字典
+
         """
         try:
             stmt = select(SystemSettings).where(
-                SystemSettings.key == "auto_cache_cleanup"
+                SystemSettings.key == "auto_cache_cleanup",
             )
             result = await self.db.execute(stmt)
             setting = result.scalar_one_or_none()
@@ -174,33 +173,33 @@ class StorageCleanupService:
                 value = setting.value
                 return {
                     "enabled": value.get("enabled", False),
-                    "last_cleanup": value.get("last_cleanup")
+                    "last_cleanup": value.get("last_cleanup"),
                 }
 
             return {
                 "enabled": False,
-                "last_cleanup": None
+                "last_cleanup": None,
             }
         except Exception as e:
             logger.error(f"获取自动清理配置失败: {e}")
             return {
                 "enabled": False,
-                "last_cleanup": None
+                "last_cleanup": None,
             }
 
     async def update_cleanup_config(self, enabled: bool) -> dict:
-        """
-        更新自动清理配置
+        """更新自动清理配置
 
         Args:
             enabled: 是否启用自动清理
 
         Returns:
             更新结果
+
         """
         try:
             stmt = select(SystemSettings).where(
-                SystemSettings.key == "auto_cache_cleanup"
+                SystemSettings.key == "auto_cache_cleanup",
             )
             result = await self.db.execute(stmt)
             setting = result.scalar_one_or_none()
@@ -209,7 +208,7 @@ class StorageCleanupService:
                 # 更新现有配置
                 setting.value = {
                     "enabled": enabled,
-                    "last_cleanup": setting.value.get("last_cleanup") if setting.value else None
+                    "last_cleanup": setting.value.get("last_cleanup") if setting.value else None,
                 }
                 setting.updated_at = datetime.now(UTC).replace(tzinfo=None)
             else:
@@ -218,10 +217,10 @@ class StorageCleanupService:
                     key="auto_cache_cleanup",
                     value={
                         "enabled": enabled,
-                        "last_cleanup": None
+                        "last_cleanup": None,
                     },
                     description="自动清理缓存配置",
-                    category="storage"
+                    category="storage",
                 )
                 self.db.add(setting)
 
@@ -232,19 +231,18 @@ class StorageCleanupService:
             return {
                 "success": True,
                 "message": "配置已更新" if enabled else "自动清理已禁用",
-                "enabled": enabled
+                "enabled": enabled,
             }
         except Exception as e:
             await self.db.rollback()
             logger.error(f"更新自动清理配置失败: {e}")
             return {
                 "success": False,
-                "message": f"更新失败: {str(e)}"
+                "message": f"更新失败: {e!s}",
             }
 
     def _cleanup_directory(self, directory_path: str, keep_days: int = 1) -> dict:
-        """
-        清理指定目录中的旧文件
+        """清理指定目录中的旧文件
 
         Args:
             directory_path: 目录路径
@@ -252,6 +250,7 @@ class StorageCleanupService:
 
         Returns:
             清理结果字典
+
         """
         deleted_count = 0
         freed_space = 0
@@ -269,7 +268,7 @@ class StorageCleanupService:
                         # 获取文件修改时间
                         file_mtime = datetime.fromtimestamp(
                             os.path.getmtime(file_path),
-                            tz=UTC
+                            tz=UTC,
                         )
 
                         # 如果文件早于截止时间，删除它
@@ -281,7 +280,7 @@ class StorageCleanupService:
                             logger.debug(
                                 f"删除文件: {file_path} "
                                 f"(修改时间: {file_mtime.strftime('%Y-%m-%d %H:%M:%S')}, "
-                                f"大小: {self._format_bytes(file_size)})"
+                                f"大小: {self._format_bytes(file_size)})",
                             )
 
                     except PermissionError as e:
@@ -302,7 +301,7 @@ class StorageCleanupService:
 
             logger.info(
                 f"✅ 目录清理完成: {directory_path} - "
-                f"删除 {deleted_count} 个文件, 释放 {self._format_bytes(freed_space)}"
+                f"删除 {deleted_count} 个文件, 释放 {self._format_bytes(freed_space)}",
             )
 
         except Exception as e:
@@ -311,18 +310,18 @@ class StorageCleanupService:
         return {
             "deleted_count": deleted_count,
             "freed_space": freed_space,
-            "freed_space_human": self._format_bytes(freed_space)
+            "freed_space_human": self._format_bytes(freed_space),
         }
 
     async def execute_cleanup(self, keep_days: int = 1) -> dict:
-        """
-        执行清理操作
+        """执行清理操作
 
         Args:
             keep_days: 保留天数（默认1天，即仅保留今天）
 
         Returns:
             清理结果字典
+
         """
         logger.info("=" * 70)
         logger.info("🧹 开始清理缓存文件...")
@@ -359,15 +358,15 @@ class StorageCleanupService:
             "total": {
                 "deleted_count": total_deleted,
                 "freed_space": total_freed,
-                "freed_space_human": self._format_bytes(total_freed)
-            }
+                "freed_space_human": self._format_bytes(total_freed),
+            },
         }
 
     async def _update_last_cleanup_time(self):
         """更新最后清理时间"""
         try:
             stmt = select(SystemSettings).where(
-                SystemSettings.key == "auto_cache_cleanup"
+                SystemSettings.key == "auto_cache_cleanup",
             )
             result = await self.db.execute(stmt)
             setting = result.scalar_one_or_none()
@@ -383,10 +382,10 @@ class StorageCleanupService:
                     key="auto_cache_cleanup",
                     value={
                         "enabled": False,
-                        "last_cleanup": current_time
+                        "last_cleanup": current_time,
                     },
                     description="自动清理缓存配置",
-                    category="storage"
+                    category="storage",
                 )
                 self.db.add(setting)
 

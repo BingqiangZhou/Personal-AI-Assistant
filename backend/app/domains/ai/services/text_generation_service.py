@@ -39,11 +39,11 @@ class TextGenerationService:
         from app.domains.ai.models import ModelType
 
         model_configs = await self.repo.get_active_models_by_priority(
-            ModelType.TEXT_GENERATION
+            ModelType.TEXT_GENERATION,
         )
         if not model_configs:
             logger.warning(
-                "No active text generation models configured, using rule-based summary"
+                "No active text generation models configured, using rule-based summary",
             )
             return self._rule_based_summary(episode_title, content)
 
@@ -75,10 +75,10 @@ class TextGenerationService:
 
                 client = AsyncOpenAI(
                     api_key=api_key,
-                    base_url=model_config.api_url if model_config.api_url else None,
+                    base_url=model_config.api_url or None,
                 )
                 api_params = {
-                    "model": model_config.model_id if model_config.model_id else "gpt-4o-mini",
+                    "model": model_config.model_id or "gpt-4o-mini",
                     "messages": [
                         {"role": "system", "content": self._system_prompt()},
                         {

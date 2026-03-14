@@ -25,36 +25,40 @@ router = APIRouter()
 
 class LoginRequest(BaseModel):
     """Login request schema."""
+
     username: str | None = Field(None, description="Username for login (alternative to email_or_username)")
     email_or_username: str | None = Field(None, description="Email or username for login (alternative to username)")
     password: str
     remember_me: bool = False
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def validate_identifier(cls, data):
         """Ensure either username or email_or_username is provided."""
         if (
             isinstance(data, dict)
-            and not data.get('username')
-            and not data.get('email_or_username')
+            and not data.get("username")
+            and not data.get("email_or_username")
         ):
-            raise ValueError('Either username or email_or_username must be provided')
+            raise ValueError("Either username or email_or_username must be provided")
         return data
 
 
 class RefreshTokenRequest(BaseModel):
     """Refresh token request schema."""
+
     refresh_token: str
 
 
 class LogoutRequest(BaseModel):
     """Logout request schema."""
+
     refresh_token: str | None = None
 
 
 class RegisterRequest(BaseModel):
     """Register request schema."""
+
     email: str
     password: str
     username: str | None = None
@@ -72,14 +76,14 @@ async def register(
         # Extract device info from request
         device_info = {
             "user_agent": request.headers.get("user-agent"),
-            "ip_address": request.client.host
+            "ip_address": request.client.host,
         }
 
         # Create user
         user = await auth_service.register_user(
             email=register_data.email,
             password=register_data.password,
-            username=register_data.username
+            username=register_data.username,
         )
 
         # Create session with tokens (like login)
@@ -88,14 +92,14 @@ async def register(
             device_info=device_info,
             ip_address=request.client.host,
             user_agent=request.headers.get("user-agent"),
-            remember_me=register_data.remember_me
+            remember_me=register_data.remember_me,
         )
 
         return Token(
             access_token=token_data["access_token"],
             refresh_token=token_data["refresh_token"],
             token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"]
+            expires_in=token_data["expires_in"],
         )
 
     except BaseCustomError:
@@ -103,7 +107,7 @@ async def register(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
+            detail=f"Registration failed: {e!s}",
         ) from e
 
 
@@ -121,7 +125,7 @@ async def login(
         # Authenticate user
         user = await auth_service.authenticate_user(
             email_or_username=identifier,
-            password=login_data.password
+            password=login_data.password,
         )
 
         if not user:
@@ -131,7 +135,7 @@ async def login(
         device_info = {
             "user_agent": request.headers.get("user-agent"),
             "ip_address": request.client.host,
-            "device_type": "web"  # Could be enhanced with device detection
+            "device_type": "web",  # Could be enhanced with device detection
         }
 
         # Create session with tokens
@@ -140,14 +144,14 @@ async def login(
             device_info=device_info,
             ip_address=request.client.host,
             user_agent=request.headers.get("user-agent"),
-            remember_me=login_data.remember_me
+            remember_me=login_data.remember_me,
         )
 
         return Token(
             access_token=token_data["access_token"],
             refresh_token=token_data["refresh_token"],
             token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"]
+            expires_in=token_data["expires_in"],
         )
 
     except BaseCustomError:
@@ -155,7 +159,7 @@ async def login(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Login failed: {str(e)}"
+            detail=f"Login failed: {e!s}",
         ) from e
 
 
@@ -167,7 +171,7 @@ async def refresh_token(
     """Refresh access token using refresh token with sliding session."""
     try:
         token_data = await auth_service.refresh_access_token(
-            refresh_token=refresh_data.refresh_token
+            refresh_token=refresh_data.refresh_token,
         )
 
         # Return new refresh token for sliding session
@@ -175,7 +179,7 @@ async def refresh_token(
             access_token=token_data["access_token"],
             refresh_token=token_data["refresh_token"],  # Return NEW refresh token
             token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"]
+            expires_in=token_data["expires_in"],
         )
 
     except BaseCustomError:
@@ -183,7 +187,7 @@ async def refresh_token(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token refresh failed: {str(e)}"
+            detail=f"Token refresh failed: {e!s}",
         ) from e
 
 
@@ -209,13 +213,13 @@ async def logout(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {str(e)}"
+            detail=f"Logout failed: {e!s}",
         ) from e
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    current_user: Any = Depends(get_current_user)
+    current_user: Any = Depends(get_current_user),
 ) -> Any:
     """Get current user information."""
     return UserResponse(
@@ -227,7 +231,7 @@ async def get_current_user_info(
         is_verified=current_user.is_verified,
         avatar_url=current_user.avatar_url,
         account_name=current_user.account_name,
-        created_at=current_user.created_at
+        created_at=current_user.created_at,
     )
 
 
@@ -243,7 +247,7 @@ async def logout_all(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {str(e)}"
+            detail=f"Logout failed: {e!s}",
         ) from e
 
 
@@ -256,13 +260,13 @@ async def forgot_password(
     try:
         # Create password reset token
         result = await auth_service.create_password_reset_token(
-            email=request_data.email
+            email=request_data.email,
         )
 
         return PasswordResetResponse(
             message=result["message"],
             token=result.get("token"),  # Will be None in production
-            expires_at=result.get("expires_at")
+            expires_at=result.get("expires_at"),
         )
 
     except BaseCustomError:
@@ -270,7 +274,7 @@ async def forgot_password(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process password reset request: {str(e)}"
+            detail=f"Failed to process password reset request: {e!s}",
         ) from e
 
 
@@ -284,11 +288,11 @@ async def reset_password(
         # Reset password
         result = await auth_service.reset_password(
             token=request_data.token,
-            new_password=request_data.new_password
+            new_password=request_data.new_password,
         )
 
         return PasswordResetResponse(
-            message=result["message"]
+            message=result["message"],
         )
 
     except BaseCustomError:
@@ -296,5 +300,5 @@ async def reset_password(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset password: {str(e)}"
+            detail=f"Failed to reset password: {e!s}",
         ) from e

@@ -26,9 +26,9 @@ __all__ = [
     "PodcastStatsService",
     "PodcastSubscriptionService",
     "PodcastSummaryGenerationService",
+    "PodcastSyncService",
     "PodcastTranscriptionRuntimeService",
     "PodcastTranscriptionScheduleService",
     "SummaryWorkflowService",
-    "PodcastSyncService",
     "TranscriptionWorkflowService",
 ]

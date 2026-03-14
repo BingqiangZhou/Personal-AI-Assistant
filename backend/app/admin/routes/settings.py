@@ -66,7 +66,7 @@ async def update_audio_settings(
                 user=user,
                 chunk_size_mb=chunk_size_mb,
                 max_concurrent_threads=max_concurrent_threads,
-            )
+            ),
         )
     except HTTPException:
         raise
@@ -107,7 +107,7 @@ async def update_frequency_settings(
                 update_frequency=update_frequency,
                 update_time=update_time,
                 update_day=update_day,
-            )
+            ),
         )
     except HTTPException:
         raise
@@ -143,7 +143,7 @@ async def update_security_settings(
                 request=request,
                 user=user,
                 admin_2fa_enabled=admin_2fa_enabled,
-            )
+            ),
         )
     except HTTPException:
         raise
@@ -192,7 +192,7 @@ async def update_cleanup_config(
                 request=request,
                 user=user,
                 enabled=enabled,
-            )
+            ),
         )
     except HTTPException:
         raise
@@ -215,7 +215,7 @@ async def execute_cleanup(
                 request=request,
                 user=user,
                 keep_days=keep_days,
-            )
+            ),
         )
     except HTTPException:
         raise

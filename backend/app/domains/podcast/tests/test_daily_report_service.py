@@ -36,7 +36,7 @@ class _FakeTaskOrchestrationService:
 
     def enqueue_episode_processing(self, *, episode_id: int, user_id: int):
         self.episode_processing_calls.append(
-            {"episode_id": episode_id, "user_id": user_id}
+            {"episode_id": episode_id, "user_id": user_id},
         )
 
 
@@ -121,7 +121,7 @@ async def test_generate_daily_report_triggers_async_processing_for_unsummarized(
     service._get_or_create_report = AsyncMock(return_value=report)
     service._list_window_summarized_episodes = AsyncMock(return_value=[])
     service._list_window_unsummarized_episodes = AsyncMock(
-        return_value=[unsummarized_episode]
+        return_value=[unsummarized_episode],
     )
     service._trigger_episode_processing = AsyncMock()
     service._append_item_if_needed = AsyncMock(return_value=0)
@@ -148,7 +148,7 @@ async def test_trigger_episode_processing_uses_task_orchestration_service():
     await service._trigger_episode_processing(episode_id=123)
 
     assert fake_task_service.episode_processing_calls == [
-        {"episode_id": 123, "user_id": 7}
+        {"episode_id": 123, "user_id": 7},
     ]
 
 
@@ -161,7 +161,7 @@ async def test_generate_daily_report_marks_items_as_non_carryover():
 
     service._get_or_create_report = AsyncMock(return_value=report)
     service._list_window_summarized_episodes = AsyncMock(
-        return_value=[same_day_episode]
+        return_value=[same_day_episode],
     )
     service._list_window_unsummarized_episodes = AsyncMock(return_value=[])
     service._trigger_episode_processing = AsyncMock()
@@ -239,7 +239,7 @@ async def test_append_item_if_needed_does_not_duplicate_episode():
         side_effect=[
             _ScalarOneOrNoneResult(None),
             _ScalarOneOrNoneResult(1),
-        ]
+        ],
     )
     service = DailyReportService(db=db, user_id=1)
     now = datetime.now(UTC)

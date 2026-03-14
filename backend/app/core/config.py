@@ -62,8 +62,7 @@ class SecretKeyManager:
 
 
 def get_or_generate_secret_key() -> str:
-    """
-    Get the SECRET_KEY for the application
+    """Get the SECRET_KEY for the application
 
     This function will:
     1. Load existing SECRET_KEY from file
@@ -213,7 +212,7 @@ class Settings(BaseSettings):
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        if isinstance(v, (list, str)):
             return v
         raise ValueError(v)
 
@@ -239,7 +238,7 @@ class Settings(BaseSettings):
     def validate_transcription_backlog_schedule_minute(cls, v: int) -> int:
         if v < 0 or v > 59:
             raise ValueError(
-                "TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE must be between 0 and 59"
+                "TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE must be between 0 and 59",
             )
         return v
 
@@ -270,7 +269,7 @@ class Settings(BaseSettings):
             return self.DATABASE_URL
         raise RuntimeError(
             "DATABASE_URL is not configured. Set backend/.env or environment variables "
-            "before starting the application."
+            "before starting the application.",
         )
 
     def get_secret_key(self) -> str:

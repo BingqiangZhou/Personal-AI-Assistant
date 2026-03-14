@@ -1,5 +1,4 @@
-"""
-播客对话交互服务
+"""播客对话交互服务
 支持基于AI摘要的上下文保持对话
 """
 
@@ -71,7 +70,7 @@ class ConversationService:
                 and_(
                     ConversationSession.episode_id == episode_id,
                     ConversationSession.user_id == user_id,
-                )
+                ),
             )
             .order_by(ConversationSession.created_at.desc())
         )
@@ -104,7 +103,7 @@ class ConversationService:
                 and_(
                     ConversationSession.episode_id == episode_id,
                     ConversationSession.user_id == user_id,
-                )
+                ),
             )
         )
         count_result = await self.db.execute(count_stmt)
@@ -139,7 +138,7 @@ class ConversationService:
             and_(
                 ConversationSession.id == session_id,
                 ConversationSession.user_id == user_id,
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         session = result.scalar_one_or_none()
@@ -148,7 +147,7 @@ class ConversationService:
 
         # Count messages before deleting
         msg_count_stmt = select(func.count(PodcastConversation.id)).where(
-            PodcastConversation.session_id == session_id
+            PodcastConversation.session_id == session_id,
         )
         msg_count_result = await self.db.execute(msg_count_stmt)
         deleted_count = msg_count_result.scalar() or 0
@@ -171,7 +170,7 @@ class ConversationService:
                 and_(
                     ConversationSession.episode_id == episode_id,
                     ConversationSession.user_id == user_id,
-                )
+                ),
             )
             .order_by(ConversationSession.created_at.desc())
             .limit(1)
@@ -199,7 +198,7 @@ class ConversationService:
         episode_id: int,
         user_id: int,
         session_id: int | None = None,
-        limit: int = 50
+        limit: int = 50,
     ) -> list[dict[str, Any]]:
         """获取对话历史（按 session 过滤）"""
         conditions = [
@@ -224,7 +223,7 @@ class ConversationService:
                 "role": conv.role,
                 "content": conv.content,
                 "conversation_turn": conv.conversation_turn,
-                "created_at": conv.created_at.isoformat()
+                "created_at": conv.created_at.isoformat(),
             }
             for conv in conversations
         ]
@@ -252,7 +251,7 @@ class ConversationService:
         # Ensure session exists
         if session_id is None:
             session_id = await self.get_or_create_default_session(episode_id, user_id)
-        
+
         # 获取对话历史（按 session 过滤）
         conversation_history = await self.get_conversation_history(episode_id, user_id, session_id=session_id)
 
@@ -267,7 +266,7 @@ class ConversationService:
             role="user",
             content=user_message,
             conversation_turn=current_turn,
-            created_at=datetime.now(UTC)
+            created_at=datetime.now(UTC),
         )
         self.db.add(user_conv)
         await self.db.flush()  # 获取ID
@@ -290,7 +289,7 @@ class ConversationService:
             parent_message_id=user_conv.id,
             conversation_turn=current_turn + 1,
             processing_time=processing_time,
-            created_at=datetime.now(UTC)
+            created_at=datetime.now(UTC),
         )
         self.db.add(assistant_conv)
 
@@ -305,14 +304,14 @@ class ConversationService:
             "content": assistant_conv.content,
             "conversation_turn": assistant_conv.conversation_turn,
             "processing_time": processing_time,
-            "created_at": assistant_conv.created_at.isoformat()
+            "created_at": assistant_conv.created_at.isoformat(),
         }
 
     def _build_conversation_context(
         self,
         episode: PodcastEpisode,
         conversation_history: list[dict[str, Any]],
-        user_message: str
+        user_message: str,
     ) -> list[dict[str, str]]:
         """构建对话上下文"""
         messages = []
@@ -342,13 +341,13 @@ class ConversationService:
         for conv in conversation_history:
             messages.append({
                 "role": conv["role"],
-                "content": conv["content"]
+                "content": conv["content"],
             })
 
         # 添加当前用户消息
         messages.append({
             "role": "user",
-            "content": user_message
+            "content": user_message,
         })
 
         return messages
@@ -356,10 +355,9 @@ class ConversationService:
     async def _call_ai_api(
         self,
         messages: list[dict[str, str]],
-        model_name: str | None = None
+        model_name: str | None = None,
     ) -> str:
-        """
-        调用AI API进行对话
+        """调用AI API进行对话
         按优先级获取模型配置，实现fallback机制
         """
         # 获取活跃的文本生成模型
@@ -400,10 +398,10 @@ class ConversationService:
 
                 # 构建请求数据
                 data = {
-                    'model': model.model_id,
-                    'messages': messages,
-                    'max_tokens': model.max_tokens or 1500,
-                    'temperature': model.get_temperature_float() or 0.7
+                    "model": model.model_id,
+                    "messages": messages,
+                    "max_tokens": model.max_tokens or 1500,
+                    "temperature": model.get_temperature_float() or 0.7,
                 }
 
                 # 添加额外配置
@@ -413,8 +411,8 @@ class ConversationService:
                 timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
 
                 headers = {
-                    'Authorization': f'Bearer {api_key}',
-                    'Content-Type': 'application/json'
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
                 }
 
                 max_retries = 3
@@ -445,7 +443,7 @@ class ConversationService:
 
                             result = await response.json()
 
-                            if 'choices' not in result or not result['choices']:
+                            if "choices" not in result or not result["choices"]:
                                 last_error = "Invalid response from AI API"
                                 logger.error(
                                     "Conversation API invalid payload model=%s provider=%s priority=%s error=%s",
@@ -456,7 +454,7 @@ class ConversationService:
                                 )
                                 break
 
-                            content = result['choices'][0]['message']['content']
+                            content = result["choices"][0]["message"]["content"]
 
                             # Filter out <thinking> tags and content
                             # 过滤掉 <thinking> 标签及其内容
@@ -545,15 +543,15 @@ class ConversationService:
         """获取API密钥"""
         # 如果未加密，直接返回
         if not model_config.api_key_encrypted:
-            return model_config.api_key if model_config.api_key else ""
+            return model_config.api_key or ""
 
         # 对于系统预设模型，从环境变量获取
         if model_config.is_system:
             from app.core.config import settings
             if model_config.provider == "openai":
-                return getattr(settings, 'OPENAI_API_KEY', '')
-            elif model_config.provider == "siliconflow":
-                return getattr(settings, 'TRANSCRIPTION_API_KEY', '')
+                return getattr(settings, "OPENAI_API_KEY", "")
+            if model_config.provider == "siliconflow":
+                return getattr(settings, "TRANSCRIPTION_API_KEY", "")
 
         # 对于用户自定义模型，使用Fernet解密
         from app.core.security import decrypt_data

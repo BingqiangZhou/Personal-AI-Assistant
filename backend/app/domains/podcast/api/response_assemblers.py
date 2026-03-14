@@ -237,7 +237,7 @@ def build_summary_response(
 ) -> PodcastSummaryResponse:
     """Build the episode summary response."""
     summary_text = summary_result.get("summary") or summary_result.get(
-        "summary_content", ""
+        "summary_content", "",
     )
     model_used = summary_result.get("model_used") or summary_result.get("model_name")
     return PodcastSummaryResponse(
@@ -337,7 +337,7 @@ def build_transcription_schedule_response(
 ) -> PodcastTranscriptionScheduleResponse:
     """Build the episode transcription scheduling response."""
     return PodcastTranscriptionScheduleResponse(
-        **episode_transcription_schedule_projection_to_payload(payload)
+        **episode_transcription_schedule_projection_to_payload(payload),
     )
 
 
@@ -360,7 +360,7 @@ def build_transcription_schedule_status_response(
 ) -> PodcastTranscriptionScheduleStatusResponse:
     """Build the transcription schedule-status response."""
     return PodcastTranscriptionScheduleStatusResponse(
-        **transcription_schedule_status_projection_to_payload(payload)
+        **transcription_schedule_status_projection_to_payload(payload),
     )
 
 

@@ -7,6 +7,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/time_formatter.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
@@ -14,6 +15,7 @@ import '../../../../shared/widgets/loading_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_daily_report_model.dart';
 import '../providers/podcast_providers.dart';
+import '../widgets/shared/episode_card_utils.dart';
 
 class PodcastDailyReportPage extends ConsumerStatefulWidget {
   const PodcastDailyReportPage({super.key, this.initialDate, this.source});
@@ -210,7 +212,7 @@ class _PodcastDailyReportPageState
     if (reportAsync.isLoading && report == null) {
       return _buildBarePanelState(
         context,
-        title: _formatDate(headerDate),
+        title: EpisodeCardUtils.formatDate(headerDate),
         subtitle: l10n.podcast_daily_report_loading,
         child: LoadingStatusContent(
           key: const Key('daily_report_loading_content'),
@@ -225,7 +227,7 @@ class _PodcastDailyReportPageState
     if (reportAsync.hasError && report == null) {
       return _buildPanelScaffold(
         context,
-        title: _formatDate(headerDate),
+        title: EpisodeCardUtils.formatDate(headerDate),
         subtitle: l10n.podcast_failed_to_load_feed,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +261,7 @@ class _PodcastDailyReportPageState
       final targetDate = currentReport?.reportDate ?? headerDate;
       return _buildPanelScaffold(
         context,
-        title: _formatDate(targetDate),
+        title: EpisodeCardUtils.formatDate(targetDate),
         subtitle: l10n.podcast_daily_report_empty,
         child: Container(
           decoration: BoxDecoration(
@@ -291,9 +293,9 @@ class _PodcastDailyReportPageState
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
             child: AppSectionHeader(
-              title: _formatDate(currentReport.reportDate ?? headerDate),
+              title: EpisodeCardUtils.formatDate(currentReport.reportDate ?? headerDate),
               subtitle:
-                  '${l10n.podcast_daily_report_items(currentReport.totalItems)} | ${l10n.podcast_daily_report_generated_prefix} ${_formatTime(currentReport.generatedAt)}',
+                  '${l10n.podcast_daily_report_items(currentReport.totalItems)} | ${l10n.podcast_daily_report_generated_prefix} ${currentReport.generatedAt != null ? TimeFormatter.formatTime(currentReport.generatedAt!) : '--:--'}',
               trailing: _buildRegenerateButton(
                 currentReport.reportDate ?? headerDate,
               ),
@@ -555,7 +557,7 @@ class _PodcastDailyReportPageState
     final selectedDate = panelRef.watch(selectedDailyReportDateProvider);
     final reportDateKeys = <String>{
       for (final item in reportDatesAsync.value?.dates ?? const [])
-        _formatDate(item.reportDate),
+        EpisodeCardUtils.formatDate(item.reportDate),
     };
     final now = _toDateOnly(DateTime.now());
     final displayFocusedDay = _focusedCalendarDay.isAfter(now)
@@ -620,7 +622,7 @@ class _PodcastDailyReportPageState
               return !normalizedDay.isAfter(now);
             },
             eventLoader: (day) {
-              final hasReport = reportDateKeys.contains(_formatDate(day));
+              final hasReport = reportDateKeys.contains(EpisodeCardUtils.formatDate(day));
               return hasReport ? const [true] : const [];
             },
             onDaySelected: (pickedDay, focusedDay) {
@@ -682,7 +684,7 @@ class _PodcastDailyReportPageState
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.primary;
                 return Positioned(
-                  key: Key('daily_report_calendar_marker_${_formatDate(day)}'),
+                  key: Key('daily_report_calendar_marker_${EpisodeCardUtils.formatDate(day)}'),
                   bottom: 5,
                   child: Container(
                     width: 6,
@@ -768,7 +770,7 @@ class _PodcastDailyReportPageState
     return Center(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        key: Key('daily_report_calendar_day_${_formatDate(normalizedDay)}'),
+        key: Key('daily_report_calendar_day_${EpisodeCardUtils.formatDate(normalizedDay)}'),
         width: 38,
         height: 38,
         alignment: Alignment.center,
@@ -913,17 +915,4 @@ class _PodcastDailyReportPageState
     }
     return normalized.replaceAll(_summaryTrailingDividerRegExp, '').trim();
   }
-}
-
-String _formatDate(DateTime date) {
-  final localDate = date.isUtc ? date.toLocal() : date;
-  return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
-}
-
-String _formatTime(DateTime? dateTime) {
-  if (dateTime == null) {
-    return '--:--';
-  }
-  final local = dateTime.isUtc ? dateTime.toLocal() : dateTime;
-  return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }

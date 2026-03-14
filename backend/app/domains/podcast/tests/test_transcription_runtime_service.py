@@ -25,7 +25,7 @@ class _FakeTaskOrchestrationService:
 
     def enqueue_audio_transcription(self, *, task_id: int, config_db_id: int | None):
         self.audio_transcription_calls.append(
-            {"task_id": task_id, "config_db_id": config_db_id}
+            {"task_id": task_id, "config_db_id": config_db_id},
         )
 
 
@@ -60,7 +60,7 @@ async def test_start_transcription_dispatches_via_task_orchestration_service():
 
     assert result == {"task": created_task, "action": "created"}
     assert fake_task_service.audio_transcription_calls == [
-        {"task_id": 55, "config_db_id": 11}
+        {"task_id": 55, "config_db_id": 11},
     ]
 
 
@@ -100,6 +100,6 @@ async def test_start_transcription_concurrent_calls_reuse_pending_task():
 
     assert sorted(result["action"] for result in results) == ["created", "reused_pending"]
     assert fake_task_service.audio_transcription_calls == [
-        {"task_id": 91, "config_db_id": 17}
+        {"task_id": 91, "config_db_id": 17},
     ]
     assert state_manager.episode_tasks == [(12, 91)]

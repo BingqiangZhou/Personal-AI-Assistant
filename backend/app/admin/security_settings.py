@@ -13,18 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 async def get_admin_2fa_enabled(db: AsyncSession) -> tuple[bool, str]:
-    """
-    Get admin 2FA enabled status with priority: database > environment variable.
+    """Get admin 2FA enabled status with priority: database > environment variable.
 
     Args:
         db: Database session
 
     Returns:
         Tuple of (is_enabled, source) where source is "database" or "env"
+
     """
     # First, try to get from database
     result = await db.execute(
-        select(SystemSettings).where(SystemSettings.key == "admin.2fa_enabled")
+        select(SystemSettings).where(SystemSettings.key == "admin.2fa_enabled"),
     )
     setting = result.scalar_one_or_none()
 
@@ -41,8 +41,7 @@ async def get_admin_2fa_enabled(db: AsyncSession) -> tuple[bool, str]:
 
 
 async def set_admin_2fa_enabled(db: AsyncSession, enabled: bool) -> SystemSettings:
-    """
-    Set admin 2FA enabled status in database.
+    """Set admin 2FA enabled status in database.
 
     Args:
         db: Database session
@@ -50,10 +49,11 @@ async def set_admin_2fa_enabled(db: AsyncSession, enabled: bool) -> SystemSettin
 
     Returns:
         The created or updated SystemSettings record
+
     """
     # Check if setting already exists
     result = await db.execute(
-        select(SystemSettings).where(SystemSettings.key == "admin.2fa_enabled")
+        select(SystemSettings).where(SystemSettings.key == "admin.2fa_enabled"),
     )
     setting = result.scalar_one_or_none()
 
@@ -67,7 +67,7 @@ async def set_admin_2fa_enabled(db: AsyncSession, enabled: bool) -> SystemSettin
             key="admin.2fa_enabled",
             value={"value": enabled},
             description="Admin panel 2FA toggle / 后台管理2FA开关",
-            category="security"
+            category="security",
         )
         db.add(setting)
         logger.info(f"Created admin 2FA setting in database: {enabled}")

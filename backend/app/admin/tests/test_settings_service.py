@@ -133,7 +133,7 @@ async def test_save_audio_settings_validates_persists_and_audits(monkeypatch: py
 async def test_save_frequency_settings_returns_compatible_success_message(monkeypatch: pytest.MonkeyPatch):
     service = AdminSettingsService(db=AsyncMock())
     service.update_frequency_settings = AsyncMock(
-        return_value=({"update_frequency": "DAILY"}, 5)
+        return_value=({"update_frequency": "DAILY"}, 5),
     )
     audit_mock = AsyncMock()
     monkeypatch.setattr(settings_service_module, "log_admin_action", audit_mock)
@@ -184,8 +184,8 @@ async def test_run_cleanup_logs_cleanup_summary(monkeypatch: pytest.MonkeyPatch)
             "total": {
                 "deleted_count": 4,
                 "freed_space_human": "128 MB",
-            }
-        }
+            },
+        },
     )
     audit_mock = AsyncMock()
     monkeypatch.setattr(settings_service_module, "log_admin_action", audit_mock)

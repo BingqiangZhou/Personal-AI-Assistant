@@ -119,7 +119,7 @@ class AIModelManagementService:
         if "api_key" in update_data:
             if update_data["api_key"]:
                 update_data["api_key"] = self.security_service.encrypt_api_key(
-                    update_data["api_key"]
+                    update_data["api_key"],
                 )
                 update_data["api_key_encrypted"] = True
                 logger.debug("API key updated for model %s", model_id)

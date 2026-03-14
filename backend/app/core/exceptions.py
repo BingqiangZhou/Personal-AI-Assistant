@@ -27,7 +27,7 @@ class BaseCustomError(Exception):
         message: str,
         status_code: int = 500,
         error_code: str | None = None,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.status_code = status_code
@@ -45,7 +45,7 @@ class NotFoundError(BaseCustomError):
     def __init__(
         self,
         message: str = "Resource not found",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 404, **kwargs)
 
@@ -59,7 +59,7 @@ class BadRequestError(BaseCustomError):
     def __init__(
         self,
         message: str = "Bad request",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 400, **kwargs)
 
@@ -73,7 +73,7 @@ class UnauthorizedError(BaseCustomError):
     def __init__(
         self,
         message: str = "Unauthorized",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 401, **kwargs)
 
@@ -87,7 +87,7 @@ class ForbiddenError(BaseCustomError):
     def __init__(
         self,
         message: str = "Forbidden",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 403, **kwargs)
 
@@ -101,7 +101,7 @@ class ConflictError(BaseCustomError):
     def __init__(
         self,
         message: str = "Resource already exists",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 409, "CONFLICT", **kwargs)
 
@@ -115,7 +115,7 @@ class ValidationError(BaseCustomError):
     def __init__(
         self,
         message: str = "Validation failed",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 400, "VALIDATION_ERROR", **kwargs)
 
@@ -129,7 +129,7 @@ class DatabaseError(BaseCustomError):
     def __init__(
         self,
         message: str = "Database error",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 500, "DATABASE_ERROR", **kwargs)
 
@@ -143,7 +143,7 @@ class ExternalServiceError(BaseCustomError):
     def __init__(
         self,
         message: str = "External service error",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 502, "EXTERNAL_SERVICE_ERROR", **kwargs)
 
@@ -157,7 +157,7 @@ class FileProcessingError(BaseCustomError):
     def __init__(
         self,
         message: str = "File processing error",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
@@ -172,14 +172,14 @@ async def custom_exception_handler(request: Request, exc: BaseCustomError) -> Cu
         f"路径: {request.url.path} | "
         f"方法: {request.method} | "
         f"消息: {exc.message} | "
-        f"状态码: {exc.status_code}"
+        f"状态码: {exc.status_code}",
     )
 
     # Build response content
     content = {
         "detail": exc.message,
         "type": exc.error_code,
-        "status_code": exc.status_code
+        "status_code": exc.status_code,
     }
 
     # Add details if present
@@ -198,15 +198,15 @@ async def http_exception_handler(request: Request, exc: HTTPException | Starlett
         f"HTTP异常: {exc.status_code} | "
         f"路径: {request.url.path} | "
         f"方法: {request.method} | "
-        f"详情: {exc.detail}"
+        f"详情: {exc.detail}",
     )
     return CustomJSONResponse(
         status_code=exc.status_code,
         content={
             "detail": str(exc.detail),
             "type": "HTTPException",
-            "status_code": exc.status_code
-        }
+            "status_code": exc.status_code,
+        },
     )
 
 
@@ -220,14 +220,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         errors.append({
             "field": " -> ".join(str(x) for x in error["loc"]),
             "message": error["msg"],
-            "type": error["type"]
+            "type": error["type"],
         })
 
     logger.error(
         f"请求验证失败: {request.url.path} | "
         f"方法: {request.method} | "
         f"错误字段: {len(errors)}个 | "
-        f"错误详情: {errors}"
+        f"错误详情: {errors}",
     )
 
     return CustomJSONResponse(
@@ -235,8 +235,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={
             "detail": "Validation failed",
             "type": "VALIDATION_ERROR",
-            "errors": errors
-        }
+            "errors": errors,
+        },
     )
 
 
@@ -249,8 +249,8 @@ async def general_exception_handler(request: Request, exc: Exception) -> CustomJ
         f"未处理异常: {exc.__class__.__name__} | "
         f"路径: {request.url.path} | "
         f"方法: {request.method} | "
-        f"消息: {str(exc)}",
-        exc_info=True
+        f"消息: {exc!s}",
+        exc_info=True,
     )
 
     return CustomJSONResponse(
@@ -258,8 +258,8 @@ async def general_exception_handler(request: Request, exc: Exception) -> CustomJ
         content={
             "detail": "Internal server error",
             "type": "INTERNAL_SERVER_ERROR",
-            "status_code": 500
-        }
+            "status_code": 500,
+        },
     )
 
 
@@ -290,7 +290,7 @@ def raise_not_found(resource_type: str = "Resource", resource_id: Any = None) ->
 
     raise NotFoundError(
         message=message,
-        details={"resource_type": resource_type, "resource_id": str(resource_id) if resource_id is not None else None}
+        details={"resource_type": resource_type, "resource_id": str(resource_id) if resource_id is not None else None},
     )
 
 
@@ -306,7 +306,7 @@ def raise_conflict(resource_type: str = "Resource", field: str = "field", value:
 
     raise ConflictError(
         message=message,
-        details={"resource_type": resource_type, "field": field, "value": str(value) if value is not None else None}
+        details={"resource_type": resource_type, "field": field, "value": str(value) if value is not None else None},
     )
 
 
@@ -321,5 +321,5 @@ def raise_validation(message: str, field: str | None = None) -> None:
 
     raise ValidationError(
         message=message,
-        details=details
+        details=details,
     )

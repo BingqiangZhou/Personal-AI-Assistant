@@ -78,7 +78,7 @@ class AdminSubscriptionsOpmlService:
         for sub_data in subscriptions_data:
             try:
                 existing = await podcast_service.repo.get_subscription_by_url(
-                    user.id, sub_data.source_url
+                    user.id, sub_data.source_url,
                 )
                 if existing:
                     skipped_count += 1
@@ -89,7 +89,7 @@ class AdminSubscriptionsOpmlService:
                             "status": "skipped",
                             "id": existing.id,
                             "message": f"Subscription already exists: {existing.title}",
-                        }
+                        },
                     )
                     continue
 
@@ -97,7 +97,7 @@ class AdminSubscriptionsOpmlService:
                     and_(
                         Subscription.source_url == sub_data.source_url,
                         Subscription.source_type == "podcast-rss",
-                    )
+                    ),
                 )
                 global_existing_result = await self.db.execute(global_existing_stmt)
                 existed_globally = (
@@ -137,7 +137,7 @@ class AdminSubscriptionsOpmlService:
                         "id": subscription.id,
                         "message": "Subscription imported. Episode parsing queued in background.",
                         "background_task_id": task.id,
-                    }
+                    },
                 )
             except Exception as exc:  # noqa: BLE001
                 error_count += 1
@@ -147,7 +147,7 @@ class AdminSubscriptionsOpmlService:
                         "title": sub_data.title,
                         "status": "error",
                         "message": str(exc),
-                    }
+                    },
                 )
 
         await log_admin_action(
@@ -239,7 +239,7 @@ class AdminSubscriptionsOpmlService:
                     source_type="podcast-rss",
                     description=description.strip()[:2000] if description else "",
                     image_url=None,
-                )
+                ),
             )
         return subscriptions
 

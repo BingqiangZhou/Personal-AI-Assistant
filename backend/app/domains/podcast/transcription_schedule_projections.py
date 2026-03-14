@@ -28,7 +28,7 @@ class EpisodeTranscriptionScheduleProjection(BaseModel):
 
     @classmethod
     def from_payload(
-        cls, payload: Mapping[str, Any]
+        cls, payload: Mapping[str, Any],
     ) -> "EpisodeTranscriptionScheduleProjection":
         return cls.model_validate(payload)
 
@@ -116,7 +116,7 @@ class TranscriptionScheduleStatusProjection(BaseModel):
 
     @classmethod
     def from_payload(
-        cls, payload: Mapping[str, Any]
+        cls, payload: Mapping[str, Any],
     ) -> "TranscriptionScheduleStatusProjection":
         return cls.model_validate(payload)
 

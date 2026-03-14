@@ -1,12 +1,11 @@
-"""
-Database-backed transcription runtime services.
+"""Database-backed transcription runtime services.
 """
 
 import asyncio
 import logging
 import os
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -21,10 +20,6 @@ from app.domains.podcast.transcription import (
     SiliconFlowTranscriber,
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
-
-
-if TYPE_CHECKING:
-    pass
 
 
 logger = logging.getLogger(__name__)
@@ -59,12 +54,12 @@ class TranscriptionModelManager:
                 or model.model_type != ModelType.TRANSCRIPTION
             ):
                 raise ValidationError(
-                    f"Transcription model '{model_name}' not found or not active"
+                    f"Transcription model '{model_name}' not found or not active",
                 )
             return model
 
         active_models = await self.ai_model_repo.get_active_models_by_priority(
-            ModelType.TRANSCRIPTION
+            ModelType.TRANSCRIPTION,
         )
         if not active_models:
             raise ValidationError("No active transcription model found")
@@ -92,7 +87,7 @@ class TranscriptionModelManager:
 
     async def list_available_models(self):
         active_models = await self.ai_model_repo.get_active_models(
-            ModelType.TRANSCRIPTION
+            ModelType.TRANSCRIPTION,
         )
         return [
             {
@@ -117,7 +112,7 @@ class TranscriptionModelManager:
                 system_key = getattr(settings, "TRANSCRIPTION_API_KEY", "")
 
         active_models = await self.ai_model_repo.get_active_models(
-            ModelType.TRANSCRIPTION
+            ModelType.TRANSCRIPTION,
         )
         try:
             return resolve_api_key_with_fallback(
@@ -160,7 +155,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         return factory(self.db)
 
     async def start_transcription(
-        self, episode_id: int, model_name: str | None = None, force: bool = False
+        self, episode_id: int, model_name: str | None = None, force: bool = False,
     ) -> dict[str, Any]:
         if model_name:
             await self.model_manager.get_active_transcription_model(model_name)
@@ -216,7 +211,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                         await self.db.refresh(existing_task)
 
                         config_db_id = await self._resolve_transcription_config_db_id(
-                            model_name
+                            model_name,
                         )
                         self._task_orchestration_service().enqueue_audio_transcription(
                             task_id=existing_task.id,
@@ -230,7 +225,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
 
         if force:
             task, config_db_id = await super().create_transcription_task_record(
-                episode_id, model_name, force
+                episode_id, model_name, force,
             )
             self._task_orchestration_service().enqueue_audio_transcription(
                 task_id=task.id,
@@ -311,7 +306,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
             existing_task = await self._load_existing_task(episode_id)
             if existing_task is None:
                 raise RuntimeError(
-                    f"Task creation conflicted but no existing task found for episode {episode_id}"
+                    f"Task creation conflicted but no existing task found for episode {episode_id}",
                 )
             return existing_task, None, False
 
@@ -350,7 +345,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         return task
 
     async def _resolve_transcription_config_db_id(
-        self, model_name: str | None
+        self, model_name: str | None,
     ) -> int | None:
         ai_repo = AIModelConfigRepository(self.db)
         model_config = None
@@ -358,7 +353,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
             model_config = await ai_repo.get_by_name(model_name)
         if not model_config:
             active_models = await ai_repo.get_active_models_by_priority(
-                ModelType.TRANSCRIPTION
+                ModelType.TRANSCRIPTION,
             )
             model_config = active_models[0] if active_models else None
         return model_config.id if model_config else None
@@ -391,7 +386,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                         TranscriptionTask.status.in_(in_progress_statuses),
                         TranscriptionTask.started_at.isnot(None),
                         TranscriptionTask.updated_at < stale_threshold,
-                    )
+                    ),
                 )
                 .values(
                     status="failed",
@@ -414,7 +409,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                         TranscriptionTask.status == "pending",
                         TranscriptionTask.started_at.is_(None),
                         TranscriptionTask.created_at < pending_stale_threshold,
-                    )
+                    ),
                 )
                 .values(
                     status="failed",
@@ -453,7 +448,7 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                 and_(
                     TranscriptionTask.status.in_(["failed", "cancelled"]),
                     TranscriptionTask.completed_at < stale_threshold,
-                )
+                ),
             )
             .distinct()
         )

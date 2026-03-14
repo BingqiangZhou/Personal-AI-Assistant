@@ -13,13 +13,13 @@ from .feed_schemas import (
 
 
 __all__ = [
-    "FeedParser",
-    "strip_html_tags",
-    "ParseErrorCode",
-    "ParseError",
-    "FeedInfo",
     "FeedEntry",
-    "FeedParseResult",
-    "FeedParserConfig",
+    "FeedInfo",
     "FeedParseOptions",
+    "FeedParseResult",
+    "FeedParser",
+    "FeedParserConfig",
+    "ParseError",
+    "ParseErrorCode",
+    "strip_html_tags",
 ]

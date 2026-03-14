@@ -354,7 +354,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     required DateTime publishedAt,
     required int? durationMilliseconds,
   }) {
-    final segments = <String>[podcastTitle, _formatDate(publishedAt)];
+    final segments = <String>[podcastTitle, EpisodeCardUtils.formatDate(publishedAt)];
     if (durationMilliseconds != null) {
       segments.add(_formatDurationLabel(durationMilliseconds));
     }
@@ -620,7 +620,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
 
   Widget _buildDateChip(PodcastEpisodeDetailResponse episode) {
     return StatusBadge(
-      label: _formatDate(episode.publishedAt),
+      label: EpisodeCardUtils.formatDate(episode.publishedAt),
       icon: Icons.calendar_today_outlined,
       color: Theme.of(context).colorScheme.secondary,
     );
@@ -702,13 +702,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime dateTime) {
-    final year = dateTime.year.toString().padLeft(4, '0');
-    final month = dateTime.month.toString().padLeft(2, '0');
-    final day = dateTime.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
   }
 
   String _formatPlaybackProgress(int milliseconds) {

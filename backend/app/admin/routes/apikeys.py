@@ -150,7 +150,7 @@ async def toggle_apikey(
             key_id=key_id,
         )
         return json_payload(
-            require_payload(payload, detail="API key not found")
+            require_payload(payload, detail="API key not found"),
         )
     except HTTPException:
         raise
@@ -193,7 +193,7 @@ async def edit_apikey(
             priority=priority,
         )
         return json_payload(
-            require_payload(payload, detail="API key not found")
+            require_payload(payload, detail="API key not found"),
         )
     except HTTPException:
         raise
@@ -225,7 +225,7 @@ async def delete_apikey(
             key_id=key_id,
         )
         return json_payload(
-            require_payload(payload, detail="API key not found")
+            require_payload(payload, detail="API key not found"),
         )
     except HTTPException:
         raise

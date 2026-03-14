@@ -1,5 +1,4 @@
-"""
-播客数据模型 - 扩展订阅域
+"""播客数据模型 - 扩展订阅域
 
 基于现有subscription实体进行扩展，新增播客特定字段
 """
@@ -30,8 +29,7 @@ from app.domains.subscription.models import Subscription
 
 
 class PodcastEpisode(Base):
-    """
-    播客单集数据模型
+    """播客单集数据模型
 
     设计说明:
     - 不直接使用继承，而是通过外键关联到Subscription
@@ -68,7 +66,7 @@ class PodcastEpisode(Base):
 
     # 分集详情页链接
     item_link = Column(
-        String(500), unique=True, nullable=False
+        String(500), unique=True, nullable=False,
     )  # <item><link> 标签内容，指向分集详情页
 
     # 播放统计（全局）
@@ -82,13 +80,13 @@ class PodcastEpisode(Base):
 
     # 状态和元数据
     status = Column(
-        String(50), default="pending_summary"
+        String(50), default="pending_summary",
     )  # pending, summarized, failed
     metadata_json = Column(
-        "metadata", JSON, nullable=True, default={}
+        "metadata", JSON, nullable=True, default={},
     )  # Renamed to avoid SQLAlchemy reserved attribute
     created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC),
     )
     updated_at = Column(
         DateTime(timezone=True),
@@ -99,13 +97,13 @@ class PodcastEpisode(Base):
     # Relationships
     subscription = relationship("Subscription", back_populates="podcast_episodes")
     playback_states = relationship(
-        "PodcastPlaybackState", back_populates="episode", cascade="all, delete"
+        "PodcastPlaybackState", back_populates="episode", cascade="all, delete",
     )
     queue_items = relationship(
-        "PodcastQueueItem", back_populates="episode", cascade="all, delete"
+        "PodcastQueueItem", back_populates="episode", cascade="all, delete",
     )
     daily_report_items = relationship(
-        "PodcastDailyReportItem", back_populates="episode", cascade="all, delete"
+        "PodcastDailyReportItem", back_populates="episode", cascade="all, delete",
     )
 
     # Indexes
@@ -123,7 +121,7 @@ class PodcastEpisode(Base):
 
 
 Subscription.podcast_episodes = relationship(
-    "PodcastEpisode", back_populates="subscription", cascade="all, delete-orphan"
+    "PodcastEpisode", back_populates="subscription", cascade="all, delete-orphan",
 )
 
 
@@ -138,11 +136,11 @@ class PodcastDailyReport(Base):
     timezone = Column(String(64), nullable=False, default="Asia/Shanghai")
     schedule_time_local = Column(String(5), nullable=False, default="03:30")
     generated_at = Column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC),
     )
     total_items = Column(Integer, nullable=False, default=0)
     created_at = Column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC),
     )
     updated_at = Column(
         DateTime(timezone=True),
@@ -190,7 +188,7 @@ class PodcastDailyReportItem(Base):
     episode_created_at = Column(DateTime(timezone=True), nullable=False)
     episode_published_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC),
     )
 
     report = relationship("PodcastDailyReport", back_populates="items")
@@ -209,8 +207,7 @@ class PodcastDailyReportItem(Base):
 
 
 class PodcastPlaybackState(Base):
-    """
-    用户播放状态 - 跟踪每个用户的播客播放进度
+    """用户播放状态 - 跟踪每个用户的播客播放进度
     """
 
     __tablename__ = "podcast_playback_states"
@@ -218,7 +215,7 @@ class PodcastPlaybackState(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     episode_id = Column(
-        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False,
     )
 
     # 播放状态
@@ -258,10 +255,10 @@ class PodcastQueue(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True,
     )
     current_episode_id = Column(
-        Integer, ForeignKey("podcast_episodes.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("podcast_episodes.id", ondelete="SET NULL"), nullable=True,
     )
     revision = Column(Integer, default=0, nullable=False)
     updated_at = Column(
@@ -277,7 +274,7 @@ class PodcastQueue(Base):
         order_by="PodcastQueueItem.position",
     )
     current_episode = relationship(
-        "PodcastEpisode", foreign_keys=[current_episode_id], lazy="joined"
+        "PodcastEpisode", foreign_keys=[current_episode_id], lazy="joined",
     )
 
     __table_args__ = (Index("idx_podcast_queue_user", "user_id"),)
@@ -293,14 +290,14 @@ class PodcastQueueItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     queue_id = Column(
-        Integer, ForeignKey("podcast_queues.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("podcast_queues.id", ondelete="CASCADE"), nullable=False,
     )
     episode_id = Column(
-        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False,
     )
     position = Column(Integer, nullable=False)
     created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC),
     )
     updated_at = Column(
         DateTime(timezone=True),
@@ -313,7 +310,7 @@ class PodcastQueueItem(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "queue_id", "episode_id", name="uq_podcast_queue_item_episode"
+            "queue_id", "episode_id", name="uq_podcast_queue_item_episode",
         ),
         UniqueConstraint("queue_id", "position", name="uq_podcast_queue_item_position"),
         Index("idx_podcast_queue_items_queue_position", "queue_id", "position"),
@@ -347,8 +344,7 @@ class TranscriptionStep(StrEnum):
 
 
 class TranscriptionTask(Base):
-    """
-    播客音频转录任务模型
+    """播客音频转录任务模型
 
     跟踪音频转录的整个生命周期，包括下载、转换、分割、转录和合并等阶段
 
@@ -418,7 +414,7 @@ class TranscriptionTask(Base):
 
     # 分片信息（JSON格式存储）
     chunk_info = Column(
-        JSON, default=dict
+        JSON, default=dict,
     )  # 存储分片信息，如：{"chunks": [{"index": 1, "file": "path", "size": 1024, "transcript": "..."}]}
 
     # 错误信息
@@ -436,7 +432,7 @@ class TranscriptionTask(Base):
 
     # 时间戳 (使用 timezone-aware datetime)
     created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC),
     )
     started_at = Column(DateTime(timezone=True))  # 任务开始时间
     completed_at = Column(DateTime(timezone=True))  # 任务完成时间
@@ -482,8 +478,7 @@ class TranscriptionTask(Base):
 
 
 class ConversationSession(Base):
-    """
-    对话会话模型
+    """对话会话模型
 
     每个 episode+user 可以有多个会话，每个会话包含独立的对话历史
     """
@@ -492,13 +487,13 @@ class ConversationSession(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     episode_id = Column(
-        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False,
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(255), default="默认对话")
 
     created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC),
     )
     updated_at = Column(
         DateTime(timezone=True),
@@ -525,8 +520,7 @@ class ConversationSession(Base):
 
 
 class PodcastConversation(Base):
-    """
-    播客单集对话交互模型
+    """播客单集对话交互模型
 
     存储用户与AI基于播客摘要的对话历史，支持上下文保持的交互
     """
@@ -535,11 +529,11 @@ class PodcastConversation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     episode_id = Column(
-        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False,
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     session_id = Column(
-        Integer, ForeignKey("conversation_sessions.id", ondelete="CASCADE"), nullable=True
+        Integer, ForeignKey("conversation_sessions.id", ondelete="CASCADE"), nullable=True,
     )
 
     # 对话内容
@@ -548,7 +542,7 @@ class PodcastConversation(Base):
 
     # 上下文管理
     parent_message_id = Column(
-        Integer, ForeignKey("podcast_conversations.id"), nullable=True
+        Integer, ForeignKey("podcast_conversations.id"), nullable=True,
     )  # 父消息ID，用于构建对话树
     conversation_turn = Column(Integer, default=0)  # 对话轮次
 
@@ -559,14 +553,14 @@ class PodcastConversation(Base):
 
     # 时间戳
     created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True,
     )
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="conversations")
     session = relationship("ConversationSession", back_populates="messages")
     parent_message = relationship(
-        "PodcastConversation", remote_side=[id], backref="replies"
+        "PodcastConversation", remote_side=[id], backref="replies",
     )
 
     # Indexes

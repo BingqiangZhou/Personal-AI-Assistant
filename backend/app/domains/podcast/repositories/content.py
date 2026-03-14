@@ -30,7 +30,7 @@ class PodcastContentRepositoryMixin:
             and_(
                 Subscription.source_url == feed_url,
                 Subscription.source_type == "podcast-rss",
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         subscription = result.scalar_one_or_none()
@@ -40,12 +40,12 @@ class PodcastContentRepositoryMixin:
         update_day_of_week = None
 
         settings_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
             update_frequency = setting.value.get(
-                "update_frequency", UpdateFrequency.HOURLY.value
+                "update_frequency", UpdateFrequency.HOURLY.value,
             )
             update_time = setting.value.get("update_time")
             update_day_of_week = setting.value.get("update_day_of_week")
@@ -55,7 +55,7 @@ class PodcastContentRepositoryMixin:
                 and_(
                     UserSubscription.user_id == user_id,
                     UserSubscription.subscription_id == subscription.id,
-                )
+                ),
             )
             user_sub_result = await self.db.execute(user_sub_stmt)
             user_sub = user_sub_result.scalar_one_or_none()
@@ -117,7 +117,7 @@ class PodcastContentRepositoryMixin:
                 and_(
                     *self._active_user_subscription_filters(user_id),
                     self._podcast_source_type_filter(),
-                )
+                ),
             )
             .order_by(Subscription.created_at.desc())
         )
@@ -125,7 +125,7 @@ class PodcastContentRepositoryMixin:
         return list(result.scalars().all())
 
     async def get_subscription_by_id(
-        self, user_id: int, sub_id: int
+        self, user_id: int, sub_id: int,
     ) -> Subscription | None:
         stmt = (
             select(Subscription)
@@ -135,14 +135,14 @@ class PodcastContentRepositoryMixin:
                     *self._active_user_subscription_filters(user_id),
                     Subscription.id == sub_id,
                     self._podcast_source_type_filter(),
-                )
+                ),
             )
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_subscription_by_url(
-        self, user_id: int, feed_url: str
+        self, user_id: int, feed_url: str,
     ) -> Subscription | None:
         stmt = (
             select(Subscription)
@@ -152,20 +152,20 @@ class PodcastContentRepositoryMixin:
                     *self._active_user_subscription_filters(user_id),
                     Subscription.source_url == feed_url,
                     self._podcast_source_type_filter(),
-                )
+                ),
             )
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_subscription_by_id_direct(
-        self, subscription_id: int
+        self, subscription_id: int,
     ) -> Subscription | None:
         stmt = select(Subscription).where(
             and_(
                 Subscription.id == subscription_id,
                 Subscription.source_type.in_(["podcast-rss", "rss"]),
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -231,13 +231,13 @@ class PodcastContentRepositoryMixin:
             return [], []
 
         item_links = list(
-            {data["item_link"] for data in episodes_data if data.get("item_link")}
+            {data["item_link"] for data in episodes_data if data.get("item_link")},
         )
         existing_by_item_link: dict[str, PodcastEpisode] = {}
 
         if item_links:
             existing_stmt = select(PodcastEpisode).where(
-                PodcastEpisode.item_link.in_(item_links)
+                PodcastEpisode.item_link.in_(item_links),
             )
             existing_result = await self.db.execute(existing_stmt)
             existing_episodes = list(existing_result.scalars().all())
@@ -313,7 +313,7 @@ class PodcastContentRepositoryMixin:
             and_(
                 PodcastEpisode.ai_summary.is_(None),
                 PodcastEpisode.status.in_(["pending_summary", "summary_failed"]),
-            )
+            ),
         )
         if subscription_id:
             stmt = stmt.where(PodcastEpisode.subscription_id == subscription_id)
@@ -325,7 +325,7 @@ class PodcastContentRepositoryMixin:
         return list(result.scalars().all())
 
     async def get_pending_summaries_for_user(
-        self, user_id: int
+        self, user_id: int,
     ) -> list[dict[str, Any]]:
         stmt = (
             select(PodcastEpisode, Subscription.title)
@@ -337,7 +337,7 @@ class PodcastContentRepositoryMixin:
                     self._podcast_source_type_filter(),
                     PodcastEpisode.ai_summary.is_(None),
                     PodcastEpisode.status.in_(["pending_summary", "summary_failed"]),
-                )
+                ),
             )
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
         )
@@ -352,12 +352,12 @@ class PodcastContentRepositoryMixin:
                     "subscription_title": subscription_title,
                     "episode_title": episode.title,
                     "size_estimate": len(description) + len(transcript),
-                }
+                },
             )
         return results
 
     async def get_subscription_episodes(
-        self, subscription_id: int, limit: int = 20
+        self, subscription_id: int, limit: int = 20,
     ) -> list[PodcastEpisode]:
         stmt = (
             select(PodcastEpisode)
@@ -372,13 +372,13 @@ class PodcastContentRepositoryMixin:
 
     async def count_subscription_episodes(self, subscription_id: int) -> int:
         stmt = select(func.count(PodcastEpisode.id)).where(
-            PodcastEpisode.subscription_id == subscription_id
+            PodcastEpisode.subscription_id == subscription_id,
         )
         result = await self.db.execute(stmt)
         return result.scalar() or 0
 
     async def get_episode_by_id(
-        self, episode_id: int, user_id: int | None = None
+        self, episode_id: int, user_id: int | None = None,
     ) -> PodcastEpisode | None:
         stmt = (
             select(PodcastEpisode)
@@ -399,13 +399,13 @@ class PodcastContentRepositoryMixin:
         return result.scalar_one_or_none()
 
     async def get_episode_by_item_link(
-        self, subscription_id: int, item_link: str
+        self, subscription_id: int, item_link: str,
     ) -> PodcastEpisode | None:
         stmt = select(PodcastEpisode).where(
             and_(
                 PodcastEpisode.subscription_id == subscription_id,
                 PodcastEpisode.item_link == item_link,
-            )
+            ),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()

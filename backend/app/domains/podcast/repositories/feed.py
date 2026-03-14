@@ -18,7 +18,7 @@ class PodcastFeedRepositoryMixin:
     """Subscription/episode pagination and lightweight feed queries."""
 
     async def get_user_subscriptions_paginated(
-        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
+        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None,
     ) -> tuple[list[Subscription], int, dict[int, int]]:
         skip = (page - 1) * size
         base_query = (
@@ -28,7 +28,7 @@ class PodcastFeedRepositoryMixin:
                 and_(
                     *self._active_user_subscription_filters(user_id),
                     self._podcast_source_type_filter(),
-                )
+                ),
             )
         )
 
@@ -64,7 +64,7 @@ class PodcastFeedRepositoryMixin:
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
         subscriptions = [row[0] for row in rows]
@@ -72,7 +72,7 @@ class PodcastFeedRepositoryMixin:
         return subscriptions, total, episode_counts
 
     async def get_episodes_paginated(
-        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
+        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None,
     ) -> tuple[list[PodcastEpisode], int]:
         skip = (page - 1) * size
         base_query = (
@@ -86,7 +86,7 @@ class PodcastFeedRepositoryMixin:
         if filters:
             if filters.subscription_id:
                 base_query = base_query.where(
-                    PodcastEpisode.subscription_id == filters.subscription_id
+                    PodcastEpisode.subscription_id == filters.subscription_id,
                 )
             if filters.has_summary is not None:
                 if filters.has_summary:
@@ -97,7 +97,7 @@ class PodcastFeedRepositoryMixin:
                 if filters.is_played:
                     base_query = base_query.join(PodcastPlaybackState).where(
                         PodcastPlaybackState.current_position
-                        >= PodcastEpisode.audio_duration * 0.9
+                        >= PodcastEpisode.audio_duration * 0.9,
                     )
                 else:
                     base_query = base_query.outerjoin(PodcastPlaybackState).where(
@@ -105,17 +105,17 @@ class PodcastFeedRepositoryMixin:
                             PodcastPlaybackState.id.is_(None),
                             PodcastPlaybackState.current_position
                             < PodcastEpisode.audio_duration * 0.9,
-                        )
+                        ),
                     )
 
         total_result = await self.db.execute(
-            select(func.count()).select_from(base_query.subquery())
+            select(func.count()).select_from(base_query.subquery()),
         )
         total = int(total_result.scalar() or 0)
 
         query = (
             base_query.order_by(
-                PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc()
+                PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc(),
             )
             .offset(skip)
             .limit(size)
@@ -199,12 +199,12 @@ class PodcastFeedRepositoryMixin:
         row_data = dict(row)
         subscription_config = row_data.pop("subscription_config", None)
         subscription_image_url = self._normalize_optional_image_url(
-            row_data.get("subscription_image_url")
+            row_data.get("subscription_image_url"),
         )
         config_image_url = None
         if isinstance(subscription_config, dict):
             config_image_url = self._normalize_optional_image_url(
-                subscription_config.get("image_url")
+                subscription_config.get("image_url"),
             )
         effective_subscription_image = config_image_url or subscription_image_url
 
@@ -213,7 +213,7 @@ class PodcastFeedRepositoryMixin:
         is_played = bool(
             playback_position
             and audio_duration
-            and playback_position >= audio_duration * 0.9
+            and playback_position >= audio_duration * 0.9,
         )
         image_url = self._normalize_optional_image_url(row_data.get("image_url"))
         if image_url is None:
@@ -288,7 +288,7 @@ class PodcastFeedRepositoryMixin:
                         PodcastEpisode.published_at == cursor_published_at,
                         PodcastEpisode.id < cursor_episode_id,
                     ),
-                )
+                ),
             )
 
         query = query.order_by(
@@ -333,7 +333,7 @@ class PodcastFeedRepositoryMixin:
                         PodcastEpisode.published_at == cursor_published_at,
                         PodcastEpisode.id < cursor_episode_id,
                     ),
-                )
+                ),
             )
 
         query = query.order_by(
@@ -391,7 +391,7 @@ class PodcastFeedRepositoryMixin:
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
         return [row[0] for row in rows], total
@@ -430,7 +430,7 @@ class PodcastFeedRepositoryMixin:
                         PodcastPlaybackState.last_updated_at == cursor_last_updated_at,
                         PodcastEpisode.id < cursor_episode_id,
                     ),
-                )
+                ),
             )
 
         query = (
@@ -448,7 +448,7 @@ class PodcastFeedRepositoryMixin:
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
 
@@ -498,7 +498,7 @@ class PodcastFeedRepositoryMixin:
 
         query = (
             base_query.add_columns(
-                func.count(PodcastEpisode.id).over().label("total_count")
+                func.count(PodcastEpisode.id).over().label("total_count"),
             )
             .order_by(PodcastPlaybackState.last_updated_at.desc())
             .offset(skip)
@@ -512,9 +512,9 @@ class PodcastFeedRepositoryMixin:
         else:
             total = int(
                 await self.db.scalar(
-                    select(func.count()).select_from(base_query.subquery())
+                    select(func.count()).select_from(base_query.subquery()),
                 )
-                or 0
+                or 0,
             )
 
         items: list[dict[str, Any]] = []
@@ -526,11 +526,11 @@ class PodcastFeedRepositoryMixin:
             config_image_url = None
             if isinstance(subscription_config, dict):
                 config_image_url = self._normalize_optional_image_url(
-                    subscription_config.get("image_url")
+                    subscription_config.get("image_url"),
                 )
 
             subscription_image_url = self._normalize_optional_image_url(
-                item.get("subscription_image_url")
+                item.get("subscription_image_url"),
             )
             item["subscription_image_url"] = config_image_url or subscription_image_url
             items.append(item)

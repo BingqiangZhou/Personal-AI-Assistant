@@ -16,7 +16,7 @@ async def test_ai_model_config_service_delegates_management_calls():
 
     assert result is expected
     service.management_service.get_default_model.assert_awaited_once_with(
-        ModelType.TEXT_GENERATION
+        ModelType.TEXT_GENERATION,
     )
 
 
@@ -25,7 +25,7 @@ async def test_ai_model_config_service_delegates_runtime_calls():
     service = AIModelConfigService(AsyncMock())
     expected = ("ok", object())
     service.runtime_service.call_text_generation_with_fallback = AsyncMock(
-        return_value=expected
+        return_value=expected,
     )
 
     result = await service.call_text_generation_with_fallback(

@@ -1,5 +1,4 @@
-"""
-AI模型配置数据访问层
+"""AI模型配置数据访问层
 """
 
 from sqlalchemy import and_, delete, func, or_, select, update
@@ -24,7 +23,7 @@ class AIModelConfigRepository:
             return model_config
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to create model config: {str(e)}") from e
+            raise DatabaseError(f"Failed to create model config: {e!s}") from e
 
     async def get_by_id(self, model_id: int) -> AIModelConfig | None:
         """根据ID获取模型配置"""
@@ -33,7 +32,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config by id: {str(e)}") from e
+            raise DatabaseError(f"Failed to get model config by id: {e!s}") from e
 
     async def get_by_name(self, name: str) -> AIModelConfig | None:
         """根据名称获取模型配置"""
@@ -42,7 +41,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config by name: {str(e)}") from e
+            raise DatabaseError(f"Failed to get model config by name: {e!s}") from e
 
     async def get_list(
         self,
@@ -83,7 +82,7 @@ class AIModelConfigRepository:
 
             return models, total
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config list: {str(e)}") from e
+            raise DatabaseError(f"Failed to get model config list: {e!s}") from e
 
     async def get_default_model(self, model_type: ModelType) -> AIModelConfig | None:
         """获取指定类型的默认模型"""
@@ -93,15 +92,15 @@ class AIModelConfigRepository:
                     AIModelConfig.model_type == model_type,
                     AIModelConfig.is_default,
                     AIModelConfig.is_active,
-                )
+                ),
             )
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get default model: {str(e)}") from e
+            raise DatabaseError(f"Failed to get default model: {e!s}") from e
 
     async def get_active_models(
-        self, model_type: ModelType | None = None
+        self, model_type: ModelType | None = None,
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序"""
         try:
@@ -111,16 +110,16 @@ class AIModelConfigRepository:
 
             # 按优先级升序排序（数字越小优先级越高），然后按创建时间降序
             stmt = stmt.order_by(
-                AIModelConfig.priority.asc(), AIModelConfig.created_at.desc()
+                AIModelConfig.priority.asc(), AIModelConfig.created_at.desc(),
             )
 
             result = await self.db.execute(stmt)
             return list(result.scalars().all())
         except Exception as e:
-            raise DatabaseError(f"Failed to get active models: {str(e)}") from e
+            raise DatabaseError(f"Failed to get active models: {e!s}") from e
 
     async def get_active_models_by_priority(
-        self, model_type: ModelType | None = None
+        self, model_type: ModelType | None = None,
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序（用于API调用fallback）"""
         return await self.get_active_models(model_type)
@@ -140,7 +139,7 @@ class AIModelConfigRepository:
             return await self.get_by_id(model_id)
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to update model config: {str(e)}") from e
+            raise DatabaseError(f"Failed to update model config: {e!s}") from e
 
     async def set_default_model(self, model_id: int, model_type: ModelType) -> bool:
         """设置默认模型（会先取消同类型的其他默认模型）"""
@@ -150,10 +149,10 @@ class AIModelConfigRepository:
                 update(AIModelConfig)
                 .where(
                     and_(
-                        AIModelConfig.model_type == model_type, AIModelConfig.is_default
-                    )
+                        AIModelConfig.model_type == model_type, AIModelConfig.is_default,
+                    ),
                 )
-                .values(is_default=False)
+                .values(is_default=False),
             )
 
             # 设置新的默认模型
@@ -163,7 +162,7 @@ class AIModelConfigRepository:
                     and_(
                         AIModelConfig.id == model_id,
                         AIModelConfig.model_type == model_type,
-                    )
+                    ),
                 )
                 .values(is_default=True)
             )
@@ -174,7 +173,7 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to set default model: {str(e)}") from e
+            raise DatabaseError(f"Failed to set default model: {e!s}") from e
 
     async def delete(self, model_id: int) -> bool:
         """删除模型配置"""
@@ -191,10 +190,10 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to delete model config: {str(e)}") from e
+            raise DatabaseError(f"Failed to delete model config: {e!s}") from e
 
     async def increment_usage(
-        self, model_id: int, success: bool = True, tokens_used: int = 0
+        self, model_id: int, success: bool = True, tokens_used: int = 0,
     ) -> bool:
         """增加使用统计"""
         try:
@@ -224,7 +223,7 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to increment usage: {str(e)}") from e
+            raise DatabaseError(f"Failed to increment usage: {e!s}") from e
 
     async def increment_usage_bulk(
         self,
@@ -264,10 +263,10 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to increment usage in bulk: {str(e)}") from e
+            raise DatabaseError(f"Failed to increment usage in bulk: {e!s}") from e
 
     async def get_usage_stats(
-        self, model_type: ModelType | None = None, limit: int = 50
+        self, model_type: ModelType | None = None, limit: int = 50,
     ) -> list[dict]:
         """获取使用统计"""
         try:
@@ -309,12 +308,12 @@ class AIModelConfigRepository:
                         "success_rate": success_rate,
                         "total_tokens_used": row.total_tokens_used,
                         "last_used_at": row.last_used_at,
-                    }
+                    },
                 )
 
             return stats
         except Exception as e:
-            raise DatabaseError(f"Failed to get usage stats: {str(e)}") from e
+            raise DatabaseError(f"Failed to get usage stats: {e!s}") from e
 
     async def search_models(
         self,
@@ -331,7 +330,7 @@ class AIModelConfigRepository:
                     AIModelConfig.name.ilike(f"%{query}%"),
                     AIModelConfig.display_name.ilike(f"%{query}%"),
                     AIModelConfig.description.ilike(f"%{query}%"),
-                )
+                ),
             ]
 
             if model_type:
@@ -352,4 +351,4 @@ class AIModelConfigRepository:
 
             return models, total
         except Exception as e:
-            raise DatabaseError(f"Failed to search models: {str(e)}") from e
+            raise DatabaseError(f"Failed to search models: {e!s}") from e

@@ -8,8 +8,7 @@ from app.core.config import get_settings
 
 
 class CSRFException(HTTPException):
-    """
-    Custom exception for CSRF validation errors.
+    """Custom exception for CSRF validation errors.
 
     This exception allows for custom error messages and page redirection
     instead of returning JSON errors.
@@ -22,14 +21,14 @@ class CSRFException(HTTPException):
         error_type: str = "csrf_error",
         user_message: str = None,
     ):
-        """
-        Initialize CSRF exception.
+        """Initialize CSRF exception.
 
         Args:
             detail: Technical error message (for logging)
             status_code: HTTP status code (default: 403)
             error_type: Type of CSRF error
             user_message: User-friendly error message (for display)
+
         """
         super().__init__(status_code=status_code, detail=detail)
         self.error_type = error_type
@@ -68,11 +67,11 @@ def validate_csrf_token(
     request: Request,
     csrf_token: str = Form(..., alias="csrf_token"),
 ) -> bool:
-    """
-    Validate CSRF token from form data against cookie.
+    """Validate CSRF token from form data against cookie.
 
     Raises:
         CSRFException: With user-friendly error messages for display
+
     """
     # Get token from cookie
     cookie_token = get_csrf_token_from_request(request)

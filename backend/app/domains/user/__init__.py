@@ -4,4 +4,4 @@ from .models import User, UserSession
 from .services import AuthenticationService
 
 
-__all__ = ["User", "UserSession", "AuthenticationService"]
+__all__ = ["AuthenticationService", "User", "UserSession"]

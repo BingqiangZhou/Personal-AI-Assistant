@@ -1,5 +1,4 @@
-"""
-Email utilities for sending password reset emails and other notifications.
+"""Email utilities for sending password reset emails and other notifications.
 """
 
 import logging
@@ -18,22 +17,21 @@ class EmailService:
 
     def __init__(self):
         """Initialize email service with configuration."""
-        self.smtp_server = getattr(settings, 'SMTP_SERVER', 'localhost')
-        self.smtp_port = getattr(settings, 'SMTP_PORT', 587)
-        self.smtp_username = getattr(settings, 'SMTP_USERNAME', '')
-        self.smtp_password = getattr(settings, 'SMTP_PASSWORD', '')
-        self.smtp_use_tls = getattr(settings, 'SMTP_USE_TLS', True)
-        self.from_email = getattr(settings, 'FROM_EMAIL', 'noreply@personalai.com')
-        self.from_name = getattr(settings, 'FROM_NAME', 'Personal AI Assistant')
+        self.smtp_server = getattr(settings, "SMTP_SERVER", "localhost")
+        self.smtp_port = getattr(settings, "SMTP_PORT", 587)
+        self.smtp_username = getattr(settings, "SMTP_USERNAME", "")
+        self.smtp_password = getattr(settings, "SMTP_PASSWORD", "")
+        self.smtp_use_tls = getattr(settings, "SMTP_USE_TLS", True)
+        self.from_email = getattr(settings, "FROM_EMAIL", "noreply@personalai.com")
+        self.from_name = getattr(settings, "FROM_NAME", "Personal AI Assistant")
 
     async def send_password_reset_email(
         self,
         email: str,
         token: str,
-        expires_at: datetime | None = None
+        expires_at: datetime | None = None,
     ) -> bool:
-        """
-        Send password reset email to user.
+        """Send password reset email to user.
 
         Args:
             email: Recipient email address
@@ -42,13 +40,14 @@ class EmailService:
 
         Returns:
             True if email sent successfully, False otherwise
+
         """
         try:
             # Create reset URL
             reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
             # Format expiry time
-            expiry_str = expires_at.strftime('%Y-%m-%d %H:%M:%S UTC') if expires_at else "1 hour"
+            expiry_str = expires_at.strftime("%Y-%m-%d %H:%M:%S UTC") if expires_at else "1 hour"
 
             # Create email content
             subject = "Reset your Personal AI Assistant password"
@@ -159,16 +158,15 @@ class EmailService:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send password reset email: {str(e)}")
+            logger.error(f"Failed to send password reset email: {e!s}")
             return False
 
     async def send_verification_email(
         self,
         email: str,
-        token: str
+        token: str,
     ) -> bool:
-        """
-        Send email verification email to user.
+        """Send email verification email to user.
 
         Args:
             email: Recipient email address
@@ -176,6 +174,7 @@ class EmailService:
 
         Returns:
             True if email sent successfully, False otherwise
+
         """
         try:
             # Create verification URL
@@ -279,46 +278,46 @@ class EmailService:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send verification email: {str(e)}")
+            logger.error(f"Failed to send verification email: {e!s}")
             return False
 
 
 def generate_secure_token(length: int = 32) -> str:
-    """
-    Generate a cryptographically secure random token.
+    """Generate a cryptographically secure random token.
 
     Args:
         length: Length of the token in bytes
 
     Returns:
         Hexadecimal string token
+
     """
     return secrets.token_hex(length)
 
 
 def generate_uuid_token() -> str:
-    """
-    Generate a UUID-based token.
+    """Generate a UUID-based token.
 
     Returns:
         UUID string token
+
     """
     return str(uuid.uuid4())
 
 
 def validate_email_format(email: str) -> bool:
-    """
-    Validate email format using basic checks.
+    """Validate email format using basic checks.
 
     Args:
         email: Email address to validate
 
     Returns:
         True if email format is valid, False otherwise
+
     """
     import re
 
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
 
 

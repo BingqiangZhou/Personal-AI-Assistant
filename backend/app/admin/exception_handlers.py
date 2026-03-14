@@ -15,8 +15,7 @@ templates = Jinja2Templates(directory="app/admin/templates")
 
 
 async def csrf_exception_handler(request: Request, exc: CSRFException) -> Response:
-    """
-    Handle CSRF exceptions by rendering user-friendly error pages.
+    """Handle CSRF exceptions by rendering user-friendly error pages.
 
     This handler intercepts CSRFException and returns HTML pages
     with friendly error messages instead of JSON responses.
@@ -27,12 +26,13 @@ async def csrf_exception_handler(request: Request, exc: CSRFException) -> Respon
 
     Returns:
         Response: HTML page with error message and new CSRF token
+
     """
     # Log the technical error
     logger.warning(
         f"CSRF validation failed: {exc.detail} | "
         f"Type: {exc.error_type} | "
-        f"Path: {request.url.path}"
+        f"Path: {request.url.path}",
     )
 
     # Generate new CSRF token for retry
@@ -65,8 +65,8 @@ async def csrf_exception_handler(request: Request, exc: CSRFException) -> Respon
         "messages": [
             {
                 "type": "error",
-                "text": exc.user_message
-            }
+                "text": exc.user_message,
+            },
         ],
     }
 

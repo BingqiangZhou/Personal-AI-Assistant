@@ -84,7 +84,7 @@ def _is_next_section_heading(line: str) -> bool:
         return False
     return bool(
         _MARKDOWN_HEADING_RE.match(text)
-        or _NUMBERED_HEADING_RE.match(text)
+        or _NUMBERED_HEADING_RE.match(text),
     )
 
 

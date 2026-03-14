@@ -11,8 +11,8 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
 
+import aiohttp
 import feedparser
-import httpx
 
 from app.domains.subscription.parsers.feed_schemas import (
     FeedEntry,
@@ -27,12 +27,11 @@ from app.domains.subscription.parsers.feed_schemas import (
 logger = logging.getLogger(__name__)
 
 # HTML tag pattern for stripping
-_HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
+_HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 
 
 def strip_html_tags(text: str) -> str:
-    """
-    Strip HTML tags and decode entities / 去除 HTML 标签并解码实体
+    """Strip HTML tags and decode entities / 去除 HTML 标签并解码实体
 
     This is a module-level utility function that can be imported and used
     across different modules without instantiating FeedParser.
@@ -42,44 +41,44 @@ def strip_html_tags(text: str) -> str:
 
     Returns:
         Clean text with HTML tags removed and entities decoded
+
     """
     if not text:
         return ""
 
     # Remove script and style content first
-    text = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", text, flags=re.DOTALL | re.IGNORECASE)
 
     # Strip tags
-    text = _HTML_TAG_PATTERN.sub(' ', text)
+    text = _HTML_TAG_PATTERN.sub(" ", text)
 
     # Decode HTML entities
     text = html.unescape(text)
 
     # Normalize whitespace
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
 class FeedParser:
-    """
-    Enhanced RSS/Atom feed parser with robust error handling.
+    """Enhanced RSS/Atom feed parser with robust error handling.
 
     增强的 RSS/Atom 解析器，具有健壮的错误处理能力。
     """
 
     def __init__(
         self,
-        config: FeedParserConfig | None = None
+        config: FeedParserConfig | None = None,
     ):
-        """
-        Initialize FeedParser.
+        """Initialize FeedParser.
 
         Args:
             config: Parser configuration (uses defaults if not provided)
+
         """
         self.config = config or FeedParserConfig()
-        self._client: httpx.AsyncClient | None = None
+        self._client: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         """Async context manager entry / 异步上下文管理器入口"""
@@ -90,33 +89,34 @@ class FeedParser:
         await self.close()
         return False
 
-    async def _get_client(self) -> httpx.AsyncClient:
+    async def _get_client(self) -> aiohttp.ClientSession:
         """Get or create HTTP client / 获取或创建 HTTP 客户端"""
         if self._client is None:
             headers = {
                 "User-Agent": self.config.user_agent,
                 "Accept": "application/rss+xml, application/rdf+xml, application/atom+xml, application/xml, text/xml",
             }
-            self._client = httpx.AsyncClient(
+            timeout = aiohttp.ClientTimeout(total=self.config.timeout)
+            connector = aiohttp.TCPConnector(limit=10)
+            self._client = aiohttp.ClientSession(
                 headers=headers,
-                timeout=self.config.timeout,
-                follow_redirects=True
+                timeout=timeout,
+                connector=connector,
             )
         return self._client
 
     async def close(self) -> None:
         """Close HTTP client / 关闭 HTTP 客户端"""
-        if self._client:
-            await self._client.aclose()
+        if self._client and not self._client.closed:
+            await self._client.close()
             self._client = None
 
     async def parse_feed(
         self,
         url: str,
-        options: FeedParseOptions | None = None
+        options: FeedParseOptions | None = None,
     ) -> FeedParseResult:
-        """
-        Parse a feed from URL.
+        """Parse a feed from URL.
 
         Args:
             url: Feed URL to parse
@@ -124,47 +124,49 @@ class FeedParser:
 
         Returns:
             FeedParseResult with parsed data and any errors
+
         """
         result = FeedParseResult(
             feed_info=FeedInfo(),
-            entries=[]
+            entries=[],
         )
 
         try:
             # Fetch feed content
             client = await self._get_client()
-            response = await client.get(url)
-            response.raise_for_status()
+            async with client.get(url) as response:
+                response.raise_for_status()
+                content = await response.read()
 
             # Parse with feedparser
             return await asyncio.to_thread(
                 self.parse_feed_content,
-                response.content,
+                content,
                 url,
                 options,
             )
 
-        except httpx.HTTPStatusError as e:
+        except aiohttp.ClientResponseError as e:
             logger.error(f"HTTP error fetching feed {url}: {e}")
             result.add_error(
                 ParseErrorCode.NETWORK_ERROR,
-                f"HTTP {e.response.status_code}: {e}",
+                f"HTTP {e.status}: {e}",
                 url=url,
-                status_code=e.response.status_code
+                status_code=e.status,
             )
-        except httpx.RequestError as e:
+        except aiohttp.ClientError as e:
             logger.error(f"Request error fetching feed {url}: {e}")
             result.add_error(
                 ParseErrorCode.NETWORK_ERROR,
                 f"Request failed: {e}",
-                url=url
+                url=url,
             )
         except Exception as e:
             logger.exception(f"Unexpected error fetching feed {url}: {e}")
             result.add_error(
                 ParseErrorCode.PARSE_ERROR,
                 str(e),
-                url=url
+                url=url,
             )
 
         return result
@@ -173,10 +175,9 @@ class FeedParser:
         self,
         content: bytes,
         url: str | None = None,
-        options: FeedParseOptions | None = None
+        options: FeedParseOptions | None = None,
     ) -> FeedParseResult:
-        """
-        Parse feed from content bytes.
+        """Parse feed from content bytes.
 
         Args:
             content: Feed content as bytes
@@ -185,10 +186,11 @@ class FeedParser:
 
         Returns:
             FeedParseResult with parsed data and any errors
+
         """
         result = FeedParseResult(
             feed_info=FeedInfo(),
-            entries=[]
+            entries=[],
         )
 
         # Apply options
@@ -203,19 +205,19 @@ class FeedParser:
             feed = feedparser.parse(content)
 
             # Check for feedparser errors
-            if hasattr(feed, 'bozo') and feed.bozo:
+            if hasattr(feed, "bozo") and feed.bozo:
                 self._handle_feedparser_error(feed, result, url)
 
             # Store raw feed for debugging if configured
             if self.config.log_raw_feed or include_raw:
-                result.raw_feed = dict(feed) if hasattr(feed, '__dict__') else {'feed': feed}
+                result.raw_feed = dict(feed) if hasattr(feed, "__dict__") else {"feed": feed}
 
             # Parse feed metadata
             result.feed_info = self._parse_feed_info(feed, url)
 
             # Parse entries
-            entries_to_parse = feed.entries[:max_entries] if hasattr(feed, 'entries') else []
-            result.total_entries = len(feed.entries) if hasattr(feed, 'entries') else 0
+            entries_to_parse = feed.entries[:max_entries] if hasattr(feed, "entries") else []
+            result.total_entries = len(feed.entries) if hasattr(feed, "entries") else 0
 
             for entry in entries_to_parse:
                 try:
@@ -229,7 +231,7 @@ class FeedParser:
                         result.add_error(
                             ParseErrorCode.PARSE_ERROR,
                             f"Failed to parse entry: {e}",
-                            entry_id=getattr(entry, 'id', None)
+                            entry_id=getattr(entry, "id", None),
                         )
                         break
                     result.add_warning(f"Skipped entry due to error: {e}")
@@ -239,7 +241,7 @@ class FeedParser:
             result.add_error(
                 ParseErrorCode.PARSE_ERROR,
                 str(e),
-                url=url
+                url=url,
             )
             result.success = False
 
@@ -249,10 +251,10 @@ class FeedParser:
         self,
         feed: Any,
         result: FeedParseResult,
-        url: str | None = None
+        url: str | None = None,
     ) -> None:
         """Handle feedparser bozo error / 处理 feedparser 错误"""
-        if hasattr(feed, 'bozo_exception'):
+        if hasattr(feed, "bozo_exception"):
             exc = feed.bozo_exception
             logger.warning(f"Feedparser warning: {exc}")
 
@@ -265,86 +267,86 @@ class FeedParser:
                 error_code,
                 str(exc),
                 url=url,
-                exception_type=type(exc).__name__
+                exception_type=type(exc).__name__,
             )
 
     def _parse_feed_info(self, feed: Any, url: str | None) -> FeedInfo:
         """Parse feed metadata / 解析 feed 元数据"""
-        feed_data = feed.get('feed', {})
+        feed_data = feed.get("feed", {})
 
         # Extract title
-        title = self._get_field(feed_data, ['title', 'text'], "")
+        title = self._get_field(feed_data, ["title", "text"], "")
 
         # Extract description
         description = self._get_field(
             feed_data,
-            ['description', 'subtitle', 'tagline', 'summary'],
-            ""
+            ["description", "subtitle", "tagline", "summary"],
+            "",
         )
 
         # Extract link
-        link = url or self._get_field(feed_data, ['link', 'href'], "")
+        link = url or self._get_field(feed_data, ["link", "href"], "")
         if link and self.config.validate_urls:
             link = self._normalize_url(link, feed_data)
 
         # Extract author
         author = self._get_field(
             feed_data,
-            ['author', 'creator', 'managingEditor', 'webMaster'],
-            None
+            ["author", "creator", "managingEditor", "webMaster"],
+            None,
         )
 
         # Extract icon/logo
         icon_url = self._get_field(
             feed_data,
-            ['icon', 'logo', 'image', 'href'],
-            None
+            ["icon", "logo", "image", "href"],
+            None,
         )
-        if icon_url and hasattr(icon_url, 'href'):
+        if icon_url and hasattr(icon_url, "href"):
             icon_url = icon_url.href
 
         # NEW: Check iTunes namespace (podcast RSS feeds)
         # feedparser stores iTunes images in various places
         if not icon_url:
-            itunes_image = feed_data.get('itunes_image')
+            itunes_image = feed_data.get("itunes_image")
             if itunes_image:
                 if isinstance(itunes_image, dict):
-                    icon_url = itunes_image.get('href')
+                    icon_url = itunes_image.get("href")
                 elif isinstance(itunes_image, str):
                     icon_url = itunes_image
 
         # NEW: Check standard RSS image with href
         if not icon_url:
-            image = feed_data.get('image')
+            image = feed_data.get("image")
             if image and isinstance(image, dict):
-                icon_url = image.get('href') or image.get('url')
+                icon_url = image.get("href") or image.get("url")
 
         # NEW: Check podcast_image (another feedparser field)
         if not icon_url:
-            podcast_image = feed_data.get('podcast_image')
+            podcast_image = feed_data.get("podcast_image")
             if podcast_image:
                 if isinstance(podcast_image, dict):
-                    icon_url = podcast_image.get('href')
+                    icon_url = podcast_image.get("href")
                 elif isinstance(podcast_image, str):
                     icon_url = podcast_image
 
         # Debug logging for troubleshooting
         if not icon_url:
-            image_keys = [k for k in feed_data if 'image' in k.lower() or 'icon' in k.lower()]
+            image_keys = [k for k in feed_data if "image" in k.lower() or "icon" in k.lower()]
             logger.debug(f"No image_url found. Image-related keys: {image_keys}")
 
         # Extract language
-        language = self._get_field(feed_data, ['language'], None)
+        language = self._get_field(feed_data, ["language"], None)
 
         # Extract updated date
         updated_at = self._parse_date(
-            self._get_field(feed_data, ['updated_parsed', 'published_parsed'], None)
+            self._get_field(feed_data, ["updated_parsed", "published_parsed"], None),
         )
 
         # Store additional metadata
         raw_metadata = {
             k: v for k, v in feed_data.items()
-            if k not in {'title', 'description', 'link', 'author', 'icon', 'language'}
+            if k not in {"title", "description", "link", "author", "icon", "language"}
         }
 
         return FeedInfo(
@@ -355,21 +357,21 @@ class FeedParser:
             icon_url=icon_url,
             updated_at=updated_at,
             language=language,
-            raw_metadata=raw_metadata
+            raw_metadata=raw_metadata,
         )
 
     def _parse_entry(
         self,
         entry: Any,
         strip_html: bool,
-        include_raw: bool
+        include_raw: bool,
     ) -> FeedEntry:
         """Parse a single feed entry / 解析单个 feed 条目"""
         # Extract ID
-        entry_id = self._get_field(entry, ['id', 'guid', 'link'], "")
+        entry_id = self._get_field(entry, ["id", "guid", "link"], "")
 
         # Extract title
-        title = self._get_field(entry, ['title'], "Untitled")
+        title = self._get_field(entry, ["title"], "Untitled")
 
         # Extract and process content
         content = self._extract_content(entry, strip_html)
@@ -378,11 +380,11 @@ class FeedParser:
         # Extract metadata
         author = self._get_field(
             entry,
-            ['author', 'creator', 'name'],
-            None
+            ["author", "creator", "name"],
+            None,
         )
 
-        link = self._get_field(entry, ['link', 'href'], None)
+        link = self._get_field(entry, ["link", "href"], None)
 
         # Extract image
         image_url = self._extract_image_url(entry)
@@ -392,16 +394,16 @@ class FeedParser:
 
         # Extract dates
         published_at = self._parse_date(
-            self._get_field(entry, ['published_parsed'], None)
+            self._get_field(entry, ["published_parsed"], None),
         )
         updated_at = self._parse_date(
-            self._get_field(entry, ['updated_parsed'], None)
+            self._get_field(entry, ["updated_parsed"], None),
         )
 
         # Raw metadata
         raw_metadata = {}
         if include_raw:
-            raw_metadata = dict(entry) if hasattr(entry, '__dict__') else {'entry': entry}
+            raw_metadata = dict(entry) if hasattr(entry, "__dict__") else {"entry": entry}
 
         return FeedEntry(
             id=entry_id,
@@ -414,13 +416,13 @@ class FeedParser:
             tags=tags,
             published_at=published_at,
             updated_at=updated_at,
-            raw_metadata=raw_metadata
+            raw_metadata=raw_metadata,
         )
 
     def _extract_content(self, entry: Any, strip_html: bool) -> str:
         """Extract and normalize content / 提取并规范化内容"""
         # Try multiple content fields in order of preference
-        content_fields = ['content', 'description', 'summary', 'body']
+        content_fields = ["content", "description", "summary", "body"]
 
         for field in content_fields:
             value = getattr(entry, field, None)
@@ -428,11 +430,11 @@ class FeedParser:
                 # Handle list format (feedparser content format)
                 if isinstance(value, list) and value:
                     if isinstance(value[0], dict):
-                        value = value[0].get('value', '')
+                        value = value[0].get("value", "")
                     else:
                         value = str(value[0])
                 elif isinstance(value, dict):
-                    value = value.get('value', '')
+                    value = value.get("value", "")
 
                 if isinstance(value, str) and value.strip():
                     # Limit content length
@@ -449,7 +451,7 @@ class FeedParser:
 
     def _extract_summary(self, entry: Any, strip_html: bool) -> str | None:
         """Extract summary / 提取摘要"""
-        summary = getattr(entry, 'summary', None)
+        summary = getattr(entry, "summary", None)
         if summary and isinstance(summary, str):
             if strip_html:
                 summary = self._strip_html_tags(summary)
@@ -459,7 +461,7 @@ class FeedParser:
     def _extract_image_url(self, entry: Any) -> str | None:
         """Extract image URL / 提取图片 URL"""
         # Try multiple image fields
-        image_fields = ['image', 'enclosure', 'media_thumbnail', 'media_content']
+        image_fields = ["image", "enclosure", "media_thumbnail", "media_content"]
 
         for field in image_fields:
             value = getattr(entry, field, None)
@@ -467,13 +469,13 @@ class FeedParser:
                 # Handle dict format
                 if isinstance(value, dict):
                     # Try common keys
-                    for key in ['href', 'url']:
+                    for key in ["href", "url"]:
                         if key in value:
                             return value[key]
                 # Handle list format
                 elif isinstance(value, list) and value:
                     if isinstance(value[0], dict):
-                        return value[0].get('href') or value[0].get('url')
+                        return value[0].get("href") or value[0].get("url")
                 # Direct string value
                 elif isinstance(value, str):
                     return value
@@ -485,19 +487,19 @@ class FeedParser:
         tags = []
 
         # Try tags field
-        if hasattr(entry, 'tags') and entry.tags:
+        if hasattr(entry, "tags") and entry.tags:
             for tag in entry.tags:
-                if hasattr(tag, 'term'):
+                if hasattr(tag, "term"):
                     tags.append(str(tag.term))
                 elif isinstance(tag, str):
                     tags.append(tag)
                 elif isinstance(tag, dict):
-                    term = tag.get('term') or tag.get('label')
+                    term = tag.get("term") or tag.get("label")
                     if term:
                         tags.append(str(term))
 
         # Try categories field
-        if hasattr(entry, 'categories') and entry.categories:
+        if hasattr(entry, "categories") and entry.categories:
             for cat in entry.categories:
                 if isinstance(cat, str):
                     tags.append(cat)
@@ -548,8 +550,8 @@ class FeedParser:
         url = url.strip()
 
         # Handle relative URLs
-        if context and not url.startswith(('http://', 'https://')):
-            base_link = self._get_field(context, ['link'], '')
+        if context and not url.startswith(("http://", "https://")):
+            base_link = self._get_field(context, ["link"], "")
             if base_link:
                 try:
                     parsed = urlparse(base_link)
@@ -567,10 +569,9 @@ class FeedParser:
 async def parse_feed_url(
     url: str,
     config: FeedParserConfig | None = None,
-    options: FeedParseOptions | None = None
+    options: FeedParseOptions | None = None,
 ) -> FeedParseResult:
-    """
-    Convenience function to parse a feed from URL.
+    """Convenience function to parse a feed from URL.
 
     从 URL 解析 feed 的便捷函数。
 
@@ -581,6 +582,7 @@ async def parse_feed_url(
 
     Returns:
         FeedParseResult with parsed data
+
     """
     parser = FeedParser(config)
     try:
@@ -592,10 +594,9 @@ async def parse_feed_url(
 def parse_feed_bytes(
     content: bytes,
     config: FeedParserConfig | None = None,
-    options: FeedParseOptions | None = None
+    options: FeedParseOptions | None = None,
 ) -> FeedParseResult:
-    """
-    Convenience function to parse feed from bytes.
+    """Convenience function to parse feed from bytes.
 
     从字节内容解析 feed 的便捷函数。
 
@@ -606,6 +607,7 @@ def parse_feed_bytes(
 
     Returns:
         FeedParseResult with parsed data
+
     """
     parser = FeedParser(config)
     return parser.parse_feed_content(content, options=options)

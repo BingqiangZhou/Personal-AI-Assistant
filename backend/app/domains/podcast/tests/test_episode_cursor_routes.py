@@ -41,7 +41,7 @@ def test_feed_rejects_legacy_page_cursor(monkeypatch):
     page_cursor = base64.urlsafe_b64encode(b"2").decode("utf-8").rstrip("=")
 
     response = client.get(
-        f"/api/v1/podcasts/episodes/feed?cursor={page_cursor}&page_size=10"
+        f"/api/v1/podcasts/episodes/feed?cursor={page_cursor}&page_size=10",
     )
 
     assert response.status_code == 400
@@ -110,7 +110,7 @@ def test_feed_keyset_cursor_path():
     keyset_cursor = encode_keyset_cursor("feed", now, 999)
 
     response = client.get(
-        f"/api/v1/podcasts/episodes/feed?cursor={keyset_cursor}&page_size=10"
+        f"/api/v1/podcasts/episodes/feed?cursor={keyset_cursor}&page_size=10",
     )
 
     assert response.status_code == 200
@@ -137,7 +137,7 @@ def test_history_keyset_cursor_path():
     keyset_cursor = encode_keyset_cursor("history", now, 888)
 
     response = client.get(
-        f"/api/v1/podcasts/episodes/history?cursor={keyset_cursor}&size=10"
+        f"/api/v1/podcasts/episodes/history?cursor={keyset_cursor}&size=10",
     )
 
     assert response.status_code == 200

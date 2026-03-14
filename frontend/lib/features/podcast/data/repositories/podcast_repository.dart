@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
+import '../../presentation/widgets/shared/episode_card_utils.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_daily_report_model.dart';
 import '../models/podcast_playback_model.dart';
@@ -20,13 +21,6 @@ class PodcastRepository {
 
   static const String _dailyReportTimezone = 'Asia/Shanghai';
   static const String _dailyReportScheduleTime = '03:30';
-
-  String? _formatDateParam(DateTime? date) {
-    if (date == null) {
-      return null;
-    }
-    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
 
   // === Subscription Management ===
 
@@ -146,7 +140,7 @@ class PodcastRepository {
 
   Future<PodcastDailyReportResponse> getDailyReport({DateTime? date}) async {
     try {
-      final dateParam = _formatDateParam(date);
+      final dateParam = date != null ? EpisodeCardUtils.formatDate(date) : null;
       return await _apiService.getDailyReport(dateParam);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
@@ -170,7 +164,7 @@ class PodcastRepository {
     bool rebuild = false,
   }) async {
     try {
-      final dateParam = _formatDateParam(date);
+      final dateParam = date != null ? EpisodeCardUtils.formatDate(date) : null;
       return await _apiService.generateDailyReport(dateParam, rebuild);
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;

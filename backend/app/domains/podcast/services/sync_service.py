@@ -1,5 +1,4 @@
-"""
-Podcast Sync Service - Handles background synchronization tasks.
+"""Podcast Sync Service - Handles background synchronization tasks.
 
 播客同步服务 - 处理后台同步任务
 """
@@ -13,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSyncService:
-    """
-    Service for managing background synchronization tasks.
+    """Service for managing background synchronization tasks.
 
     Handles:
     - Triggering transcription tasks
@@ -22,12 +20,12 @@ class PodcastSyncService:
     """
 
     def __init__(self, db: AsyncSession, user_id: int):
-        """
-        Initialize sync service.
+        """Initialize sync service.
 
         Args:
             db: Database session
             user_id: Current user ID
+
         """
         self.db = db
         self.user_id = user_id
@@ -39,14 +37,14 @@ class PodcastSyncService:
         self.transcription_service = DatabaseBackedTranscriptionService(db)
 
     async def trigger_transcription(self, episode_id: int) -> dict | None:
-        """
-        Trigger transcription task for an episode.
+        """Trigger transcription task for an episode.
 
         Args:
             episode_id: Episode ID
 
         Returns:
             Task dict or None
+
         """
         try:
             # Create and schedule transcription task

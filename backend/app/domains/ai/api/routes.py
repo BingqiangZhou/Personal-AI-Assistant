@@ -1,5 +1,4 @@
-"""
-AI模型配置管理API路由
+"""AI模型配置管理API路由
 """
 
 
@@ -35,15 +34,14 @@ router = APIRouter()
     "/models",
     response_model=AIModelConfigResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="创建AI模型配置"
+    summary="创建AI模型配置",
 )
 async def create_model(
     model_data: AIModelConfigCreate,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    创建新的AI模型配置
+    """创建新的AI模型配置
 
     请求示例:
     ```json
@@ -72,7 +70,7 @@ async def create_model(
 @router.get(
     "/models",
     response_model=AIModelConfigList,
-    summary="获取AI模型配置列表"
+    summary="获取AI模型配置列表",
 )
 async def get_models(
     model_type: ModelType | None = Query(None, description="模型类型"),
@@ -82,10 +80,9 @@ async def get_models(
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     search: str | None = Query(None, description="搜索关键词"),
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    获取AI模型配置列表，支持筛选和搜索
+    """获取AI模型配置列表，支持筛选和搜索
 
     参数:
     - model_type: 模型类型 (transcription/text_generation)
@@ -102,7 +99,7 @@ async def get_models(
                 query=search,
                 model_type=model_type,
                 page=page,
-                size=size
+                size=size,
             )
         else:
             models, total = await service.get_models(
@@ -110,7 +107,7 @@ async def get_models(
                 is_active=is_active,
                 provider=provider,
                 page=page,
-                size=size
+                size=size,
             )
 
         return build_ai_model_config_list_response(
@@ -126,13 +123,13 @@ async def get_models(
 @router.get(
     "/models/{model_id}",
     response_model=AIModelConfigResponse,
-    summary="获取AI模型配置详情"
+    summary="获取AI模型配置详情",
 )
 async def get_model(
     model_id: int,
     decrypt_key: bool = Query(False, description="是否解密API密钥"),
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """获取指定AI模型配置的详细信息"""
     try:
@@ -141,7 +138,7 @@ async def get_model(
         if not model:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model config {model_id} not found"
+                detail=f"Model config {model_id} not found",
             )
 
         # Decrypt API key if requested
@@ -167,13 +164,13 @@ async def get_model(
 @router.put(
     "/models/{model_id}",
     response_model=AIModelConfigResponse,
-    summary="更新AI模型配置"
+    summary="更新AI模型配置",
 )
 async def update_model(
     model_id: int,
     model_data: AIModelConfigUpdate,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """更新指定AI模型配置"""
     try:
@@ -182,7 +179,7 @@ async def update_model(
         if not model:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model config {model_id} not found"
+                detail=f"Model config {model_id} not found",
             )
 
         return build_ai_model_config_response(model)
@@ -197,12 +194,12 @@ async def update_model(
 @router.delete(
     "/models/{model_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="删除AI模型配置"
+    summary="删除AI模型配置",
 )
 async def delete_model(
     model_id: int,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """删除指定的AI模型配置"""
     try:
@@ -211,7 +208,7 @@ async def delete_model(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model config {model_id} not found"
+                detail=f"Model config {model_id} not found",
             )
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
@@ -224,16 +221,15 @@ async def delete_model(
 @router.post(
     "/models/{model_id}/set-default",
     response_model=AIModelConfigResponse,
-    summary="设置默认模型"
+    summary="设置默认模型",
 )
 async def set_default_model(
     model_id: int,
     model_type: ModelType = Query(..., description="模型类型"),
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    将指定模型设置为该类型的默认模型
+    """将指定模型设置为该类型的默认模型
 
     参数:
     - model_id: 模型配置ID
@@ -245,7 +241,7 @@ async def set_default_model(
         if not model:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model config {model_id} not found or type mismatch"
+                detail=f"Model config {model_id} not found or type mismatch",
             )
 
         return build_ai_model_config_response(model)
@@ -260,12 +256,12 @@ async def set_default_model(
 @router.get(
     "/models/default/{model_type}",
     response_model=AIModelConfigResponse,
-    summary="获取默认模型"
+    summary="获取默认模型",
 )
 async def get_default_model(
     model_type: ModelType,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """获取指定类型的默认模型配置"""
     try:
@@ -274,7 +270,7 @@ async def get_default_model(
         if not model:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No default model found for type: {model_type}"
+                detail=f"No default model found for type: {model_type}",
             )
 
         return build_ai_model_config_response(model)
@@ -285,12 +281,12 @@ async def get_default_model(
 @router.get(
     "/models/active/{model_type}",
     response_model=list[AIModelConfigResponse],
-    summary="获取活跃模型列表"
+    summary="获取活跃模型列表",
 )
 async def get_active_models(
     model_type: ModelType,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """获取指定类型的所有活跃模型"""
     try:
@@ -304,16 +300,15 @@ async def get_active_models(
 @router.post(
     "/models/{model_id}/test",
     response_model=ModelTestResponse,
-    summary="测试模型连接"
+    summary="测试模型连接",
 )
 async def test_model(
     model_id: int,
     test_request: ModelTestRequest,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    测试模型配置是否正确
+    """测试模型配置是否正确
 
     对于转录模型：发送测试音频进行转录
     对于文本生成模型：发送测试文本进行生成
@@ -331,12 +326,12 @@ async def test_model(
 @router.get(
     "/models/{model_id}/stats",
     response_model=ModelUsageStats,
-    summary="获取模型使用统计"
+    summary="获取模型使用统计",
 )
 async def get_model_stats(
     model_id: int,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """获取指定模型的使用统计信息"""
     try:
@@ -345,7 +340,7 @@ async def get_model_stats(
         if not stats:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model config {model_id} not found"
+                detail=f"Model config {model_id} not found",
             )
 
         return stats
@@ -356,13 +351,13 @@ async def get_model_stats(
 @router.get(
     "/models/stats/{model_type}",
     response_model=list[ModelUsageStats],
-    summary="获取模型类型使用统计"
+    summary="获取模型类型使用统计",
 )
 async def get_type_stats(
     model_type: ModelType,
     limit: int = Query(20, ge=1, le=100, description="返回数量限制"),
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
     """获取指定模型类型的所有模型使用统计（按使用量排序）"""
     try:
@@ -376,14 +371,13 @@ async def get_type_stats(
 @router.post(
     "/models/init-defaults",
     response_model=list[AIModelConfigResponse],
-    summary="初始化默认模型配置"
+    summary="初始化默认模型配置",
 )
 async def init_default_models(
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    初始化系统的默认模型配置
+    """初始化系统的默认模型配置
 
     从环境变量中读取默认配置并创建系统预设模型
     """
@@ -400,15 +394,14 @@ async def init_default_models(
 @router.post(
     "/models/validate-api-key",
     response_model=APIKeyValidationResponse,
-    summary="验证API密钥连接"
+    summary="验证API密钥连接",
 )
 async def validate_api_key(
     request: APIKeyValidationRequest,
     user=Depends(get_token_from_request),
-    service: AIModelConfigService = Depends(get_ai_model_config_service)
+    service: AIModelConfigService = Depends(get_ai_model_config_service),
 ):
-    """
-    验证API配置是否可以成功连接
+    """验证API配置是否可以成功连接
     
     尝试使用提供的API URL和Key连接服务。
     会尝试使用标准Bearer Token和api-key Header (Azure/MIMO)
@@ -418,7 +411,7 @@ async def validate_api_key(
             api_url=request.api_url,
             api_key=request.api_key,
             model_id=request.model_id,
-            model_type=request.model_type
+            model_type=request.model_type,
         )
         return result
     except Exception as e:
@@ -426,19 +419,18 @@ async def validate_api_key(
         return APIKeyValidationResponse(
             valid=False,
             error_message=str(e),
-            response_time_ms=0
+            response_time_ms=0,
         )
 
 
 @router.get(
     "/security/rsa-public-key",
-    summary="获取RSA公钥"
+    summary="获取RSA公钥",
 )
 async def get_rsa_public_key(
-    user=Depends(get_token_from_request)
+    user=Depends(get_token_from_request),
 ):
-    """
-    获取RSA公钥用于前端加密API密钥
+    """获取RSA公钥用于前端加密API密钥
 
     返回PEM格式的RSA公钥，前端使用此公钥加密敏感数据（如API密钥）后再传输到后端。
 

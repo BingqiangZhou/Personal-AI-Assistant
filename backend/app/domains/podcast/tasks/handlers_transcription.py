@@ -26,7 +26,7 @@ async def process_podcast_episode_with_transcription_handler(
 ) -> dict:
     """Dispatch the transcription pipeline and return immediately."""
     return await PodcastTaskOrchestrationService(
-        session
+        session,
     ).trigger_episode_transcription_pipeline(
         episode_id=episode_id,
         user_id=user_id,

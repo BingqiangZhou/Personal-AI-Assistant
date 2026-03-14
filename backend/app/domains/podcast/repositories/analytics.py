@@ -59,7 +59,7 @@ class PodcastAnalyticsRepositoryMixin:
             return or_(coalesced.op("%")(keyword), ilike_condition)
 
         def _build_relevance_term(
-            column: Any, weight: float, enable_pg_trgm: bool
+            column: Any, weight: float, enable_pg_trgm: bool,
         ) -> Any:
             coalesced = _coalesced_text(column)
             if enable_pg_trgm:
@@ -74,40 +74,40 @@ class PodcastAnalyticsRepositoryMixin:
 
             if search_in in {"title", "all"}:
                 search_conditions.append(
-                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm)
+                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm),
                 )
                 relevance_terms.append(
-                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm)
+                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm),
                 )
             if search_in in {"description", "all"}:
                 search_conditions.append(
                     _build_text_match_condition(
-                        PodcastEpisode.description, enable_pg_trgm
-                    )
+                        PodcastEpisode.description, enable_pg_trgm,
+                    ),
                 )
                 relevance_terms.append(
                     _build_relevance_term(
-                        PodcastEpisode.description, 0.7, enable_pg_trgm
-                    )
+                        PodcastEpisode.description, 0.7, enable_pg_trgm,
+                    ),
                 )
             if search_in in {"summary", "all"}:
                 search_conditions.append(
                     _build_text_match_condition(
-                        PodcastEpisode.ai_summary, enable_pg_trgm
-                    )
+                        PodcastEpisode.ai_summary, enable_pg_trgm,
+                    ),
                 )
                 relevance_terms.append(
                     _build_relevance_term(
-                        PodcastEpisode.ai_summary, 0.9, enable_pg_trgm
-                    )
+                        PodcastEpisode.ai_summary, 0.9, enable_pg_trgm,
+                    ),
                 )
 
             if not search_conditions:
                 search_conditions.append(
-                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm)
+                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm),
                 )
                 relevance_terms.append(
-                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm)
+                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm),
                 )
 
             relevance_score = relevance_terms[0]
@@ -127,13 +127,13 @@ class PodcastAnalyticsRepositoryMixin:
                     and_(
                         *self._active_user_subscription_filters(user_id),
                         or_(*search_conditions),
-                    )
+                    ),
                 )
             )
 
             paged_query = (
                 base_query.add_columns(
-                    func.count(PodcastEpisode.id).over().label("total_count")
+                    func.count(PodcastEpisode.id).over().label("total_count"),
                 )
                 .order_by(
                     desc(relevance_score),
@@ -150,9 +150,9 @@ class PodcastAnalyticsRepositoryMixin:
             else:
                 total = int(
                     await self.db.scalar(
-                        select(func.count()).select_from(base_query.subquery())
+                        select(func.count()).select_from(base_query.subquery()),
                     )
-                    or 0
+                    or 0,
                 )
 
             episodes: list[PodcastEpisode] = []
@@ -183,7 +183,7 @@ class PodcastAnalyticsRepositoryMixin:
             raise
 
     async def update_subscription_fetch_time(
-        self, subscription_id: int, fetch_time: datetime | None = None
+        self, subscription_id: int, fetch_time: datetime | None = None,
     ):
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)
@@ -191,7 +191,7 @@ class PodcastAnalyticsRepositoryMixin:
 
         if subscription:
             time_to_set = ensure_timezone_aware_fetch_time(
-                fetch_time or datetime.now(UTC)
+                fetch_time or datetime.now(UTC),
             )
             subscription.last_fetched_at = time_to_set
             await self.db.commit()
@@ -212,7 +212,7 @@ class PodcastAnalyticsRepositoryMixin:
             await self.db.commit()
 
     async def get_recently_played(
-        self, user_id: int, limit: int = 5
+        self, user_id: int, limit: int = 5,
     ) -> list[dict[str, Any]]:
         stmt = (
             select(
@@ -229,7 +229,7 @@ class PodcastAnalyticsRepositoryMixin:
                     *self._active_user_subscription_filters(user_id),
                     PodcastPlaybackState.last_updated_at
                     >= datetime.now(UTC) - timedelta(days=7),
-                )
+                ),
             )
             .order_by(PodcastPlaybackState.last_updated_at.desc())
             .limit(limit)
@@ -248,12 +248,12 @@ class PodcastAnalyticsRepositoryMixin:
                     "position": position,
                     "last_played": last_played,
                     "duration": episode.audio_duration,
-                }
+                },
             )
         return recently_played
 
     async def get_liked_episodes(
-        self, user_id: int, limit: int = 20
+        self, user_id: int, limit: int = 20,
     ) -> list[PodcastEpisode]:
         stmt = (
             select(PodcastEpisode)
@@ -266,7 +266,7 @@ class PodcastAnalyticsRepositoryMixin:
                     PodcastEpisode.audio_duration > 0,
                     PodcastPlaybackState.current_position
                     >= PodcastEpisode.audio_duration * 0.8,
-                )
+                ),
             )
             .order_by(PodcastPlaybackState.play_count.desc())
             .limit(limit)
@@ -283,7 +283,7 @@ class PodcastAnalyticsRepositoryMixin:
                     PodcastPlaybackState.user_id == user_id,
                     PodcastPlaybackState.last_updated_at
                     >= datetime.now(UTC) - timedelta(days=days),
-                )
+                ),
             )
             .distinct()
         )
@@ -311,24 +311,24 @@ class PodcastAnalyticsRepositoryMixin:
         columns: list[Any] = [
             func.count(PodcastEpisode.id).label("total_episodes"),
             func.sum(case((PodcastEpisode.ai_summary.isnot(None), 1), else_=0)).label(
-                "summaries_generated"
+                "summaries_generated",
             ),
             func.sum(case((PodcastEpisode.ai_summary.is_(None), 1), else_=0)).label(
-                "pending_summaries"
+                "pending_summaries",
             ),
         ]
 
         if include_played_episodes:
             columns.append(
                 func.count(func.distinct(PodcastPlaybackState.episode_id)).label(
-                    "played_episodes"
-                )
+                    "played_episodes",
+                ),
             )
         if include_total_playtime:
             columns.append(
                 func.coalesce(func.sum(PodcastPlaybackState.current_position), 0).label(
-                    "total_playtime"
-                )
+                    "total_playtime",
+                ),
             )
 
         return select(*columns).select_from(
@@ -349,7 +349,7 @@ class PodcastAnalyticsRepositoryMixin:
                     PodcastPlaybackState.episode_id == PodcastEpisode.id,
                     PodcastPlaybackState.user_id == user_id,
                 ),
-            )
+            ),
         )
 
     async def get_profile_stats_aggregated(self, user_id: int) -> dict[str, Any]:
@@ -357,7 +357,7 @@ class PodcastAnalyticsRepositoryMixin:
             await self.db.scalar(self._subscription_count_stmt(user_id)) or 0
         )
         episode_stats_result = await self.db.execute(
-            self._episode_stats_stmt(user_id, include_played_episodes=True)
+            self._episode_stats_stmt(user_id, include_played_episodes=True),
         )
         episode_stats = episode_stats_result.one()
 
@@ -386,7 +386,7 @@ class PodcastAnalyticsRepositoryMixin:
             await self.db.scalar(self._subscription_count_stmt(user_id)) or 0
         )
         episode_stats_result = await self.db.execute(
-            self._episode_stats_stmt(user_id, include_total_playtime=True)
+            self._episode_stats_stmt(user_id, include_total_playtime=True),
         )
         episode_stats = episode_stats_result.one()
 
@@ -397,7 +397,7 @@ class PodcastAnalyticsRepositoryMixin:
                 and_(
                     *self._active_user_subscription_filters(user_id),
                     Subscription.status == "active",
-                )
+                ),
             )
         )
         active_check_result = await self.db.execute(active_check_stmt)

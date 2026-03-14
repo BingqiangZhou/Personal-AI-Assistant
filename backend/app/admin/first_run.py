@@ -14,17 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 async def check_admin_exists() -> bool:
-    """
-    Check if any superuser exists in the database.
+    """Check if any superuser exists in the database.
 
     Returns:
         True if at least one superuser exists, False otherwise
+
     """
     try:
         session_factory = get_async_session_factory()
         async with session_factory() as db:
             result = await db.execute(
-                select(User).where(User.is_superuser).limit(1)
+                select(User).where(User.is_superuser).limit(1),
             )
             admin_user = result.scalar_one_or_none()
             return admin_user is not None
@@ -35,8 +35,7 @@ async def check_admin_exists() -> bool:
 
 
 async def first_run_middleware(request: Request, call_next):
-    """
-    Middleware to redirect to setup page if no admin user exists.
+    """Middleware to redirect to setup page if no admin user exists.
 
     This middleware checks if any superuser exists in the database.
     If not, it redirects all /super/* requests (except /super/setup)

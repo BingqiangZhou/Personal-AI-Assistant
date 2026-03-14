@@ -15,5 +15,5 @@ async def generate_daily_reports_handler(
 ) -> dict:
     """Generate one daily report snapshot for each user with active subscriptions."""
     return await PodcastTaskOrchestrationService(session).generate_daily_reports(
-        target_date=target_date
+        target_date=target_date,
     )

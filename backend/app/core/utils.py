@@ -1,5 +1,4 @@
-"""
-Utility functions for the application.
+"""Utility functions for the application.
 通用工具函数
 """
 
@@ -12,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def sanitize_html(text: str, allow_tags: set | None = None) -> str:
-    """
-    Sanitize HTML content to prevent XSS attacks.
+    """Sanitize HTML content to prevent XSS attacks.
 
     This function escapes HTML tags and attributes, making the content safe
     to display in web browsers.
@@ -31,6 +29,7 @@ def sanitize_html(text: str, allow_tags: set | None = None) -> str:
 
         >>> sanitize_html("<b>Bold</b> text", allow_tags={'b'})
         '&lt;b&gt;Bold&lt;/b&gt; text'
+
     """
     if not text:
         return text
@@ -42,8 +41,7 @@ def sanitize_html(text: str, allow_tags: set | None = None) -> str:
 
 
 def filter_thinking_content(text: str) -> str:
-    """
-    Filter out <thinking> and special Chinese punctuation tags from AI model output.
+    """Filter out <thinking> and special Chinese punctuation tags from AI model output.
     过滤掉 AI 模型输出中的 <thinking> 和中文标点标签及其内容
 
     This function removes thinking/reasoning content that some AI models include
@@ -70,6 +68,7 @@ def filter_thinking_content(text: str) -> str:
 
         >>> filter_thinking_content("No thinking tags here")
         'No thinking tags here'
+
     """
     if not text:
         return text
@@ -95,7 +94,7 @@ def filter_thinking_content(text: str) -> str:
 
     if len(cleaned) != original_length:
         logger.debug(
-            f"Filtered thinking content: {original_length} -> {len(cleaned)} chars"
+            f"Filtered thinking content: {original_length} -> {len(cleaned)} chars",
         )
 
     return cleaned

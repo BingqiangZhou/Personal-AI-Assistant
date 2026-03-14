@@ -59,17 +59,17 @@ class SubscriptionRepository:
         return result.scalar_one_or_none()
 
     async def get_subscription_by_url(
-        self, user_id: int, url: str
+        self, user_id: int, url: str,
     ) -> Subscription | None:
         query = select(Subscription).where(Subscription.source_url == url)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_subscription_by_title(
-        self, user_id: int, title: str
+        self, user_id: int, title: str,
     ) -> Subscription | None:
         query = select(Subscription).where(
-            func.lower(Subscription.title) == func.lower(title)
+            func.lower(Subscription.title) == func.lower(title),
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
@@ -87,13 +87,13 @@ class SubscriptionRepository:
             return subscription
 
         query_title = select(Subscription).where(
-            func.lower(Subscription.title) == func.lower(title)
+            func.lower(Subscription.title) == func.lower(title),
         )
         result = await self.db.execute(query_title)
         return result.scalar_one_or_none()
 
     async def get_item_by_id(
-        self, item_id: int, user_id: int
+        self, item_id: int, user_id: int,
     ) -> SubscriptionItem | None:
         query = (
             select(SubscriptionItem)
@@ -131,7 +131,7 @@ class SubscriptionRepository:
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived.is_(False),
                     SubscriptionItem.read_at.is_(None),
-                )
+                ),
             )
         )
         return await self.db.scalar(count_query) or 0
@@ -186,7 +186,7 @@ class SubscriptionRepository:
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
         items = [row[0] for row in rows]
@@ -232,7 +232,7 @@ class SubscriptionRepository:
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
         return [row[0] for row in rows], total
@@ -274,7 +274,7 @@ class SubscriptionRepository:
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
+                base_query.subquery(),
             ),
         )
         return [row[0] for row in rows], total
@@ -303,12 +303,12 @@ class SubscriptionRepository:
         update_day_of_week = None
 
         settings_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
             update_frequency = setting.value.get(
-                "update_frequency", UpdateFrequency.HOURLY.value
+                "update_frequency", UpdateFrequency.HOURLY.value,
             )
             update_time = setting.value.get("update_time")
             update_day_of_week = setting.value.get("update_day_of_week")
@@ -375,7 +375,7 @@ class SubscriptionRepository:
             return False
 
         other_subs_query = select(func.count()).select_from(UserSubscription).where(
-            UserSubscription.subscription_id == sub_id
+            UserSubscription.subscription_id == sub_id,
         )
         remaining_count = await self.db.scalar(other_subs_query) or 0
         if remaining_count == 0:
@@ -468,7 +468,7 @@ class SubscriptionRepository:
             return [], []
 
         external_ids = list(
-            {data["external_id"] for data in items_data if data.get("external_id")}
+            {data["external_id"] for data in items_data if data.get("external_id")},
         )
         existing_by_external_id: dict[str, SubscriptionItem] = {}
         if external_ids:
@@ -526,7 +526,7 @@ class SubscriptionRepository:
         return processed_items, new_items
 
     async def mark_item_as_read(
-        self, item_id: int, user_id: int
+        self, item_id: int, user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -538,7 +538,7 @@ class SubscriptionRepository:
         return item
 
     async def mark_item_as_unread(
-        self, item_id: int, user_id: int
+        self, item_id: int, user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -549,7 +549,7 @@ class SubscriptionRepository:
         return item
 
     async def toggle_bookmark(
-        self, item_id: int, user_id: int
+        self, item_id: int, user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -610,7 +610,7 @@ class SubscriptionRepository:
         return True
 
     async def add_subscription_to_category(
-        self, subscription_id: int, category_id: int
+        self, subscription_id: int, category_id: int,
     ) -> bool:
         query = select(SubscriptionCategoryMapping).where(
             SubscriptionCategoryMapping.subscription_id == subscription_id,
@@ -630,7 +630,7 @@ class SubscriptionRepository:
         return True
 
     async def remove_subscription_from_category(
-        self, subscription_id: int, category_id: int
+        self, subscription_id: int, category_id: int,
     ) -> bool:
         query = select(SubscriptionCategoryMapping).where(
             SubscriptionCategoryMapping.subscription_id == subscription_id,

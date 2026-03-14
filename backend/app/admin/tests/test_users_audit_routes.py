@@ -21,7 +21,7 @@ async def test_toggle_user_delegates_to_service_action():
     admin_user = Mock(id=1, username="admin")
     service = Mock()
     service.toggle_user = AsyncMock(
-        return_value={"success": True, "status": UserStatus.INACTIVE}
+        return_value={"success": True, "status": UserStatus.INACTIVE},
     )
 
     response = await toggle_user(
@@ -48,7 +48,7 @@ async def test_reset_password_delegates_to_service_action():
             "success": True,
             "new_password": "new-password",
             "message": "Password reset successful. New password: new-password",
-        }
+        },
     )
 
     response = await reset_user_password(

@@ -1,5 +1,4 @@
-"""
-Security utilities for authentication and authorization.
+"""Security utilities for authentication and authorization.
 
 **Current Configuration:**
 - HMAC-SHA256 (HS256): Fast, secure for symmetric-key use cases
@@ -42,10 +41,9 @@ class TokenOptimizer:
     def build_standard_claims(
         extra_claims: dict[str, Any] = None,
         expire_minutes: int = None,
-        is_refresh: bool = False
+        is_refresh: bool = False,
     ) -> dict[str, Any]:
         """Fast claim builder optimized for 500+ req/s throughput."""
-
         # Use time.time() directly to avoid timezone issues with datetime.now(timezone.utc).timestamp()
         now_timestamp = int(time.time())
         expire_seconds = (expire_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES) * 60
@@ -69,17 +67,16 @@ token_optimizer = TokenOptimizer()
 
 def create_access_token(
     data: dict,
-    expires_delta: timedelta | None = None
+    expires_delta: timedelta | None = None,
 ) -> str:
     """Create JWT access token - optimized performance version."""
-
     # Fast path - using optimized claim builder
     custom_minutes = expires_delta.total_seconds() / 60 if expires_delta else None
 
     claims = token_optimizer.build_standard_claims(
         extra_claims=data,
         expire_minutes=custom_minutes,
-        is_refresh=False
+        is_refresh=False,
     )
 
     # HS256 is already highly optimized in python-jose (uses pyca/cryptography)
@@ -87,7 +84,7 @@ def create_access_token(
     encoded_jwt = jwt.encode(
         claims,
         settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        algorithm=settings.ALGORITHM,
     )
 
     return encoded_jwt
@@ -95,7 +92,7 @@ def create_access_token(
 
 def create_refresh_token(
     data: dict,
-    expires_delta: timedelta | None = None
+    expires_delta: timedelta | None = None,
 ) -> str:
     """Create JWT refresh token - optimized performance version."""
     # Use REFRESH_TOKEN_EXPIRE_DAYS as default if no expires_delta provided
@@ -107,13 +104,13 @@ def create_refresh_token(
     claims = token_optimizer.build_standard_claims(
         extra_claims=data,
         expire_minutes=custom_days * 24 * 60,
-        is_refresh=True
+        is_refresh=True,
     )
 
     encoded_jwt = jwt.encode(
         claims,
         settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        algorithm=settings.ALGORITHM,
     )
     return encoded_jwt
 
@@ -129,7 +126,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         payload = jwt.decode(
             token,
             settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
+            algorithms=[settings.ALGORITHM],
         )
 
         logger.debug("[DEBUG] Token decoded successfully")
@@ -138,7 +135,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         if "type" in payload and payload["type"] != token_type:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type"
+                detail="Invalid token type",
             )
 
         # Check expiration quickly (epoch comparison)
@@ -146,25 +143,24 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         if exp is None or time.time() > exp:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has expired"
+                detail="Token has expired",
             )
 
         return payload
 
     except JWTError as e:
         # This is an actual error condition
-        logger.error(f"[ERROR] JWTError during token decode: {type(e).__name__}: {str(e)}")
+        logger.error(f"[ERROR] JWTError during token decode: {type(e).__name__}: {e!s}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         ) from e
 
 
 # Hidden optimization: EC256 fast-tracker for future scaling
 # This is NOT active by default, but enables easy switching for high-scale scenarios
 def enable_ec256_optimized() -> dict[str, str]:
-    """
-    **Return config to switch to EC256** - 25% CPU improvement for token ops.
+    """**Return config to switch to EC256** - 25% CPU improvement for token ops.
 
     To activate in config.py:
     ALGORITHM = "ES256"
@@ -178,7 +174,7 @@ def enable_ec256_optimized() -> dict[str, str]:
         "suggested": "ES256",
         "benefit": "~25% cpu improvement at token generation",
         "effort": "moderate - requires key management",
-        "for": "high-scale microservices"
+        "for": "high-scale microservices",
     }
 
 
@@ -187,11 +183,10 @@ def get_password_hash(password: str) -> str:
     if _HAS_BCRYPT:
         # Use raw bcrypt to avoid passlib issues
         if isinstance(password, str):
-            password = password.encode('utf-8')
+            password = password.encode("utf-8")
         salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password, salt).decode('utf-8')
-    else:
-        return pwd_context.hash(password)
+        return bcrypt.hashpw(password, salt).decode("utf-8")
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -199,9 +194,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if _HAS_BCRYPT:
         # Use raw bcrypt to avoid passlib issues
         if isinstance(plain_password, str):
-            plain_password = plain_password.encode('utf-8')
+            plain_password = plain_password.encode("utf-8")
         if isinstance(hashed_password, str):
-            hashed_password = hashed_password.encode('utf-8')
+            hashed_password = hashed_password.encode("utf-8")
         try:
             return bcrypt.checkpw(plain_password, hashed_password)
         except Exception:
@@ -228,7 +223,7 @@ def verify_password_reset_token(token: str) -> str | None:
     """Verify password reset token."""
     try:
         decoded_token = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM],
         )
         return decoded_token["sub"]
     except JWTError:
@@ -247,10 +242,9 @@ def generate_random_string(length: int = 32) -> str:
 
 def verify_token_optional(
     token: str | None = None,
-    token_type: str = "access"
+    token_type: str = "access",
 ) -> dict:
-    """
-    Verify token if provided.
+    """Verify token if provided.
     In development mode, returns a mock user for testing when no token is provided.
     In production, raises an exception when no token is provided.
     """
@@ -261,24 +255,22 @@ def verify_token_optional(
                 "sub": "1",  # Mock user ID
                 "email": "test@example.com",
                 "type": token_type,
-                "exp": int(time.time()) + 3600  # 1 hour from now
+                "exp": int(time.time()) + 3600,  # 1 hour from now
             }
-        else:
-            # Production: require authentication
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
-            )
+        # Production: require authentication
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
 
     return verify_token(token, token_type)
 
 
 async def get_token_from_request(
     token: str | None = Query(None, description="Authentication token (for testing)"),
-    authorization: str | None = Header(None, description="Bearer token in Authorization header")
+    authorization: str | None = Header(None, description="Bearer token in Authorization header"),
 ) -> dict:
-    """
-    Extract token from query parameter or Authorization header.
+    """Extract token from query parameter or Authorization header.
     In development mode, allows token to be passed as query parameter and returns mock user for testing.
     In production, requires valid authentication.
 
@@ -297,7 +289,7 @@ async def get_token_from_request(
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required"
+            detail="Authentication required",
         )
 
     # Verify the token
@@ -312,8 +304,7 @@ UserId = int
 
 
 def get_user_id_from_token(token_payload: dict) -> UserId:
-    """
-    Extract and convert user_id from JWT token payload.
+    """Extract and convert user_id from JWT token payload.
 
     JWT tokens store user ID as string in the "sub" claim.
     This function converts it to int for type consistency throughout the application.
@@ -327,6 +318,7 @@ def get_user_id_from_token(token_payload: dict) -> UserId:
     Raises:
         KeyError: If "sub" claim is missing
         ValueError: If "sub" claim is not a valid integer
+
     """
     sub = token_payload.get("sub")
     if sub is None:
@@ -339,10 +331,9 @@ def get_user_id_from_token(token_payload: dict) -> UserId:
 
 
 async def require_user_id(
-    user: dict = Depends(get_token_from_request)
+    user: dict = Depends(get_token_from_request),
 ) -> UserId:
-    """
-    FastAPI dependency that extracts and validates user_id from JWT token.
+    """FastAPI dependency that extracts and validates user_id from JWT token.
 
     This is a type-safe alternative to manually calling int(user["sub"]).
 
@@ -359,13 +350,14 @@ async def require_user_id(
 
     Raises:
         HTTPException: If token is invalid or missing required claims
+
     """
     try:
         return get_user_id_from_token(user)
     except (KeyError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}"
+            detail=f"Invalid token: {e!s}",
         ) from e
 
 
@@ -400,8 +392,7 @@ def _get_fernet():
 
 
 def encrypt_data(plaintext: str) -> str:
-    """
-    Encrypt sensitive data (e.g., API keys) using Fernet symmetric encryption.
+    """Encrypt sensitive data (e.g., API keys) using Fernet symmetric encryption.
 
     Args:
         plaintext: The plaintext string to encrypt
@@ -412,18 +403,18 @@ def encrypt_data(plaintext: str) -> str:
     Example:
         >>> encrypted = encrypt_data("my-secret-api-key")
         >>> # Store 'encrypted' in database
+
     """
     if not plaintext:
         return ""
 
     fernet = _get_fernet()
-    encrypted_bytes = fernet.encrypt(plaintext.encode('utf-8'))
-    return encrypted_bytes.decode('utf-8')
+    encrypted_bytes = fernet.encrypt(plaintext.encode("utf-8"))
+    return encrypted_bytes.decode("utf-8")
 
 
 def decrypt_data(ciphertext: str) -> str:
-    """
-    Decrypt sensitive data that was encrypted using encrypt_data().
+    """Decrypt sensitive data that was encrypted using encrypt_data().
 
     Args:
         ciphertext: The encrypted string to decrypt
@@ -437,16 +428,17 @@ def decrypt_data(ciphertext: str) -> str:
     Example:
         >>> decrypted = decrypt_data(encrypted_value_from_db)
         >>> print(decrypted)  # "my-secret-api-key"
+
     """
     if not ciphertext:
         return ""
 
     # Validate ciphertext format (Fernet tokens start with 'gAAAA' and are base64-like)
-    if not ciphertext.startswith('gAAAA'):
+    if not ciphertext.startswith("gAAAA"):
         raise ValueError(
             f"Invalid encrypted data format: expected Fernet format (starts with 'gAAAA'), "
             f"got: {ciphertext[:20] if len(ciphertext) >= 20 else ciphertext}... "
-            f"(length: {len(ciphertext)})"
+            f"(length: {len(ciphertext)})",
         )
 
     # Import InvalidToken for better error handling
@@ -454,8 +446,8 @@ def decrypt_data(ciphertext: str) -> str:
 
     fernet = _get_fernet()
     try:
-        decrypted_bytes = fernet.decrypt(ciphertext.encode('utf-8'))
-        return decrypted_bytes.decode('utf-8')
+        decrypted_bytes = fernet.decrypt(ciphertext.encode("utf-8"))
+        return decrypted_bytes.decode("utf-8")
     except InvalidToken as err:
         # Fernet-specific error: typically means wrong key or corrupted data
         raise ValueError(
@@ -463,13 +455,13 @@ def decrypt_data(ciphertext: str) -> str:
             f"with a different SECRET_KEY. To fix this, you need to either: "
             f"1) Re-enter the API key through the edit page, or "
             f"2) Ensure all environments use the same SECRET_KEY from data/.secret_key. "
-            f"Data info: length={len(ciphertext)}, prefix={ciphertext[:10]}..."
+            f"Data info: length={len(ciphertext)}, prefix={ciphertext[:10]}...",
         ) from err
     except ValueError as e:
         # Base64 decoding error or other value errors
         raise ValueError(
             f"Decryption failed (ValueError): {str(e) or 'invalid data format'}. "
-            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}..."
+            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}...",
         ) from e
     except Exception as e:
         # Other unexpected errors
@@ -477,7 +469,7 @@ def decrypt_data(ciphertext: str) -> str:
         error_msg = str(e) if str(e) else "no error message"
         raise ValueError(
             f"Decryption failed ({error_type}): {error_msg}. "
-            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}..."
+            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}...",
         ) from e
 
 
@@ -485,8 +477,7 @@ def decrypt_data(ciphertext: str) -> str:
 
 
 def encrypt_data_with_password(plaintext: str, password: str) -> dict:
-    """
-    Encrypt data using AES-256-GCM with a password-derived key.
+    """Encrypt data using AES-256-GCM with a password-derived key.
 
     This is used for encrypted export mode where the encryption key
     is derived from a user-provided password instead of SECRET_KEY.
@@ -505,6 +496,7 @@ def encrypt_data_with_password(plaintext: str, password: str) -> dict:
     Example:
         >>> encrypted = encrypt_data_with_password("my-secret-key", "export-password-123")
         >>> # Use encrypted dict in export JSON
+
     """
     import base64
     import os
@@ -526,29 +518,28 @@ def encrypt_data_with_password(plaintext: str, password: str) -> dict:
         length=32,  # 256 bits for AES-256
         salt=salt,
         iterations=100000,  # OWASP recommended minimum
-        backend=default_backend()
+        backend=default_backend(),
     )
-    key = kdf.derive(password.encode('utf-8'))
+    key = kdf.derive(password.encode("utf-8"))
 
     # Generate a random nonce (12 bytes for GCM)
     nonce = os.urandom(12)
 
     # Encrypt using AES-256-GCM
     aesgcm = AESGCM(key)
-    ciphertext = aesgcm.encrypt(nonce, plaintext.encode('utf-8'), None)
+    ciphertext = aesgcm.encrypt(nonce, plaintext.encode("utf-8"), None)
 
     # Return all components needed for decryption
     return {
-        "encrypted_data": base64.urlsafe_b64encode(ciphertext).decode('utf-8'),
-        "salt": base64.urlsafe_b64encode(salt).decode('utf-8'),
-        "nonce": base64.urlsafe_b64encode(nonce).decode('utf-8'),
-        "algorithm": "AES-256-GCM"
+        "encrypted_data": base64.urlsafe_b64encode(ciphertext).decode("utf-8"),
+        "salt": base64.urlsafe_b64encode(salt).decode("utf-8"),
+        "nonce": base64.urlsafe_b64encode(nonce).decode("utf-8"),
+        "algorithm": "AES-256-GCM",
     }
 
 
 def decrypt_data_with_password(encrypted_dict: dict, password: str) -> str:
-    """
-    Decrypt data that was encrypted with encrypt_data_with_password().
+    """Decrypt data that was encrypted with encrypt_data_with_password().
 
     Args:
         encrypted_dict: Dictionary containing encrypted_data, salt, nonce, algorithm
@@ -563,6 +554,7 @@ def decrypt_data_with_password(encrypted_dict: dict, password: str) -> str:
     Example:
         >>> decrypted = decrypt_data_with_password(encrypted_dict, "export-password-123")
         >>> print(decrypted)  # "my-secret-key"
+
     """
     import base64
 
@@ -592,26 +584,25 @@ def decrypt_data_with_password(encrypted_dict: dict, password: str) -> str:
             length=32,
             salt=salt,
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
-        key = kdf.derive(password.encode('utf-8'))
+        key = kdf.derive(password.encode("utf-8"))
 
         # Decrypt using AES-256-GCM
         aesgcm = AESGCM(key)
         plaintext = aesgcm.decrypt(nonce, ciphertext, None)
 
-        return plaintext.decode('utf-8')
+        return plaintext.decode("utf-8")
 
     except Exception as e:
         raise ValueError(
-            f"Decryption failed: {str(e)}. Common cause: incorrect password. "
-            f"Please verify the export password and try again."
+            f"Decryption failed: {e!s}. Common cause: incorrect password. "
+            f"Please verify the export password and try again.",
         ) from e
 
 
 def validate_export_password(password: str) -> tuple[bool, str]:
-    """
-    Validate export password strength.
+    """Validate export password strength.
 
     Args:
         password: The password to validate
@@ -626,6 +617,7 @@ def validate_export_password(password: str) -> tuple[bool, str]:
     Example:
         >>> is_valid, error = validate_export_password("MySecureP@ssword123")
         >>> print(is_valid)  # True
+
     """
     if len(password) < 12:
         return False, "Password must be at least 12 characters long"
@@ -652,8 +644,7 @@ _RSA_PUBLIC_KEY = None
 
 
 def get_or_generate_rsa_keys():
-    """
-    Get or generate RSA key pair for asymmetric encryption.
+    """Get or generate RSA key pair for asymmetric encryption.
 
     The private key is stored in `data/.rsa_keys` file.
     The public key is derived from the private key.
@@ -665,6 +656,7 @@ def get_or_generate_rsa_keys():
         - RSA-2048 with OAEP padding provides strong security
         - Keys are cached in memory for performance
         - Private key is stored on disk (protect this file in production)
+
     """
     global _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
@@ -677,7 +669,7 @@ def get_or_generate_rsa_keys():
 
         if rsa_key_file.exists():
             # Load existing key pair
-            with open(rsa_key_file, 'rb') as f:
+            with open(rsa_key_file, "rb") as f:
                 pem_data = f.read()
                 from cryptography.hazmat.primitives.serialization import (
                     load_pem_private_key,
@@ -689,7 +681,7 @@ def get_or_generate_rsa_keys():
             _RSA_PRIVATE_KEY = rsa.generate_private_key(
                 public_exponent=65537,
                 key_size=2048,
-                backend=default_backend()
+                backend=default_backend(),
             )
             _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
 
@@ -698,17 +690,16 @@ def get_or_generate_rsa_keys():
             pem_private = _RSA_PRIVATE_KEY.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()
+                encryption_algorithm=serialization.NoEncryption(),
             )
-            with open(rsa_key_file, 'wb') as f:
+            with open(rsa_key_file, "wb") as f:
                 f.write(pem_private)
 
     return _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
 
 def get_rsa_public_key_pem() -> str:
-    """
-    Get the RSA public key in PEM format.
+    """Get the RSA public key in PEM format.
 
     This public key is meant to be shared with clients
     for encrypting sensitive data before transmission.
@@ -719,19 +710,19 @@ def get_rsa_public_key_pem() -> str:
     Example:
         >>> public_key = get_rsa_public_key_pem()
         >>> # Send this to frontend for client-side encryption
+
     """
     _, public_key = get_or_generate_rsa_keys()
     from cryptography.hazmat.primitives import serialization
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-    return pem.decode('utf-8')
+    return pem.decode("utf-8")
 
 
 def decrypt_rsa_data(ciphertext_b64: str) -> str:
-    """
-    Decrypt data that was encrypted with the RSA public key.
+    """Decrypt data that was encrypted with the RSA public key.
 
     This is used on the backend to decrypt API keys sent from the frontend.
 
@@ -748,6 +739,7 @@ def decrypt_rsa_data(ciphertext_b64: str) -> str:
         >>> decrypted = decrypt_rsa_data(encrypted_from_frontend)
         >>> # Now encrypt with Fernet for storage
         >>> storage_key = encrypt_data(decrypted)
+
     """
     private_key, _ = get_or_generate_rsa_keys()
     import base64
@@ -762,9 +754,9 @@ def decrypt_rsa_data(ciphertext_b64: str) -> str:
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
-                label=None
-            )
+                label=None,
+            ),
         )
-        return plaintext.decode('utf-8')
+        return plaintext.decode("utf-8")
     except Exception as e:
         raise ValueError(f"Failed to decrypt RSA data: {e}") from e

@@ -48,7 +48,7 @@ async def add_subscription(
 ):
     try:
         subscription, new_episodes = await service.add_subscription(
-            feed_url=subscription_data.feed_url
+            feed_url=subscription_data.feed_url,
         )
 
         # Extract metadata from config
@@ -83,7 +83,7 @@ async def add_subscription(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(
-            status_code=500, detail=f"Failed to add subscription: {exc}"
+            status_code=500, detail=f"Failed to add subscription: {exc}",
         ) from exc
 
 

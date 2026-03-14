@@ -36,7 +36,7 @@ async def test_update_frequency_uses_bulk_update(monkeypatch):
         side_effect=[
             _ScalarOneOrNoneResult(existing_setting),
             _ExecuteResult(rowcount=7),
-        ]
+        ],
     )
     monkeypatch.setattr(service_module, "log_admin_action", AsyncMock())
 

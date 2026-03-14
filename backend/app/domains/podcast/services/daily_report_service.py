@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, date, datetime, time, timedelta
-from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, delete, func, or_, select
@@ -20,10 +19,6 @@ from app.domains.podcast.services.daily_report_summary_extractor import (
     extract_one_line_summary,
 )
 from app.domains.subscription.models import Subscription, UserSubscription
-
-
-if TYPE_CHECKING:
-    pass
 
 
 logger = logging.getLogger(__name__)
@@ -146,7 +141,7 @@ class DailyReportService:
         safe_size = min(max(1, size), 100)
 
         base_stmt = select(PodcastDailyReport).where(
-            PodcastDailyReport.user_id == self.user_id
+            PodcastDailyReport.user_id == self.user_id,
         )
         count_stmt = select(func.count()).select_from(base_stmt.subquery())
         total = (await self.db.execute(count_stmt)).scalar() or 0
@@ -195,7 +190,7 @@ class DailyReportService:
             and_(
                 PodcastDailyReport.user_id == self.user_id,
                 PodcastDailyReport.report_date == report_date,
-            )
+            ),
         )
         report = (await self.db.execute(stmt)).scalar_one_or_none()
         if report is not None:
@@ -228,7 +223,7 @@ class DailyReportService:
                     UserSubscription.is_archived == False,  # noqa: E712
                     Subscription.source_type == "podcast-rss",
                     Subscription.status == "active",
-                )
+                ),
             )
         )
 
@@ -255,7 +250,7 @@ class DailyReportService:
                 and_(
                     PodcastDailyReportItem.user_id == self.user_id,
                     PodcastDailyReportItem.episode_id == PodcastEpisode.id,
-                )
+                ),
             )
             .exists()
         )
@@ -268,7 +263,7 @@ class DailyReportService:
                     PodcastEpisode.published_at < window_end_utc,
                     self._has_summary_expr(),
                     ~reported_exists,
-                )
+                ),
             )
             .order_by(PodcastEpisode.published_at.asc())
         )
@@ -289,7 +284,7 @@ class DailyReportService:
                         PodcastEpisode.ai_summary.is_(None),
                         self._missing_summary_expr(),
                     ),
-                )
+                ),
             )
             .order_by(PodcastEpisode.published_at.asc())
         )
@@ -305,7 +300,7 @@ class DailyReportService:
             and_(
                 PodcastDailyReportItem.user_id == self.user_id,
                 PodcastDailyReportItem.episode_id == episode.id,
-            )
+            ),
         )
         existing_id = (await self.db.execute(existing_stmt)).scalar_one_or_none()
         if existing_id is not None:
@@ -335,14 +330,14 @@ class DailyReportService:
 
     async def _clear_report_items(self, report_id: int) -> None:
         stmt = delete(PodcastDailyReportItem).where(
-            PodcastDailyReportItem.report_id == report_id
+            PodcastDailyReportItem.report_id == report_id,
         )
         await self.db.execute(stmt)
         await self.db.flush()
 
     async def _count_report_items(self, report_id: int) -> int:
         stmt = select(func.count(PodcastDailyReportItem.id)).where(
-            PodcastDailyReportItem.report_id == report_id
+            PodcastDailyReportItem.report_id == report_id,
         )
         return (await self.db.execute(stmt)).scalar() or 0
 
@@ -364,7 +359,7 @@ class DailyReportService:
                 and_(
                     PodcastDailyReport.user_id == self.user_id,
                     PodcastDailyReport.report_date == target_date,
-                )
+                ),
             )
             .limit(1)
         )

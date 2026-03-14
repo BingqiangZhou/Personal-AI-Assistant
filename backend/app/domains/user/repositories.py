@@ -27,7 +27,7 @@ class UserRepository:
             account_name=user_data.account_name,
             hashed_password=hashed_password,
             status=user_status,
-            is_superuser=user_data.is_superuser
+            is_superuser=user_data.is_superuser,
         )
 
         self.db.add(db_user)
@@ -38,28 +38,28 @@ class UserRepository:
     async def get_by_id(self, user_id: int) -> User | None:
         """Get user by ID."""
         result = await self.db.execute(
-            select(User).filter(User.id == user_id)
+            select(User).filter(User.id == user_id),
         )
         return result.scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> User | None:
         """Get user by email."""
         result = await self.db.execute(
-            select(User).filter(User.email == email)
+            select(User).filter(User.email == email),
         )
         return result.scalar_one_or_none()
 
     async def get_by_username(self, username: str) -> User | None:
         """Get user by username."""
         result = await self.db.execute(
-            select(User).filter(User.username == username)
+            select(User).filter(User.username == username),
         )
         return result.scalar_one_or_none()
 
     async def get_by_api_key(self, api_key: str) -> User | None:
         """Get user by API key."""
         result = await self.db.execute(
-            select(User).filter(User.api_key == api_key)
+            select(User).filter(User.api_key == api_key),
         )
         return result.scalar_one_or_none()
 
@@ -91,7 +91,7 @@ class UserRepository:
         self,
         skip: int = 0,
         limit: int = 100,
-        active_only: bool = True
+        active_only: bool = True,
     ) -> list[User]:
         """List users."""
         query = select(User)
@@ -116,7 +116,7 @@ class UserSessionRepository:
         db_session = UserSession(
             user_id=user_id,
             session_token=session_token,
-            **kwargs
+            **kwargs,
         )
 
         self.db.add(db_session)
@@ -130,9 +130,9 @@ class UserSessionRepository:
             select(UserSession).filter(
                 and_(
                     UserSession.session_token == session_token,
-                    UserSession.is_active
-                )
-            )
+                    UserSession.is_active,
+                ),
+            ),
         )
         return result.scalar_one_or_none()
 
@@ -152,9 +152,9 @@ class UserSessionRepository:
             select(UserSession).filter(
                 and_(
                     UserSession.user_id == user_id,
-                    UserSession.is_active
-                )
-            )
+                    UserSession.is_active,
+                ),
+            ),
         )
         sessions = result.scalars().all()
 

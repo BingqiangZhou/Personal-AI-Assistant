@@ -1,5 +1,4 @@
-"""
-Database-backed AI summary generation services.
+"""Database-backed AI summary generation services.
 """
 
 import asyncio
@@ -64,12 +63,12 @@ class SummaryModelManager:
                 or model.model_type != ModelType.TEXT_GENERATION
             ):
                 raise ValidationError(
-                    f"Summary model '{model_name}' not found or not active"
+                    f"Summary model '{model_name}' not found or not active",
                 )
             return model
 
         active_models = await self.ai_model_repo.get_active_models_by_priority(
-            ModelType.TEXT_GENERATION
+            ModelType.TEXT_GENERATION,
         )
         if not active_models:
             raise ValidationError("No active summary model found")
@@ -87,7 +86,7 @@ class SummaryModelManager:
             models_to_try = [model]
         else:
             models_to_try = await self.ai_model_repo.get_active_models_by_priority(
-                ModelType.TEXT_GENERATION
+                ModelType.TEXT_GENERATION,
             )
             if not models_to_try:
                 raise ValidationError("No active text generation models available")
@@ -137,11 +136,11 @@ class SummaryModelManager:
                 continue
 
         raise ValidationError(
-            f"All text generation models failed. Last error: {last_error}"
+            f"All text generation models failed. Last error: {last_error}",
         )
 
     async def _call_ai_api_with_retry(
-        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any]
+        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any],
     ) -> tuple[str, float, int]:
         max_retries = 3
         base_delay = 2
@@ -158,10 +157,10 @@ class SummaryModelManager:
                 processing_time = time.time() - attempt_start
                 tokens_used = len(prompt.split()) + len(summary_content.split())
                 await self.ai_model_repo.increment_usage(
-                    model_config.id, success=True, tokens_used=tokens_used
+                    model_config.id, success=True, tokens_used=tokens_used,
                 )
                 return summary_content, processing_time, tokens_used
-            except (  # noqa: PERF203
+            except (
                 RetryableSummaryModelError,
                 TimeoutError,
                 aiohttp.ClientError,
@@ -189,9 +188,9 @@ class SummaryModelManager:
                     exc,
                 )
                 raise Exception(
-                    f"Model {model_config.name} failed after {max_retries} attempts: {exc}"
+                    f"Model {model_config.name} failed after {max_retries} attempts: {exc}",
                 ) from exc
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 await self.ai_model_repo.increment_usage(model_config.id, success=False)
                 logger.error(
                     "Summary non-retryable failure model=%s provider=%s retryable=false error_type=%s error=%s",
@@ -201,13 +200,13 @@ class SummaryModelManager:
                     exc,
                 )
                 raise Exception(
-                    f"Model {model_config.name} failed without retry: {exc}"
+                    f"Model {model_config.name} failed without retry: {exc}",
                 ) from exc
 
         raise Exception("Unexpected error in _call_ai_api_with_retry")
 
     async def _call_ai_api(
-        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any]
+        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any],
     ) -> str:
         del episode_info
         max_prompt_length = 100000
@@ -269,7 +268,7 @@ class SummaryModelManager:
                         response.status,
                     )
                     raise RetryableSummaryModelError(
-                        f"AI summary API transient error: {response.status} - {error_text[:200]}"
+                        f"AI summary API transient error: {response.status} - {error_text[:200]}",
                     )
                 logger.error(
                     "Summary API non-retryable status model=%s provider=%s status=%s retryable=false",
@@ -305,13 +304,13 @@ class SummaryModelManager:
 
             if "choices" not in result or not result["choices"]:
                 raise HTTPException(
-                    status_code=500, detail="Invalid response from AI API"
+                    status_code=500, detail="Invalid response from AI API",
                 )
 
             content = result["choices"][0].get("message", {}).get("content")
             if not content or not isinstance(content, str):
                 raise HTTPException(
-                    status_code=500, detail="AI API returned empty or invalid content"
+                    status_code=500, detail="AI API returned empty or invalid content",
                 )
 
             if _looks_like_html_error_page(content):
@@ -326,7 +325,7 @@ class SummaryModelManager:
             return filter_thinking_content(content).strip()
 
     def _build_default_prompt(
-        self, episode_info: dict[str, Any], transcript: str
+        self, episode_info: dict[str, Any], transcript: str,
     ) -> str:
         """构建默认的摘要提示词"""
         title = episode_info.get("title", "未知标题")
@@ -409,7 +408,7 @@ Shownotes: {description}
 
     async def _get_api_key(self, model_config) -> str:
         active_models = await self.ai_model_repo.get_active_models(
-            ModelType.TEXT_GENERATION
+            ModelType.TEXT_GENERATION,
         )
         try:
             return resolve_api_key_with_fallback(
@@ -428,7 +427,7 @@ Shownotes: {description}
 
     async def list_available_models(self):
         active_models = await self.ai_model_repo.get_active_models(
-            ModelType.TEXT_GENERATION
+            ModelType.TEXT_GENERATION,
         )
         return [
             {
@@ -462,7 +461,7 @@ class PodcastSummaryGenerationService:
     ) -> dict[str, Any]:
         lock_name = f"summary:{episode_id}"
         lock_acquired = await self.redis.acquire_lock(
-            lock_name, expire=self.summary_lock_ttl_seconds
+            lock_name, expire=self.summary_lock_ttl_seconds,
         )
         if not lock_acquired:
             return await self._wait_for_existing_summary(episode_id)
@@ -479,7 +478,7 @@ class PodcastSummaryGenerationService:
             transcript_content = episode.transcript_content
             if not transcript_content:
                 raise ValidationError(
-                    f"No transcript content available for episode {episode_id}"
+                    f"No transcript content available for episode {episode_id}",
                 )
 
             episode_info = {
@@ -503,7 +502,7 @@ class PodcastSummaryGenerationService:
 
         for _ in range(self.summary_wait_retries):
             stmt = select(PodcastEpisode.ai_summary).where(
-                PodcastEpisode.id == episode_id
+                PodcastEpisode.id == episode_id,
             )
             result = await self.db.execute(stmt)
             summary_content = result.scalar_one_or_none() or ""
@@ -519,11 +518,11 @@ class PodcastSummaryGenerationService:
             await asyncio.sleep(self.summary_wait_interval_seconds)
 
         raise ValidationError(
-            f"Summary generation already in progress for episode {episode_id}"
+            f"Summary generation already in progress for episode {episode_id}",
         )
 
     async def _update_episode_summary(
-        self, episode_id: int, summary_result: dict[str, Any]
+        self, episode_id: int, summary_result: dict[str, Any],
     ):
         from sqlalchemy import update
 

@@ -60,7 +60,7 @@ def generate_episode_summary(
                 episode_id=episode_id,
                 summary_model=summary_model,
                 custom_prompt=custom_prompt,
-            )
+            ),
         )
         log_task_run(
             task_name=task_name,

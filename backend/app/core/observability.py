@@ -139,7 +139,7 @@ def build_observability_snapshot(
     redis_total_commands = _safe_int(redis_commands.get("total_count"))
     redis_cache_hit_rate = _safe_float(redis_cache.get("hit_rate"))
     redis_cache_lookups = _safe_int(redis_cache.get("hits")) + _safe_int(
-        redis_cache.get("misses")
+        redis_cache.get("misses"),
     )
 
     checks = [

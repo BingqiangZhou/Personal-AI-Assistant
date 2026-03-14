@@ -23,6 +23,7 @@ from app.core.database import Base
 
 class SubscriptionType(StrEnum):
     """Subscription source types."""
+
     RSS = "rss"
     API = "api"
     SOCIAL = "social"
@@ -32,6 +33,7 @@ class SubscriptionType(StrEnum):
 
 class SubscriptionStatus(StrEnum):
     """Subscription status."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     ERROR = "error"
@@ -40,6 +42,7 @@ class SubscriptionStatus(StrEnum):
 
 class UpdateFrequency(StrEnum):
     """Update frequency for scheduled RSS feed refresh."""
+
     HOURLY = "HOURLY"
     DAILY = "DAILY"
     WEEKLY = "WEEKLY"
@@ -66,7 +69,7 @@ class Subscription(Base):
     latest_item_published_at = Column(
         DateTime(timezone=True),
         nullable=True,
-        comment="Published timestamp of the latest item from this feed"
+        comment="Published timestamp of the latest item from this feed",
     )
     error_message = Column(Text, nullable=True)
     fetch_interval = Column(Integer, default=3600)
@@ -79,12 +82,12 @@ class Subscription(Base):
     categories = relationship(
         "SubscriptionCategory",
         secondary="subscription_category_mappings",
-        back_populates="subscriptions"
+        back_populates="subscriptions",
     )
 
     __table_args__ = (
-        Index('idx_source_type', 'source_type'),
-        Index('idx_source_url', 'source_url'),
+        Index("idx_source_type", "source_type"),
+        Index("idx_source_url", "source_url"),
     )
 
 
@@ -107,17 +110,17 @@ class UserSubscription(Base):
         String(10),
         nullable=True,
         default=UpdateFrequency.HOURLY.value,
-        comment="Update frequency type: HOURLY, DAILY, WEEKLY"
+        comment="Update frequency type: HOURLY, DAILY, WEEKLY",
     )
     update_time = Column(
         String(5),
         nullable=True,
-        comment="Update time in HH:MM format (24-hour)"
+        comment="Update time in HH:MM format (24-hour)",
     )
     update_day_of_week = Column(
         Integer,
         nullable=True,
-        comment="Day of week for WEEKLY frequency (1=Monday, 7=Sunday)"
+        comment="Day of week for WEEKLY frequency (1=Monday, 7=Sunday)",
     )
 
     # User-specific state
@@ -141,8 +144,8 @@ class UserSubscription(Base):
             "(playback_rate_preference >= 0.5 AND playback_rate_preference <= 3.0)",
             name="ck_user_subscriptions_playback_rate_preference_range",
         ),
-        Index('idx_user_subscription', 'user_id', 'subscription_id', unique=True),
-        Index('idx_user_archived', 'user_id', 'is_archived'),
+        Index("idx_user_subscription", "user_id", "subscription_id", unique=True),
+        Index("idx_user_archived", "user_id", "is_archived"),
     )
 
     def _parse_local_time(self) -> tuple[int, int]:
@@ -150,7 +153,7 @@ class UserSubscription(Base):
         if not self.update_time:
             return 0, 0
         try:
-            parts = self.update_time.split(':')
+            parts = self.update_time.split(":")
             if len(parts) == 2:
                 return int(parts[0]), int(parts[1])
         except (ValueError, AttributeError):
@@ -158,8 +161,7 @@ class UserSubscription(Base):
         return 0, 0
 
     def _get_next_scheduled_time(self, base_time: datetime) -> datetime:
-        """
-        Calculate the next scheduled time after base_time.
+        """Calculate the next scheduled time after base_time.
 
         All date calculations are done in local timezone (Asia/Shanghai),
         then converted to UTC for storage/comparison.
@@ -169,11 +171,12 @@ class UserSubscription(Base):
 
         Returns:
             UTC datetime of next scheduled time
+
         """
         from zoneinfo import ZoneInfo
 
         # Convert base_time to local timezone for comparison
-        shanghai_tz = ZoneInfo('Asia/Shanghai')
+        shanghai_tz = ZoneInfo("Asia/Shanghai")
         base_local = base_time.astimezone(shanghai_tz)
 
         frequency = self.update_frequency or UpdateFrequency.HOURLY.value
@@ -183,7 +186,7 @@ class UserSubscription(Base):
             next_local = (base_local + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
             return next_local.astimezone(UTC)
 
-        elif frequency == UpdateFrequency.DAILY.value:
+        if frequency == UpdateFrequency.DAILY.value:
             # Get local hour/minute from stored time
             local_hour, local_minute = self._parse_local_time()
 
@@ -197,7 +200,7 @@ class UserSubscription(Base):
             # Convert back to UTC
             return scheduled_local.astimezone(UTC)
 
-        elif frequency == UpdateFrequency.WEEKLY.value:
+        if frequency == UpdateFrequency.WEEKLY.value:
             # Get local hour/minute from stored time
             local_hour, local_minute = self._parse_local_time()
 
@@ -220,15 +223,13 @@ class UserSubscription(Base):
 
     @property
     def computed_next_update_at(self) -> datetime | None:
-        """
-        Calculate next update time based on frequency and user settings.
+        """Calculate next update time based on frequency and user settings.
         Aligns to the next scheduled interval based on CURRENT time.
         """
         return self._get_next_scheduled_time(datetime.now(UTC))
 
     def should_update_now(self) -> bool:
-        """
-        Check if we should update now based on time passed since last fetch.
+        """Check if we should update now based on time passed since last fetch.
         Uses the subscription's last_fetched_at but user's update frequency.
         """
         if not self.subscription.last_fetched_at:
@@ -270,10 +271,10 @@ class SubscriptionItem(Base):
     subscription = relationship("Subscription", back_populates="items")
 
     __table_args__ = (
-        Index('idx_subscription_external', 'subscription_id', 'external_id'),
-        Index('idx_published_at', 'published_at'),
-        Index('idx_read_at', 'read_at'),
-        Index('idx_bookmarked', 'bookmarked'),
+        Index("idx_subscription_external", "subscription_id", "external_id"),
+        Index("idx_published_at", "published_at"),
+        Index("idx_read_at", "read_at"),
+        Index("idx_bookmarked", "bookmarked"),
     )
 
 
@@ -298,11 +299,11 @@ class SubscriptionCategory(Base):
     subscriptions = relationship(
         "Subscription",
         secondary="subscription_category_mappings",
-        back_populates="categories"
+        back_populates="categories",
     )
 
     __table_args__ = (
-        Index('idx_user_category', 'user_id', 'name'),
+        Index("idx_user_category", "user_id", "name"),
     )
 
 

@@ -17,7 +17,7 @@ def process_audio_transcription(self, task_id: int, config_db_id: int | None = N
     queue_name = "transcription"
     try:
         result = run_async(
-            _process_audio_transcription(task_id=task_id, config_db_id=config_db_id)
+            _process_audio_transcription(task_id=task_id, config_db_id=config_db_id),
         )
         log_task_run(
             task_name=task_name,
@@ -61,7 +61,7 @@ def process_podcast_episode_with_transcription(self, episode_id: int, user_id: i
     queue_name = "transcription"
     try:
         result = run_async(
-            _process_episode_with_transcription(episode_id=episode_id, user_id=user_id)
+            _process_episode_with_transcription(episode_id=episode_id, user_id=user_id),
         )
         log_task_run(
             task_name=task_name,

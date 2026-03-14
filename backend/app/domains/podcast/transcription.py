@@ -37,13 +37,13 @@ logger = logging.getLogger(__name__)
 
 
 def log_with_timestamp(level: str, message: str, task_id: int = None):
-    """
-    Emit a log line with timestamp and optional task context.
+    """Emit a log line with timestamp and optional task context.
 
     Args:
         level: Log level (INFO, WARNING, ERROR, DEBUG).
         message: Log message.
         task_id: Optional task ID.
+
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     task_info = f"[Task:{task_id}] " if task_id is not None else ""
@@ -125,7 +125,7 @@ class AudioDownloader:
             "Cache-Control": "max-age=0",
         }
         self.session = aiohttp.ClientSession(
-            connector=connector, timeout=timeout, headers=headers
+            connector=connector, timeout=timeout, headers=headers,
         )
         return self
 
@@ -135,10 +135,9 @@ class AudioDownloader:
             await self.session.close()
 
     async def download_file(
-        self, url: str, destination: str, progress_callback=None
+        self, url: str, destination: str, progress_callback=None,
     ) -> tuple[str, int]:
-        """
-        Download a file to the destination path.
+        """Download a file to the destination path.
 
         Args:
             url: Source URL.
@@ -147,6 +146,7 @@ class AudioDownloader:
 
         Returns:
             Tuple[str, int]: (saved file path, file size in bytes).
+
         """
         if not self.session:
             raise RuntimeError("AudioDownloader must be used as async context manager")
@@ -159,7 +159,7 @@ class AudioDownloader:
         if "cdn.lizhi.fm" in url:
             url = url.replace("cdn.lizhi.fm", "cdn.gzlzfm.com")
             logger.info(
-                f"[CDN REPLACEMENT] Replaced CDN URL: {original_url[:80]}... -> {url[:80]}..."
+                f"[CDN REPLACEMENT] Replaced CDN URL: {original_url[:80]}... -> {url[:80]}...",
             )
 
         # Build request headers.
@@ -168,7 +168,7 @@ class AudioDownloader:
         if "lizhi.fm" in original_url or "lizhi.fm" in url or "gzlzfm.com" in url:
             request_headers["Referer"] = "https://www.lizhi.fm/"
             logger.info(
-                "[HEADERS] Added Referer for lizhi.fm: https://www.lizhi.fm/"
+                "[HEADERS] Added Referer for lizhi.fm: https://www.lizhi.fm/",
             )
 
         # Emit request diagnostics.
@@ -199,7 +199,7 @@ class AudioDownloader:
                         if not first_chunk_logged:
                             preview = chunk[:200]
                             logger.info(
-                                f"[Response Body Preview] First 200 bytes: {preview}"
+                                f"[Response Body Preview] First 200 bytes: {preview}",
                             )
                             first_chunk_logged = True
 
@@ -212,29 +212,28 @@ class AudioDownloader:
                             await progress_callback(progress)
 
                 logger.info(
-                    f"Successfully downloaded file to {destination}, size: {downloaded} bytes"
+                    f"Successfully downloaded file to {destination}, size: {downloaded} bytes",
                 )
                 return destination, downloaded
 
         except TimeoutError as err:
             raise HTTPException(
-                status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Download timeout"
+                status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Download timeout",
             ) from err
         except Exception as e:
-            logger.error(f"Download failed: {str(e)}")
+            logger.error(f"Download failed: {e!s}")
             # Remove partially downloaded file.
             if os.path.exists(destination):
                 os.remove(destination)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Download failed: {str(e)}",
+                detail=f"Download failed: {e!s}",
             ) from e
 
     async def download_file_with_fallback(
-        self, url: str, destination: str, progress_callback=None
+        self, url: str, destination: str, progress_callback=None,
     ) -> tuple[str, int]:
-        """
-        Download a file using aiohttp only.
+        """Download a file using aiohttp only.
 
         Args:
             url: Source URL.
@@ -246,25 +245,25 @@ class AudioDownloader:
 
         Raises:
             HTTPException: Raised when the download fails.
+
         """
         # Download directly with aiohttp.
         logger.info(f"[DOWNLOAD] Starting download for: {url[:100]}...")
         try:
             file_path, file_size = await self.download_file(
-                url, destination, progress_callback
+                url, destination, progress_callback,
             )
             logger.info(f"[DOWNLOAD] Download succeeded: {file_size} bytes")
             return file_path, file_size
 
         except Exception as e:
-            logger.error(f"[DOWNLOAD] Download failed: {type(e).__name__}: {str(e)}")
+            logger.error(f"[DOWNLOAD] Download failed: {type(e).__name__}: {e!s}")
             if isinstance(e, HTTPException):
                 raise
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Download failed: {str(e)}",
-                ) from e
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Download failed: {e!s}",
+            ) from e
 
 
 # Note: Browser fallback download has been removed.
@@ -276,10 +275,9 @@ class AudioConverter:
 
     @staticmethod
     async def convert_to_mp3(
-        input_path: str, output_path: str, progress_callback=None
+        input_path: str, output_path: str, progress_callback=None,
     ) -> tuple[str, float]:
-        """
-        MP3
+        """MP3
 
         Args:
             input_path: 
@@ -288,20 +286,19 @@ class AudioConverter:
 
         Returns:
             Tuple[str, float]: (, )
+
         """
         start_time = time.time()
 
         try:
-            # 
             if not os.path.exists(input_path):
                 raise FileNotFoundError(f"Input file not found: {input_path}")
 
             input_size = os.path.getsize(input_path)
             logger.info(
-                f"[CONVERT] Starting conversion: {input_path} ({input_size / 1024 / 1024:.2f} MB) -> {output_path}"
+                f"[CONVERT] Starting conversion: {input_path} ({input_size / 1024 / 1024:.2f} MB) -> {output_path}",
             )
 
-            # 
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
             # FFmpeg
@@ -317,11 +314,10 @@ class AudioConverter:
                 )
                 .overwrite_output()
                 .global_args(
-                    "-loglevel", "error"
+                    "-loglevel", "error",
                 )  # Changed from 'quiet' to 'error' for debugging
             )
 
-            # 
             if progress_callback:
                 await progress_callback(0)
 
@@ -330,7 +326,7 @@ class AudioConverter:
             logger.debug(f"[CONVERT] FFmpeg command: {' '.join(cmd)}")
 
             process = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await process.communicate()
@@ -342,17 +338,17 @@ class AudioConverter:
                     else "Unknown FFmpeg error"
                 )
                 logger.error(
-                    f"[CONVERT] FFmpeg failed with return code {process.returncode}"
+                    f"[CONVERT] FFmpeg failed with return code {process.returncode}",
                 )
                 logger.error(f"[CONVERT] FFmpeg stderr: {error_msg}")
                 raise RuntimeError(
-                    f"FFmpeg conversion failed (code {process.returncode}): {error_msg}"
+                    f"FFmpeg conversion failed (code {process.returncode}): {error_msg}",
                 )
 
             # Verify output file was created
             if not os.path.exists(output_path):
                 raise RuntimeError(
-                    f"FFmpeg completed successfully but output file not found: {output_path}"
+                    f"FFmpeg completed successfully but output file not found: {output_path}",
                 )
 
             output_size = os.path.getsize(output_path)
@@ -365,35 +361,34 @@ class AudioConverter:
 
             duration = time.time() - start_time
             logger.info(
-                f"[CONVERT] Successfully converted {input_path} to {output_path}"
+                f"[CONVERT] Successfully converted {input_path} to {output_path}",
             )
             logger.info(
-                f"[CONVERT] Input: {input_size / 1024 / 1024:.2f} MB -> Output: {output_size / 1024 / 1024:.2f} MB, Time: {duration:.2f}s"
+                f"[CONVERT] Input: {input_size / 1024 / 1024:.2f} MB -> Output: {output_size / 1024 / 1024:.2f} MB, Time: {duration:.2f}s",
             )
 
             return output_path, duration
 
         except Exception as e:
             logger.error(
-                f"[CONVERT] Audio conversion failed: {type(e).__name__}: {str(e)}"
+                f"[CONVERT] Audio conversion failed: {type(e).__name__}: {e!s}",
             )
             logger.error(
-                f"[CONVERT] Input: {input_path} (exists: {os.path.exists(input_path)}), Output: {output_path} (exists: {os.path.exists(output_path)})"
+                f"[CONVERT] Input: {input_path} (exists: {os.path.exists(input_path)}), Output: {output_path} (exists: {os.path.exists(output_path)})",
             )
-            # 
             if os.path.exists(output_path):
                 try:
                     os.remove(output_path)
                     logger.debug(
-                        f"[CONVERT] Removed partial output file: {output_path}"
+                        f"[CONVERT] Removed partial output file: {output_path}",
                     )
                 except Exception as cleanup_error:
                     logger.warning(
-                        f"[CONVERT] Failed to remove partial output: {cleanup_error}"
+                        f"[CONVERT] Failed to remove partial output: {cleanup_error}",
                     )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Audio conversion failed: {str(e)}",
+                detail=f"Audio conversion failed: {e!s}",
             ) from e
 
 
@@ -407,8 +402,7 @@ class AudioSplitter:
         chunk_duration_seconds: int = 300,
         progress_callback=None,
     ) -> list[AudioChunk]:
-        """
-        P3
+        """P3
 
         Args:
             input_path: MP3
@@ -418,16 +412,15 @@ class AudioSplitter:
 
         Returns:
             List[AudioChunk]: 
+
         """
         try:
-            # 
             os.makedirs(output_dir, exist_ok=True)
 
             # FFmpeg
             probe = await _ffmpeg_probe_async(input_path)
             duration = float(probe["streams"][0]["duration"])
 
-            # 
             num_chunks = max(
                 1,
                 int(duration // chunk_duration_seconds)
@@ -440,15 +433,14 @@ class AudioSplitter:
 
             for i in range(num_chunks):
                 start_time = i * chunk_duration_seconds
-                # 
                 end_time = min(start_time + chunk_duration_seconds, duration)
                 segment_duration = end_time - start_time
 
                 output_path = os.path.join(
-                    output_dir, f"{base_name}_chunk_{i + 1:03d}.mp3"
+                    output_dir, f"{base_name}_chunk_{i + 1:03d}.mp3",
                 )
 
-                # FFmpeg - 
+                # FFmpeg -
                 await _run_ffmpeg_sync(
                     lambda start_time=start_time, segment_duration=segment_duration, output_path=output_path: (
                         ffmpeg.input(input_path, ss=start_time, t=segment_duration)
@@ -462,10 +454,9 @@ class AudioSplitter:
                         .overwrite_output()
                         .global_args("-loglevel", "quiet")
                         .run()
-                    )
+                    ),
                 )
 
-                # 
                 chunk_file_size = os.path.getsize(output_path)
 
                 chunk = AudioChunk(
@@ -477,25 +468,23 @@ class AudioSplitter:
                 )
                 chunks.append(chunk)
 
-                # 
                 if progress_callback:
                     progress = ((i + 1) / num_chunks) * 100
                     await progress_callback(progress)
 
             logger.info(
-                f"Successfully split {input_path} into {len(chunks)} chunks by time ({chunk_duration_seconds}s each)"
+                f"Successfully split {input_path} into {len(chunks)} chunks by time ({chunk_duration_seconds}s each)",
             )
             return chunks
 
         except Exception as e:
-            logger.error(f"Audio splitting by time failed: {str(e)}")
-            # 
+            logger.error(f"Audio splitting by time failed: {e!s}")
             for chunk in locals().get("chunks", []):
                 if os.path.exists(chunk.file_path):
                     os.remove(chunk.file_path)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Audio splitting by time failed: {str(e)}",
+                detail=f"Audio splitting by time failed: {e!s}",
             ) from e
 
     @staticmethod
@@ -505,8 +494,7 @@ class AudioSplitter:
         chunk_size_mb: int = 10,
         progress_callback=None,
     ) -> list[AudioChunk]:
-        """
-        P3
+        """P3
 
         Args:
             input_path: MP3
@@ -516,22 +504,20 @@ class AudioSplitter:
 
         Returns:
             List[AudioChunk]: 
+
         """
         try:
-            # 
             if not os.path.exists(input_path):
                 raise FileNotFoundError(f"Input file not found: {input_path}")
 
             input_size = os.path.getsize(input_path)
             logger.info(
-                f"[SPLIT] Starting split: {input_path} ({input_size / 1024 / 1024:.2f} MB) into {chunk_size_mb}MB chunks"
+                f"[SPLIT] Starting split: {input_path} ({input_size / 1024 / 1024:.2f} MB) into {chunk_size_mb}MB chunks",
             )
 
-            # 
             os.makedirs(output_dir, exist_ok=True)
             logger.info(f"[SPLIT] Output directory: {output_dir}")
 
-            # 
             file_size = os.path.getsize(input_path)
             chunk_size_bytes = chunk_size_mb * 1024 * 1024
 
@@ -544,12 +530,11 @@ class AudioSplitter:
                 logger.error(f"[SPLIT] FFmpeg probe failed: {e}")
                 raise RuntimeError(f"Failed to probe input file: {e}") from e
 
-            # 
             num_chunks = max(1, (file_size + chunk_size_bytes - 1) // chunk_size_bytes)
             chunk_duration = duration / num_chunks
 
             logger.info(
-                f"[SPLIT] Will create {num_chunks} chunks, ~{chunk_duration:.2f}s each"
+                f"[SPLIT] Will create {num_chunks} chunks, ~{chunk_duration:.2f}s each",
             )
 
             chunks = []
@@ -558,14 +543,14 @@ class AudioSplitter:
             for i in range(num_chunks):
                 start_time = i * chunk_duration
                 output_path = os.path.join(
-                    output_dir, f"{base_name}_chunk_{i + 1:03d}.mp3"
+                    output_dir, f"{base_name}_chunk_{i + 1:03d}.mp3",
                 )
 
                 logger.debug(
-                    f"[SPLIT] Creating chunk {i + 1}/{num_chunks}: {output_path} (start: {start_time:.2f}s, duration: {chunk_duration:.2f}s)"
+                    f"[SPLIT] Creating chunk {i + 1}/{num_chunks}: {output_path} (start: {start_time:.2f}s, duration: {chunk_duration:.2f}s)",
                 )
 
-                # FFmpeg - 
+                # FFmpeg -
                 try:
                     # FFmpeg
                     ffmpeg_cmd = (
@@ -573,12 +558,11 @@ class AudioSplitter:
                         .output(output_path, c="copy")
                         .overwrite_output()
                         .global_args(
-                            "-loglevel", "error"
+                            "-loglevel", "error",
                         )  # Changed from 'quiet' to 'error'
                         .compile()
                     )
 
-                    # 
                     process = await asyncio.create_subprocess_exec(
                         *ffmpeg_cmd,
                         stdout=asyncio.subprocess.PIPE,
@@ -594,7 +578,7 @@ class AudioSplitter:
                             else "Unknown error"
                         )
                         raise RuntimeError(
-                            f"FFmpeg split failed (code {process.returncode}): {error_msg}"
+                            f"FFmpeg split failed (code {process.returncode}): {error_msg}",
                         )
 
                 except Exception as e:
@@ -604,7 +588,7 @@ class AudioSplitter:
                 # ?
                 if not os.path.exists(output_path):
                     raise RuntimeError(
-                        f"FFmpeg completed but output file not created: {output_path}"
+                        f"FFmpeg completed but output file not created: {output_path}",
                     )
 
                 chunk_file_size = os.path.getsize(output_path)
@@ -622,42 +606,40 @@ class AudioSplitter:
                 chunks.append(chunk)
 
                 logger.debug(
-                    f"[SPLIT] Created chunk {i + 1}: {chunk_file_size / 1024:.2f} KB"
+                    f"[SPLIT] Created chunk {i + 1}: {chunk_file_size / 1024:.2f} KB",
                 )
 
-                # 
                 if progress_callback:
                     progress = ((i + 1) / num_chunks) * 100
                     await progress_callback(progress)
 
             total_output_size = sum(c.file_size for c in chunks)
             logger.info(
-                f"[SPLIT] Successfully split {input_path} into {len(chunks)} chunks ({total_output_size / 1024 / 1024:.2f} MB total)"
+                f"[SPLIT] Successfully split {input_path} into {len(chunks)} chunks ({total_output_size / 1024 / 1024:.2f} MB total)",
             )
             return chunks
 
         except Exception as e:
             logger.error(
-                f"[SPLIT] Audio splitting failed: {type(e).__name__}: {str(e)}"
+                f"[SPLIT] Audio splitting failed: {type(e).__name__}: {e!s}",
             )
             logger.error(
-                f"[SPLIT] Input: {input_path} (exists: {os.path.exists(input_path)}), Output dir: {output_dir}"
+                f"[SPLIT] Input: {input_path} (exists: {os.path.exists(input_path)}), Output dir: {output_dir}",
             )
-            # 
             for chunk in locals().get("chunks", []):
                 if os.path.exists(chunk.file_path):
                     try:
                         os.remove(chunk.file_path)
                         logger.debug(
-                            f"[SPLIT] Removed partial chunk: {chunk.file_path}"
+                            f"[SPLIT] Removed partial chunk: {chunk.file_path}",
                         )
                     except Exception as cleanup_error:
                         logger.warning(
-                            f"[SPLIT] Failed to remove partial chunk: {cleanup_error}"
+                            f"[SPLIT] Failed to remove partial chunk: {cleanup_error}",
                         )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Audio splitting failed: {str(e)}",
+                detail=f"Audio splitting failed: {e!s}",
             ) from e
 
 
@@ -731,7 +713,6 @@ class SiliconFlowTranscriber:
         model: str = "FunAudioLLM/SenseVoiceSmall",
     ) -> AudioChunk:
         """Transcribe a single audio chunk with retries."""
-
         async with self.semaphore:
             if not self.session:
                 raise RuntimeError("Transcriber must be used as async context manager")
@@ -768,7 +749,7 @@ class SiliconFlowTranscriber:
                     transcript_file = chunk.file_path.replace(".mp3", ".txt")
                     try:
                         async with aiofiles.open(
-                            transcript_file, "w", encoding="utf-8"
+                            transcript_file, "w", encoding="utf-8",
                         ) as file_obj:
                             await file_obj.write(transcript)
                     except Exception as save_error:
@@ -861,7 +842,7 @@ class SiliconFlowTranscriber:
                 )
             except Exception as stats_error:
                 logger.warning(
-                    "Failed to persist aggregated usage stats: %s", stats_error
+                    "Failed to persist aggregated usage stats: %s", stats_error,
                 )
 
         success_count = sum(1 for item in results if item.transcript is not None)
@@ -879,16 +860,15 @@ class PodcastTranscriptionService:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        # 
         self._progress_cache: dict[str, dict[str, float | str]] = {}
         self._task_progress_context_cache: dict[int, dict[str, Any]] = {}
 
         # Get path from settings - use absolute path if configured, otherwise resolve relative path
         temp_dir_config = getattr(
-            settings, "TRANSCRIPTION_TEMP_DIR", "./temp/transcription"
+            settings, "TRANSCRIPTION_TEMP_DIR", "./temp/transcription",
         )
         storage_dir_config = getattr(
-            settings, "TRANSCRIPTION_STORAGE_DIR", "./storage/podcasts"
+            settings, "TRANSCRIPTION_STORAGE_DIR", "./storage/podcasts",
         )
 
         # Use configured path directly (supports both absolute and relative)
@@ -899,23 +879,23 @@ class PodcastTranscriptionService:
 
         # Log for debugging (use debug level to reduce noise)
         logger.debug(
-            f"[TRANSCRIPTION] temp_dir = {self.temp_dir} (from config: {temp_dir_config})"
+            f"[TRANSCRIPTION] temp_dir = {self.temp_dir} (from config: {temp_dir_config})",
         )
         logger.debug(
-            f"[TRANSCRIPTION] storage_dir = {self.storage_dir} (from config: {storage_dir_config})"
+            f"[TRANSCRIPTION] storage_dir = {self.storage_dir} (from config: {storage_dir_config})",
         )
         logger.debug(f"[TRANSCRIPTION] cwd = {os.getcwd()}")
 
         self.chunk_size_mb = getattr(settings, "TRANSCRIPTION_CHUNK_SIZE_MB", 10)
         self.max_threads = getattr(settings, "TRANSCRIPTION_MAX_THREADS", 4)
         self.min_chunk_success_ratio = float(
-            getattr(settings, "TRANSCRIPTION_MIN_CHUNK_SUCCESS_RATIO", 0.6)
+            getattr(settings, "TRANSCRIPTION_MIN_CHUNK_SUCCESS_RATIO", 0.6),
         )
         self.progress_commit_min_delta = float(
-            getattr(settings, "TRANSCRIPTION_PROGRESS_COMMIT_MIN_DELTA", 5.0)
+            getattr(settings, "TRANSCRIPTION_PROGRESS_COMMIT_MIN_DELTA", 5.0),
         )
         self.progress_commit_min_interval = float(
-            getattr(settings, "TRANSCRIPTION_PROGRESS_COMMIT_MIN_INTERVAL_SECONDS", 3.0)
+            getattr(settings, "TRANSCRIPTION_PROGRESS_COMMIT_MIN_INTERVAL_SECONDS", 3.0),
         )
         # API configuration is now dynamic, but we keep defaults for fallback
         self.default_api_url = getattr(
@@ -940,7 +920,7 @@ class PodcastTranscriptionService:
         # ?
         filename = re.sub(r'[<>:"/\\|?*]', "", filename)
         filename = filename.replace(" ", "_")
-        return filename[:100]  # 
+        return filename[:100]
 
     async def update_task_progress(
         self,
@@ -962,11 +942,10 @@ class PodcastTranscriptionService:
 
         # ?
         if status == TranscriptionStatus.IN_PROGRESS and not await self._get_task_field(
-            task_id, "started_at"
+            task_id, "started_at",
         ):
             update_data["started_at"] = datetime.now(UTC)
 
-        # 
         if status in [
             TranscriptionStatus.COMPLETED,
             TranscriptionStatus.FAILED,
@@ -986,13 +965,13 @@ class PodcastTranscriptionService:
         # ?
         if _progress_throttle.should_log(task_id, str(status), progress):
             logger.info(
-                f"Updated task {task_id}: status={status}, progress={progress:.1f}%"
+                f"Updated task {task_id}: status={status}, progress={progress:.1f}%",
             )
 
     async def _get_task_field(self, task_id: int, field: str):
         """?"""
         stmt = select(getattr(TranscriptionTask, field)).where(
-            TranscriptionTask.id == task_id
+            TranscriptionTask.id == task_id,
         )
         result = await self.db.execute(stmt)
         return result.scalar()
@@ -1129,33 +1108,32 @@ class PodcastTranscriptionService:
         logger.info(f"Set task {task_id} final status: {status}")
 
     async def create_transcription_task_record(
-        self, episode_id: int, model: str | None = None, force: bool = False
+        self, episode_id: int, model: str | None = None, force: bool = False,
     ) -> tuple[TranscriptionTask, int | None]:
-        """
-        ?
+        """?
 
         Returns:
             Tuple[TranscriptionTask, Optional[int]]: (, DB ID)
+
         """
         logger.info(
-            f"[TRANSCRIPTION PREPARE] episode_id={episode_id}, model={model}, force={force}"
+            f"[TRANSCRIPTION PREPARE] episode_id={episode_id}, model={model}, force={force}",
         )
 
-        # 
         stmt = select(TranscriptionTask).where(
-            TranscriptionTask.episode_id == episode_id
+            TranscriptionTask.episode_id == episode_id,
         )
         result = await self.db.execute(stmt)
         existing_task = result.scalar_one_or_none()
 
         if existing_task:
             logger.info(
-                f"[TRANSCRIPTION] Existing task found: id={existing_task.id}, status={existing_task.status}"
+                f"[TRANSCRIPTION] Existing task found: id={existing_task.id}, status={existing_task.status}",
             )
             if force:
                 # Force mode: delete existing task and create new one (regardless of status)
                 logger.info(
-                    f"[TRANSCRIPTION] Force mode: deleting existing task {existing_task.id}"
+                    f"[TRANSCRIPTION] Force mode: deleting existing task {existing_task.id}",
                 )
                 await self.db.delete(existing_task)
                 await self.db.flush()
@@ -1168,15 +1146,15 @@ class PodcastTranscriptionService:
             ]:
                 # Task exists with non-failed/cancelled status and force=false: raise error
                 logger.warning(
-                    f"[TRANSCRIPTION] Task already exists with status {existing_task.status}"
+                    f"[TRANSCRIPTION] Task already exists with status {existing_task.status}",
                 )
                 raise ValidationError(
-                    f"Transcription task already exists for episode {episode_id} with status {existing_task.status}. Use force=true to retry."
+                    f"Transcription task already exists for episode {episode_id} with status {existing_task.status}. Use force=true to retry.",
                 )
             else:
                 # Task exists with failed/cancelled status and force=false: delete it and create new one
                 logger.info(
-                    f"[TRANSCRIPTION] Removing failed/cancelled task {existing_task.id} before creating new one"
+                    f"[TRANSCRIPTION] Removing failed/cancelled task {existing_task.id} before creating new one",
                 )
                 await self.db.delete(existing_task)
                 await self.db.flush()
@@ -1184,10 +1162,9 @@ class PodcastTranscriptionService:
                     self.db.commit()
                 )  # Commit the delete to release the unique constraint
                 logger.info(
-                    "[TRANSCRIPTION] Failed/cancelled task removed, ready to create new one"
+                    "[TRANSCRIPTION] Failed/cancelled task removed, ready to create new one",
                 )
 
-        # 
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
         result = await self.db.execute(stmt)
         episode = result.scalar_one_or_none()
@@ -1197,48 +1174,45 @@ class PodcastTranscriptionService:
             raise ValidationError(f"Episode {episode_id} not found")
 
         logger.info(
-            f"[TRANSCRIPTION] Episode found: title='{episode.title}', audio_url='{episode.audio_url}'"
+            f"[TRANSCRIPTION] Episode found: title='{episode.title}', audio_url='{episode.audio_url}'",
         )
 
         # ?
         ai_repo = AIModelConfigRepository(self.db)
 
-        # 1. 
+        # 1.
         model_config = None
         if model:
             model_config = await ai_repo.get_by_name(model)
             logger.info(
-                f"[TRANSCRIPTION] Looking for model by name '{model}': {model_config is not None}"
+                f"[TRANSCRIPTION] Looking for model by name '{model}': {model_config is not None}",
             )
-            # 
             if (
                 not model_config
                 or not model_config.is_active
                 or model_config.model_type != ModelType.TRANSCRIPTION
             ):
                 raise ValidationError(
-                    f"Transcription model '{model}' not found or not active"
+                    f"Transcription model '{model}' not found or not active",
                 )
 
-        # 2. 
+        # 2.
         if not model_config:
             active_models = await ai_repo.get_active_models_by_priority(
-                ModelType.TRANSCRIPTION
+                ModelType.TRANSCRIPTION,
             )
             if active_models:
-                model_config = active_models[0]  # 
+                model_config = active_models[0]
                 logger.info(
-                    f"[TRANSCRIPTION] Using highest priority model: {model_config.model_id} (priority={model_config.priority})"
+                    f"[TRANSCRIPTION] Using highest priority model: {model_config.model_id} (priority={model_config.priority})",
                 )
             else:
-                # 
                 raise ValidationError("No active transcription model found")
 
         # ID?(APIodel)
         transcription_model = model_config.model_id
         logger.info(f"[TRANSCRIPTION] Final model to use: '{transcription_model}'")
 
-        # 
         logger.info("[TRANSCRIPTION] Creating TranscriptionTask in database...")
         task = TranscriptionTask(
             episode_id=episode_id,
@@ -1252,36 +1226,36 @@ class PodcastTranscriptionService:
         await self.db.refresh(task)
 
         logger.info(
-            f"[TRANSCRIPTION] Task created in DB: id={task.id}, status={task.status}"
+            f"[TRANSCRIPTION] Task created in DB: id={task.id}, status={task.status}",
         )
 
         config_db_id = model_config.id if model_config else None
         return task, config_db_id
 
     async def start_transcription(
-        self, episode_id: int, model: str | None = None, force: bool = False
+        self, episode_id: int, model: str | None = None, force: bool = False,
     ) -> TranscriptionTask:
         """"""
-        # 1. 
+        # 1.
         task, config_db_id = await self.create_transcription_task_record(
-            episode_id, model=model, force=force
+            episode_id, model=model, force=force,
         )
 
         logger.info(
-            f"[TRANSCRIPTION] Task {task.id} created successfully. config_db_id={config_db_id}"
+            f"[TRANSCRIPTION] Task {task.id} created successfully. config_db_id={config_db_id}",
         )
 
         return task
 
     async def execute_transcription_task(
-        self, task_id: int, session, config_db_id: int | None = None
+        self, task_id: int, session, config_db_id: int | None = None,
     ):
         """"""
         log_with_timestamp(
-            "INFO", "[EXECUTE START] Transcription task starting...", task_id
+            "INFO", "[EXECUTE START] Transcription task starting...", task_id,
         )
         log_with_timestamp(
-            "INFO", f"[EXECUTE] config_db_id={config_db_id}", task_id
+            "INFO", f"[EXECUTE] config_db_id={config_db_id}", task_id,
         )
         log_with_timestamp(
             "INFO",
@@ -1292,23 +1266,21 @@ class PodcastTranscriptionService:
         task: TranscriptionTask | None = None
         try:
             logger.info(
-                f"[EXECUTE] Using provided database session for task {task_id}"
+                f"[EXECUTE] Using provided database session for task {task_id}",
             )
 
-            # ?AI 
+            # ?AI
             ai_repo = AIModelConfigRepository(session)
-            # 
             stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
             result = await session.execute(stmt)
             task = result.scalar_one_or_none()
 
             if not task:
                 logger.error(
-                    f"[EXECUTE] Transcription task {task_id} not found in database"
+                    f"[EXECUTE] Transcription task {task_id} not found in database",
                 )
                 raise RuntimeError(f"Transcription task {task_id} not found")
 
-            # 
             if task.status == TranscriptionStatus.COMPLETED:
                 log_with_timestamp(
                     "INFO",
@@ -1322,7 +1294,6 @@ class PodcastTranscriptionService:
                 )
                 return
 
-            # 
             if task.status == TranscriptionStatus.CANCELLED:
                 log_with_timestamp(
                     "WARNING",
@@ -1344,25 +1315,24 @@ class PodcastTranscriptionService:
 
             if not episode:
                 logger.error(
-                    f"transcription._execute_transcription: Episode {task.episode_id} not found for task {task_id}"
+                    f"transcription._execute_transcription: Episode {task.episode_id} not found for task {task_id}",
                 )
                 await self._set_task_final_status(
-                    session, task_id, TranscriptionStatus.FAILED, "Episode not found"
+                    session, task_id, TranscriptionStatus.FAILED, "Episode not found",
                 )
                 raise RuntimeError(f"Episode {task.episode_id} not found")
 
-            # 
             api_url = self.default_api_url
             api_key = self.default_api_key
 
             if config_db_id:
                 logger.info(
-                    f"transcription._execute_transcription: Using custom model config {config_db_id}"
+                    f"transcription._execute_transcription: Using custom model config {config_db_id}",
                 )
                 model_config = await ai_repo.get_by_id(config_db_id)
                 if model_config and model_config.is_active:
                     api_url = model_config.api_url
-                    # API Key - 
+                    # API Key -
                     if (
                         model_config.is_system
                         and model_config.provider == "siliconflow"
@@ -1376,25 +1346,24 @@ class PodcastTranscriptionService:
                             getattr(settings, "OPENAI_API_KEY", None)
                             or model_config.api_key
                         )
-                    else:
-                        # ?- ?
-                        if model_config.api_key_encrypted and model_config.api_key:
-                            from app.core.security import decrypt_data
+                    # ?- ?
+                    elif model_config.api_key_encrypted and model_config.api_key:
+                        from app.core.security import decrypt_data
 
-                            try:
-                                api_key = decrypt_data(model_config.api_key)
-                                logger.info(
-                                    f"[KEY] Decrypted API key for model {model_config.name} (first 10 chars): {api_key[:10]}..."
-                                )
-                            except Exception as e:
-                                logger.error(f"Failed to decrypt API key: {e}")
-                                api_key = model_config.api_key
-                        else:
+                        try:
+                            api_key = decrypt_data(model_config.api_key)
+                            logger.info(
+                                f"[KEY] Decrypted API key for model {model_config.name} (first 10 chars): {api_key[:10]}...",
+                            )
+                        except Exception as e:
+                            logger.error(f"Failed to decrypt API key: {e}")
                             api_key = model_config.api_key
+                    else:
+                        api_key = model_config.api_key
 
             if not api_key:
                 logger.error(
-                    f"transcription._execute_transcription: API Key missing for task {task_id}"
+                    f"transcription._execute_transcription: API Key missing for task {task_id}",
                 )
                 await self._set_task_final_status(
                     session,
@@ -1404,11 +1373,10 @@ class PodcastTranscriptionService:
                 )
                 raise RuntimeError("Transcription API key not found")
 
-            # 
             temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
             os.makedirs(temp_episode_dir, exist_ok=True)
             logger.info(
-                f"transcription._execute_transcription: Created temp dir {temp_episode_dir}"
+                f"transcription._execute_transcription: Created temp dir {temp_episode_dir}",
             )
 
             # === ?current_step ?===
@@ -1431,7 +1399,6 @@ class PodcastTranscriptionService:
             )
             file_size = 0
 
-            # 
             if os.path.exists(original_file) and os.path.getsize(original_file) > 0:
                 file_size = os.path.getsize(original_file)
                 log_with_timestamp(
@@ -1456,7 +1423,7 @@ class PodcastTranscriptionService:
                     task_id,
                 )
                 await self._update_task_progress_with_session(
-                    session, task_id, "downloading", 5, "Downloading audio file..."
+                    session, task_id, "downloading", 5, "Downloading audio file...",
                 )
 
                 logger.info(f"[STEP 1 DOWNLOAD] Target path: {original_file}")
@@ -1471,7 +1438,7 @@ class PodcastTranscriptionService:
                         # ?0%?
                         if int(progress) // 10 > int(last_dl_progress) // 10:
                             logger.info(
-                                f"[STEP 1 DOWNLOAD] Progress: {progress:.1f}%"
+                                f"[STEP 1 DOWNLOAD] Progress: {progress:.1f}%",
                             )
                             last_dl_progress = progress
 
@@ -1485,7 +1452,7 @@ class PodcastTranscriptionService:
 
                     # ?
                     file_path, file_size = await downloader.download_file_with_fallback(
-                        task.original_audio_url, original_file, download_progress
+                        task.original_audio_url, original_file, download_progress,
                     )
 
                 log_with_timestamp(
@@ -1517,7 +1484,6 @@ class PodcastTranscriptionService:
                 task_id,
             )
 
-            # 
             skip_conversion = False
             if os.path.exists(converted_file):
                 converted_size = os.path.getsize(converted_file)
@@ -1560,7 +1526,7 @@ class PodcastTranscriptionService:
                     except Exception as e:
                         log_with_timestamp(
                             "WARNING",
-                            f"[STEP 2/6 CONVERT] File exists but validation failed ({str(e)}), re-converting",
+                            f"[STEP 2/6 CONVERT] File exists but validation failed ({e!s}), re-converting",
                             task_id,
                         )
                     else:
@@ -1583,7 +1549,7 @@ class PodcastTranscriptionService:
                     task_id,
                 )
                 await self._update_task_progress_with_session(
-                    session, task_id, "converting", 20, "Converting to MP3..."
+                    session, task_id, "converting", 20, "Converting to MP3...",
                 )
 
                 async def convert_progress(progress):
@@ -1596,7 +1562,7 @@ class PodcastTranscriptionService:
                     )
 
                 _, conversion_time = await AudioConverter.convert_to_mp3(
-                    file_path, converted_file, convert_progress
+                    file_path, converted_file, convert_progress,
                 )
 
                 # Verify the converted file was actually created
@@ -1604,7 +1570,7 @@ class PodcastTranscriptionService:
                     error_msg = f"Conversion completed but output file not found: {converted_file}"
                     logger.error(f"[STEP 2/6 CONVERT] {error_msg}")
                     logger.error(
-                        f"[STEP 2/6 CONVERT] Input file: {file_path}, exists: {os.path.exists(file_path)}"
+                        f"[STEP 2/6 CONVERT] Input file: {file_path}, exists: {os.path.exists(file_path)}",
                     )
                     await self._set_task_final_status(
                         session,
@@ -1613,7 +1579,7 @@ class PodcastTranscriptionService:
                         "MP3 conversion failed - output file not created",
                     )
                     raise RuntimeError(
-                        "MP3 conversion failed - output file not created"
+                        "MP3 conversion failed - output file not created",
                     )
 
                 converted_size = os.path.getsize(converted_file)
@@ -1633,7 +1599,7 @@ class PodcastTranscriptionService:
             # === 3?===
             # converted_file?
             log_with_timestamp(
-                "INFO", "[STEP 3/6 SPLIT] Starting split verification...", task_id
+                "INFO", "[STEP 3/6 SPLIT] Starting split verification...", task_id,
             )
 
             if not os.path.exists(converted_file):
@@ -1641,7 +1607,7 @@ class PodcastTranscriptionService:
                 logger.error(f"[STEP 3/6 SPLIT] {error_msg}")
                 logger.error(f"[STEP 3/6 SPLIT] Working directory: {os.getcwd()}")
                 logger.error(
-                    f"[STEP 3/6 SPLIT] Temp dir exists: {os.path.exists(temp_episode_dir)}"
+                    f"[STEP 3/6 SPLIT] Temp dir exists: {os.path.exists(temp_episode_dir)}",
                 )
                 if os.path.exists(temp_episode_dir):
                     files = os.listdir(temp_episode_dir)
@@ -1674,7 +1640,6 @@ class PodcastTranscriptionService:
 
             split_dir = os.path.join(temp_episode_dir, "chunks")
 
-            # 
             if os.path.exists(split_dir) and os.path.isdir(split_dir):
                 # chunk
                 chunk_file_pattern = re.compile(r".+_chunk_(\d+)\.mp3$")
@@ -1691,12 +1656,12 @@ class PodcastTranscriptionService:
                         task_id,
                     )
                     log_with_timestamp(
-                        "INFO", "[STEP 3/6 SPLIT] Using existing chunks", task_id
+                        "INFO", "[STEP 3/6 SPLIT] Using existing chunks", task_id,
                     )
                     # chunks
                     chunks = []
                     for index, chunk_file in sorted(
-                        existing_chunks, key=lambda item: item[0]
+                        existing_chunks, key=lambda item: item[0],
                     ):
                         chunk_path = os.path.join(split_dir, chunk_file)
                         file_size = os.path.getsize(chunk_path)
@@ -1708,7 +1673,7 @@ class PodcastTranscriptionService:
                                 duration=0,
                                 file_size=file_size,
                                 transcript=None,
-                            )
+                            ),
                         )
                 else:
                     # ?
@@ -1718,7 +1683,7 @@ class PodcastTranscriptionService:
                         task_id,
                     )
                     await self._update_task_progress_with_session(
-                        session, task_id, "splitting", 35, "Splitting audio file..."
+                        session, task_id, "splitting", 35, "Splitting audio file...",
                     )
 
                     async def split_progress(progress):
@@ -1731,7 +1696,7 @@ class PodcastTranscriptionService:
                         )
 
                     chunks = await AudioSplitter.split_mp3(
-                        converted_file, split_dir, task.chunk_size_mb, split_progress
+                        converted_file, split_dir, task.chunk_size_mb, split_progress,
                     )
                     log_with_timestamp(
                         "INFO",
@@ -1746,7 +1711,7 @@ class PodcastTranscriptionService:
                     task_id,
                 )
                 await self._update_task_progress_with_session(
-                    session, task_id, "splitting", 35, "Splitting audio file..."
+                    session, task_id, "splitting", 35, "Splitting audio file...",
                 )
 
                 async def split_progress(progress):
@@ -1759,7 +1724,7 @@ class PodcastTranscriptionService:
                     )
 
                 chunks = await AudioSplitter.split_mp3(
-                    converted_file, split_dir, task.chunk_size_mb, split_progress
+                    converted_file, split_dir, task.chunk_size_mb, split_progress,
                 )
                 log_with_timestamp(
                     "INFO",
@@ -1768,7 +1733,7 @@ class PodcastTranscriptionService:
                 )
 
             # === 4?===
-            # 
+            #
             chunks_to_transcribe = []
             already_transcribed = []
             for chunk in chunks:
@@ -1799,7 +1764,7 @@ class PodcastTranscriptionService:
                 task_id,
             )
             log_with_timestamp(
-                "INFO", f"[STEP 4/6 TRANSCRIBE] Model: {task.model_used}", task_id
+                "INFO", f"[STEP 4/6 TRANSCRIBE] Model: {task.model_used}", task_id,
             )
 
             if chunks_to_transcribe:
@@ -1822,7 +1787,7 @@ class PodcastTranscriptionService:
                     # ?0%?
                     if int(progress) // 10 > int(last_trans_progress) // 10:
                         logger.info(
-                            f"[STEP 4 TRANSCRIBE] Progress: {progress:.1f}%"
+                            f"[STEP 4 TRANSCRIBE] Progress: {progress:.1f}%",
                         )
                         last_trans_progress = progress
 
@@ -1835,7 +1800,7 @@ class PodcastTranscriptionService:
                     )
 
                 async with SiliconFlowTranscriber(
-                    api_key, api_url, self.max_threads
+                    api_key, api_url, self.max_threads,
                 ) as transcriber:
                     transcribed_chunks = await transcriber.transcribe_chunks(
                         chunks_to_transcribe,
@@ -1845,7 +1810,6 @@ class PodcastTranscriptionService:
                         config_db_id=config_db_id,
                     )
 
-                # 
                 all_chunks = already_transcribed + transcribed_chunks
 
                 log_with_timestamp(
@@ -1906,7 +1870,7 @@ class PodcastTranscriptionService:
                 task_id,
             )
             await self._update_task_progress_with_session(
-                session, task_id, "merging", 95, "Merging transcription results..."
+                session, task_id, "merging", 95, "Merging transcription results...",
             )
 
             # ?
@@ -1916,7 +1880,7 @@ class PodcastTranscriptionService:
                     chunk.transcript.strip()
                     for chunk in sorted_chunks
                     if chunk.transcript and chunk.transcript.strip()
-                ]
+                ],
             )
 
             log_with_timestamp(
@@ -1934,7 +1898,6 @@ class PodcastTranscriptionService:
             storage_path = self._get_episode_storage_path(episode)
             os.makedirs(storage_path, exist_ok=True)
 
-            # 
             final_audio_path = os.path.join(storage_path, "original.mp3")
 
             # Verify converted file exists before copying
@@ -1943,7 +1906,7 @@ class PodcastTranscriptionService:
                 logger.error(f"[STEP 6 SAVE] {error_msg}")
                 logger.error(f"[STEP 6 SAVE] Working directory: {os.getcwd()}")
                 logger.error(
-                    f"[STEP 6 SAVE] Absolute path: {os.path.abspath(converted_file)}"
+                    f"[STEP 6 SAVE] Absolute path: {os.path.abspath(converted_file)}",
                 )
                 # List files in temp directory for debugging
                 if os.path.exists(temp_episode_dir):
@@ -1951,30 +1914,29 @@ class PodcastTranscriptionService:
                     logger.error(f"[STEP 6 SAVE] Files in temp dir: {files}")
                 else:
                     logger.error(
-                        f"[STEP 6 SAVE] Temp directory does not exist: {temp_episode_dir}"
+                        f"[STEP 6 SAVE] Temp directory does not exist: {temp_episode_dir}",
                     )
                 raise FileNotFoundError(error_msg)
 
             # Move audio file to permanent storage
             # Use shutil.move instead of os.replace to handle cross-device moves (e.g., Docker volumes)
-            #  shutil.move  os.replace?Docker 
+            #  shutil.move  os.replace?Docker
             import shutil
 
             try:
                 shutil.move(converted_file, final_audio_path)
             except OSError as e:
                 logger.warning(
-                    f"[STEP 6 SAVE] shutil.move failed ({e}), trying copy + delete"
+                    f"[STEP 6 SAVE] shutil.move failed ({e}), trying copy + delete",
                 )
                 shutil.copy2(converted_file, final_audio_path)
                 try:
                     os.remove(converted_file)
                 except OSError:
                     logger.warning(
-                        f"[STEP 6 SAVE] Could not remove source file: {converted_file}"
+                        f"[STEP 6 SAVE] Could not remove source file: {converted_file}",
                     )
 
-            # 
             transcript_path = os.path.join(storage_path, "transcript.txt")
             async with aiofiles.open(transcript_path, "w", encoding="utf-8") as f:
                 await f.write(full_transcript)
@@ -1985,10 +1947,9 @@ class PodcastTranscriptionService:
                 task_id,
             )
 
-            # 
             task_update = {
                 "status": TranscriptionStatus.COMPLETED,
-                "current_step": "merging",  # 
+                "current_step": "merging",
                 "progress_percentage": 100.0,
                 "transcript_content": full_transcript,
                 "transcript_word_count": len(full_transcript.split()),
@@ -2053,11 +2014,11 @@ class PodcastTranscriptionService:
 
             error_trace = traceback.format_exc()
             logger.error(
-                f"[EXECUTE ERROR] Transcription failed for task {task_id}: {str(e)}"
+                f"[EXECUTE ERROR] Transcription failed for task {task_id}: {e!s}",
             )
             logger.error(f"[EXECUTE ERROR] Traceback:\n{error_trace}")
             status_stmt = select(TranscriptionTask.status).where(
-                TranscriptionTask.id == task_id
+                TranscriptionTask.id == task_id,
             )
             status_result = await session.execute(status_stmt)
             current_status = status_result.scalar()
@@ -2073,7 +2034,7 @@ class PodcastTranscriptionService:
                     session,
                     task_id,
                     TranscriptionStatus.FAILED,
-                    f"Transcription failed: {str(e)}",
+                    f"Transcription failed: {e!s}",
                 )
             raise
         finally:
@@ -2082,7 +2043,7 @@ class PodcastTranscriptionService:
             try:
                 # Re-fetch task status to see if it completed successfully
                 stmt_check = select(TranscriptionTask.status).where(
-                    TranscriptionTask.id == task_id
+                    TranscriptionTask.id == task_id,
                 )
                 result_check = await session.execute(stmt_check)
                 final_status = result_check.scalar()
@@ -2091,23 +2052,23 @@ class PodcastTranscriptionService:
                     import shutil
 
                     temp_episode_dir = os.path.join(
-                        self.temp_dir, f"episode_{task.episode_id}"
+                        self.temp_dir, f"episode_{task.episode_id}",
                     )
                     if os.path.exists(temp_episode_dir):
                         shutil.rmtree(temp_episode_dir)
                         logger.info(
-                            f"[CLEANUP] Cleaned up temporary directory for successful task {task_id}: {temp_episode_dir}"
+                            f"[CLEANUP] Cleaned up temporary directory for successful task {task_id}: {temp_episode_dir}",
                         )
                 elif task is not None:
                     temp_episode_dir = os.path.join(
-                        self.temp_dir, f"episode_{task.episode_id}"
+                        self.temp_dir, f"episode_{task.episode_id}",
                     )
                     if os.path.exists(temp_episode_dir):
                         logger.info(
-                            f"[CLEANUP] Preserving temporary directory for task {task_id} (status={final_status}): {temp_episode_dir}"
+                            f"[CLEANUP] Preserving temporary directory for task {task_id} (status={final_status}): {temp_episode_dir}",
                         )
             except Exception as e:
-                logger.error(f"[CLEANUP] Error during cleanup: {str(e)}")
+                logger.error(f"[CLEANUP] Error during cleanup: {e!s}")
 
     async def get_transcription_status(self, task_id: int) -> TranscriptionTask | None:
         """?"""
@@ -2116,11 +2077,11 @@ class PodcastTranscriptionService:
         return result.scalar_one_or_none()
 
     async def get_episode_transcription(
-        self, episode_id: int
+        self, episode_id: int,
     ) -> TranscriptionTask | None:
         """?"""
         stmt = select(TranscriptionTask).where(
-            TranscriptionTask.episode_id == episode_id
+            TranscriptionTask.episode_id == episode_id,
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -2129,7 +2090,6 @@ class PodcastTranscriptionService:
         """AI"""
         task: TranscriptionTask | None = None
         try:
-            # 
             log_with_timestamp(
                 "INFO",
                 f"[AI SUMMARY] Getting transcription task {task_id}",
@@ -2167,7 +2127,6 @@ class PodcastTranscriptionService:
             # AI
             summary_result = await summary_service.generate_summary(task.episode_id)
 
-            # 
             word_count = len(summary_result["summary_content"].split())
 
             log_with_timestamp(
@@ -2219,7 +2178,7 @@ class PodcastTranscriptionService:
                 return
 
             episode_meta_stmt = select(PodcastEpisode.metadata_json).where(
-                PodcastEpisode.id == task.episode_id
+                PodcastEpisode.id == task.episode_id,
             )
             episode_meta_result = await session.execute(episode_meta_stmt)
             metadata_json = episode_meta_result.scalar_one_or_none() or {}
@@ -2233,7 +2192,7 @@ class PodcastTranscriptionService:
                     status="summary_failed",
                     metadata_json=metadata_json,
                     updated_at=datetime.now(UTC),
-                )
+                ),
             )
             await session.execute(
                 update(TranscriptionTask)
@@ -2241,7 +2200,7 @@ class PodcastTranscriptionService:
                 .values(
                     summary_error_message=error_msg,
                     updated_at=datetime.now(UTC),
-                )
+                ),
             )
             await session.commit()
 

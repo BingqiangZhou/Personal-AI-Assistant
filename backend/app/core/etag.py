@@ -1,5 +1,4 @@
-"""
-ETag Utilities for HTTP Caching
+"""ETag Utilities for HTTP Caching
 
 Provides functions for generating and validating ETag headers
 to enable 304 Not Modified responses.
@@ -68,6 +67,7 @@ def generate_etag(content: Any, weak: bool = False) -> str:
 
     Returns:
         ETag string (e.g., '"abc123..."' or 'W/"abc123..."')
+
     """
     # Convert content to JSON string with consistent ordering
     json_str = json.dumps(content, cls=CustomJSONEncoder, sort_keys=True, ensure_ascii=False)
@@ -97,6 +97,7 @@ def parse_if_none_match(header: str | None) -> set[str]:
 
     Returns:
         Set of normalized ETag strings
+
     """
     if not header:
         return set()
@@ -120,6 +121,7 @@ def validate_etag(request_etag: str, current_etag: str) -> bool:
 
     Returns:
         True if ETags match (or wildcard used), False otherwise
+
     """
     # Wildcard matches everything.
     if request_etag.strip() == "*":
@@ -144,6 +146,7 @@ def matches_any_etag(current_etag: str, if_none_match_header: str | None) -> boo
 
     Returns:
         True if current ETag matches any in header (or wildcard), False otherwise
+
     """
     etags = parse_if_none_match(if_none_match_header)
     if not etags:
@@ -187,7 +190,7 @@ class ETagResponse(JSONResponse):
         cache_control: str | None = None,
         precomputed_etag: str | None = None,
         content_is_serialized: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Initialize ETagResponse.
 
@@ -196,6 +199,7 @@ class ETagResponse(JSONResponse):
             max_age: Cache-Control max-age in seconds (default: 300)
             weak: If True, use weak ETag validation (prefixed with W/)
             **kwargs: Additional arguments passed to JSONResponse
+
         """
         # Convert content at most once.
         if content_is_serialized:
@@ -210,11 +214,11 @@ class ETagResponse(JSONResponse):
         self._etag = precomputed_etag or generate_etag(self._etag_content, weak=weak)
 
         # Prepare headers
-        headers = kwargs.pop('headers', {})
-        headers['ETag'] = self._etag
+        headers = kwargs.pop("headers", {})
+        headers["ETag"] = self._etag
         if cache_control is None:
-            cache_control = f'public, max-age={max_age}'
-        headers['Cache-Control'] = cache_control
+            cache_control = f"public, max-age={max_age}"
+        headers["Cache-Control"] = cache_control
 
         # Store content for rendering with custom encoder
         self._original_content = json_content
@@ -227,7 +231,7 @@ class ETagResponse(JSONResponse):
             cls=CustomJSONEncoder,
             sort_keys=True,
             ensure_ascii=False,
-        ).encode('utf-8')
+        ).encode("utf-8")
 
 
 async def check_etag_precondition(
@@ -270,9 +274,10 @@ async def check_etag_precondition(
             # Return full response with ETag
             return ETagResponse(content=items)
         ```
+
     """
     # Get If-None-Match header
-    if_none_match = request.headers.get('if-none-match')
+    if_none_match = request.headers.get("if-none-match")
 
     if not if_none_match:
         return None
@@ -285,13 +290,13 @@ async def check_etag_precondition(
     # Check if any ETag matches
     if matches_any_etag(current_etag, if_none_match):
         if cache_control is None:
-            cache_control = f'public, max-age={max_age}'
+            cache_control = f"public, max-age={max_age}"
         return Response(
             status_code=304,
             headers={
-                'ETag': current_etag,
-                'Cache-Control': cache_control
-            }
+                "ETag": current_etag,
+                "Cache-Control": cache_control,
+            },
         )
 
     return None
@@ -334,7 +339,7 @@ def build_conditional_etag_response(
 def etag_response_wrapper(
     content: Any,
     max_age: int = 300,
-    weak: bool = False
+    weak: bool = False,
 ) -> ETagResponse:
     """Convenience function to create an ETagResponse.
 
@@ -345,5 +350,6 @@ def etag_response_wrapper(
 
     Returns:
         ETagResponse instance
+
     """
     return ETagResponse(content=content, max_age=max_age, weak=weak)

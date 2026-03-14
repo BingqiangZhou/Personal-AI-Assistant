@@ -1,5 +1,4 @@
-"""
-播客相关的Pydantic schemas - API请求和响应模型
+"""播客相关的Pydantic schemas - API请求和响应模型
 """
 
 from datetime import date, datetime
@@ -31,7 +30,7 @@ class PodcastSubscriptionCreate(PodcastBaseSchema):
     """创建播客订阅请求"""
 
     feed_url: str = Field(
-        ..., description="RSS feed URL", min_length=10, max_length=500
+        ..., description="RSS feed URL", min_length=10, max_length=500,
     )
 
     @field_validator("feed_url")
@@ -733,7 +732,7 @@ class PodcastConversationSendRequest(PodcastBaseSchema):
     message: str = Field(..., min_length=1, max_length=5000, description="用户消息内容")
     model_name: str | None = Field(None, description="使用的AI模型名称")
     session_id: int | None = Field(
-        None, description="会话ID，不提供则使用或创建默认会话"
+        None, description="会话ID，不提供则使用或创建默认会话",
     )
 
 
@@ -799,13 +798,13 @@ class ScheduleConfigUpdate(BaseModel):
     """Update subscription schedule configuration"""
 
     update_frequency: str = Field(
-        ..., description="Update frequency: HOURLY, DAILY, WEEKLY"
+        ..., description="Update frequency: HOURLY, DAILY, WEEKLY",
     )
     update_time: str | None = Field(
-        None, description="Update time in HH:MM format (24-hour)"
+        None, description="Update time in HH:MM format (24-hour)",
     )
     update_day_of_week: int | None = Field(
-        None, ge=1, le=7, description="Day of week (1=Monday, 7=Sunday)"
+        None, ge=1, le=7, description="Day of week (1=Monday, 7=Sunday)",
     )
     fetch_interval: int | None = Field(
         None,
@@ -832,7 +831,7 @@ class ScheduleConfigUpdate(BaseModel):
                     raise ValueError("Invalid time")
             except (ValueError, AttributeError) as err:
                 raise ValueError(
-                    "update_time must be in HH:MM format (24-hour)"
+                    "update_time must be in HH:MM format (24-hour)",
                 ) from err
         return v
 
@@ -845,7 +844,7 @@ class ScheduleConfigUpdate(BaseModel):
             not self.update_time or not self.update_day_of_week
         ):
             raise ValueError(
-                "update_time and update_day_of_week are required for WEEKLY frequency"
+                "update_time and update_day_of_week are required for WEEKLY frequency",
             )
         if self.update_frequency == "HOURLY" and not self.fetch_interval:
             # Set default fetch_interval if not provided
@@ -873,7 +872,7 @@ class PodcastSubscriptionBulkDelete(PodcastBaseSchema):
     """批量删除播客订阅请求"""
 
     subscription_ids: list[int] = Field(
-        ..., description="订阅ID列表", min_length=1, max_length=100
+        ..., description="订阅ID列表", min_length=1, max_length=100,
     )
 
     @field_validator("subscription_ids")
@@ -898,8 +897,8 @@ class PodcastSubscriptionBulkDeleteResponse(PodcastBaseSchema):
     success_count: int = Field(..., description="成功删除的订阅数量")
     failed_count: int = Field(..., description="删除失败的订阅数量")
     errors: list[dict[str, Any]] = Field(
-        default_factory=list, description="删除失败的错误信息列表"
+        default_factory=list, description="删除失败的错误信息列表",
     )
     deleted_subscription_ids: list[int] = Field(
-        default_factory=list, description="成功删除的订阅ID列表"
+        default_factory=list, description="成功删除的订阅ID列表",
     )

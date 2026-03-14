@@ -18,7 +18,7 @@ class PodcastScheduleService:
         self.user_id = user_id
 
     def _build_schedule_projection(
-        self, subscription: Subscription, user_sub: UserSubscription
+        self, subscription: Subscription, user_sub: UserSubscription,
     ) -> ScheduleConfigProjection:
         return ScheduleConfigProjection(
             id=subscription.id,
@@ -32,7 +32,7 @@ class PodcastScheduleService:
         )
 
     async def get_subscription_schedule(
-        self, subscription_id: int
+        self, subscription_id: int,
     ) -> ScheduleConfigProjection | None:
         """Get schedule settings for a specific subscription."""
         stmt = (
@@ -97,7 +97,7 @@ class PodcastScheduleService:
                     UserSubscription.user_id == self.user_id,
                     UserSubscription.is_archived == False,  # noqa: E712
                     Subscription.source_type.in_(["podcast-rss", "rss"]),
-                )
+                ),
             )
             .order_by(Subscription.created_at)
         )
@@ -123,7 +123,7 @@ class PodcastScheduleService:
                     UserSubscription.user_id == self.user_id,
                     UserSubscription.is_archived == False,  # noqa: E712
                     Subscription.source_type.in_(["podcast-rss", "rss"]),
-                )
+                ),
             )
         )
         result = await self.db.execute(stmt)

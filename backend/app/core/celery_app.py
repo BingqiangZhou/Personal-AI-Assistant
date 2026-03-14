@@ -76,40 +76,40 @@ def create_celery_app() -> Celery:
         worker_max_tasks_per_child=settings.CELERY_WORKER_MAX_TASKS_PER_CHILD,
         task_routes={
             "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds": {
-                "queue": "subscription_sync"
+                "queue": "subscription_sync",
             },
             "app.domains.podcast.tasks.opml_import.process_opml_subscription_episodes": {
-                "queue": "subscription_sync"
+                "queue": "subscription_sync",
             },
             "app.domains.podcast.tasks.summary_generation.generate_pending_summaries": {
-                "queue": "ai_generation"
+                "queue": "ai_generation",
             },
             "app.domains.podcast.tasks.summary_generation.generate_episode_summary": {
-                "queue": "ai_generation"
+                "queue": "ai_generation",
             },
             "app.domains.podcast.tasks.transcription.process_audio_transcription": {
-                "queue": "transcription"
+                "queue": "transcription",
             },
             "app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription": {
-                "queue": "transcription"
+                "queue": "transcription",
             },
             "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions": {
-                "queue": "transcription"
+                "queue": "transcription",
             },
             "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states": {
-                "queue": "maintenance"
+                "queue": "maintenance",
             },
             "app.domains.podcast.tasks.maintenance.cleanup_old_transcription_temp_files": {
-                "queue": "maintenance"
+                "queue": "maintenance",
             },
             "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files": {
-                "queue": "maintenance"
+                "queue": "maintenance",
             },
             "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations": {
-                "queue": "ai_generation"
+                "queue": "ai_generation",
             },
             "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports": {
-                "queue": "ai_generation"
+                "queue": "ai_generation",
             },
         },
         beat_schedule=_build_beat_schedule(),
@@ -118,7 +118,7 @@ def create_celery_app() -> Celery:
     _celery_app = celery
 
     # Ensure task modules are imported so Celery registers them.
-    import app.domains.podcast.tasks  # noqa: F401,E402
+    import app.domains.podcast.tasks  # noqa: F401
 
     return celery
 

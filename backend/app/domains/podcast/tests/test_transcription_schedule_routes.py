@@ -188,7 +188,7 @@ def test_get_schedule_status_returns_assembled_response(
     )
 
     response = client.get(
-        "/api/v1/podcasts/episodes/13/transcription/schedule-status"
+        "/api/v1/podcasts/episodes/13/transcription/schedule-status",
     )
 
     assert response.status_code == 200
@@ -271,7 +271,7 @@ def test_get_pending_transcriptions_returns_assembled_response(
                     progress=15.5,
                     created_at=now,
                     updated_at=now,
-                )
+                ),
             ],
         )
     )

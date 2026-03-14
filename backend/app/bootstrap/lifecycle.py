@@ -45,7 +45,7 @@ async def application_lifespan(app: FastAPI):
                 workflow = TranscriptionWorkflowService(session)
                 try:
                     async with asyncio.timeout(
-                        settings.TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS
+                        settings.TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS,
                     ):
                         await workflow.reset_stale_tasks()
                     logger.info("Reset stale transcription tasks during startup")

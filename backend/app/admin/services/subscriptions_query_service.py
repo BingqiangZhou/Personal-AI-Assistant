@@ -31,7 +31,7 @@ class AdminSubscriptionsQueryService:
     ) -> dict:
         query = (
             select(
-                Subscription, func.count(UserSubscription.id).label("subscriber_count")
+                Subscription, func.count(UserSubscription.id).label("subscriber_count"),
             )
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .group_by(Subscription.id)
@@ -56,7 +56,7 @@ class AdminSubscriptionsQueryService:
 
         if user_filter and user_filter.strip():
             user_query = select(User.id).where(
-                User.username.ilike(f"%{user_filter.strip()}%")
+                User.username.ilike(f"%{user_filter.strip()}%"),
             )
             user_result = await self.db.execute(user_query)
             user_ids = [row[0] for row in user_result.fetchall()]
@@ -80,7 +80,7 @@ class AdminSubscriptionsQueryService:
         result = await self.db.execute(
             query.order_by(Subscription.created_at.desc())
             .limit(per_page)
-            .offset(offset)
+            .offset(offset),
         )
         subscriptions = result.all()
 
@@ -120,7 +120,7 @@ class AdminSubscriptionsQueryService:
                         UserSubscription.subscription_id,
                         UserSubscription.updated_at.desc(),
                         UserSubscription.id.desc(),
-                    )
+                    ),
                 )
             )
             .scalars()
@@ -157,7 +157,7 @@ class AdminSubscriptionsQueryService:
                 UserSubscription.update_day_of_week,
             )
             .order_by(func.count().desc())
-            .limit(1)
+            .limit(1),
         )
         row = freq_result.first()
         if not row:

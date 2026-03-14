@@ -7,6 +7,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../podcast/presentation/navigation/podcast_navigation.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
+import '../../../podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 class ProfileActivityCards extends ConsumerWidget {
   const ProfileActivityCards({super.key});
@@ -240,7 +241,7 @@ class ProfileActivityCards extends ConsumerWidget {
       return '--';
     }
     try {
-      return _formatDateOnly(DateTime.parse(latestDailyReportDate));
+      return EpisodeCardUtils.formatDate(DateTime.parse(latestDailyReportDate));
     } catch (_) {
       return '--';
     }
@@ -248,10 +249,5 @@ class ProfileActivityCards extends ConsumerWidget {
 
   Color _resolveActivityIconColor(BuildContext context) {
     return Theme.of(context).colorScheme.onSurfaceVariant;
-  }
-
-  String _formatDateOnly(DateTime value) {
-    final local = value.isUtc ? value.toLocal() : value;
-    return '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
 }

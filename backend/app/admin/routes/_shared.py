@@ -22,10 +22,10 @@ def get_templates() -> Jinja2Templates:
         _templates.env.globals["min"] = min
 
         # Register custom filters
-        _templates.env.filters['to_local'] = to_local_timezone
-        _templates.env.filters['format_uptime'] = format_uptime
-        _templates.env.filters['format_bytes'] = format_bytes
-        _templates.env.filters['format_number'] = format_number
+        _templates.env.filters["to_local"] = to_local_timezone
+        _templates.env.filters["format_uptime"] = format_uptime
+        _templates.env.filters["format_bytes"] = format_bytes
+        _templates.env.filters["format_number"] = format_number
     return _templates
 
 
@@ -75,16 +75,16 @@ def require_payload(payload, *, detail: str):
 
 
 # Custom filter to convert UTC datetime to local timezone (Asia/Shanghai, UTC+8)
-def to_local_timezone(dt: datetime, format_str: str = '%Y-%m-%d %H:%M:%S') -> str:
+def to_local_timezone(dt: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
     """Convert UTC datetime to Asia/Shanghai timezone and format it."""
     if dt is None:
-        return '-'
+        return "-"
     # Ensure dt is timezone-aware (assume UTC if naive)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
     # Convert to Asia/Shanghai timezone (UTC+8)
     from zoneinfo import ZoneInfo
-    shanghai_tz = ZoneInfo('Asia/Shanghai')
+    shanghai_tz = ZoneInfo("Asia/Shanghai")
     local_dt = dt.astimezone(shanghai_tz)
     return local_dt.strftime(format_str)
 
@@ -93,37 +93,35 @@ def to_local_timezone(dt: datetime, format_str: str = '%Y-%m-%d %H:%M:%S') -> st
 def format_uptime(seconds: float) -> str:
     """Format uptime seconds to human readable string."""
     if seconds is None:
-        return '-'
+        return "-"
     days = int(seconds // 86400)
     hours = int((seconds % 86400) // 3600)
     minutes = int((seconds % 3600) // 60)
     if days > 0:
         return f"{days}天 {hours}小时"
-    elif hours > 0:
+    if hours > 0:
         return f"{hours}小时 {minutes}分钟"
-    else:
-        return f"{minutes}分钟"
+    return f"{minutes}分钟"
 
 
 # Custom filter for bytes formatting
 def format_bytes(bytes_value: int) -> str:
     """Format bytes to human readable string."""
     if bytes_value is None:
-        return '-'
+        return "-"
     if bytes_value >= 1073741824:
         return f"{bytes_value / 1073741824:.1f} GB"
-    elif bytes_value >= 1048576:
+    if bytes_value >= 1048576:
         return f"{bytes_value / 1048576:.1f} MB"
-    elif bytes_value >= 1024:
+    if bytes_value >= 1024:
         return f"{bytes_value / 1024:.1f} KB"
-    else:
-        return f"{bytes_value} B"
+    return f"{bytes_value} B"
 
 
 # Custom filter for number formatting
 def format_number(value: int) -> str:
     """Format number with thousand separators."""
     if value is None:
-        return '-'
+        return "-"
     return f"{value:,}"
 
