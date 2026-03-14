@@ -40,6 +40,7 @@ from app.domains.podcast.transcription_schedule_projections import (
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 from app.domains.podcast.transcription_types import ScheduleFrequency
+from app.domains.podcast.utils.status_helpers import status_value
 
 
 logger = logging.getLogger(__name__)
@@ -53,16 +54,16 @@ class TranscriptionWorkflowService:
         db: AsyncSession,
         *,
         transcription_service_factory: Callable[
-            [AsyncSession], PodcastTranscriptionRuntimeService
+            [AsyncSession], PodcastTranscriptionRuntimeService,
         ] = PodcastTranscriptionRuntimeService,
         scheduler_factory: Callable[
-            [AsyncSession], PodcastTranscriptionScheduleService
+            [AsyncSession], PodcastTranscriptionScheduleService,
         ] = PodcastTranscriptionScheduleService,
         sync_service_factory: Callable[
-            [AsyncSession, int], PodcastSyncService
+            [AsyncSession, int], PodcastSyncService,
         ] = PodcastSyncService,
         state_manager_factory: Callable[
-            [], Awaitable[Any]
+            [], Awaitable[Any],
         ] = get_transcription_state_manager,
         redis_factory: Callable[[], PodcastRedis] = get_shared_redis,
         claim_dispatched: Callable[[AsyncSession, int], Awaitable[bool]] | None = None,
@@ -83,7 +84,7 @@ class TranscriptionWorkflowService:
             clear_dispatched=clear_dispatched,
         )
         self.state_coordinator = TranscriptionStateCoordinator(
-            state_manager_factory=state_manager_factory
+            state_manager_factory=state_manager_factory,
         )
 
     async def start_episode_transcription(
@@ -187,12 +188,12 @@ class TranscriptionWorkflowService:
         episode = await episode_lookup(task.episode_id)
         if not episode:
             raise PermissionError(
-                "You don't have permission to access this transcription task"
+                "You don't have permission to access this transcription task",
             )
 
         return build_transcription_status_payload(
             task,
-            status_key=self._status_value(task.status),
+            status_key=status_value(task.status),
         )
 
     async def schedule_episode_transcription(
@@ -226,7 +227,7 @@ class TranscriptionWorkflowService:
         transcript = await get_episode_transcript(self.db, episode_id)
         if not transcript:
             raise LookupError(
-                "No transcription found for this episode. Please schedule transcription first."
+                "No transcription found for this episode. Please schedule transcription first.",
             )
 
         return EpisodeTranscriptProjection(
@@ -338,7 +339,7 @@ class TranscriptionWorkflowService:
             config_db_id=config_db_id,
             transcription_service_factory=self.transcription_service_factory,
             dispatch_guard=self.dispatch_guard,
-            status_value=self._status_value,
+            status_value=status_value,
         )
 
     async def trigger_episode_pipeline(
@@ -361,7 +362,7 @@ class TranscriptionWorkflowService:
         transcription_task = await sync_service.trigger_transcription(episode_id)
         if not transcription_task:
             raise RuntimeError(
-                f"Failed to trigger transcription for episode={episode_id}, user={user_id}"
+                f"Failed to trigger transcription for episode={episode_id}, user={user_id}",
             )
 
         return {
@@ -370,7 +371,3 @@ class TranscriptionWorkflowService:
             "transcription_task_id": transcription_task["task_id"],
             "processed_at": datetime.now(UTC).isoformat(),
         }
-
-    @staticmethod
-    def _status_value(status: object) -> str:
-        return status.value if hasattr(status, "value") else str(status)

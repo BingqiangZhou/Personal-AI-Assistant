@@ -2,7 +2,6 @@
 
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +25,7 @@ from app.domains.podcast.transcription_schedule_projections import (
     TranscriptionScheduleStatusProjection,
 )
 from app.domains.podcast.transcription_types import ScheduleFrequency
+from app.domains.podcast.utils.status_helpers import status_value
 
 
 logger = logging.getLogger(__name__)
@@ -37,10 +37,6 @@ class PodcastTranscriptionScheduleService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.transcription_service = PodcastTranscriptionRuntimeService(db)
-
-    @staticmethod
-    def _status_value(status: Any) -> str:
-        return status.value if hasattr(status, "value") else str(status)
 
     async def schedule_transcription(
         self,
@@ -54,7 +50,7 @@ class PodcastTranscriptionScheduleService:
         if not episode:
             raise ValidationError(f"Episode {episode_id} not found")
         start_result = await self.transcription_service.start_transcription(
-            episode_id, force=force
+            episode_id, force=force,
         )
         task = start_result["task"]
         action = start_result["action"]
@@ -78,7 +74,7 @@ class PodcastTranscriptionScheduleService:
                 message="Transcription task already in progress",
                 task_id=task.id,
                 progress=task.progress_percentage,
-                current_status=self._status_value(task.status),
+                current_status=status_value(task.status),
                 action=action,
             )
 
@@ -133,7 +129,7 @@ class PodcastTranscriptionScheduleService:
                         episode_id=episode.id,
                         episode_title=episode.title,
                         **schedule_result.to_response_payload(),
-                    )
+                    ),
                 )
             except Exception as exc:  # noqa: BLE001
                 results.append(
@@ -142,7 +138,7 @@ class PodcastTranscriptionScheduleService:
                         episode_title=episode.title,
                         status="error",
                         error=str(exc),
-                    )
+                    ),
                 )
         return results
 
@@ -152,7 +148,7 @@ class PodcastTranscriptionScheduleService:
         hours_since_published: int = 24,
     ) -> CheckNewEpisodesProjection:
         cutoff_time = datetime.now(UTC) - timedelta(
-            hours=hours_since_published
+            hours=hours_since_published,
         )
 
         stmt = (
@@ -165,7 +161,7 @@ class PodcastTranscriptionScheduleService:
                         PodcastEpisode.transcript_content.is_(None),
                         PodcastEpisode.transcript_content == "",
                     ),
-                )
+                ),
             )
             .order_by(PodcastEpisode.published_at.desc())
         )
@@ -192,7 +188,7 @@ class PodcastTranscriptionScheduleService:
                         episode_id=episode.id,
                         status="scheduled",
                         task_id=schedule_result.task_id,
-                    )
+                    ),
                 )
             except Exception as exc:  # noqa: BLE001
                 results.append(
@@ -200,7 +196,7 @@ class PodcastTranscriptionScheduleService:
                         episode_id=episode.id,
                         status="error",
                         error=str(exc),
-                    )
+                    ),
                 )
 
         scheduled = sum(1 for item in results if item.status == "scheduled")
@@ -215,7 +211,7 @@ class PodcastTranscriptionScheduleService:
         )
 
     async def get_transcription_status(
-        self, episode_id: int
+        self, episode_id: int,
     ) -> TranscriptionScheduleStatusProjection:
         episode = await self._get_episode(episode_id)
         if not episode:
@@ -239,7 +235,7 @@ class PodcastTranscriptionScheduleService:
             episode_id=episode_id,
             episode_title=episode.title,
             task_id=task.id,
-            status=self._status_value(task.status),
+            status=status_value(task.status),
             progress=task.progress_percentage,
             created_at=task.created_at,
             updated_at=task.updated_at,
@@ -247,7 +243,7 @@ class PodcastTranscriptionScheduleService:
             has_transcript=task.transcript_content is not None,
             transcript_preview=(
                 task.transcript_content[:100] + "..."
-                if self._status_value(task.status) == TranscriptionStatus.COMPLETED.value
+                if status_value(task.status) == TranscriptionStatus.COMPLETED.value
                 and task.transcript_content
                 else None
             ),
@@ -265,8 +261,8 @@ class PodcastTranscriptionScheduleService:
                     [
                         TranscriptionStatus.PENDING.value,
                         TranscriptionStatus.IN_PROGRESS.value,
-                    ]
-                )
+                    ],
+                ),
             )
             .order_by(TranscriptionTask.created_at.desc())
         )
@@ -276,7 +272,7 @@ class PodcastTranscriptionScheduleService:
             PendingTranscriptionTaskProjection(
                 task_id=task.id,
                 episode_id=task.episode_id,
-                status=self._status_value(task.status),
+                status=status_value(task.status),
                 progress=task.progress_percentage,
                 created_at=task.created_at,
                 updated_at=task.updated_at,
@@ -298,7 +294,7 @@ class PodcastTranscriptionScheduleService:
         task = await self._get_existing_transcription_task(episode_id)
         if (
             task
-            and self._status_value(task.status) == TranscriptionStatus.COMPLETED.value
+            and status_value(task.status) == TranscriptionStatus.COMPLETED.value
             and task.transcript_content
         ):
             return task.transcript_content
@@ -309,10 +305,10 @@ class PodcastTranscriptionScheduleService:
         return (await self.db.execute(stmt)).scalar_one_or_none()
 
     async def _get_existing_transcription_task(
-        self, episode_id: int
+        self, episode_id: int,
     ) -> TranscriptionTask | None:
         stmt = select(TranscriptionTask).where(
-            TranscriptionTask.episode_id == episode_id
+            TranscriptionTask.episode_id == episode_id,
         )
         return (await self.db.execute(stmt)).scalar_one_or_none()
 

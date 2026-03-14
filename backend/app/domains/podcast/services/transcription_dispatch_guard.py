@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import TranscriptionTask
+from app.domains.podcast.utils.status_helpers import status_value
 
 
 class TranscriptionDispatchGuard:
@@ -37,14 +38,14 @@ class TranscriptionDispatchGuard:
             return True
 
         status_stmt = select(TranscriptionTask.status).where(
-            TranscriptionTask.id == task_id
+            TranscriptionTask.id == task_id,
         )
         status_result = await self.db.execute(status_stmt)
-        task_status_value = _status_value(status_result.scalar_one_or_none())
+        task_status_value = status_value(status_result.scalar_one_or_none())
         if task_status_value in {"completed", "failed", "cancelled"}:
             return False
         raise RuntimeError(
-            f"Task {task_id} dispatch key exists while task status={task_status_value}"
+            f"Task {task_id} dispatch key exists while task status={task_status_value}",
         )
 
     async def clear(self, task_id: int) -> None:
@@ -55,7 +56,3 @@ class TranscriptionDispatchGuard:
         redis = self.redis_factory()
         key = f"podcast:transcription:dispatched:{task_id}"
         await redis.delete_keys(key)
-
-
-def _status_value(status: object) -> str:
-    return status.value if hasattr(status, "value") else str(status)

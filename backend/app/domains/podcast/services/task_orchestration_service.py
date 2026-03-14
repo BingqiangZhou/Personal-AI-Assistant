@@ -27,6 +27,7 @@ from app.domains.podcast.repositories import PodcastSubscriptionRepository
 from app.domains.podcast.services.daily_report_service import DailyReportService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.sync_service import PodcastSyncService
+from app.domains.podcast.utils.status_helpers import status_value
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
@@ -77,7 +78,7 @@ class PodcastTaskOrchestrationService:
             refreshed_count += batch_result["refreshed_subscriptions"]
             new_episodes_count += batch_result["new_episodes"]
             pending_transcription_episode_ids.extend(
-                batch_result["transcription_episode_ids"]
+                batch_result["transcription_episode_ids"],
             )
 
             if next_subscription_id is None:
@@ -86,7 +87,7 @@ class PodcastTaskOrchestrationService:
         if pending_transcription_episode_ids:
             workflow = self._build_transcription_workflow()
             dispatch_result = await workflow.dispatch_pending_transcriptions(
-                pending_transcription_episode_ids
+                pending_transcription_episode_ids,
             )
             logger.info(
                 "Feed refresh transcription dispatch completed: checked=%s dispatched=%s skipped=%s failed=%s",
@@ -116,7 +117,7 @@ class PodcastTaskOrchestrationService:
                     Subscription.source_type == "podcast-rss",
                     Subscription.status == SubscriptionStatus.ACTIVE.value,
                     Subscription.id > after_subscription_id,
-                )
+                ),
             )
             .order_by(Subscription.id.asc())
             .limit(limit)
@@ -134,7 +135,7 @@ class PodcastTaskOrchestrationService:
                 and_(
                     UserSubscription.subscription_id.in_(subscription_ids),
                     UserSubscription.is_archived.is_(False),
-                )
+                ),
             )
             .order_by(UserSubscription.subscription_id.asc(), UserSubscription.id.asc())
         )
@@ -154,7 +155,7 @@ class PodcastTaskOrchestrationService:
                 {
                     "subscription_id": user_subscription.subscription_id,
                     "user_id": user_subscription.user_id,
-                }
+                },
             )
 
         next_cursor = subscriptions[-1].id if len(subscriptions) >= limit else None
@@ -173,7 +174,7 @@ class PodcastTaskOrchestrationService:
             "User-Agent": (
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-            )
+            ),
         }
 
         async with aiohttp.ClientSession(
@@ -277,12 +278,12 @@ class PodcastTaskOrchestrationService:
                 )
 
                 last_fetched = ensure_timezone_aware_fetch_time(
-                    subscription.last_fetched_at
+                    subscription.last_fetched_at,
                 )
                 transcription_episode_ids: list[int] = []
                 for saved_episode in new_episode_rows:
                     published_at = ensure_timezone_aware_fetch_time(
-                        saved_episode.published_at
+                        saved_episode.published_at,
                     )
                     if last_fetched and published_at and published_at > last_fetched:
                         transcription_episode_ids.append(saved_episode.id)
@@ -347,7 +348,7 @@ class PodcastTaskOrchestrationService:
                         "feed_title": feed.title,
                         "imported_via_opml": True,
                         "opml_background_parsed_at": datetime.now(
-                            UTC
+                            UTC,
                         ).isoformat(),
                     },
                 }
@@ -372,7 +373,7 @@ class PodcastTaskOrchestrationService:
             }
             await repo.update_subscription_metadata(subscription_id, metadata)
             await repo.update_subscription_fetch_time(
-                subscription_id, feed.last_fetched
+                subscription_id, feed.last_fetched,
             )
 
             return {
@@ -432,17 +433,15 @@ class PodcastTaskOrchestrationService:
             return True
 
         status_stmt = select(TranscriptionTask.status).where(
-            TranscriptionTask.id == task_id
+            TranscriptionTask.id == task_id,
         )
         status_result = await session.execute(status_stmt)
         status_obj = status_result.scalar_one_or_none()
-        task_status_value = (
-            status_obj.value if hasattr(status_obj, "value") else str(status_obj)
-        )
+        task_status_value = status_value(status_obj)
         if task_status_value in {"completed", "failed", "cancelled"}:
             return False
         raise RuntimeError(
-            f"Task {task_id} dispatch key exists while task status={task_status_value}"
+            f"Task {task_id} dispatch key exists while task status={task_status_value}",
         )
 
     async def _lookup_episode(self, episode_id: int) -> PodcastEpisode | None:
@@ -469,7 +468,7 @@ class PodcastTaskOrchestrationService:
                         Subscription.status == SubscriptionStatus.ACTIVE.value,
                         UserSubscription.is_archived == False,  # noqa: E712
                         UserSubscription.user_id > last_user_id,
-                    )
+                    ),
                 )
                 .distinct()
                 .order_by(UserSubscription.user_id.asc())
@@ -487,7 +486,7 @@ class PodcastTaskOrchestrationService:
                 except Exception:
                     failed_count += 1
                     logger.exception(
-                        "Failed to generate daily report for user=%s", user_id
+                        "Failed to generate daily report for user=%s", user_id,
                     )
                     await self.session.rollback()
 
@@ -507,7 +506,7 @@ class PodcastTaskOrchestrationService:
 
     async def get_task_statistics(self) -> dict:
         count_stmt = select(
-            TranscriptionTask.status, func.count(TranscriptionTask.id)
+            TranscriptionTask.status, func.count(TranscriptionTask.id),
         ).group_by(TranscriptionTask.status)
         count_result = await self.session.execute(count_stmt)
         grouped = dict(count_result.all())
@@ -550,7 +549,7 @@ class PodcastTaskOrchestrationService:
     async def cleanup_old_playback_states(self) -> dict:
         cutoff_date = datetime.now(UTC) - timedelta(days=90)
         stmt = delete(PodcastPlaybackState).where(
-            PodcastPlaybackState.last_updated_at < cutoff_date
+            PodcastPlaybackState.last_updated_at < cutoff_date,
         )
         result = await self.session.execute(stmt)
         await self.session.commit()
@@ -598,8 +597,8 @@ class PodcastTaskOrchestrationService:
                 and_(
                     UserSubscription.subscription_id == Subscription.id,
                     UserSubscription.is_archived.is_(False),
-                )
-            )
+                ),
+            ),
         )
         filters = [
             Subscription.source_type == "podcast-rss",
@@ -622,7 +621,7 @@ class PodcastTaskOrchestrationService:
             select(PodcastEpisode.id, PodcastEpisode.published_at)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .outerjoin(
-                TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id
+                TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id,
             )
             .where(and_(*filters))
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
@@ -675,7 +674,7 @@ class PodcastTaskOrchestrationService:
                     and_(
                         User.status == UserStatus.ACTIVE,
                         User.id > last_user_id,
-                    )
+                    ),
                 )
                 .order_by(User.id.asc())
                 .limit(batch_size)
