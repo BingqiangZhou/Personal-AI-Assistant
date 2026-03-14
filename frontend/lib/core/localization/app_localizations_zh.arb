@@ -2007,10 +2007,6 @@
     "@apply_button":  {
                           "description":  "通用应用按钮标签"
                       },
-    "auth_test_page_title":  "身份验证测试",
-    "@auth_test_page_title":  {
-                                  "description":  "身份验证测试页面标题"
-                              },
     "auth_verification_title":  "身份验证",
     "@auth_verification_title":  {
                                      "description":  "身份验证页面标题"

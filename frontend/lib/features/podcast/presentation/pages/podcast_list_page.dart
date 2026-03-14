@@ -484,26 +484,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     );
     const isDense = true;
     final content = hasSearched
-        ? Consumer(
-            builder: (context, localRef, _) {
-              final searchState = localRef.watch(search.podcastSearchProvider);
-              return _buildSearchResults(
-                context,
-                searchState,
-                l10n,
-                isDense: isDense,
-              );
-            },
+        ? _buildSearchResults(
+            context,
+            ref.watch(search.podcastSearchProvider),
+            l10n,
+            isDense: isDense,
           )
-        : Consumer(
-            builder: (context, localRef, _) {
-              final discoverState = localRef.watch(podcastDiscoverProvider);
-              return _buildDiscoverContent(
-                context,
-                discoverState,
-                isDense: isDense,
-              );
-            },
+        : _buildDiscoverContent(
+            context,
+            ref.watch(podcastDiscoverProvider),
+            isDense: isDense,
           );
 
     return LayoutBuilder(

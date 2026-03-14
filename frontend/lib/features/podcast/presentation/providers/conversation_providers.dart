@@ -1,50 +1,79 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_conversation_model.dart';
+import 'episode_provider_cache.dart';
 import 'podcast_providers.dart';
 
 // === Providers ===
 
 // Conversation state providers for each episode (Messages)
 final conversationStateProviders =
-    <int, NotifierProvider<ConversationNotifier, ConversationState>>{};
+  <int, NotifierProvider<ConversationNotifier, ConversationState>>{};
 
 /// Get or create a conversation state provider for a specific episode
 NotifierProvider<ConversationNotifier, ConversationState> getConversationProvider(
     int episodeId) {
-  return conversationStateProviders.putIfAbsent(
+  return getOrCreateEpisodeScopedProvider(
+    conversationStateProviders,
     episodeId,
-    () => NotifierProvider<ConversationNotifier, ConversationState>(
+    () => NotifierProvider.autoDispose<ConversationNotifier, ConversationState>(
         () => ConversationNotifier(episodeId)),
   );
 }
 
 // Session List Providers
 final sessionListProviders = <int,
-    AsyncNotifierProvider<SessionListNotifier, List<ConversationSession>>>{};
+  AsyncNotifierProvider<SessionListNotifier, List<ConversationSession>>>{};
 
 AsyncNotifierProvider<SessionListNotifier, List<ConversationSession>>
     getSessionListProvider(int episodeId) {
-  return sessionListProviders.putIfAbsent(
+  return getOrCreateEpisodeScopedProvider(
+    sessionListProviders,
     episodeId,
-    () => AsyncNotifierProvider<SessionListNotifier, List<ConversationSession>>(
+    () => AsyncNotifierProvider.autoDispose<SessionListNotifier, List<ConversationSession>>(
         () => SessionListNotifier(episodeId)),
   );
 }
 
 // Current Session ID Providers
-final currentSessionIdProviders = <int, NotifierProvider<SessionIdNotifier, int?>>{};
+final currentSessionIdProviders =
+  <int, NotifierProvider<SessionIdNotifier, int?>>{};
 
-NotifierProvider<SessionIdNotifier, int?> getCurrentSessionIdProvider(int episodeId) {
-  return currentSessionIdProviders.putIfAbsent(
+NotifierProvider<SessionIdNotifier, int?> getCurrentSessionIdProvider(
+    int episodeId) {
+  return getOrCreateEpisodeScopedProvider(
+    currentSessionIdProviders,
     episodeId,
-    () => NotifierProvider<SessionIdNotifier, int?>(() => SessionIdNotifier()),
+    () => NotifierProvider.autoDispose<SessionIdNotifier, int?>(
+        () => SessionIdNotifier(episodeId)),
   );
 }
 
+/// Explicitly release conversation-related provider cache for an episode.
+///
+/// This is a best-effort cleanup to prevent key accumulation in long-running
+/// sessions when widgets are recreated across many episode IDs.
+void releaseConversationProviders(int episodeId) {
+  releaseEpisodeScopedProvider(conversationStateProviders, episodeId);
+  releaseEpisodeScopedProvider(sessionListProviders, episodeId);
+  releaseEpisodeScopedProvider(currentSessionIdProviders, episodeId);
+}
+
 class SessionIdNotifier extends Notifier<int?> {
+  SessionIdNotifier([this.episodeId]);
+
+  final int? episodeId;
+
   @override
-  int? build() => null;
+  int? build() {
+    ref.onDispose(() {
+      final id = episodeId;
+      if (id != null) {
+        releaseEpisodeScopedProvider(currentSessionIdProviders, id);
+      }
+    });
+    return null;
+  }
 
   void set(int? id) => state = id;
 }
@@ -103,6 +132,9 @@ class SessionListNotifier extends AsyncNotifier<List<ConversationSession>> {
 
   @override
   Future<List<ConversationSession>> build() async {
+    ref.onDispose(() {
+      releaseEpisodeScopedProvider(sessionListProviders, episodeId);
+    });
     return _loadSessions();
   }
 
@@ -182,6 +214,10 @@ class ConversationNotifier extends Notifier<ConversationState> {
 
   @override
   ConversationState build() {
+    ref.onDispose(() {
+      releaseEpisodeScopedProvider(conversationStateProviders, episodeId);
+    });
+
     // Watch current session ID to reload on change
     final sessionId = ref.watch(getCurrentSessionIdProvider(episodeId));
     

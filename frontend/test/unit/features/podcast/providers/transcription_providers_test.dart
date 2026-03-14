@@ -57,6 +57,16 @@ void main() {
       expect(repository.getTranscriptionCalls, 1);
     });
   });
+
+  test('releaseTranscriptionProvider removes cached provider key', () {
+    final provider = getTranscriptionProvider(2003);
+    expect(transcriptionStateProviders.containsKey(2003), isTrue);
+
+    releaseTranscriptionProvider(2003);
+
+    expect(transcriptionStateProviders.containsKey(2003), isFalse);
+    expect(provider, isNotNull);
+  });
 }
 
 class _FakeTranscriptionRepository extends PodcastRepository {

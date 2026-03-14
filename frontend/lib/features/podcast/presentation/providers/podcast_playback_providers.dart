@@ -19,6 +19,7 @@ import '../../data/repositories/podcast_repository.dart';
 import 'podcast_core_providers.dart';
 import 'playback_progress_policy.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
+import '../../../../core/utils/time_formatter.dart';
 
 part 'podcast_playback_helpers.dart';
 part 'podcast_playback_queue_controller.dart';
@@ -1471,13 +1472,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   String _formatRemainingTime(Duration d) {
-    final hours = d.inHours;
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return TimeFormatter.formatDuration(d, padHours: false);
   }
 
   Future<void> _updatePlaybackStateOnServer({bool immediate = false}) async {

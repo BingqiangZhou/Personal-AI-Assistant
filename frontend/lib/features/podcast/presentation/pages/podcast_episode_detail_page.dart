@@ -28,6 +28,7 @@ import '../widgets/podcast_image_widget.dart';
 import '../widgets/scrollable_content_wrapper.dart';
 import '../services/content_image_share_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
+import '../../../../core/utils/time_formatter.dart';
 
 part 'podcast_episode_detail_page_layout.dart';
 part 'podcast_episode_detail_page_header.dart';
@@ -90,10 +91,16 @@ class _PodcastEpisodeDetailPageState
   @override
   void dispose() {
     _transcriptionNoticeSubscription?.close();
+    _releaseEpisodeScopedProviders(widget.episodeId);
     _pageController.dispose();
     _scrollOffset.dispose();
     _showScrollToTopButton.dispose();
     super.dispose();
+  }
+
+  void _releaseEpisodeScopedProviders(int episodeId) {
+    releaseSummaryProvider(episodeId);
+    releaseTranscriptionProvider(episodeId);
   }
 
   void _bindTranscriptionNoticeListener() {
@@ -369,6 +376,7 @@ class _PodcastEpisodeDetailPageState
       _shownotesAnchors = const <ShownotesAnchor>[];
 
       _bindTranscriptionNoticeListener();
+      _releaseEpisodeScopedProviders(oldWidget.episodeId);
 
       // Reload data for the new episode
       WidgetsBinding.instance.addPostFrameCallback((_) {

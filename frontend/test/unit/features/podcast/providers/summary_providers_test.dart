@@ -156,6 +156,16 @@ void main() {
       });
     },
   );
+
+  test('releaseSummaryProvider removes cached provider key', () {
+    final provider = getSummaryProvider(1006);
+    expect(summaryStateProviders.containsKey(1006), isTrue);
+
+    releaseSummaryProvider(1006);
+
+    expect(summaryStateProviders.containsKey(1006), isFalse);
+    expect(provider, isNotNull);
+  });
 }
 
 class _FakeSummaryRepository extends PodcastRepository {

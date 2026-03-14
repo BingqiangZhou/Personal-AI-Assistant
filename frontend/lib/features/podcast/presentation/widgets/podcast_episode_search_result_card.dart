@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/models/itunes_episode_lookup_model.dart';
+import '../../../../core/utils/time_formatter.dart';
 import '../constants/podcast_ui_constants.dart';
 import 'podcast_image_widget.dart';
 
@@ -124,7 +125,11 @@ class PodcastEpisodeSearchResultCard extends StatelessWidget {
       parts.add(_formatDate(episode.releaseDate!));
     }
     if (episode.trackTimeMillis != null && episode.trackTimeMillis! > 0) {
-      parts.add(_formatDuration(Duration(milliseconds: episode.trackTimeMillis!)));
+      parts.add(
+        TimeFormatter.formatDuration(
+          Duration(milliseconds: episode.trackTimeMillis!),
+        ),
+      );
     }
     return parts.join(' · ');
   }
@@ -134,15 +139,5 @@ class PodcastEpisodeSearchResultCard extends StatelessWidget {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '${date.year}-$month-$day';
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

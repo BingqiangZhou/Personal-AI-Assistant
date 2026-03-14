@@ -2780,12 +2780,6 @@ abstract class AppLocalizations {
   /// **'Apply'**
   String get apply_button;
 
-  /// Authentication test page title
-  ///
-  /// In en, this message translates to:
-  /// **'Authentication Test'**
-  String get auth_test_page_title;
-
   /// Authentication verification page title
   ///
   /// In en, this message translates to:

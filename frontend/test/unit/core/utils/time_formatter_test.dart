@@ -72,5 +72,36 @@ void main() {
       expect(result, isNotEmpty);
       expect(result, contains(RegExp(r'\d{2}:\d{2}')));
     });
+
+    test('formatDuration should return mm:ss when duration is under one hour', () {
+      final result = TimeFormatter.formatDuration(
+        const Duration(minutes: 7, seconds: 5),
+      );
+
+      expect(result, '07:05');
+    });
+
+    test('formatDuration should return hh:mm:ss when duration is one hour or more', () {
+      final result = TimeFormatter.formatDuration(
+        const Duration(hours: 2, minutes: 3, seconds: 4),
+      );
+
+      expect(result, '02:03:04');
+    });
+
+    test('formatSecondsClock should clamp negative values to zero', () {
+      final result = TimeFormatter.formatSecondsClock(-5);
+
+      expect(result, '00:00');
+    });
+
+    test('formatSecondsClock should support unpadded hour display', () {
+      final result = TimeFormatter.formatSecondsClock(
+        3725,
+        padHours: false,
+      );
+
+      expect(result, '1:02:05');
+    });
   });
 }

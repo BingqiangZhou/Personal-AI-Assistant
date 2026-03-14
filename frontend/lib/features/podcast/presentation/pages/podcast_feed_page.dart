@@ -76,6 +76,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final feedState = ref.watch(podcastFeedProvider);
     return ContentShell(
       title: l10n.podcast_feed_page_title,
       subtitle: '',
@@ -96,12 +97,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         ],
       ),
       badges: const [],
-      child: Consumer(
-        builder: (context, localRef, child) {
-          final feedState = localRef.watch(podcastFeedProvider);
-          return _buildFeedContent(context, localRef, feedState);
-        },
-      ),
+      child: _buildFeedContent(context, ref, feedState),
     );
   }
 

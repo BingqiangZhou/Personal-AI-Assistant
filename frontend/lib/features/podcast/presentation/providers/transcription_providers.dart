@@ -3,17 +3,31 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_transcription_model.dart';
+import 'episode_provider_cache.dart';
 import 'podcast_providers.dart';
 
 // Transcription state provider for each episode
-final transcriptionStateProviders = <int, AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?>>{};
+final transcriptionStateProviders =
+  <int, AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?>>{};
 
 /// Get or create a transcription state provider for a specific episode
-AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?> getTranscriptionProvider(int episodeId) {
-  return transcriptionStateProviders.putIfAbsent(
+AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?>
+getTranscriptionProvider(int episodeId) {
+  return getOrCreateEpisodeScopedProvider(
+    transcriptionStateProviders,
     episodeId,
-    () => AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?>(() => TranscriptionNotifier(episodeId)),
+    () => AsyncNotifierProvider<TranscriptionNotifier, PodcastTranscriptionResponse?>(
+      () => TranscriptionNotifier(episodeId),
+    ),
   );
+}
+
+/// Explicitly release transcription provider cache for an episode.
+///
+/// Keeps default non-autoDispose semantics unchanged while allowing page-level
+/// lifecycle hooks to avoid map key growth.
+void releaseTranscriptionProvider(int episodeId) {
+  releaseEpisodeScopedProvider(transcriptionStateProviders, episodeId);
 }
 
 /// Notifier for managing transcription state

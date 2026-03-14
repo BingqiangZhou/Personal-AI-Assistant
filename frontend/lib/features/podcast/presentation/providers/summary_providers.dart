@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_playback_model.dart';
 import '../../core/utils/summary_sanitizer.dart';
+import 'episode_provider_cache.dart';
 import 'podcast_providers.dart';
 
 // Summary state providers for each episode
@@ -14,12 +15,21 @@ final summaryStateProviders =
 NotifierProvider<SummaryNotifier, SummaryState> getSummaryProvider(
   int episodeId,
 ) {
-  return summaryStateProviders.putIfAbsent(
+  return getOrCreateEpisodeScopedProvider(
+    summaryStateProviders,
     episodeId,
     () => NotifierProvider<SummaryNotifier, SummaryState>(
       () => SummaryNotifier(episodeId),
     ),
   );
+}
+
+/// Explicitly release summary provider cache for an episode.
+///
+/// Keeps default non-autoDispose semantics unchanged while allowing page-level
+/// lifecycle hooks to prevent map key growth in long-running sessions.
+void releaseSummaryProvider(int episodeId) {
+  releaseEpisodeScopedProvider(summaryStateProviders, episodeId);
 }
 
 // Provider for available summary models

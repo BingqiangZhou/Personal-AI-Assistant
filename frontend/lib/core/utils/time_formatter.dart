@@ -100,4 +100,40 @@ class TimeFormatter {
 
     return DateFormat('HH:mm').format(dateTime);
   }
+
+  /// 格式化时长为 mm:ss 或 hh:mm:ss。
+  static String formatDuration(
+    Duration duration, {
+    bool padHours = true,
+    bool alwaysShowHours = false,
+  }) {
+    final safeDuration = duration.isNegative ? Duration.zero : duration;
+    final hours = safeDuration.inHours;
+    final minutes = safeDuration.inMinutes.remainder(60);
+    final seconds = safeDuration.inSeconds.remainder(60);
+
+    final minutePart = minutes.toString().padLeft(2, '0');
+    final secondPart = seconds.toString().padLeft(2, '0');
+
+    if (hours > 0 || alwaysShowHours) {
+      final hourPart = padHours ? hours.toString().padLeft(2, '0') : '$hours';
+      return '$hourPart:$minutePart:$secondPart';
+    }
+
+    return '$minutePart:$secondPart';
+  }
+
+  /// 按秒格式化时钟文本。
+  static String formatSecondsClock(
+    int seconds, {
+    bool padHours = true,
+    bool alwaysShowHours = false,
+  }) {
+    final safeSeconds = seconds < 0 ? 0 : seconds;
+    return formatDuration(
+      Duration(seconds: safeSeconds),
+      padHours: padHours,
+      alwaysShowHours: alwaysShowHours,
+    );
+  }
 }

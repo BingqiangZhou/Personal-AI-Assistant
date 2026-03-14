@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_spacing.dart';
 import '../constants/breakpoints.dart';
 import 'mindriver_theme.dart';
-import 'app_colors.dart';
 
 /// AppTheme - Main theme accessor
 /// AppTheme - 主主题访问器
@@ -11,42 +10,6 @@ import 'app_colors.dart';
 /// 此类包装 MindriverTheme 以保持向后兼容性
 class AppTheme {
   AppTheme._();
-
-  // ============================================================
-  // LEGACY COLOR CONSTANTS (for backward compatibility)
-  // 向后兼容的遗留颜色常量
-  // ============================================================
-
-  static const Color primaryColor = AppColors.primary;
-  static const Color primaryDarkColor = AppColors.riverAccent;
-  static const Color secondaryColor = AppColors.indigo;
-  static const Color accentColor = AppColors.riverAccent;
-
-  static const Color surfaceColor = AppColors.lightSurface;
-  static const Color cardColor = AppColors.lightSurface;
-
-  static const Color textPrimary = AppColors.lightTextPrimary;
-  static const Color textSecondary = AppColors.lightTextSecondary;
-  static const Color textTertiary = AppColors.lightTextTertiary;
-
-  static const Color errorColor = AppColors.error;
-  static const Color warningColor = AppColors.warning;
-  static const Color successColor = AppColors.success;
-  static const Color infoColor = AppColors.info;
-
-  static const Color dividerColor = AppColors.lightOutline;
-  static const Color borderColor = AppColors.lightOutline;
-
-  // Dark theme colors / 暗色主题颜色
-  static const Color darkSurfaceColor = AppColors.darkSurface;
-  static const Color darkCardColor = AppColors.darkSurfaceVariant;
-
-  static const Color darkTextPrimary = AppColors.darkTextPrimary;
-  static const Color darkTextSecondary = AppColors.darkTextSecondary;
-  static const Color darkTextTertiary = AppColors.darkTextTertiary;
-
-  static const Color darkDividerColor = AppColors.darkOutline;
-  static const Color darkBorderColor = AppColors.darkOutline;
 
   // ============================================================
   // RESPONSIVE HELPERS / 响应式助手

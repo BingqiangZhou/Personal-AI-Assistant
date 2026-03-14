@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
 import '../providers/transcription_providers.dart';
@@ -972,14 +973,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    }
-    return '$minutes:${secs.toString().padLeft(2, '0')}';
+    return TimeFormatter.formatSecondsClock(seconds, padHours: false);
   }
 
   String _formatAccuracy(double? accuracy) {

@@ -472,11 +472,11 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
     final remainingSeconds = duration.inSeconds.remainder(60);
 
     if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+      return TimeFormatter.formatDuration(duration);
     }
 
     if (remainingSeconds > 0) {
-      return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+      return TimeFormatter.formatDuration(duration);
     }
 
     return l10n.player_minutes(minutes);

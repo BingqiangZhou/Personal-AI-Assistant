@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -124,7 +123,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Icon(

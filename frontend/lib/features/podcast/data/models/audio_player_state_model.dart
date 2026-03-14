@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'podcast_episode_model.dart';
 import 'podcast_queue_model.dart';
 
@@ -100,27 +101,17 @@ class AudioPlayerState extends Equatable {
   }
 
   String get formattedPosition {
-    final duration = Duration(milliseconds: position);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return TimeFormatter.formatDuration(
+      Duration(milliseconds: position),
+      padHours: false,
+    );
   }
 
   String get formattedDuration {
-    final duration = Duration(milliseconds: this.duration);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return TimeFormatter.formatDuration(
+      Duration(milliseconds: duration),
+      padHours: false,
+    );
   }
 
   @override

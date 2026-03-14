@@ -43,6 +43,7 @@ class ConversationChatWidgetState
   bool _lastSelectedChatIsUser = false;
   bool _isMessageSelectMode = false;
   final Set<int> _selectedMessageIds = <int>{};
+  ProviderSubscription<ConversationState>? _conversationSubscription;
 
   void _onMessageInputChanged() {
     if (!mounted) return;
@@ -89,16 +90,42 @@ class ConversationChatWidgetState
         error: (_, _) {},
       );
     });
+    _bindConversationListener();
   }
 
   @override
   void dispose() {
+    _conversationSubscription?.close();
     _pendingScrollTimer?.cancel();
+    releaseConversationProviders(widget.episodeId);
     _messageController.removeListener(_onMessageInputChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant ConversationChatWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.episodeId != widget.episodeId) {
+      _conversationSubscription?.close();
+      releaseConversationProviders(oldWidget.episodeId);
+      _bindConversationListener();
+    }
+  }
+
+  void _bindConversationListener() {
+    _conversationSubscription?.close();
+    _conversationSubscription = ref.listenManual<ConversationState>(
+      getConversationProvider(widget.episodeId),
+      (previous, next) {
+        _syncSelectedMessageIds(next.messages);
+        if (next.messages.length > (previous?.messages.length ?? 0)) {
+          _scheduleScrollToBottom(const Duration(milliseconds: 100));
+        }
+      },
+    );
   }
 
   void _scheduleScrollToBottom(Duration delay) {
@@ -343,17 +370,6 @@ class ConversationChatWidgetState
     final conversationState = ref.watch(
       getConversationProvider(widget.episodeId),
     );
-
-    // Scroll to bottom when new messages arrive
-    ref.listen<ConversationState>(getConversationProvider(widget.episodeId), (
-      previous,
-      next,
-    ) {
-      _syncSelectedMessageIds(next.messages);
-      if (next.messages.length > (previous?.messages.length ?? 0)) {
-        _scheduleScrollToBottom(const Duration(milliseconds: 100));
-      }
-    });
 
     return Scaffold(
       backgroundColor: Colors.transparent,

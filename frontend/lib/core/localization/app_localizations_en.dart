@@ -1479,9 +1479,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apply_button => 'Apply';
 
   @override
-  String get auth_test_page_title => 'Authentication Test';
-
-  @override
   String get auth_verification_title => 'Auth Verification';
 
   @override

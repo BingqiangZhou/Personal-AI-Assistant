@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/time_formatter.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
@@ -836,16 +837,7 @@ String _queueFormatProgress({
 }
 
 String _queueFormatClock(int seconds) {
-  final safeSeconds = seconds < 0 ? 0 : seconds;
-  final duration = Duration(seconds: safeSeconds);
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  final remainingSeconds = duration.inSeconds.remainder(60);
-
-  if (hours > 0) {
-    return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  }
-  return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  return TimeFormatter.formatSecondsClock(seconds, padHours: false);
 }
 
 String? _queueStatusLabel(

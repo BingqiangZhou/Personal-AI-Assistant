@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
-import '../../features/auth/presentation/pages/auth_test_page.dart';
 import '../../features/auth/presentation/pages/auth_verify_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
@@ -55,11 +54,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterPage(),
-      ),
-      GoRoute(
-        path: '/auth-test',
-        name: 'auth-test',
-        builder: (context, state) => const AuthTestPage(),
       ),
       GoRoute(
         path: '/auth-verify',
@@ -207,7 +201,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isLoggingIn = state.matchedLocation == '/login';
       final isRegistering = state.matchedLocation == '/register';
       final isSplash = state.matchedLocation == '/splash';
-      final isAuthTest = state.matchedLocation.startsWith('/auth-test');
       final isForgotPassword = state.matchedLocation.startsWith(
         '/forgot-password',
       );
@@ -217,9 +210,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Allow Splash
       if (isSplash) return null;
-
-      // Allow Auth Test page for debugging
-      if (isAuthTest) return null;
 
       // Allow password reset pages
       if (isForgotPassword || isResetPassword) return null;

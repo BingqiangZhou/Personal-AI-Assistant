@@ -2006,10 +2006,6 @@
     "@apply_button":  {
                           "description":  "Generic apply button label"
                       },
-    "auth_test_page_title":  "Authentication Test",
-    "@auth_test_page_title":  {
-                                  "description":  "Authentication test page title"
-                              },
     "auth_verification_title":  "Auth Verification",
     "@auth_verification_title":  {
                                      "description":  "Authentication verification page title"

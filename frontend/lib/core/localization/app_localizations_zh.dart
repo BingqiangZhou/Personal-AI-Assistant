@@ -1434,9 +1434,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get apply_button => '应用';
 
   @override
-  String get auth_test_page_title => '身份验证测试';
-
-  @override
   String get auth_verification_title => '身份验证';
 
   @override
