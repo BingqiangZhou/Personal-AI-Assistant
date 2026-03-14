@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -110,7 +111,8 @@ class _PodcastDailyReportPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile =
+        MediaQuery.of(context).size.width < AppBreakpoints.medium;
     return CompactHeaderPanel(
       title: l10n.podcast_daily_report_title,
       leading: isMobile ? null : _buildBackButton(context),
@@ -484,7 +486,8 @@ class _PodcastDailyReportPageState
 
   Future<void> _showCalendarPanel() async {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = screenWidth < 600 ? 12.0 : 16.0;
+    final horizontalPadding =
+        screenWidth < AppBreakpoints.medium ? 12.0 : 16.0;
 
     await showGeneralDialog<void>(
       context: context,

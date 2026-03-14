@@ -73,12 +73,12 @@ void main() {
 
 Widget _buildTestApp(
   _FakeSummaryRepository repository, {
-  dynamic summaryOverride,
+  Object? summaryOverride,
 }) {
   return ProviderScope(
     overrides: [
       podcastRepositoryProvider.overrideWithValue(repository),
-      if (summaryOverride != null) summaryOverride,
+      ...?(summaryOverride == null ? null : [summaryOverride as dynamic]),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

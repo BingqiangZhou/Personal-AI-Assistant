@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -104,9 +105,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = _UpdateDialogPalette.of(theme);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = MediaQuery.of(context).size.width < AppBreakpoints.medium;
     final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 500.0;
+    final dialogWidth =
+      screenWidth < AppBreakpoints.medium ? screenWidth - 32 : 500.0;
 
     return AlertDialog(
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,
@@ -284,7 +286,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = _UpdateDialogPalette.of(theme);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = MediaQuery.of(context).size.width < AppBreakpoints.medium;
     final asset = _platformAsset;
 
     return Container(
@@ -672,8 +674,9 @@ class _ManualUpdateCheckDialogState
     final state = ref.watch(manualUpdateCheckProvider);
     _maybeRedirectToDetailedDialog(context, state);
     final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 400.0;
-    final isMobile = screenWidth < 600;
+    final dialogWidth =
+      screenWidth < AppBreakpoints.medium ? screenWidth - 32 : 400.0;
+    final isMobile = screenWidth < AppBreakpoints.medium;
 
     return AlertDialog(
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,

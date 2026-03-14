@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -25,7 +26,8 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile =
+        MediaQuery.of(context).size.width < AppBreakpoints.medium;
     final titleTextStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
       fontSize: 13,

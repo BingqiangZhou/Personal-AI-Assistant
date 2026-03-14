@@ -150,6 +150,12 @@ class _ManagedResourceBundle {
   int firedTimerCount = 0;
 
   Future<void> dispose() async {
+    await playerStateSubscription.cancel();
+    await positionSubscription.cancel();
+    await durationSubscription.cancel();
+    syncThrottleTimer.cancel();
+    sleepTimerTickTimer.cancel();
+    snapshotPersistTimer.cancel();
     await _playerStateController.close();
     await _positionController.close();
     await _durationController.close();

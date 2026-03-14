@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/router/app_router.dart';
 import '../constants/playback_speed_options.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 typedef PlaybackSpeedSheetInitialSelection = ({
   double speed,
@@ -76,8 +77,10 @@ class _PlaybackSpeedSelectorSheetState
   void initState() {
     super.initState();
     widget.correctedInitialSelection?.then(_applyCorrectedSelection).catchError(
-      (_) {
-        return null;
+      (error, stackTrace) {
+        logger.AppLogger.warning(
+          '[PlaybackSpeedSheet] Failed to apply corrected initial selection: $error',
+        );
       },
     );
   }

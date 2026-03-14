@@ -106,7 +106,8 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
   }
 
   Widget _buildSummaryTabContent(PodcastEpisodeDetailResponse episode) {
-    final isCompact = MediaQuery.sizeOf(context).width < 600;
+    final isCompact =
+        MediaQuery.sizeOf(context).width < AppBreakpoints.medium;
 
     return ScrollableContentWrapper(
       key: _summaryKey,
@@ -201,29 +202,6 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
     } on ContentImageShareException catch (e) {
       _showShareErrorNotice(e.message);
     }
-  }
-
-  Widget _buildRightRail(PodcastEpisodeDetailResponse episode) {
-    return GlassPanel(
-      key: const Key('podcast_episode_detail_side_rail'),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      backgroundColor: Theme.of(
-        context,
-      ).colorScheme.surface.withValues(alpha: 0.18),
-      showHighlight: false,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAnchorRailCard(),
-            if ((episode.relatedEpisodes?.isNotEmpty ?? false)) ...[
-              const SizedBox(height: 16),
-              _buildRelatedEpisodesCard(episode),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildAiSummarySection(
@@ -399,148 +377,6 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
       icon: Icons.auto_awesome,
       title: l10n.podcast_summary_no_summary,
       subtitle: l10n.podcast_summary_empty_hint,
-    );
-  }
-
-  Widget _buildAnchorRailCard() {
-    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
-
-    return Container(
-      key: const Key('podcast_episode_detail_anchor_rail'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Shownotes',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.podcast_source,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_shownotesAnchors.isEmpty)
-            Text(
-              (AppLocalizations.of(context) ?? AppLocalizationsEn())
-                  .podcast_no_shownotes,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            )
-          else
-            Column(
-              children: _shownotesAnchors
-                  .map((anchor) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: Key(
-                            'podcast_episode_detail_anchor_${anchor.index}',
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => _jumpToShownotesAnchor(anchor),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    anchor.title,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  })
-                  .toList(growable: false),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRelatedEpisodesCard(PodcastEpisodeDetailResponse episode) {
-    final relatedEpisodes = episode.relatedEpisodes ?? const <dynamic>[];
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Related',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          ...relatedEpisodes.take(4).map((relatedEpisode) {
-            final title = relatedEpisode is Map<String, dynamic>
-                ? (relatedEpisode['title']?.toString() ?? '')
-                : relatedEpisode.toString();
-            if (title.trim().isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            );
-          }),
-        ],
-      ),
     );
   }
 

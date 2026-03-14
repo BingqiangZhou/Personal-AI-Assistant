@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
@@ -34,7 +36,11 @@ class _ProfileSubscriptionsPageState
       ref
           .read(podcastSubscriptionProvider.notifier)
           .loadSubscriptions()
-          .catchError((_) {});
+          .catchError((error, stackTrace) {
+            logger.AppLogger.warning(
+              '[ProfileSubscriptions] Initial subscriptions load failed: $error',
+            );
+          });
     });
   }
 
@@ -124,7 +130,8 @@ class _ProfileSubscriptionsPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile =
+        MediaQuery.of(context).size.width < AppBreakpoints.medium;
     return CompactHeaderPanel(
       title: l10n.profile_subscriptions,
       leading: isMobile

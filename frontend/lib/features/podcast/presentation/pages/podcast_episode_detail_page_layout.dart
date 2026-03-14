@@ -13,9 +13,10 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
             layoutConstraints.maxWidth >
             _PodcastEpisodeDetailPageState._wideLayoutBreakpoint;
         final outerPadding = EdgeInsets.fromLTRB(
-          layoutConstraints.maxWidth < 600 ? 16 : 20,
-          (layoutConstraints.maxWidth < 600 ? 12 : 16) + safeTop,
-          layoutConstraints.maxWidth < 600 ? 16 : 20,
+          layoutConstraints.maxWidth < AppBreakpoints.medium ? 16 : 20,
+          (layoutConstraints.maxWidth < AppBreakpoints.medium ? 12 : 16) +
+              safeTop,
+          layoutConstraints.maxWidth < AppBreakpoints.medium ? 16 : 20,
           16,
         );
 

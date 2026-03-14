@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../podcast/presentation/navigation/podcast_navigation.dart';
@@ -11,7 +12,7 @@ class ProfileActivityCards extends ConsumerWidget {
   const ProfileActivityCards({super.key});
 
   bool _isMobile(BuildContext context) =>
-      MediaQuery.of(context).size.width < 600;
+      MediaQuery.of(context).size.width < AppBreakpoints.medium;
 
   EdgeInsetsGeometry _cardMargin(BuildContext context) {
     if (_isMobile(context)) {

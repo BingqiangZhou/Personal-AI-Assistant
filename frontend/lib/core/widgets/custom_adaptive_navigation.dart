@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 
+import '../constants/breakpoints.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_colors.dart';
 
@@ -41,10 +42,10 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        if (width < 600) {
+        if (width < AppBreakpoints.medium) {
           return _buildMobileLayout(context, width);
         }
-        if (width < 840) {
+        if (width < AppBreakpoints.mediumLarge) {
           return _buildTabletLayout(context);
         }
         return _buildDesktopLayout(context, expanded: desktopNavExpanded);
@@ -581,14 +582,14 @@ class ResponsiveContainer extends StatelessWidget {
     final resolvedPadding =
         padding ??
         EdgeInsets.fromLTRB(
-          width < 600 ? 16 : 24,
-          (width < 600 ? 12 : 20) + topPadding,
-          width < 600 ? 16 : 24,
+          width < AppBreakpoints.medium ? 16 : 24,
+          (width < AppBreakpoints.medium ? 12 : 20) + topPadding,
+          width < AppBreakpoints.medium ? 16 : 24,
           0,
         );
     final resolvedMaxWidth =
         maxWidth ??
-        (width < 600
+        (width < AppBreakpoints.medium
             ? width
             : width < 900
             ? 920

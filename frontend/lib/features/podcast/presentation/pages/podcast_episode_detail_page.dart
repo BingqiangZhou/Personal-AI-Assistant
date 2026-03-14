@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/app_localizations_en.dart';
 import '../../../../core/widgets/app_shells.dart';
@@ -270,7 +271,7 @@ class _PodcastEpisodeDetailPageState
       return;
     }
 
-    if (MediaQuery.sizeOf(context).width >= 600) {
+    if (MediaQuery.sizeOf(context).width >= AppBreakpoints.medium) {
       return;
     }
 
@@ -463,24 +464,4 @@ class _PodcastEpisodeDetailPageState
     });
   }
 
-  Future<void> _jumpToShownotesAnchor(ShownotesAnchor anchor) async {
-    if (_selectedTabIndex != 0) {
-      if (MediaQuery.sizeOf(context).width < _wideLayoutBreakpoint) {
-        await _pageController.animateToPage(
-          0,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeInOutCubic,
-        );
-      }
-      if (mounted) {
-        setState(() {
-          _selectedTabIndex = 0;
-        });
-      }
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _shownotesKey.currentState?.scrollToAnchor(anchor.id);
-    });
-  }
 }

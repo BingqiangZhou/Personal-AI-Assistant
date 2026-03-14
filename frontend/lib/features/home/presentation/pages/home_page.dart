@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/route_provider.dart';
 import '../../../../core/router/app_router.dart';
@@ -254,7 +255,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                 size: 64,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 AppLocalizations.of(context)!.page_not_found,
                 style: TextStyle(
@@ -263,7 +264,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 AppLocalizations.of(context)!.page_not_found_subtitle,
                 style: TextStyle(

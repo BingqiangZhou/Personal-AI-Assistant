@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -213,7 +214,8 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   }
 
   Widget _buildHeaderPanel(BuildContext context, AppLocalizations l10n) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile =
+        MediaQuery.of(context).size.width < AppBreakpoints.medium;
     return CompactHeaderPanel(
       title: l10n.profile_viewed_title,
       leading: isMobile

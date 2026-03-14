@@ -219,7 +219,8 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isCompact = MediaQuery.sizeOf(context).width < 600;
+    final isCompact =
+        MediaQuery.sizeOf(context).width < AppBreakpoints.medium;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = DefaultTextStyle.of(context).style.copyWith(
       color: isSelected ? colorScheme.onSurface : colorScheme.onSurfaceVariant,

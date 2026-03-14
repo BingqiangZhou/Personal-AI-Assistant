@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_spacing.dart';
 import '../constants/breakpoints.dart';
 import 'mindriver_theme.dart';
 import 'app_colors.dart';
@@ -56,11 +57,11 @@ class AppTheme {
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < AppBreakpoints.medium) {
-      return const EdgeInsets.all(16.0); // 移动端
+      return const EdgeInsets.all(AppSpacing.lg); // 移动端
     } else if (screenWidth < AppBreakpoints.mediumLarge) {
-      return const EdgeInsets.all(24.0); // 平板端
+      return const EdgeInsets.all(AppSpacing.xl); // 平板端
     } else {
-      return const EdgeInsets.all(32.0); // 桌面端
+      return const EdgeInsets.all(AppSpacing.xxl); // 桌面端
     }
   }
 
@@ -71,11 +72,11 @@ class AppTheme {
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < AppBreakpoints.medium) {
-      return const EdgeInsets.symmetric(horizontal: 16.0); // 移动端
+      return const EdgeInsets.symmetric(horizontal: AppSpacing.lg); // 移动端
     } else if (screenWidth < AppBreakpoints.mediumLarge) {
-      return const EdgeInsets.symmetric(horizontal: 24.0); // 平板端
+      return const EdgeInsets.symmetric(horizontal: AppSpacing.xl); // 平板端
     } else {
-      return const EdgeInsets.symmetric(horizontal: 32.0); // 桌面端
+      return const EdgeInsets.symmetric(horizontal: AppSpacing.xxl); // 桌面端
     }
   }
 
@@ -84,11 +85,11 @@ class AppTheme {
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < AppBreakpoints.medium) {
-      return const EdgeInsets.symmetric(vertical: 8.0); // 移动端
+      return const EdgeInsets.symmetric(vertical: AppSpacing.sm); // 移动端
     } else if (screenWidth < AppBreakpoints.mediumLarge) {
-      return const EdgeInsets.symmetric(vertical: 12.0); // 平板端
+      return const EdgeInsets.symmetric(vertical: AppSpacing.md); // 平板端
     } else {
-      return const EdgeInsets.symmetric(vertical: 16.0); // 桌面端
+      return const EdgeInsets.symmetric(vertical: AppSpacing.lg); // 桌面端
     }
   }
 

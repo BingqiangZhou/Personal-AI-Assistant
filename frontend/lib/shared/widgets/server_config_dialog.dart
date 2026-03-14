@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
@@ -99,7 +100,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = screenWidth < AppBreakpoints.medium;
     final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
     return AlertDialog(
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,

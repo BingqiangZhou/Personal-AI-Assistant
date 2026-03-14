@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/route_provider.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/widgets/app_shells.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../constants/playback_speed_options.dart';
@@ -130,7 +131,7 @@ class PodcastPlayerLayoutFrame extends ConsumerWidget {
           ),
         if (canShowExpandedOverlay)
           _PodcastExpandedOverlay(
-            episode: episode!,
+            episode: episode,
             viewportSpec: spec,
             visible: isExpanded,
             applySafeArea: applyMiniPlayerSafeArea,
@@ -1176,9 +1177,15 @@ Future<void> _showQueueSheet(BuildContext context, WidgetRef ref) async {
   try {
     final showFuture = PodcastQueueSheet.show(modalContext);
     unawaited(
-      queueController
-          .loadQueue(forceRefresh: queueState.hasValue)
-          .catchError((_) => null),
+      () async {
+        try {
+          await queueController.loadQueue(forceRefresh: queueState.hasValue);
+        } catch (error) {
+          logger.AppLogger.warning(
+            '[PodcastQueueSheet] Prefetch queue failed: $error',
+          );
+        }
+      }(),
     );
     await showFuture;
   } finally {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/core_providers.dart';
@@ -93,7 +94,7 @@ class _ProfileCacheManagementPageState
   late Future<_MediaCacheStats> _statsFuture;
 
   bool _isMobile(BuildContext context) =>
-      MediaQuery.of(context).size.width < 600;
+      MediaQuery.of(context).size.width < AppBreakpoints.medium;
 
   double _contentHorizontalInset(BuildContext context) =>
       _isMobile(context) ? kPodcastRowCardHorizontalMargin : 0;

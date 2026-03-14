@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
@@ -68,11 +69,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   bool _isMobile(BuildContext context) =>
-      MediaQuery.of(context).size.width < 600;
+      MediaQuery.of(context).size.width < AppBreakpoints.medium;
 
   double _dialogMaxWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return screenWidth < 600 ? screenWidth - 32 : 560.0;
+    return screenWidth < AppBreakpoints.medium ? screenWidth - 32 : 560.0;
   }
 
   EdgeInsets _dialogInsetPadding(BuildContext context) =>

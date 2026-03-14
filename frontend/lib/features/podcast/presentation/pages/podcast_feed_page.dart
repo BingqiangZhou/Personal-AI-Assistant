@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
@@ -310,7 +311,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final isMobile = screenWidth < 600;
+        final isMobile = screenWidth < AppBreakpoints.medium;
 
         if (feedState.episodes.isEmpty) {
           return _buildEmptyFeedWithEntry(context, mobile: isMobile);
@@ -335,7 +336,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     required PodcastFeedState feedState,
     required double screenWidth,
   }) {
-    final isMobile = screenWidth < 600;
+    final isMobile = screenWidth < AppBreakpoints.medium;
     final itemCount = feedState.episodes.length + (feedState.hasMore ? 1 : 0);
 
     if (isMobile) {

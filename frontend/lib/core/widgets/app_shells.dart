@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../constants/breakpoints.dart';
 import '../theme/app_colors.dart';
 import 'custom_adaptive_navigation.dart';
 
@@ -680,7 +681,8 @@ class ProfileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile =
+        MediaQuery.of(context).size.width < AppBreakpoints.medium;
     final showSummary = summary is! SizedBox;
     final topSectionSpacing = isMobile ? 20.0 : 12.0;
     final tokens = mindriverThemeOf(context);
@@ -785,7 +787,7 @@ class AuthShell extends StatelessWidget {
             child: Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: width < 600 ? 20 : 32,
+                  horizontal: width < AppBreakpoints.medium ? 20 : 32,
                   vertical: 24,
                 ),
                 child: ConstrainedBox(

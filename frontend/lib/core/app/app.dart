@@ -246,7 +246,6 @@ class _PersonalAIAssistantAppState
         // Use the GoRouter's navigator context which is inside MaterialApp
         // (the state's own context is above MaterialApp, so AppLocalizations
         // and ScaffoldMessenger would not be found from it).
-        final router = ref.read(appRouterProvider);
         final navContext = appNavigatorKey.currentContext;
         if (navContext != null && navContext.mounted) {
           AppUpdateDialog.show(

@@ -1,12 +1,10 @@
 part of 'podcast_episode_detail_page.dart';
 
 extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
-  bool get _isCompactPhoneLayout => MediaQuery.sizeOf(context).width < 600;
+  bool get _isCompactPhoneLayout =>
+      MediaQuery.sizeOf(context).width < AppBreakpoints.medium;
 
   bool get _isUltraCompactPhoneLayout => MediaQuery.sizeOf(context).width < 360;
-
-  HeaderCapsuleActionButtonDensity get _mobilePlayButtonDensity =>
-      HeaderCapsuleActionButtonDensity.iconOnly;
 
   Widget _buildHeader(PodcastEpisodeDetailResponse episode) {
     return AnimatedSwitcher(
@@ -175,76 +173,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     );
   }
 
-  Widget _buildCompactHeaderCard(
-    PodcastEpisodeDetailResponse episode, {
-    required bool isWide,
-    Key? key,
-  }) {
-    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
-    final title = episode.title.trim().isEmpty
-        ? l10n.episode_unknown_title
-        : episode.title;
-    final theme = Theme.of(context);
-    final artworkSize = isWide ? 34.0 : 30.0;
-
-    return GlassPanel(
-      key: key,
-      padding: EdgeInsets.fromLTRB(
-        isWide ? 14 : 12,
-        isWide ? 10 : 8,
-        isWide ? 14 : 12,
-        isWide ? 10 : 8,
-      ),
-      child: SizedBox(
-        key: const Key('podcast_episode_detail_compact_header_body'),
-        child: Row(
-          children: [
-            SizedBox(
-              key: const Key('podcast_episode_detail_compact_artwork'),
-              width: artworkSize,
-              height: artworkSize,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: PodcastImageWidget(
-                  imageUrl: episode.imageUrl,
-                  fallbackImageUrl: episode.subscriptionImageUrl,
-                  width: artworkSize,
-                  height: artworkSize,
-                  iconSize: artworkSize * 0.56,
-                ),
-              ),
-            ),
-            SizedBox(width: isWide ? 10 : 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      height: 1.12,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  _buildCompactHeaderMetadata(episode, l10n),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (isWide) ...[
-              _buildCompactHeaderActionRow(episode, l10n, isWide: true),
-            ] else
-              _buildCompactHeaderActionRow(episode, l10n, isWide: false),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildHeroArtwork(
     PodcastEpisodeDetailResponse episode, {
     required bool isWide,
@@ -311,28 +239,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     );
   }
 
-  Widget _buildHeaderActions(
-    PodcastEpisodeDetailResponse episode,
-    AppLocalizations l10n, {
-    required bool compact,
-    required bool includeBack,
-  }) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        if (includeBack) _buildBackButton(),
-        _buildPlayButton(
-          episode,
-          l10n,
-          compact: compact,
-          density: _mobilePlayButtonDensity,
-        ),
-        _buildQueueButton(),
-      ],
-    );
-  }
-
   Widget _buildMobileHeroActionColumn(
     PodcastEpisodeDetailResponse episode,
     AppLocalizations l10n,
@@ -349,29 +255,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
         ),
         const SizedBox(height: 8),
         _buildQueueButton(),
-      ],
-    );
-  }
-
-  Widget _buildCompactHeaderActionRow(
-    PodcastEpisodeDetailResponse episode,
-    AppLocalizations l10n, {
-    required bool isWide,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildPlayButton(
-          episode,
-          l10n,
-          compact: !isWide,
-          density: isWide
-              ? HeaderCapsuleActionButtonDensity.regular
-              : _mobilePlayButtonDensity,
-        ),
-        const SizedBox(width: 8),
-        _buildQueueButton(),
-        if (isWide) ...[const SizedBox(width: 8), _buildBackButton()],
       ],
     );
   }
@@ -463,42 +346,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                 ),
         ),
       ),
-    );
-  }
-
-  Widget _buildCompactHeaderMetadata(
-    PodcastEpisodeDetailResponse episode,
-    AppLocalizations l10n,
-  ) {
-    final theme = Theme.of(context);
-
-    return Consumer(
-      builder: (context, ref, _) {
-        final activeDuration = ref.watch(
-          audioDurationForEpisodeProvider(episode.id),
-        );
-        final durationMilliseconds =
-            activeDuration ??
-            (episode.audioDuration == null
-                ? null
-                : episode.audioDuration! * 1000);
-        final metadataText = _buildCompactHeaderMetadataText(
-          podcastTitle: _resolvePodcastTitle(episode, l10n),
-          publishedAt: episode.publishedAt,
-          durationMilliseconds: durationMilliseconds,
-        );
-
-        return Text(
-          metadataText,
-          key: const Key('podcast_episode_detail_compact_metadata'),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            height: 1.1,
-          ),
-        );
-      },
     );
   }
 
@@ -754,25 +601,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCollapsedFloatingActions(
-    PodcastEpisodeDetailResponse episode,
-    AppLocalizations l10n,
-  ) {
-    return GlassPanel(
-      key: const Key('podcast_episode_detail_collapsed_actions'),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      borderRadius: 24,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildBackButton(),
-          const SizedBox(width: 8),
-          _buildPlayButton(episode, l10n, compact: true),
-        ],
       ),
     );
   }

@@ -16,7 +16,6 @@ int resolveCompletedPositionMs(int currentPositionMs, int durationMs) {
   return currentPositionMs;
 }
 
-@visibleForTesting
 double _effectiveFallbackPlaybackRate({
   required double currentValue,
   double? episodePlaybackRate,
