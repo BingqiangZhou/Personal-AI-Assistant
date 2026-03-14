@@ -3,15 +3,19 @@
 支持基于AI摘要的上下文保持对话
 """
 
+import asyncio
 import logging
+import random
 import time
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import and_, func, select
+import aiohttp
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
+from app.core.http_client import get_shared_http_session
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.podcast.models import (
@@ -22,6 +26,14 @@ from app.domains.podcast.models import (
 
 
 logger = logging.getLogger(__name__)
+
+
+class RetryableConversationError(Exception):
+    """Transient conversation model invocation error that can be retried."""
+
+
+def _is_retryable_http_status(status_code: int) -> bool:
+    return status_code >= 500 or status_code in {408, 409, 425, 429}
 
 
 class ConversationService:
@@ -350,8 +362,6 @@ class ConversationService:
         调用AI API进行对话
         按优先级获取模型配置，实现fallback机制
         """
-        import aiohttp
-
         # 获取活跃的文本生成模型
         if model_name:
             model = await self.ai_model_repo.get_by_name(model_name)
@@ -368,12 +378,24 @@ class ConversationService:
         last_error = None
         for idx, model in enumerate(models_to_try):
             try:
-                logger.info(f"尝试使用对话模型 [{model.display_name or model.name}] (priority={model.priority}, 尝试 {idx + 1}/{len(models_to_try)})")
+                logger.info(
+                    "Conversation model attempt model=%s provider=%s priority=%s order=%s/%s",
+                    model.display_name or model.name,
+                    model.provider,
+                    model.priority,
+                    idx + 1,
+                    len(models_to_try),
+                )
 
                 # 解密API密钥
                 api_key = await self._get_api_key(model)
                 if not api_key:
-                    logger.warning(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 的 API key 为空，跳过")
+                    logger.warning(
+                        "Conversation model skipped for missing api key model=%s provider=%s priority=%s",
+                        model.display_name or model.name,
+                        model.provider,
+                        model.priority,
+                    )
                     continue
 
                 # 构建请求数据
@@ -395,45 +417,124 @@ class ConversationService:
                     'Content-Type': 'application/json'
                 }
 
-                async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
-                    f"{model.api_url}/chat/completions", headers=headers, json=data
-                ) as response:
-                        if response.status != 200:
-                            error_text = await response.text()
-                            last_error = f"HTTP {response.status}: {error_text}"
-                            logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) API 错误: {last_error}")
-                            continue
+                max_retries = 3
+                base_delay = 1.0
+                session = await get_shared_http_session()
+                for attempt in range(max_retries):
+                    try:
+                        async with session.post(
+                            f"{model.api_url}/chat/completions",
+                            headers=headers,
+                            json=data,
+                            timeout=timeout,
+                        ) as response:
+                            if response.status != 200:
+                                error_text = await response.text()
+                                last_error = f"HTTP {response.status}: {error_text}"
+                                if _is_retryable_http_status(response.status):
+                                    raise RetryableConversationError(last_error)
+                                logger.error(
+                                    "Conversation API non-retryable error model=%s provider=%s priority=%s status=%s retryable=false error=%s",
+                                    model.display_name or model.name,
+                                    model.provider,
+                                    model.priority,
+                                    response.status,
+                                    last_error,
+                                )
+                                break
 
-                        result = await response.json()
+                            result = await response.json()
 
-                        if 'choices' not in result or not result['choices']:
-                            last_error = "Invalid response from AI API"
-                            logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) {last_error}")
-                            continue
+                            if 'choices' not in result or not result['choices']:
+                                last_error = "Invalid response from AI API"
+                                logger.error(
+                                    "Conversation API invalid payload model=%s provider=%s priority=%s error=%s",
+                                    model.display_name or model.name,
+                                    model.provider,
+                                    model.priority,
+                                    last_error,
+                                )
+                                break
 
-                        content = result['choices'][0]['message']['content']
+                            content = result['choices'][0]['message']['content']
 
-                        # Filter out <thinking> tags and content
-                        # 过滤掉 <thinking> 标签及其内容
-                        from app.core.utils import filter_thinking_content
-                        original_length = len(content)
-                        cleaned_content = filter_thinking_content(content)
+                            # Filter out <thinking> tags and content
+                            # 过滤掉 <thinking> 标签及其内容
+                            from app.core.utils import filter_thinking_content
+                            original_length = len(content)
+                            cleaned_content = filter_thinking_content(content)
 
-                        if len(cleaned_content) != original_length:
-                            logger.info(f"🧹 [FILTER] Removed thinking content: {original_length} -> {len(cleaned_content)} chars")
+                            if len(cleaned_content) != original_length:
+                                logger.info(
+                                    "Conversation response filtered model=%s provider=%s removed_chars=%s",
+                                    model.display_name or model.name,
+                                    model.provider,
+                                    original_length - len(cleaned_content),
+                                )
 
-                        logger.info(f"成功使用对话模型 [{model.display_name or model.name}] (priority={model.priority})")
-                        return cleaned_content.strip()
+                            logger.info(
+                                "Conversation request succeeded model=%s provider=%s priority=%s",
+                                model.display_name or model.name,
+                                model.provider,
+                                model.priority,
+                            )
+                            return cleaned_content.strip()
+                    except (
+                        TimeoutError,
+                        aiohttp.ClientError,
+                        RetryableConversationError,
+                    ) as e:
+                        if attempt >= max_retries - 1:
+                            last_error = e
+                            logger.error(
+                                "Conversation transient retries exhausted model=%s provider=%s priority=%s attempts=%s error=%s",
+                                model.display_name or model.name,
+                                model.provider,
+                                model.priority,
+                                max_retries,
+                                e,
+                            )
+                            break
+                        backoff = base_delay * (2**attempt)
+                        await asyncio.sleep(backoff + random.uniform(0, 0.5 * backoff))
+                        logger.warning(
+                            "Conversation transient error model=%s provider=%s priority=%s attempt=%s/%s retryable=true error=%s",
+                            model.display_name or model.name,
+                            model.provider,
+                            model.priority,
+                            attempt + 1,
+                            max_retries,
+                            e,
+                        )
 
             except TimeoutError as e:
                 last_error = e
-                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 请求超时: {e}")
+                logger.error(
+                    "Conversation model timeout model=%s provider=%s priority=%s error=%s",
+                    model.display_name or model.name,
+                    model.provider,
+                    model.priority,
+                    e,
+                )
             except aiohttp.ClientError as e:
                 last_error = e
-                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 网络错误: {e}")
+                logger.error(
+                    "Conversation model network error model=%s provider=%s priority=%s error=%s",
+                    model.display_name or model.name,
+                    model.provider,
+                    model.priority,
+                    e,
+                )
             except Exception as e:
                 last_error = e
-                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 未知错误: {type(e).__name__}: {e}")
+                logger.error(
+                    "Conversation model unknown error model=%s provider=%s priority=%s error_type=%s error=%s",
+                    model.display_name or model.name,
+                    model.provider,
+                    model.priority,
+                    type(e).__name__,
+                    e,
+                )
 
         # 所有模型都失败了
         error_msg = f"所有 {len(models_to_try)} 个对话模型配置均访问失败，最后错误: {type(last_error).__name__}: {last_error}"
@@ -478,13 +579,9 @@ class ConversationService:
         if session_id is not None:
             conditions.append(PodcastConversation.session_id == session_id)
 
-        stmt = select(PodcastConversation).where(and_(*conditions))
+        stmt = delete(PodcastConversation).where(and_(*conditions))
         result = await self.db.execute(stmt)
-        conversations = result.scalars().all()
-
-        count = len(conversations)
-        for conv in conversations:
-            await self.db.delete(conv)
+        count = int(result.rowcount or 0)
 
         await self.db.commit()
         logger.info(f"Cleared {count} conversation messages for episode {episode_id}, user {user_id}, session {session_id}")

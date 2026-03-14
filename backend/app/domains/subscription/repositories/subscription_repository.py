@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -365,28 +365,21 @@ class SubscriptionRepository:
         return sub
 
     async def delete_subscription(self, user_id: int, sub_id: int) -> bool:
-        user_sub_query = select(UserSubscription).where(
+        delete_user_sub_stmt = delete(UserSubscription).where(
             UserSubscription.user_id == user_id,
             UserSubscription.subscription_id == sub_id,
         )
-        result = await self.db.execute(user_sub_query)
-        user_sub = result.scalar_one_or_none()
-        if not user_sub:
+        delete_result = await self.db.execute(delete_user_sub_stmt)
+        deleted_count = int(delete_result.rowcount or 0)
+        if deleted_count == 0:
             return False
 
-        await self.db.delete(user_sub)
-        other_subs_query = select(func.count()).select_from(
-            select(UserSubscription)
-            .where(UserSubscription.subscription_id == sub_id)
-            .subquery()
+        other_subs_query = select(func.count()).select_from(UserSubscription).where(
+            UserSubscription.subscription_id == sub_id
         )
         remaining_count = await self.db.scalar(other_subs_query) or 0
         if remaining_count == 0:
-            sub_query = select(Subscription).where(Subscription.id == sub_id)
-            sub_result = await self.db.execute(sub_query)
-            sub = sub_result.scalar_one_or_none()
-            if sub:
-                await self.db.delete(sub)
+            await self.db.execute(delete(Subscription).where(Subscription.id == sub_id))
 
         await self.db.commit()
         return True

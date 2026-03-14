@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.domains.ai.services.model_runtime_service import AIModelRuntimeService
+from app.domains.ai.services.model_runtime_service import (
+    AIModelRuntimeService,
+    _is_retryable_http_status,
+)
 
 
 class _SuccessfulResponse:
@@ -34,8 +37,9 @@ class _InspectingClientSession:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def post(self, api_endpoint, headers=None, data=None):
+    def post(self, api_endpoint, headers=None, data=None, timeout=None):
         del api_endpoint, headers
+        del timeout
         payload = data()
         for part, *_ in getattr(payload, "_parts", []):
             value = getattr(part, "_value", None)
@@ -48,7 +52,10 @@ class _InspectingClientSession:
 @pytest.mark.asyncio
 async def test_call_transcription_model_keeps_file_handle_open(monkeypatch):
     fake_session = _InspectingClientSession()
-    monkeypatch.setattr("aiohttp.ClientSession", lambda timeout=None: fake_session)
+    monkeypatch.setattr(
+        "app.domains.ai.services.model_runtime_service.get_shared_http_session",
+        AsyncMock(return_value=fake_session),
+    )
 
     runtime_service = AIModelRuntimeService(
         repo=AsyncMock(),
@@ -71,3 +78,11 @@ async def test_call_transcription_model_keeps_file_handle_open(monkeypatch):
 
     assert result == "transcribed text"
     assert fake_session.file_closed_during_post is False
+
+
+def test_is_retryable_http_status():
+    assert _is_retryable_http_status(500) is True
+    assert _is_retryable_http_status(429) is True
+    assert _is_retryable_http_status(408) is True
+    assert _is_retryable_http_status(400) is False
+    assert _is_retryable_http_status(401) is False

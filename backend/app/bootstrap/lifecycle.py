@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from app.core.config import get_settings
 from app.core.database import close_db, get_async_session_factory, init_db
+from app.core.http_client import close_shared_http_session
 from app.core.logging_config import setup_logging_from_env
 from app.core.redis import close_shared_redis, get_shared_redis
 from app.domains.podcast.services.transcription_workflow_service import (
@@ -67,6 +68,7 @@ async def application_lifespan(app: FastAPI):
                 "startup:reset-stale-transcription-tasks",
                 startup_lock_token,
             )
+        await close_shared_http_session()
         await close_shared_redis()
         await close_db()
         logger.info("Service shutdown completed")

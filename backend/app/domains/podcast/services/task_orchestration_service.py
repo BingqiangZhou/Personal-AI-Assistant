@@ -65,7 +65,7 @@ class PodcastTaskOrchestrationService:
                 after_subscription_id=next_subscription_id,
                 limit=self._refresh_batch_size,
             )
-            if next_subscription_id is None:
+            if not candidates and next_subscription_id is None:
                 break
             if not candidates:
                 continue
@@ -79,6 +79,9 @@ class PodcastTaskOrchestrationService:
             pending_transcription_episode_ids.extend(
                 batch_result["transcription_episode_ids"]
             )
+
+            if next_subscription_id is None:
+                break
 
         if pending_transcription_episode_ids:
             workflow = self._build_transcription_workflow()
@@ -136,7 +139,7 @@ class PodcastTaskOrchestrationService:
             .order_by(UserSubscription.subscription_id.asc(), UserSubscription.id.asc())
         )
         user_sub_rows = await self.session.execute(user_sub_stmt)
-        user_subscriptions = list(user_sub_rows.unique().scalars().all())
+        user_subscriptions = list(user_sub_rows.scalars().all())
 
         due_candidates: list[dict[str, Any]] = []
         seen_subscription_ids: set[int] = set()
@@ -154,7 +157,8 @@ class PodcastTaskOrchestrationService:
                 }
             )
 
-        return due_candidates, subscriptions[-1].id
+        next_cursor = subscriptions[-1].id if len(subscriptions) >= limit else None
+        return due_candidates, next_cursor
 
     async def _refresh_due_subscription_batch(
         self,
@@ -449,35 +453,50 @@ class PodcastTaskOrchestrationService:
     # ── Reporting ──────────────────────────────────────────────────────────
 
     async def generate_daily_reports(self, *, target_date=None) -> dict:
-        users_stmt = (
-            select(UserSubscription.user_id)
-            .join(Subscription, UserSubscription.subscription_id == Subscription.id)
-            .where(
-                and_(
-                    Subscription.source_type == "podcast-rss",
-                    Subscription.status == SubscriptionStatus.ACTIVE.value,
-                    UserSubscription.is_archived == False,  # noqa: E712
-                )
-            )
-            .distinct()
-        )
-        user_ids = list((await self.session.execute(users_stmt)).scalars().all())
-
+        batch_size = max(1, settings.TASK_ORCHESTRATION_USER_BATCH_SIZE)
+        last_user_id = 0
+        processed_users = 0
         success_count = 0
         failed_count = 0
-        for user_id in user_ids:
-            try:
-                service = DailyReportService(self.session, user_id=user_id)
-                await service.generate_daily_report(target_date=target_date)
-                success_count += 1
-            except Exception:
-                failed_count += 1
-                logger.exception("Failed to generate daily report for user=%s", user_id)
-                await self.session.rollback()
+
+        while True:
+            users_stmt = (
+                select(UserSubscription.user_id)
+                .join(Subscription, UserSubscription.subscription_id == Subscription.id)
+                .where(
+                    and_(
+                        Subscription.source_type == "podcast-rss",
+                        Subscription.status == SubscriptionStatus.ACTIVE.value,
+                        UserSubscription.is_archived == False,  # noqa: E712
+                        UserSubscription.user_id > last_user_id,
+                    )
+                )
+                .distinct()
+                .order_by(UserSubscription.user_id.asc())
+                .limit(batch_size)
+            )
+            user_ids = list((await self.session.execute(users_stmt)).scalars().all())
+            if not user_ids:
+                break
+
+            for user_id in user_ids:
+                try:
+                    service = DailyReportService(self.session, user_id=user_id)
+                    await service.generate_daily_report(target_date=target_date)
+                    success_count += 1
+                except Exception:
+                    failed_count += 1
+                    logger.exception(
+                        "Failed to generate daily report for user=%s", user_id
+                    )
+                    await self.session.rollback()
+
+            processed_users += len(user_ids)
+            last_user_id = user_ids[-1]
 
         return {
             "status": "success",
-            "processed_users": len(user_ids),
+            "processed_users": processed_users,
             "successful_users": success_count,
             "failed_users": failed_count,
             "report_date": target_date.isoformat() if target_date else None,
@@ -644,18 +663,38 @@ class PodcastTaskOrchestrationService:
         }
 
     async def generate_podcast_recommendations(self) -> dict:
-        stmt = select(User).where(User.status == UserStatus.ACTIVE)
-        result = await self.session.execute(stmt)
-        users = list(result.scalars().all())
-
+        batch_size = max(1, settings.TASK_ORCHESTRATION_USER_BATCH_SIZE)
+        last_user_id = 0
+        processed_users = 0
         recommendations_generated = 0
-        for user in users:
-            service = PodcastSearchService(self.session, user.id)
-            recommendations = await service.get_recommendations(limit=20)
-            recommendations_generated += len(recommendations)
+
+        while True:
+            stmt = (
+                select(User.id)
+                .where(
+                    and_(
+                        User.status == UserStatus.ACTIVE,
+                        User.id > last_user_id,
+                    )
+                )
+                .order_by(User.id.asc())
+                .limit(batch_size)
+            )
+            user_ids = list((await self.session.execute(stmt)).scalars().all())
+            if not user_ids:
+                break
+
+            for user_id in user_ids:
+                service = PodcastSearchService(self.session, user_id)
+                recommendations = await service.get_recommendations(limit=20)
+                recommendations_generated += len(recommendations)
+
+            processed_users += len(user_ids)
+            last_user_id = user_ids[-1]
 
         return {
             "status": "success",
+            "processed_users": processed_users,
             "recommendations_generated": recommendations_generated,
             "processed_at": datetime.now(UTC).isoformat(),
         }

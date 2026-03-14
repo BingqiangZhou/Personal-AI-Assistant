@@ -5,6 +5,7 @@ Database-backed AI summary generation services.
 import asyncio
 import json
 import logging
+import random
 import time
 from datetime import UTC, datetime
 from typing import Any
@@ -13,6 +14,7 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import HTTPException, ValidationError
+from app.core.http_client import get_shared_http_session
 from app.core.redis import get_shared_redis
 from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
@@ -23,6 +25,14 @@ from app.domains.subscription.parsers.feed_parser import strip_html_tags
 
 
 logger = logging.getLogger(__name__)
+
+
+class RetryableSummaryModelError(Exception):
+    """Transient summary model invocation error that can be retried."""
+
+
+def _is_retryable_http_status(status_code: int) -> bool:
+    return status_code >= 500 or status_code in {408, 409, 425, 429}
 
 
 def _looks_like_html_error_page(text: str) -> bool:
@@ -151,13 +161,47 @@ class SummaryModelManager:
                     model_config.id, success=True, tokens_used=tokens_used
                 )
                 return summary_content, processing_time, tokens_used
-            except Exception as exc:  # noqa: BLE001
+            except (  # noqa: PERF203
+                RetryableSummaryModelError,
+                TimeoutError,
+                aiohttp.ClientError,
+            ) as exc:
                 await self.ai_model_repo.increment_usage(model_config.id, success=False)
                 if attempt < max_retries - 1:
-                    await asyncio.sleep(base_delay * (2**attempt))
+                    backoff = base_delay * (2**attempt)
+                    logger.warning(
+                        "Summary transient error model=%s provider=%s attempt=%s/%s retryable=true error_type=%s error=%s",
+                        model_config.name,
+                        model_config.provider,
+                        attempt + 1,
+                        max_retries,
+                        type(exc).__name__,
+                        exc,
+                    )
+                    await asyncio.sleep(backoff + random.uniform(0, 0.5 * backoff))
                     continue
+                logger.error(
+                    "Summary transient retries exhausted model=%s provider=%s attempts=%s error_type=%s error=%s",
+                    model_config.name,
+                    model_config.provider,
+                    max_retries,
+                    type(exc).__name__,
+                    exc,
+                )
                 raise Exception(
                     f"Model {model_config.name} failed after {max_retries} attempts: {exc}"
+                ) from exc
+            except Exception as exc:  # noqa: BLE001
+                await self.ai_model_repo.increment_usage(model_config.id, success=False)
+                logger.error(
+                    "Summary non-retryable failure model=%s provider=%s retryable=false error_type=%s error=%s",
+                    model_config.name,
+                    model_config.provider,
+                    type(exc).__name__,
+                    exc,
+                )
+                raise Exception(
+                    f"Model {model_config.name} failed without retry: {exc}"
                 ) from exc
 
         raise Exception("Unexpected error in _call_ai_api_with_retry")
@@ -193,10 +237,13 @@ class SummaryModelManager:
         if model_config.extra_config:
             data.update(model_config.extra_config)
 
-        async with (
-            aiohttp.ClientSession(timeout=timeout) as session,
-            session.post(api_url, headers=headers, json=data) as response,
-        ):
+        session = await get_shared_http_session()
+        async with session.post(
+            api_url,
+            headers=headers,
+            json=data,
+            timeout=timeout,
+        ) as response:
             response_text = await response.text()
             content_type = response.headers.get("Content-Type", "")
 
@@ -214,6 +261,22 @@ class SummaryModelManager:
 
             if response.status != 200:
                 error_text = response_text
+                if _is_retryable_http_status(response.status):
+                    logger.warning(
+                        "Summary API transient status model=%s provider=%s status=%s retryable=true",
+                        model_config.name,
+                        model_config.provider,
+                        response.status,
+                    )
+                    raise RetryableSummaryModelError(
+                        f"AI summary API transient error: {response.status} - {error_text[:200]}"
+                    )
+                logger.error(
+                    "Summary API non-retryable status model=%s provider=%s status=%s retryable=false",
+                    model_config.name,
+                    model_config.provider,
+                    response.status,
+                )
                 if response.status == 400:
                     raise HTTPException(
                         status_code=500,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -30,6 +31,11 @@ class _SequenceSession:
 
     async def execute(self, _stmt):
         return next(self._results)
+
+
+@asynccontextmanager
+async def _fake_worker_db_session(_application_name: str):
+    yield AsyncMock()
 
 
 def _build_feed(*, published_at: datetime) -> SimpleNamespace:
@@ -81,6 +87,7 @@ async def test_refresh_all_podcast_feeds_closes_parser_after_success() -> None:
     parser = AsyncMock()
     parser.fetch_and_parse_feed.return_value = (True, _build_feed(published_at=now), None)
     repo = AsyncMock()
+    repo.get_subscription_by_id_direct.return_value = subscription
     repo.create_or_update_episodes_batch.return_value = (
         [],
         [SimpleNamespace(id=11, published_at=now)],
@@ -96,6 +103,9 @@ async def test_refresh_all_podcast_feeds_closes_parser_after_success() -> None:
     ), patch(
         "app.domains.podcast.services.task_orchestration_service.PodcastSyncService",
         return_value=sync_service,
+    ), patch(
+        "app.domains.podcast.services.task_orchestration_service.worker_db_session",
+        _fake_worker_db_session,
     ):
         result = await PodcastTaskOrchestrationService(session).refresh_all_podcast_feeds()
 
@@ -125,6 +135,7 @@ async def test_refresh_all_podcast_feeds_closes_parser_after_exception() -> None
     parser = AsyncMock()
     parser.fetch_and_parse_feed.side_effect = RuntimeError("parse boom")
     repo = AsyncMock()
+    repo.get_subscription_by_id_direct.return_value = subscription
 
     with patch(
         "app.domains.podcast.services.task_orchestration_service.PodcastSubscriptionRepository",
@@ -132,6 +143,9 @@ async def test_refresh_all_podcast_feeds_closes_parser_after_exception() -> None
     ), patch(
         "app.domains.podcast.services.task_orchestration_service.SecureRSSParser",
         return_value=parser,
+    ), patch(
+        "app.domains.podcast.services.task_orchestration_service.worker_db_session",
+        _fake_worker_db_session,
     ):
         result = await PodcastTaskOrchestrationService(session).refresh_all_podcast_feeds()
 

@@ -88,8 +88,8 @@ class Settings(BaseSettings):
     # Database - Pool sizing adjusted for podcast-heavy workloads
     # Base calculation: 5 domains × 6 concurrent/domain × 2 buffer = 60 connections
     DATABASE_URL: str | None = None
-    DATABASE_POOL_SIZE: int = 5
-    DATABASE_MAX_OVERFLOW: int = 5
+    DATABASE_POOL_SIZE: int = 20
+    DATABASE_MAX_OVERFLOW: int = 40
 
     # Database timeout settings
     DATABASE_POOL_TIMEOUT: int = 30  # Max wait for connection (seconds)
@@ -98,6 +98,7 @@ class Settings(BaseSettings):
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
+    REDIS_MAX_CONNECTIONS: int = 50
 
     # CORS
     ALLOWED_HOSTS: list[str] = ["*"]
@@ -112,6 +113,8 @@ class Settings(BaseSettings):
     # Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    CELERY_WORKER_PREFETCH_MULTIPLIER: int = 4
+    CELERY_WORKER_MAX_TASKS_PER_CHILD: int = 500
 
     # Podcast Processing Limits
     MAX_PODCAST_SUBSCRIPTIONS: int = 999999  # Per user (unlimited)
@@ -179,6 +182,7 @@ class Settings(BaseSettings):
         True  # Enable lightweight feed payload/query path
     )
     RSS_REFRESH_CONCURRENCY: int = 5
+    TASK_ORCHESTRATION_USER_BATCH_SIZE: int = 500
 
     # ETag Configuration
     ETAG_ENABLED: bool = True  # Enable ETag caching for GET endpoints
@@ -196,6 +200,7 @@ class Settings(BaseSettings):
     OBS_ALERT_REDIS_COMMAND_MAX_MS: float = 100.0
     OBS_ALERT_REDIS_CACHE_HIT_RATE_MIN: float = 0.5
     OBS_ALERT_REDIS_CACHE_LOOKUPS_MIN: int = 20
+    OBS_SUCCESS_LOG_SAMPLE_RATE: float = 0.1
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -238,11 +243,25 @@ class Settings(BaseSettings):
             )
         return v
 
+    @field_validator("TASK_ORCHESTRATION_USER_BATCH_SIZE")
+    @classmethod
+    def validate_task_orchestration_user_batch_size(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("TASK_ORCHESTRATION_USER_BATCH_SIZE must be >= 1")
+        return v
+
     @field_validator("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS")
     @classmethod
     def validate_transcription_startup_reset_timeout_seconds(cls, v: float) -> float:
         if v <= 0:
             raise ValueError("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS must be > 0")
+        return v
+
+    @field_validator("OBS_SUCCESS_LOG_SAMPLE_RATE")
+    @classmethod
+    def validate_obs_success_log_sample_rate(cls, v: float) -> float:
+        if v < 0 or v > 1:
+            raise ValueError("OBS_SUCCESS_LOG_SAMPLE_RATE must be between 0 and 1")
         return v
 
     def require_database_url(self) -> str:

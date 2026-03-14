@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import random
 import time
 from typing import Any
 
 from app.core.exceptions import ValidationError
+from app.core.http_client import get_shared_http_session
 from app.domains.ai.model_testing import (
     test_text_generation_model,
     test_transcription_model,
@@ -20,6 +23,14 @@ from .model_security_service import AIModelSecurityService
 
 
 logger = logging.getLogger(__name__)
+
+
+class RetryableModelError(Exception):
+    """Transient model invocation error that can be retried."""
+
+
+def _is_retryable_http_status(status_code: int) -> bool:
+    return status_code >= 500 or status_code in {408, 409, 425, 429}
 
 
 class AIModelRuntimeService:
@@ -94,20 +105,29 @@ class AIModelRuntimeService:
         for model in models:
             try:
                 logger.info(
-                    "Trying transcription model: %s (priority: %s)",
+                    "Transcription model attempt model=%s provider=%s priority=%s",
                     model.name,
+                    model.provider,
                     model.priority,
                 )
                 result = await self._call_transcription_model(model, audio_file_path, language)
                 await self.repo.increment_usage(model.id, success=True)
-                logger.info("Transcription succeeded with model: %s", model.name)
+                logger.info(
+                    "Transcription request succeeded model=%s provider=%s priority=%s",
+                    model.name,
+                    model.provider,
+                    model.priority,
+                )
                 return result, model
             except Exception as exc:
                 last_error = exc
                 await self.repo.increment_usage(model.id, success=False)
                 logger.warning(
-                    "Transcription failed with model %s: %s",
+                    "Transcription model failed model=%s provider=%s priority=%s error_type=%s error=%s",
                     model.name,
+                    model.provider,
+                    model.priority,
+                    type(exc).__name__,
                     exc,
                 )
 
@@ -130,8 +150,9 @@ class AIModelRuntimeService:
         for model in models:
             try:
                 logger.info(
-                    "Trying text generation model: %s (priority: %s)",
+                    "Text generation model attempt model=%s provider=%s priority=%s",
                     model.name,
+                    model.provider,
                     model.priority,
                 )
                 result = await self._call_text_generation_model(
@@ -141,14 +162,22 @@ class AIModelRuntimeService:
                     temperature,
                 )
                 await self.repo.increment_usage(model.id, success=True)
-                logger.info("Text generation succeeded with model: %s", model.name)
+                logger.info(
+                    "Text generation request succeeded model=%s provider=%s priority=%s",
+                    model.name,
+                    model.provider,
+                    model.priority,
+                )
                 return result, model
             except Exception as exc:
                 last_error = exc
                 await self.repo.increment_usage(model.id, success=False)
                 logger.warning(
-                    "Text generation failed with model %s: %s",
+                    "Text generation model failed model=%s provider=%s priority=%s error_type=%s error=%s",
                     model.name,
+                    model.provider,
+                    model.priority,
+                    type(exc).__name__,
                     exc,
                 )
 
@@ -188,17 +217,19 @@ class AIModelRuntimeService:
         api_key = await self.security_service.get_decrypted_api_key(model)
         headers = {"Authorization": f"Bearer {api_key}"}
         timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
+        session = await get_shared_http_session()
+        data = aiohttp.FormData()
+        data.add_field("model", model.model_id)
+        data.add_field("language", language)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            data = aiohttp.FormData()
-            data.add_field("model", model.model_id)
-            data.add_field("language", language)
-
-            api_endpoint = (
-                "https://api.openai.com/v1/audio/transcriptions"
-                if model.provider == "openai"
-                else model.api_url
-            )
+        api_endpoint = (
+            "https://api.openai.com/v1/audio/transcriptions"
+            if model.provider == "openai"
+            else model.api_url
+        )
+        max_retries = 3
+        base_delay = 1.0
+        for attempt in range(max_retries):
             try:
                 with open(audio_file_path, "rb") as audio_file:
                     data.add_field(
@@ -211,12 +242,14 @@ class AIModelRuntimeService:
                         api_endpoint,
                         headers=headers,
                         data=data,
+                        timeout=timeout,
                     ) as response:
                         if response.status != 200:
                             error_text = await response.text()
-                            raise Exception(
-                                f"API error: {response.status} - {error_text}"
-                            )
+                            message = f"API error: {response.status} - {error_text}"
+                            if _is_retryable_http_status(response.status):
+                                raise RetryableModelError(message)
+                            raise ValidationError(message)
 
                         result = await response.json()
                         if "text" not in result:
@@ -224,10 +257,35 @@ class AIModelRuntimeService:
                                 "Invalid response format: missing 'text' field"
                             )
                         return result["text"].strip()
+            except (aiohttp.ClientError, TimeoutError, RetryableModelError) as exc:
+                if attempt >= max_retries - 1:
+                    logger.exception(
+                        "Transcription transient retries exhausted model=%s provider=%s attempts=%s audio_path=%s error_type=%s",
+                        model.name,
+                        model.provider,
+                        max_retries,
+                        audio_file_path,
+                        type(exc).__name__,
+                    )
+                    raise
+                backoff = base_delay * (2**attempt)
+                await asyncio.sleep(backoff + random.uniform(0, 0.5 * backoff))
+                logger.warning(
+                    "Transcription transient error model=%s provider=%s attempt=%s/%s retryable=true error_type=%s error=%s",
+                    model.name,
+                    model.provider,
+                    attempt + 1,
+                    max_retries,
+                    type(exc).__name__,
+                    exc,
+                )
+            except ValidationError:
+                raise
             except Exception:
                 logger.exception(
-                    "Transcription request failed for model %s using %s",
+                    "Transcription request unexpected failure model=%s provider=%s audio_path=%s",
                     model.name,
+                    model.provider,
                     audio_file_path,
                 )
                 raise
@@ -256,25 +314,58 @@ class AIModelRuntimeService:
         }
         timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
-            f"{model.api_url}/chat/completions",
-            headers=headers,
-            json=data,
-        ) as response:
-            if response.status != 200:
-                error_text = await response.text()
-                raise Exception(f"API error: {response.status} - {error_text}")
+        session = await get_shared_http_session()
+        max_retries = 3
+        base_delay = 1.0
+        for attempt in range(max_retries):
+            try:
+                async with session.post(
+                    f"{model.api_url}/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=timeout,
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        message = f"API error: {response.status} - {error_text}"
+                        if _is_retryable_http_status(response.status):
+                            raise RetryableModelError(message)
+                        raise ValidationError(message)
 
-            result = await response.json()
-            if "choices" not in result or not result["choices"]:
-                raise Exception("Invalid response from API")
+                    result = await response.json()
+                    if "choices" not in result or not result["choices"]:
+                        raise ValidationError("Invalid response from API")
 
-            raw_content = result["choices"][0]["message"]["content"].strip()
-            cleaned_content = filter_thinking_content(raw_content)
-            safe_content = sanitize_html(cleaned_content)
-            logger.debug(
-                "Filtered and sanitized content: %s -> %s chars",
-                len(raw_content),
-                len(safe_content),
-            )
-            return safe_content
+                    raw_content = result["choices"][0]["message"]["content"].strip()
+                    cleaned_content = filter_thinking_content(raw_content)
+                    safe_content = sanitize_html(cleaned_content)
+                    logger.debug(
+                        "Filtered and sanitized content: %s -> %s chars",
+                        len(raw_content),
+                        len(safe_content),
+                    )
+                    return safe_content
+            except (aiohttp.ClientError, TimeoutError, RetryableModelError) as exc:
+                if attempt >= max_retries - 1:
+                    logger.error(
+                        "Text generation transient retries exhausted model=%s provider=%s attempts=%s error_type=%s error=%s",
+                        model.name,
+                        model.provider,
+                        max_retries,
+                        type(exc).__name__,
+                        exc,
+                    )
+                    raise
+                backoff = base_delay * (2**attempt)
+                await asyncio.sleep(backoff + random.uniform(0, 0.5 * backoff))
+                logger.warning(
+                    "Text generation transient error model=%s provider=%s attempt=%s/%s retryable=true error_type=%s error=%s",
+                    model.name,
+                    model.provider,
+                    attempt + 1,
+                    max_retries,
+                    type(exc).__name__,
+                    exc,
+                )
+            except ValidationError:
+                raise

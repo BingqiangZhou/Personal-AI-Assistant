@@ -1,9 +1,11 @@
 """Request observability middleware and runtime metrics store."""
 
 import logging
+import random
 import time
 from collections import deque
 
+from app.core.config import get_settings
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -156,6 +158,7 @@ class RequestObservabilityMiddleware:
     ):
         self.app = app
         self.slow_threshold_ms = slow_threshold * 1000
+        self.success_log_sample_rate = get_settings().OBS_SUCCESS_LOG_SAMPLE_RATE
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -284,6 +287,20 @@ class RequestObservabilityMiddleware:
             client_host,
             user_label,
         )
+
+        if self.success_log_sample_rate <= 0:
+            return
+
+        if random.random() <= self.success_log_sample_rate:
+            logger.info(
+                "Sampled request: %s %s | status=%s | elapsed=%.3fs | client=%s | user=%s",
+                method,
+                path,
+                status_code,
+                duration_ms / 1000,
+                client_host,
+                user_label,
+            )
 
 
 def get_performance_middleware(app: ASGIApp | None = None) -> PerformanceMetricsStore:

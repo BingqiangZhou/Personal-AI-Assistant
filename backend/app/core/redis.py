@@ -218,8 +218,26 @@ class PodcastRedis:
             socket_timeout=5,
             socket_connect_timeout=5,
             retry_on_timeout=True,
-            max_connections=20,
+            max_connections=settings.REDIS_MAX_CONNECTIONS,
         )
+
+    async def _delete_keys_nonblocking(self, *keys: str) -> int:
+        """Delete keys using UNLINK when available to reduce Redis main-thread blocking."""
+        if not keys:
+            return 0
+
+        client = await self._get_client()
+        started = perf_counter()
+        try:
+            result = await client.unlink(*keys)
+            self._record_command_timing("UNLINK", (perf_counter() - started) * 1000)
+            return int(result or 0)
+        except Exception:
+            # Fall back to DEL for Redis deployments without UNLINK support.
+            fallback_started = perf_counter()
+            result = await client.delete(*keys)
+            self._record_command_timing("DEL", (perf_counter() - fallback_started) * 1000)
+            return int(result or 0)
 
     async def _ping_client(self, client: aioredis.Redis) -> None:
         started = perf_counter()
@@ -290,13 +308,7 @@ class PodcastRedis:
 
     async def delete_keys(self, *keys: str) -> int:
         """Delete one or more keys."""
-        if not keys:
-            return 0
-        client = await self._get_client()
-        started = perf_counter()
-        result = await client.delete(*keys)
-        self._record_command_timing("DEL", (perf_counter() - started) * 1000)
-        return int(result or 0)
+        return await self._delete_keys_nonblocking(*keys)
 
     async def cache_hget(self, key: str, field: str) -> str | None:
         """Get hash field"""
@@ -449,9 +461,7 @@ class PodcastRedis:
             pattern = f"podcast:subscriptions:v2:{user_id}:*"
             keys = await self._scan_keys(pattern)
         if keys:
-            delete_started = perf_counter()
-            await client.delete(*keys, index_key)
-            self._record_command_timing("DEL", (perf_counter() - delete_started) * 1000)
+            await self._delete_keys_nonblocking(*keys, index_key)
 
     # === User Stats Cache ===
 
@@ -525,9 +535,7 @@ class PodcastRedis:
             pattern = f"podcast:episodes:{subscription_id}:*"
             keys = await self._scan_keys(pattern)
         if keys:
-            delete_started = perf_counter()
-            await client.delete(*keys, index_key)
-            self._record_command_timing("DEL", (perf_counter() - delete_started) * 1000)
+            await self._delete_keys_nonblocking(*keys, index_key)
 
     # === Search Results Cache ===
 

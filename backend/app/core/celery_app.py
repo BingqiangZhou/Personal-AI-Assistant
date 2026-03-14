@@ -72,8 +72,8 @@ def create_celery_app() -> Celery:
         task_track_started=True,
         task_time_limit=30 * 60,
         task_soft_time_limit=25 * 60,
-        worker_prefetch_multiplier=1,
-        worker_max_tasks_per_child=1000,
+        worker_prefetch_multiplier=settings.CELERY_WORKER_PREFETCH_MULTIPLIER,
+        worker_max_tasks_per_child=settings.CELERY_WORKER_MAX_TASKS_PER_CHILD,
         task_routes={
             "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds": {
                 "queue": "subscription_sync"
