@@ -282,12 +282,23 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
         await _player.setSource(DeviceFileSource(file.path));
         return;
       }
-    } catch (_) {}
+    } catch (e) {
+      // Cache miss or error - fall back to direct URL
+      if (kDebugMode) {
+        logger.AppLogger.debug('⚠️ Cache lookup failed for $url: $e');
+      }
+    }
 
+    // Download in background for future use
     Future(() async {
       try {
         await AppMediaCacheManager.instance.downloadFile(url);
-      } catch (_) {}
+      } catch (e) {
+        // Background download failed - not critical, audio will still play
+        if (kDebugMode) {
+          logger.AppLogger.debug('⚠️ Background cache download failed: $e');
+        }
+      }
     });
 
     await _player.setSourceUrl(url);

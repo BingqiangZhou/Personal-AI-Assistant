@@ -56,6 +56,11 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Timer? _snapshotPersistTimer;
   _PlaybackRateSelectionCache? _playbackRateSelectionCache;
 
+  // Position debounce fields
+  Timer? _positionDebounceTimer;
+  int? _pendingPositionMs;
+  static const Duration _positionDebounceInterval = Duration(milliseconds: 200);
+
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
   PodcastAudioHandler? _audioHandlerOrNull() {
@@ -126,6 +131,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _sleepTimerTickTimer = null;
     _snapshotPersistTimer?.cancel();
     _snapshotPersistTimer = null;
+    _positionDebounceTimer?.cancel();
+    _positionDebounceTimer = null;
+    _pendingPositionMs = null;
   }
 
   void _disposeManagedResources() {
@@ -478,9 +486,35 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (_isDisposed || !ref.mounted) return;
 
       final positionMs = position.inMilliseconds;
-      if (state.position != positionMs) {
-        state = state.copyWith(position: positionMs);
+
+      // OPTIMIZATION: Debounce position updates to reduce state changes
+      // Only update state immediately if position changed significantly (>1 second)
+      final positionDelta = (state.position - positionMs).abs();
+      final shouldUpdateImmediately = positionDelta > 1000;
+
+      if (shouldUpdateImmediately) {
+        // Immediate update for significant position changes (seek operations)
+        _positionDebounceTimer?.cancel();
+        _positionDebounceTimer = null;
+        _pendingPositionMs = null;
+        if (state.position != positionMs) {
+          state = state.copyWith(position: positionMs);
+        }
+      } else if (state.position != positionMs) {
+        // Debounce small position changes
+        _pendingPositionMs = positionMs;
+        _positionDebounceTimer?.cancel();
+        _positionDebounceTimer = Timer(_positionDebounceInterval, () {
+          if (_isDisposed || !ref.mounted) return;
+          _positionDebounceTimer = null;
+          final pending = _pendingPositionMs;
+          _pendingPositionMs = null;
+          if (pending != null && state.position != pending) {
+            state = state.copyWith(position: pending);
+          }
+        });
       }
+
       if (state.currentEpisode != null) {
         _schedulePersistLastPlaybackSnapshot();
       }

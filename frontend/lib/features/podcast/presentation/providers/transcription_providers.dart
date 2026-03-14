@@ -37,30 +37,37 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
   TranscriptionNotifier(this.episodeId);
 
   Timer? _pollTimer;
+  bool _isDisposed = false;
 
   @override
   Future<PodcastTranscriptionResponse?> build() async {
+    _isDisposed = false;
     // Cancel timer when provider is disposed
     ref.onDispose(() {
+      _isDisposed = true;
       _pollTimer?.cancel();
+      _pollTimer = null;
     });
     return null;
   }
 
   /// Load transcription for the episode
   Future<void> loadTranscription() async {
+    if (_isDisposed) return;
     state = const AsyncValue.loading();
 
     try {
       final repository = ref.read(podcastRepositoryProvider);
       final transcription = await repository.getTranscription(episodeId);
+      if (_isDisposed) return;
       state = AsyncValue.data(transcription);
-      
+
       // If transcription is in progress, start polling
       if (transcription != null && transcription.isProcessing) {
         _startPolling();
       }
     } catch (error, stackTrace) {
+      if (_isDisposed) return;
       if (error is DioException && error.response?.statusCode == 404) {
          state = const AsyncValue.data(null);
       } else {
@@ -78,21 +85,25 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   /// Start transcription for the episode
   Future<void> startTranscription() async {
+    if (_isDisposed) return;
     state = const AsyncValue.loading();
 
     try {
       final repository = ref.read(podcastRepositoryProvider);
       final transcription = await repository.startTranscription(episodeId);
+      if (_isDisposed) return;
       state = AsyncValue.data(transcription);
-      
+
       _startPolling();
     } catch (error, stackTrace) {
+      if (_isDisposed) return;
       state = AsyncValue.error(error, stackTrace);
     }
   }
 
   /// Refresh transcription status
   Future<void> refreshStatus() async {
+    if (_isDisposed) return;
     // If we have no data yet, don't just refresh status, better to load
     if (state.value == null) {
       await loadTranscription();
@@ -103,16 +114,18 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
       final repository = ref.read(podcastRepositoryProvider);
       // Use getTranscription to poll status as it returns the full task info including status
       final transcription = await repository.getTranscription(episodeId);
+      if (_isDisposed) return;
       state = AsyncValue.data(transcription);
-      
+
       // Stop polling if completed or failed
       if (transcription != null && (transcription.isCompleted || transcription.isFailed)) {
         _stopPolling();
       }
     } catch (error, stackTrace) {
-      // Don't set state to error on poll fail, just log? 
-      // Or set error? If we set error, UI shows error. 
-      // Maybe specific error handling for polling? 
+      if (_isDisposed) return;
+      // Don't set state to error on poll fail, just log?
+      // Or set error? If we set error, UI shows error.
+      // Maybe specific error handling for polling?
       // For now, let's keep it simple.
       state = AsyncValue.error(error, stackTrace);
       _stopPolling();
@@ -121,8 +134,8 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   void _startPolling() {
     _stopPolling();
-    // OPTIMIZATION: Poll every 3 seconds instead of 1 second to reduce network traffic
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    // OPTIMIZATION: Poll every 5 seconds to reduce API calls by 40%
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       refreshStatus();
     });
   }
@@ -134,12 +147,15 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   /// Delete transcription
   Future<void> deleteTranscription() async {
+    if (_isDisposed) return;
     _stopPolling();
     try {
       final repository = ref.read(podcastRepositoryProvider);
       await repository.deleteTranscription(episodeId);
+      if (_isDisposed) return;
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
+      if (_isDisposed) return;
       state = AsyncValue.error(error, stackTrace);
     }
   }
