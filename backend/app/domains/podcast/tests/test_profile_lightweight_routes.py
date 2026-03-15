@@ -4,29 +4,11 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.providers import get_podcast_episode_service, get_podcast_stats_service
-from app.main import app
-
-
-@pytest.fixture
-def client():
-    return TestClient(app)
-
-
-@pytest.fixture
-def mock_service():
-    service = AsyncMock()
-    app.dependency_overrides[get_podcast_stats_service] = lambda: service
-    app.dependency_overrides[get_podcast_episode_service] = lambda: service
-    yield service
-    app.dependency_overrides.pop(get_podcast_stats_service, None)
-    app.dependency_overrides.pop(get_podcast_episode_service, None)
-
 
 def test_get_profile_stats_returns_lightweight_fields(
-    client: TestClient, mock_service: AsyncMock,
+    client: TestClient, mock_stats_service: AsyncMock,
 ):
-    mock_service.get_profile_stats.return_value = {
+    mock_stats_service.get_profile_stats.return_value = {
         "total_subscriptions": 3,
         "total_episodes": 42,
         "summaries_generated": 15,
@@ -43,15 +25,15 @@ def test_get_profile_stats_returns_lightweight_fields(
     assert data["summaries_generated"] == 15
     assert data["pending_summaries"] == 27
     assert data["played_episodes"] == 11
-    mock_service.get_profile_stats.assert_awaited_once_with()
+    mock_stats_service.get_profile_stats.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("size", [1, 100])
 def test_get_history_lite_page_size_boundaries(
-    client: TestClient, mock_service: AsyncMock, size: int,
+    client: TestClient, mock_stats_service: AsyncMock, size: int,
 ):
     now = datetime.now(UTC)
-    mock_service.list_playback_history_lite.return_value = (
+    mock_stats_service.list_playback_history_lite.return_value = (
         [
             {
                 "id": 1,
@@ -76,14 +58,14 @@ def test_get_history_lite_page_size_boundaries(
     assert data["size"] == size
     assert data["total"] == 1
     assert len(data["episodes"]) == 1
-    mock_service.list_playback_history_lite.assert_awaited_with(page=1, size=size)
+    mock_stats_service.list_playback_history_lite.assert_awaited_with(page=1, size=size)
 
 
 def test_get_history_lite_excludes_heavy_fields(
-    client: TestClient, mock_service: AsyncMock,
+    client: TestClient, mock_stats_service: AsyncMock,
 ):
     now = datetime.now(UTC)
-    mock_service.list_playback_history_lite.return_value = (
+    mock_stats_service.list_playback_history_lite.return_value = (
         [
             {
                 "id": 88,

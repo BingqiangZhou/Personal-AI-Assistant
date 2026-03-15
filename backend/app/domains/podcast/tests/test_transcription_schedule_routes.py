@@ -1,16 +1,8 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
-import pytest
 from fastapi.testclient import TestClient
 
-from app.core.providers import (
-    get_podcast_episode_service,
-    get_podcast_subscription_service,
-    get_token_user_id,
-    get_transcription_workflow_service,
-)
-from app.core.security import get_token_from_request
 from app.domains.podcast.transcription_schedule_projections import (
     BatchTranscriptionDetailProjection,
     BatchTranscriptionProjection,
@@ -23,45 +15,6 @@ from app.domains.podcast.transcription_schedule_projections import (
     TranscriptionCancelProjection,
     TranscriptionScheduleStatusProjection,
 )
-from app.main import app
-
-
-@pytest.fixture
-def client():
-    return TestClient(app)
-
-
-@pytest.fixture(autouse=True)
-def override_auth_dependencies():
-    app.dependency_overrides[get_token_from_request] = lambda: {"sub": "123"}
-    app.dependency_overrides[get_token_user_id] = lambda: 123
-    yield
-    app.dependency_overrides.pop(get_token_from_request, None)
-    app.dependency_overrides.pop(get_token_user_id, None)
-
-
-@pytest.fixture
-def mock_episode_service():
-    service = AsyncMock()
-    app.dependency_overrides[get_podcast_episode_service] = lambda: service
-    yield service
-    app.dependency_overrides.pop(get_podcast_episode_service, None)
-
-
-@pytest.fixture
-def mock_subscription_service():
-    service = AsyncMock()
-    app.dependency_overrides[get_podcast_subscription_service] = lambda: service
-    yield service
-    app.dependency_overrides.pop(get_podcast_subscription_service, None)
-
-
-@pytest.fixture
-def mock_workflow_service():
-    service = AsyncMock()
-    app.dependency_overrides[get_transcription_workflow_service] = lambda: service
-    yield service
-    app.dependency_overrides.pop(get_transcription_workflow_service, None)
 
 
 def test_schedule_episode_transcription_returns_assembled_response(

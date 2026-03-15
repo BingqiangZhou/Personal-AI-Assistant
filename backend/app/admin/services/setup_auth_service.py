@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.admin.auth import create_admin_session
 from app.admin.csrf import generate_csrf_token, validate_csrf_token
 from app.admin.first_run import check_admin_exists
-from app.admin.twofa import generate_qr_code, generate_totp_secret, verify_totp_token
+from app.admin.twofa import generate_qr_code, generate_totp_secret
 from app.core.security import get_password_hash, verify_password
 from app.domains.user.models import User, UserStatus
 
@@ -233,7 +233,3 @@ class AdminSetupAuthService:
             "secret": secret,
             "qr_code": generate_qr_code(user.username or user.email, secret),
         }
-
-    @staticmethod
-    def verify_totp(secret: str, token: str) -> bool:
-        return verify_totp_token(secret, token)

@@ -1,10 +1,15 @@
 """Test fixtures for subscription domain tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
+from typing import Callable
+from unittest.mock import AsyncMock
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.main import app
 
 # Import all models to ensure proper registration with SQLAlchemy
 # This is required for tests to work with relationships
@@ -20,9 +25,36 @@ from app.domains.user.models import User, UserStatus
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
+@pytest.fixture
+def client() -> TestClient:
+    """Provide a TestClient for route testing."""
+    return TestClient(app)
+
+
+@pytest.fixture
+def mock_service_factory() -> Callable[[Callable], Generator[AsyncMock, None, None]]:
+    """Factory fixture to create mock services for any provider."""
+
+    def _factory(provider: Callable) -> Generator[AsyncMock, None, None]:
+        service = AsyncMock()
+        app.dependency_overrides[provider] = lambda: service
+        try:
+            yield service
+        finally:
+            app.dependency_overrides.pop(provider, None)
+
+    return _factory
+
+
+@pytest.fixture
+def mock_schedule_service(mock_service_factory):
+    from app.core.providers import get_podcast_schedule_service
+
+    yield from mock_service_factory(get_podcast_schedule_service)
+
+
 class TestBase:
     """Base class for test models."""
-
 
 
 # Create test engine
@@ -98,7 +130,9 @@ async def another_user(db_session: AsyncSession) -> User:
 
 
 @pytest.fixture
-async def active_subscription(db_session: AsyncSession, test_user: User) -> Subscription:
+async def active_subscription(
+    db_session: AsyncSession, test_user: User
+) -> Subscription:
     """Create an active subscription for testing."""
     from app.domains.subscription.repositories import SubscriptionRepository
     from app.shared.schemas import SubscriptionCreate

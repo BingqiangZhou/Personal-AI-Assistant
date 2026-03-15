@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from app.admin.auth import admin_required, admin_required_no_2fa
 from app.admin.routes._shared import get_templates
 from app.admin.services import AdminSetupAuthService
+from app.admin.twofa import verify_totp_token
 from app.core.providers import get_admin_setup_auth_service
 from app.domains.user.models import User
 
@@ -159,6 +160,7 @@ async def login(
 
         # Verify password
         from app.core.security import verify_password
+
         if not verify_password(password, user.hashed_password):
             return service.build_csrf_template_response(
                 templates=templates,
@@ -196,7 +198,9 @@ async def login(
 
         # Log login with 2FA status
         if user.is_2fa_enabled and not admin_2fa_enabled:
-            logger.info(f"User {username} logged in with 2FA enabled but global 2FA is disabled")
+            logger.info(
+                f"User {username} logged in with 2FA enabled but global 2FA is disabled"
+            )
         elif not admin_2fa_enabled:
             logger.info(f"User {username} logged in without 2FA (global disabled)")
         else:
@@ -217,7 +221,9 @@ async def login(
 @router.post("/logout")
 async def logout():
     """Handle logout."""
-    response = RedirectResponse(url="/super/login", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(
+        url="/super/login", status_code=status.HTTP_303_SEE_OTHER
+    )
     response.delete_cookie(key="admin_session")
     return response
 
@@ -270,7 +276,7 @@ async def verify_2fa_login(
             )
 
         # Verify TOTP token
-        if not service.verify_totp(user.totp_secret, token):
+        if not verify_totp_token(user.totp_secret, token):
             return service.build_template_response(
                 templates=templates,
                 template_name="2fa_verify.html",
@@ -351,7 +357,7 @@ async def verify_2fa_setup(
             )
 
         # Verify token
-        if not service.verify_totp(user.totp_secret, token):
+        if not verify_totp_token(user.totp_secret, token):
             qr_payload = service.build_2fa_qr_payload(user, user.totp_secret)
             return service.build_csrf_template_response(
                 templates=templates,
