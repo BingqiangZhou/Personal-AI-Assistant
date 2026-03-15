@@ -50,7 +50,8 @@ class PodcastTranscriptionScheduleService:
         if not episode:
             raise ValidationError(f"Episode {episode_id} not found")
         start_result = await self.transcription_service.start_transcription(
-            episode_id, force=force,
+            episode_id,
+            force=force,
         )
         task = start_result["task"]
         action = start_result["action"]
@@ -211,7 +212,8 @@ class PodcastTranscriptionScheduleService:
         )
 
     async def get_transcription_status(
-        self, episode_id: int,
+        self,
+        episode_id: int,
     ) -> TranscriptionScheduleStatusProjection:
         episode = await self._get_episode(episode_id)
         if not episode:
@@ -253,7 +255,9 @@ class PodcastTranscriptionScheduleService:
             error_message=task.error_message,
         )
 
-    async def get_pending_transcriptions(self) -> list[PendingTranscriptionTaskProjection]:
+    async def get_pending_transcriptions(
+        self,
+    ) -> list[PendingTranscriptionTaskProjection]:
         stmt = (
             select(TranscriptionTask)
             .where(
@@ -305,7 +309,8 @@ class PodcastTranscriptionScheduleService:
         return (await self.db.execute(stmt)).scalar_one_or_none()
 
     async def _get_existing_transcription_task(
-        self, episode_id: int,
+        self,
+        episode_id: int,
     ) -> TranscriptionTask | None:
         stmt = select(TranscriptionTask).where(
             TranscriptionTask.episode_id == episode_id,

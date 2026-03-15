@@ -1,4 +1,5 @@
 """CSRF protection utilities for admin panel."""
+
 import secrets
 
 from fastapi import Form, HTTPException, Request, status
@@ -33,6 +34,7 @@ class CSRFException(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
         self.error_type = error_type
         self.user_message = user_message or detail
+
 
 # CSRF token timeout (1 hour)
 CSRF_TOKEN_TIMEOUT = 3600

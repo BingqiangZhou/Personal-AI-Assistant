@@ -57,7 +57,7 @@ def process_opml_subscription_episodes(
             },
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 
@@ -73,4 +73,3 @@ async def _process_opml_subscription_episodes(
             user_id=user_id,
             source_url=source_url,
         )
-

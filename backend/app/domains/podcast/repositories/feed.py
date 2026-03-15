@@ -9,6 +9,7 @@ from sqlalchemy.orm import joinedload
 
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.subscription.models import Subscription, UserSubscription
+from app.shared.repository_helpers import resolve_window_total
 
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,11 @@ class PodcastFeedRepositoryMixin:
     """Subscription/episode pagination and lightweight feed queries."""
 
     async def get_user_subscriptions_paginated(
-        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None,
+        self,
+        user_id: int,
+        page: int = 1,
+        size: int = 20,
+        filters: dict | None = None,
     ) -> tuple[list[Subscription], int, dict[int, int]]:
         skip = (page - 1) * size
         base_query = (
@@ -60,7 +65,8 @@ class PodcastFeedRepositoryMixin:
 
         result = await self.db.execute(query)
         rows = result.all()
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(
@@ -72,7 +78,11 @@ class PodcastFeedRepositoryMixin:
         return subscriptions, total, episode_counts
 
     async def get_episodes_paginated(
-        self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None,
+        self,
+        user_id: int,
+        page: int = 1,
+        size: int = 20,
+        filters: dict | None = None,
     ) -> tuple[list[PodcastEpisode], int]:
         skip = (page - 1) * size
         base_query = (
@@ -115,7 +125,8 @@ class PodcastFeedRepositoryMixin:
 
         query = (
             base_query.order_by(
-                PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc(),
+                PodcastEpisode.published_at.desc(),
+                PodcastEpisode.id.desc(),
             )
             .offset(skip)
             .limit(size)
@@ -387,7 +398,8 @@ class PodcastFeedRepositoryMixin:
 
         result = await self.db.execute(query)
         rows = list(result.unique().all())
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
@@ -444,7 +456,8 @@ class PodcastFeedRepositoryMixin:
 
         result = await self.db.execute(query)
         rows = list(result.all())
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(

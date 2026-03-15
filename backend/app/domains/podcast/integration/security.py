@@ -27,11 +27,12 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSecurityValidator:
-    """Comprehensive security validation for podcast operations
-    """
+    """Comprehensive security validation for podcast operations"""
 
     # Maximum safe limits
-    MAX_RSS_SIZE = 100 * 1024 * 1024  # 100MB max RSS size (support very large podcast feeds with many episodes)
+    MAX_RSS_SIZE = (
+        100 * 1024 * 1024
+    )  # 100MB max RSS size (support very large podcast feeds with many episodes)
     MAX_AUDIO_SIZE = settings.MAX_PODCAST_EPISODE_DOWNLOAD_SIZE  # 500MB
     MAX_TRANSCRIPT_SIZE = 5 * 1024 * 1024  # 5MB for transcripts
 
@@ -48,8 +49,13 @@ class PodcastSecurityValidator:
 
     # Dangerous URL patterns for SSRF
     DANGEROUS_HOSTS = {
-        "localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254",  # Metadata endpoints
-        "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",  # Private networks
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "169.254.169.254",  # Metadata endpoints
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",  # Private networks
     }
 
     @classmethod
@@ -139,7 +145,13 @@ class PodcastSecurityValidator:
         hostname_lower = hostname.lower()
 
         # Exact matches
-        dangerous_exact = {"localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254", "::1"}
+        dangerous_exact = {
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0",
+            "169.254.169.254",
+            "::1",
+        }
         if hostname_lower in dangerous_exact:
             return True
 
@@ -151,7 +163,9 @@ class PodcastSecurityValidator:
         return bool(re.match(r"^192\.168\.", hostname_lower))
 
     @classmethod
-    async def validate_audio_download(cls, url: str) -> tuple[bool, str | None, bytes | None]:
+    async def validate_audio_download(
+        cls, url: str
+    ) -> tuple[bool, str | None, bytes | None]:
         """Safely download audio with size limits and validation
 
         Args:
@@ -168,23 +182,26 @@ class PodcastSecurityValidator:
 
         try:
             timeout = aiohttp.ClientTimeout(total=300)  # 5 minute total timeout
-            async with aiohttp.ClientSession(timeout=timeout) as session, session.get(
-                url,
-            ) as response:
-                    # Check content length before downloading
-                    content_length = response.headers.get("Content-Length")
-                    if content_length:
-                        size = int(content_length)
-                        if size > cls.MAX_AUDIO_SIZE:
-                            return False, f"Audio too large: {size} bytes", None
+            async with (
+                aiohttp.ClientSession(timeout=timeout) as session,
+                session.get(
+                    url,
+                ) as response,
+            ):
+                # Check content length before downloading
+                content_length = response.headers.get("Content-Length")
+                if content_length:
+                    size = int(content_length)
+                    if size > cls.MAX_AUDIO_SIZE:
+                        return False, f"Audio too large: {size} bytes", None
 
-                    # Stream download with size tracking
-                    content = await response.read()
+                # Stream download with size tracking
+                content = await response.read()
 
-                    if len(content) > cls.MAX_AUDIO_SIZE:
-                        return False, "File size exceeds limit during download", None
+                if len(content) > cls.MAX_AUDIO_SIZE:
+                    return False, "File size exceeds limit during download", None
 
-                    return True, None, content
+                return True, None, content
 
         except aiohttp.ClientError as e:
             logger.error(f"Audio download error: {e}")
@@ -209,8 +226,18 @@ class PodcastSecurityValidator:
         soup = BeautifulSoup(html, "html.parser")
 
         # Remove dangerous tags completely
-        dangerous_tags = ["script", "style", "iframe", "object", "embed",
-                         "form", "input", "button", "select", "textarea"]
+        dangerous_tags = [
+            "script",
+            "style",
+            "iframe",
+            "object",
+            "embed",
+            "form",
+            "input",
+            "button",
+            "select",
+            "textarea",
+        ]
         for tag_name in dangerous_tags:
             for tag in soup.find_all(tag_name):
                 tag.decompose()
@@ -218,8 +245,9 @@ class PodcastSecurityValidator:
         # Remove dangerous attributes (onclick, onerror, etc.)
         for tag in soup.find_all(True):
             # Remove event handler attributes
-            attrs_to_remove = [attr for attr in tag.attrs
-                             if attr.lower().startswith("on")]
+            attrs_to_remove = [
+                attr for attr in tag.attrs if attr.lower().startswith("on")
+            ]
             for attr in attrs_to_remove:
                 del tag[attr]
 
@@ -243,8 +271,7 @@ class PodcastSecurityValidator:
 
 
 class PodcastContentValidator:
-    """High-level content validation interface
-    """
+    """High-level content validation interface"""
 
     @staticmethod
     async def validate_rss_feed(feed_url: str, xml_content: str) -> dict:
@@ -262,6 +289,7 @@ class PodcastContentValidator:
             # 2. Parse safely
             try:
                 from defusedxml.ElementTree import fromstring
+
                 root = fromstring(xml_content)
 
                 # Extract basic info
@@ -270,7 +298,9 @@ class PodcastContentValidator:
 
                 # Detect audio enclosures
                 enclosures = root.findall(".//enclosure")
-                has_audio = any(e.get("type", "").startswith("audio/") for e in enclosures)
+                has_audio = any(
+                    e.get("type", "").startswith("audio/") for e in enclosures
+                )
 
                 return {
                     "valid": True,

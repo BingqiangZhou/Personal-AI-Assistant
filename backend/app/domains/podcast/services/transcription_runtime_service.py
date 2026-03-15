@@ -1,5 +1,4 @@
-"""Database-backed transcription runtime services.
-"""
+"""Database-backed transcription runtime services."""
 
 import asyncio
 import logging
@@ -155,7 +154,10 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         return factory(self.db)
 
     async def start_transcription(
-        self, episode_id: int, model_name: str | None = None, force: bool = False,
+        self,
+        episode_id: int,
+        model_name: str | None = None,
+        force: bool = False,
     ) -> dict[str, Any]:
         if model_name:
             await self.model_manager.get_active_transcription_model(model_name)
@@ -184,7 +186,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                 if locked_task_id is not None:
                     return {"task": existing_task, "action": "locked_by_other_task"}
 
-                config_db_id = await self._resolve_transcription_config_db_id(model_name)
+                config_db_id = await self._resolve_transcription_config_db_id(
+                    model_name
+                )
                 self._task_orchestration_service().enqueue_audio_transcription(
                     task_id=existing_task.id,
                     config_db_id=config_db_id,
@@ -193,7 +197,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
 
             if status_value in {"failed", "cancelled"}:
                 temp_episode_dir = os.path.join(self.temp_dir, f"episode_{episode_id}")
-                has_temp_files = os.path.exists(temp_episode_dir) and await asyncio.to_thread(
+                has_temp_files = os.path.exists(
+                    temp_episode_dir
+                ) and await asyncio.to_thread(
                     _directory_has_files,
                     temp_episode_dir,
                 )
@@ -225,7 +231,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
 
         if force:
             task, config_db_id = await super().create_transcription_task_record(
-                episode_id, model_name, force,
+                episode_id,
+                model_name,
+                force,
             )
             self._task_orchestration_service().enqueue_audio_transcription(
                 task_id=task.id,
@@ -278,7 +286,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         from app.domains.podcast.models import TranscriptionTask
 
         episode = await self._load_episode_for_task_creation(episode_id)
-        model_config = await self.model_manager.get_active_transcription_model(model_name)
+        model_config = await self.model_manager.get_active_transcription_model(
+            model_name
+        )
         task_values = {
             "episode_id": episode_id,
             "original_audio_url": episode.audio_url,
@@ -345,7 +355,8 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         return task
 
     async def _resolve_transcription_config_db_id(
-        self, model_name: str | None,
+        self,
+        model_name: str | None,
     ) -> int | None:
         ai_repo = AIModelConfigRepository(self.db)
         model_config = None
@@ -399,7 +410,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
             result = await self.db.execute(stmt)
             await self.db.commit()
             if result.rowcount > 0:
-                logger.warning("Reset %s stale transcription tasks to FAILED", result.rowcount)
+                logger.warning(
+                    "Reset %s stale transcription tasks to FAILED", result.rowcount
+                )
 
             pending_stale_threshold = datetime.now(UTC) - timedelta(hours=1)
             stmt2 = (
@@ -422,7 +435,9 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
             result2 = await self.db.execute(stmt2)
             await self.db.commit()
             if result2.rowcount > 0:
-                logger.warning("Reset %s stale PENDING tasks to FAILED", result2.rowcount)
+                logger.warning(
+                    "Reset %s stale PENDING tasks to FAILED", result2.rowcount
+                )
         except Exception as exc:  # noqa: BLE001
             logger.error("Failed to reset stale tasks: %s", exc)
 

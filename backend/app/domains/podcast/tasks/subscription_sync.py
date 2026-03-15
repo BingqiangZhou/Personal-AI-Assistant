@@ -34,7 +34,7 @@ def refresh_all_podcast_feeds(self):
             error_message=str(exc),
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 

@@ -33,7 +33,8 @@ class SummaryWorkflowService:
             PodcastSummaryRepository
         ),
         summary_service_factory: Callable[
-            [AsyncSession], PodcastSummaryGenerationService,
+            [AsyncSession],
+            PodcastSummaryGenerationService,
         ] = PodcastSummaryGenerationService,
     ):
         self.db = db
@@ -79,7 +80,9 @@ class SummaryWorkflowService:
         if not episode:
             raise ValueError(f"Episode {episode_id} not found")
         if not episode.transcript_content:
-            raise ValidationError(f"No transcript content available for episode {episode_id}")
+            raise ValidationError(
+                f"No transcript content available for episode {episode_id}"
+            )
 
         accepted_at = datetime.now(UTC)
         if episode.status == "summary_generating":
@@ -135,7 +138,9 @@ class SummaryWorkflowService:
             )
             return result
         except Exception as exc:
-            logger.exception("Episode summary generation failed: episode_id=%s", episode_id)
+            logger.exception(
+                "Episode summary generation failed: episode_id=%s", episode_id
+            )
             await self._mark_episode_summary_failed(episode_id, str(exc))
             raise
 
@@ -174,7 +179,9 @@ class SummaryWorkflowService:
 
         for episode_id in claimed_episode_ids:
             try:
-                async with worker_db_session("celery-summary-episode") as episode_session:
+                async with worker_db_session(
+                    "celery-summary-episode"
+                ) as episode_session:
                     summary_service = self.summary_service_factory(episode_session)
                     await summary_service.generate_summary(episode_id)
                 processed_count += 1
@@ -190,14 +197,22 @@ class SummaryWorkflowService:
                     continue
 
                 failed_count += 1
-                logger.exception("Failed to generate summary for episode %s", episode_id)
-                async with worker_db_session("celery-summary-episode") as episode_session:
+                logger.exception(
+                    "Failed to generate summary for episode %s", episode_id
+                )
+                async with worker_db_session(
+                    "celery-summary-episode"
+                ) as episode_session:
                     repo = self.repo_factory(episode_session)
                     await repo.mark_summary_failed(episode_id, str(exc))
             except Exception as exc:
                 failed_count += 1
-                logger.exception("Failed to generate summary for episode %s", episode_id)
-                async with worker_db_session("celery-summary-episode") as episode_session:
+                logger.exception(
+                    "Failed to generate summary for episode %s", episode_id
+                )
+                async with worker_db_session(
+                    "celery-summary-episode"
+                ) as episode_session:
                     repo = self.repo_factory(episode_session)
                     await repo.mark_summary_failed(episode_id, str(exc))
 
@@ -246,7 +261,9 @@ class SummaryWorkflowService:
     async def _claim_pending_summary_episode_ids(self, *, limit: int) -> list[int]:
         claim_stmt = (
             select(PodcastEpisode.id)
-            .outerjoin(TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id)
+            .outerjoin(
+                TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id
+            )
             .where(
                 and_(
                     PodcastEpisode.ai_summary.is_(None),

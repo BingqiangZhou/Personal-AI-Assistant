@@ -155,7 +155,8 @@ class TranscriptionStateManager:
         )
 
     async def _resolve_lock_owner(
-        self, episode_id: int,
+        self,
+        episode_id: int,
     ) -> tuple[int | None, str | None, str | None]:
         lock_key = self._task_lock_key(episode_id)
         lock_value = await self.redis.cache_get(lock_key)
@@ -203,7 +204,9 @@ class TranscriptionStateManager:
             )
             if acquired:
                 await self.redis.sorted_set_add(
-                    self._lock_index_key(), str(episode_id), time.time(),
+                    self._lock_index_key(),
+                    str(episode_id),
+                    time.time(),
                 )
                 await self.redis.delete_keys(legacy_key)
                 logger.info(
@@ -213,7 +216,11 @@ class TranscriptionStateManager:
                 )
                 return True
 
-            owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
+            (
+                owner_task_id,
+                owner_source,
+                raw_lock_value,
+            ) = await self._resolve_lock_owner(
                 episode_id,
             )
             if owner_task_id == task_id:
@@ -252,7 +259,9 @@ class TranscriptionStateManager:
             )
             if retry_acquired:
                 await self.redis.sorted_set_add(
-                    self._lock_index_key(), str(episode_id), time.time(),
+                    self._lock_index_key(),
+                    str(episode_id),
+                    time.time(),
                 )
                 logger.info(
                     "[LOCK] Re-acquired reclaimed lock for episode %s, task %s",
@@ -293,7 +302,11 @@ class TranscriptionStateManager:
         try:
             lock_key = self._task_lock_key(episode_id)
             legacy_key = self._legacy_task_lock_value_key(episode_id)
-            owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
+            (
+                owner_task_id,
+                owner_source,
+                raw_lock_value,
+            ) = await self._resolve_lock_owner(
                 episode_id,
             )
 
@@ -315,7 +328,9 @@ class TranscriptionStateManager:
 
             await self.redis.delete_keys(lock_key, legacy_key)
             await self.redis.sorted_set_remove(self._lock_index_key(), str(episode_id))
-            logger.info("[LOCK] Released lock for episode %s, task %s", episode_id, task_id)
+            logger.info(
+                "[LOCK] Released lock for episode %s, task %s", episode_id, task_id
+            )
             return True
 
         except Exception as e:
@@ -437,7 +452,9 @@ class TranscriptionStateManager:
 
         # Use throttle to reduce log frequency (log every 5% or every 5 seconds, whichever is longer)
         if _progress_throttle.should_log(task_id, status, progress):
-            logger.info(f"转录进度 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
+            logger.info(
+                f"转录进度 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}"
+            )
 
     async def get_task_progress(self, task_id: int) -> dict[str, Any] | None:
         """Get cached task progress
@@ -540,7 +557,9 @@ class TranscriptionStateManager:
             await self.release_task_lock(episode_id, task_id)
 
             # Clear episode mapping
-            episode_key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
+            episode_key = TranscriptionStateKeys.EPISODE_TASK.format(
+                episode_id=episode_id
+            )
             progress_key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
             status_key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
             dispatched_key = f"podcast:transcription:dispatched:{task_id}"
@@ -551,7 +570,9 @@ class TranscriptionStateManager:
                 dispatched_key,
             )
 
-            logger.info(f"[STATE] Cleared Redis state for task {task_id}, episode {episode_id}")
+            logger.info(
+                f"[STATE] Cleared Redis state for task {task_id}, episode {episode_id}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to clear state for task {task_id}: {e}")
@@ -604,7 +625,9 @@ class TranscriptionStateManager:
                 "-inf",
                 time.time(),
             )
-            return await self.redis.sorted_set_cardinality(self._active_task_index_key())
+            return await self.redis.sorted_set_cardinality(
+                self._active_task_index_key()
+            )
         except Exception as e:
             logger.error(f"Failed to get active tasks count: {e}")
             return 0
@@ -630,7 +653,8 @@ class TranscriptionStateManager:
             for episode_id_str in stale_episode_ids:
                 if not episode_id_str.isdigit():
                     await self.redis.sorted_set_remove(
-                        self._lock_index_key(), episode_id_str,
+                        self._lock_index_key(),
+                        episode_id_str,
                     )
                     continue
 
@@ -639,7 +663,8 @@ class TranscriptionStateManager:
                 ttl = await self.redis.get_ttl(lock_key)
                 if ttl in (-2,) or (ttl != -1 and ttl <= max_age_seconds):
                     await self.redis.sorted_set_remove(
-                        self._lock_index_key(), episode_id_str,
+                        self._lock_index_key(),
+                        episode_id_str,
                     )
                     continue
 
@@ -647,7 +672,9 @@ class TranscriptionStateManager:
                     lock_key,
                     self._legacy_task_lock_value_key(episode_id),
                 )
-                await self.redis.sorted_set_remove(self._lock_index_key(), episode_id_str)
+                await self.redis.sorted_set_remove(
+                    self._lock_index_key(), episode_id_str
+                )
                 if deleted > 0:
                     cleaned += 1
 
@@ -659,6 +686,7 @@ class TranscriptionStateManager:
         except Exception as e:
             logger.error(f"Failed to cleanup stale locks: {e}")
             return 0
+
 
 # Singleton instance
 _state_manager = None

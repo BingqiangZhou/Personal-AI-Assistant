@@ -65,7 +65,8 @@ class PodcastSubscriptionService:
         self.subscription_repo = subscription_repo or SubscriptionRepository(db)
 
     async def add_subscription(
-        self, feed_url: str,
+        self,
+        feed_url: str,
     ) -> tuple[Subscription, list[PodcastEpisode]]:
         """Add a new podcast subscription.
 
@@ -141,7 +142,8 @@ class PodcastSubscriptionService:
         return subscription, new_episodes
 
     async def add_subscriptions_batch(
-        self, subscriptions_data: list[PodcastSubscriptionCreate],
+        self,
+        subscriptions_data: list[PodcastSubscriptionCreate],
     ) -> list[dict[str, Any]]:
         """Batch add podcast subscriptions.
 
@@ -161,7 +163,8 @@ class PodcastSubscriptionService:
             try:
                 # Check if already exists
                 existing = await self.repo.get_subscription_by_url(
-                    self.user_id, sub_data.feed_url,
+                    self.user_id,
+                    sub_data.feed_url,
                 )
                 if existing:
                     results.append(
@@ -206,7 +209,10 @@ class PodcastSubscriptionService:
         return results
 
     async def list_subscriptions(
-        self, filters: dict | None = None, page: int = 1, size: int = 20,
+        self,
+        filters: dict | None = None,
+        page: int = 1,
+        size: int = 20,
     ) -> tuple[list[dict], int]:
         """List user subscriptions with pagination.
 
@@ -242,7 +248,10 @@ class PodcastSubscriptionService:
             total,
             episode_counts,
         ) = await self.repo.get_user_subscriptions_paginated(
-            self.user_id, page=page, size=size, filters=filters,
+            self.user_id,
+            page=page,
+            size=size,
+            filters=filters,
         )
 
         # Batch fetch recent episodes
@@ -257,7 +266,8 @@ class PodcastSubscriptionService:
         for ep_list in episodes_batch.values():
             all_episode_ids.extend([ep.id for ep in ep_list])
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, all_episode_ids,
+            self.user_id,
+            all_episode_ids,
         )
 
         # Build response
@@ -363,7 +373,8 @@ class PodcastSubscriptionService:
             return None
 
         episodes = await self.repo.get_subscription_episodes(
-            subscription_id, limit=settings.PODCAST_EPISODE_BATCH_SIZE,
+            subscription_id,
+            limit=settings.PODCAST_EPISODE_BATCH_SIZE,
         )
         pending_count = len([e for e in episodes if not e.ai_summary])
 
@@ -471,7 +482,8 @@ class PodcastSubscriptionService:
 
         # Update last fetch time
         await self.repo.update_subscription_fetch_time(
-            subscription_id, feed.last_fetched,
+            subscription_id,
+            feed.last_fetched,
         )
 
         # Invalidate related caches in best-effort mode.
@@ -488,7 +500,9 @@ class PodcastSubscriptionService:
         return new_episodes
 
     async def reparse_subscription(
-        self, subscription_id: int, force_all: bool = False,
+        self,
+        subscription_id: int,
+        force_all: bool = False,
     ) -> dict:
         """Re-parse all episodes for a subscription.
 
@@ -517,7 +531,8 @@ class PodcastSubscriptionService:
         existing_item_links = set()
         if not force_all:
             existing_episodes = await self.repo.get_subscription_episodes(
-                subscription_id, limit=None,
+                subscription_id,
+                limit=None,
             )
             existing_item_links = {
                 ep.item_link for ep in existing_episodes if ep.item_link
@@ -568,7 +583,8 @@ class PodcastSubscriptionService:
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
         await self.repo.update_subscription_fetch_time(
-            subscription_id, feed.last_fetched,
+            subscription_id,
+            feed.last_fetched,
         )
 
         # Invalidate related caches in best-effort mode.
@@ -630,7 +646,8 @@ class PodcastSubscriptionService:
             raise
 
     async def remove_subscriptions_bulk(
-        self, subscription_ids: list[int],
+        self,
+        subscription_ids: list[int],
     ) -> dict[str, Any]:
         """Bulk remove subscriptions.
 
@@ -711,7 +728,9 @@ class PodcastSubscriptionService:
         }
 
     async def _validate_and_get_subscription(
-        self, subscription_id: int, check_source_type: bool = False,
+        self,
+        subscription_id: int,
+        check_source_type: bool = False,
     ) -> Subscription | None:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
@@ -737,7 +756,10 @@ class PodcastSubscriptionService:
         return result.scalar_one_or_none()
 
     async def _invalidate_subscription_related_caches(
-        self, subscription_id: int, *, operation: str,
+        self,
+        subscription_id: int,
+        *,
+        operation: str,
     ) -> None:
         """Invalidate caches without failing the business operation."""
         await safe_cache_invalidate(

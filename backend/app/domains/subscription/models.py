@@ -75,10 +75,18 @@ class Subscription(Base):
     fetch_interval = Column(Integer, default=3600)
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
-    user_subscriptions = relationship("UserSubscription", back_populates="subscription", cascade="all, delete-orphan")
-    items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
+    user_subscriptions = relationship(
+        "UserSubscription", back_populates="subscription", cascade="all, delete-orphan"
+    )
+    items = relationship(
+        "SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan"
+    )
     categories = relationship(
         "SubscriptionCategory",
         secondary="subscription_category_mappings",
@@ -102,8 +110,12 @@ class UserSubscription(Base):
     __tablename__ = "user_subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    subscription_id = Column(
+        Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False
+    )
 
     # User-specific settings
     update_frequency = Column(
@@ -124,8 +136,12 @@ class UserSubscription(Base):
     )
 
     # User-specific state
-    is_archived = Column(Boolean, default=False, comment="User has archived this subscription")
-    is_pinned = Column(Boolean, default=False, comment="User has pinned this subscription")
+    is_archived = Column(
+        Boolean, default=False, comment="User has archived this subscription"
+    )
+    is_pinned = Column(
+        Boolean, default=False, comment="User has pinned this subscription"
+    )
     playback_rate_preference = Column(
         Float,
         nullable=True,
@@ -133,7 +149,11 @@ class UserSubscription(Base):
     )
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     user = relationship("User", back_populates="user_subscriptions")
     subscription = relationship("Subscription", back_populates="user_subscriptions")
@@ -183,7 +203,9 @@ class UserSubscription(Base):
 
         if frequency == UpdateFrequency.HOURLY.value:
             # Next top of the hour in local time, then convert to UTC
-            next_local = (base_local + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+            next_local = (base_local + timedelta(hours=1)).replace(
+                minute=0, second=0, microsecond=0
+            )
             return next_local.astimezone(UTC)
 
         if frequency == UpdateFrequency.DAILY.value:
@@ -191,7 +213,9 @@ class UserSubscription(Base):
             local_hour, local_minute = self._parse_local_time()
 
             # Today at scheduled time in local timezone
-            scheduled_local = base_local.replace(hour=local_hour, minute=local_minute, second=0, microsecond=0)
+            scheduled_local = base_local.replace(
+                hour=local_hour, minute=local_minute, second=0, microsecond=0
+            )
 
             # If already passed today, next one is tomorrow
             if scheduled_local <= base_local:
@@ -205,10 +229,14 @@ class UserSubscription(Base):
             local_hour, local_minute = self._parse_local_time()
 
             # DB stores 1-7 (Mon-Sun), Python weekday is 0-6 (Mon-Sun)
-            target_weekday = (self.update_day_of_week - 1) if self.update_day_of_week else 0
+            target_weekday = (
+                (self.update_day_of_week - 1) if self.update_day_of_week else 0
+            )
 
             # Today at scheduled time in local timezone
-            scheduled_local = base_local.replace(hour=local_hour, minute=local_minute, second=0, microsecond=0)
+            scheduled_local = base_local.replace(
+                hour=local_hour, minute=local_minute, second=0, microsecond=0
+            )
 
             # Find days until target weekday
             days_ahead = target_weekday - base_local.weekday()
@@ -219,7 +247,7 @@ class UserSubscription(Base):
             scheduled_local += timedelta(days=days_ahead)
             return scheduled_local.astimezone(UTC)
 
-        return base_time + timedelta(hours=1) # Fallback
+        return base_time + timedelta(hours=1)  # Fallback
 
     @property
     def computed_next_update_at(self) -> datetime | None:
@@ -237,7 +265,10 @@ class UserSubscription(Base):
 
         # Convert naive datetime to aware datetime (assume UTC)
         from app.core.datetime_utils import ensure_timezone_aware_fetch_time
-        last_fetched_aware = ensure_timezone_aware_fetch_time(self.subscription.last_fetched_at)
+
+        last_fetched_aware = ensure_timezone_aware_fetch_time(
+            self.subscription.last_fetched_at
+        )
 
         # Calculate the Earliest next scheduled time AFTER the last fetch
         next_possible = self._get_next_scheduled_time(last_fetched_aware)
@@ -266,7 +297,11 @@ class SubscriptionItem(Base):
     read_at = Column(DateTime(timezone=True), nullable=True)
     bookmarked = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     subscription = relationship("Subscription", back_populates="items")
 
@@ -293,7 +328,11 @@ class SubscriptionCategory(Base):
     description = Column(Text, nullable=True)
     color = Column(String(7), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     user = relationship("User", back_populates="subscription_categories")
     subscriptions = relationship(
@@ -302,9 +341,7 @@ class SubscriptionCategory(Base):
         back_populates="categories",
     )
 
-    __table_args__ = (
-        Index("idx_user_category", "user_id", "name"),
-    )
+    __table_args__ = (Index("idx_user_category", "user_id", "name"),)
 
 
 class SubscriptionCategoryMapping(Base):
@@ -313,5 +350,7 @@ class SubscriptionCategoryMapping(Base):
     __tablename__ = "subscription_category_mappings"
 
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), primary_key=True)
-    category_id = Column(Integer, ForeignKey("subscription_categories.id"), primary_key=True)
+    category_id = Column(
+        Integer, ForeignKey("subscription_categories.id"), primary_key=True
+    )
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

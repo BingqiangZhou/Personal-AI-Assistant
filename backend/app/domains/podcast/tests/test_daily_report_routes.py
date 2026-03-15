@@ -25,7 +25,9 @@ def test_get_daily_report_not_available(
     assert data["available"] is False
     assert data["total_items"] == 0
     assert data["items"] == []
-    mock_daily_report_service.get_daily_report.assert_awaited_once_with(target_date=None)
+    mock_daily_report_service.get_daily_report.assert_awaited_once_with(
+        target_date=None
+    )
 
 
 def test_get_daily_report_by_date_success(
@@ -213,4 +215,6 @@ def test_list_daily_report_dates_with_pagination(
     assert data["size"] == 30
     assert data["pages"] == 2
     assert data["dates"][0]["report_date"] == "2026-02-20"
-    mock_daily_report_service.list_report_dates.assert_awaited_once_with(page=2, size=30)
+    mock_daily_report_service.list_report_dates.assert_awaited_once_with(
+        page=2, size=30
+    )

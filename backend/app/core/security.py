@@ -26,12 +26,14 @@ from app.core.config import get_or_generate_secret_key, settings
 # Note: Use bcrypt without prefix to avoid base64 encoding issues
 try:
     import bcrypt
+
     # Test if bcrypt has the expected API
     _test = bcrypt.hashpw(b"test", bcrypt.gensalt())
     _HAS_BCRYPT = True
 except ImportError:
     _HAS_BCRYPT = False
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 # Token operation cache (micro-optimization)
 class TokenOptimizer:
@@ -61,6 +63,7 @@ class TokenOptimizer:
             claims.update(extra_claims)
 
         return claims
+
 
 token_optimizer = TokenOptimizer()
 
@@ -118,6 +121,7 @@ def create_refresh_token(
 def verify_token(token: str, token_type: str = "access") -> dict:
     """Verify and decode JWT token."""
     import logging
+
     logger = logging.getLogger(__name__)
 
     try:
@@ -223,7 +227,9 @@ def verify_password_reset_token(token: str) -> str | None:
     """Verify password reset token."""
     try:
         decoded_token = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM],
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
         return decoded_token["sub"]
     except JWTError:
@@ -268,7 +274,9 @@ def verify_token_optional(
 
 async def get_token_from_request(
     token: str | None = Query(None, description="Authentication token (for testing)"),
-    authorization: str | None = Header(None, description="Bearer token in Authorization header"),
+    authorization: str | None = Header(
+        None, description="Bearer token in Authorization header"
+    ),
 ) -> dict:
     """Extract token from query parameter or Authorization header.
     In development mode, allows token to be passed as query parameter and returns mock user for testing.
@@ -386,6 +394,7 @@ def _get_fernet():
         _fernet_key = base64.urlsafe_b64encode(key_hash)
 
         from cryptography.fernet import Fernet
+
         _fernet = Fernet(_fernet_key)
 
     return _fernet
@@ -631,7 +640,10 @@ def validate_export_password(password: str) -> tuple[bool, str]:
     variety_score = sum([has_upper, has_lower, has_digit, has_special])
 
     if variety_score < 3:
-        return False, "Password must contain at least 3 of: uppercase, lowercase, digits, special characters"
+        return (
+            False,
+            "Password must contain at least 3 of: uppercase, lowercase, digits, special characters",
+        )
 
     return True, ""
 
@@ -674,6 +686,7 @@ def get_or_generate_rsa_keys():
                 from cryptography.hazmat.primitives.serialization import (
                     load_pem_private_key,
                 )
+
                 _RSA_PRIVATE_KEY = load_pem_private_key(pem_data, password=None)
                 _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
         else:
@@ -714,6 +727,7 @@ def get_rsa_public_key_pem() -> str:
     """
     _, public_key = get_or_generate_rsa_keys()
     from cryptography.hazmat.primitives import serialization
+
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,

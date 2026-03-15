@@ -31,7 +31,8 @@ class AdminSubscriptionsQueryService:
     ) -> dict:
         query = (
             select(
-                Subscription, func.count(UserSubscription.id).label("subscriber_count"),
+                Subscription,
+                func.count(UserSubscription.id).label("subscriber_count"),
             )
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .group_by(Subscription.id)

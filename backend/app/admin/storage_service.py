@@ -79,7 +79,9 @@ class StorageCleanupService:
                 "total_human": self._format_bytes(usage.total),
                 "used": usage.used,
                 "used_human": self._format_bytes(usage.used),
-                "usage_percent": round((usage.used / usage.total) * 100, 2) if usage.total > 0 else 0,
+                "usage_percent": round((usage.used / usage.total) * 100, 2)
+                if usage.total > 0
+                else 0,
             }
         except Exception as e:
             logger.error(f"获取磁盘使用情况失败: {e}")
@@ -208,7 +210,9 @@ class StorageCleanupService:
                 # 更新现有配置
                 setting.value = {
                     "enabled": enabled,
-                    "last_cleanup": setting.value.get("last_cleanup") if setting.value else None,
+                    "last_cleanup": setting.value.get("last_cleanup")
+                    if setting.value
+                    else None,
                 }
                 setting.updated_at = datetime.now(UTC).replace(tzinfo=None)
             else:
@@ -284,7 +288,9 @@ class StorageCleanupService:
                             )
 
                     except PermissionError as e:
-                        logger.warning(f"权限不足，无法删除文件: {file_path}, 错误: {e}")
+                        logger.warning(
+                            f"权限不足，无法删除文件: {file_path}, 错误: {e}"
+                        )
                     except FileNotFoundError:
                         # 文件已被删除，跳过
                         pass
@@ -342,10 +348,16 @@ class StorageCleanupService:
 
         logger.info("-" * 70)
         logger.info("📊 清理统计:")
-        logger.info(f"  Storage 目录: {storage_result['deleted_count']} 文件, {self._format_bytes(storage_result['freed_space'])}")
-        logger.info(f"  Temp 目录: {temp_result['deleted_count']} 文件, {self._format_bytes(temp_result['freed_space'])}")
+        logger.info(
+            f"  Storage 目录: {storage_result['deleted_count']} 文件, {self._format_bytes(storage_result['freed_space'])}"
+        )
+        logger.info(
+            f"  Temp 目录: {temp_result['deleted_count']} 文件, {self._format_bytes(temp_result['freed_space'])}"
+        )
         logger.info("-" * 70)
-        logger.info(f"✅ 清理完成: 总计删除 {total_deleted} 个文件, 释放 {self._format_bytes(total_freed)} 空间")
+        logger.info(
+            f"✅ 清理完成: 总计删除 {total_deleted} 个文件, 释放 {self._format_bytes(total_freed)} 空间"
+        )
         logger.info("=" * 70)
 
         # 更新最后清理时间

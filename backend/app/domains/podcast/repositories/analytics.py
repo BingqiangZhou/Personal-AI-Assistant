@@ -59,7 +59,9 @@ class PodcastAnalyticsRepositoryMixin:
             return or_(coalesced.op("%")(keyword), ilike_condition)
 
         def _build_relevance_term(
-            column: Any, weight: float, enable_pg_trgm: bool,
+            column: Any,
+            weight: float,
+            enable_pg_trgm: bool,
         ) -> Any:
             coalesced = _coalesced_text(column)
             if enable_pg_trgm:
@@ -82,23 +84,29 @@ class PodcastAnalyticsRepositoryMixin:
             if search_in in {"description", "all"}:
                 search_conditions.append(
                     _build_text_match_condition(
-                        PodcastEpisode.description, enable_pg_trgm,
+                        PodcastEpisode.description,
+                        enable_pg_trgm,
                     ),
                 )
                 relevance_terms.append(
                     _build_relevance_term(
-                        PodcastEpisode.description, 0.7, enable_pg_trgm,
+                        PodcastEpisode.description,
+                        0.7,
+                        enable_pg_trgm,
                     ),
                 )
             if search_in in {"summary", "all"}:
                 search_conditions.append(
                     _build_text_match_condition(
-                        PodcastEpisode.ai_summary, enable_pg_trgm,
+                        PodcastEpisode.ai_summary,
+                        enable_pg_trgm,
                     ),
                 )
                 relevance_terms.append(
                     _build_relevance_term(
-                        PodcastEpisode.ai_summary, 0.9, enable_pg_trgm,
+                        PodcastEpisode.ai_summary,
+                        0.9,
+                        enable_pg_trgm,
                     ),
                 )
 
@@ -183,7 +191,9 @@ class PodcastAnalyticsRepositoryMixin:
             raise
 
     async def update_subscription_fetch_time(
-        self, subscription_id: int, fetch_time: datetime | None = None,
+        self,
+        subscription_id: int,
+        fetch_time: datetime | None = None,
     ):
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)
@@ -212,7 +222,9 @@ class PodcastAnalyticsRepositoryMixin:
             await self.db.commit()
 
     async def get_recently_played(
-        self, user_id: int, limit: int = 5,
+        self,
+        user_id: int,
+        limit: int = 5,
     ) -> list[dict[str, Any]]:
         stmt = (
             select(
@@ -253,7 +265,9 @@ class PodcastAnalyticsRepositoryMixin:
         return recently_played
 
     async def get_liked_episodes(
-        self, user_id: int, limit: int = 20,
+        self,
+        user_id: int,
+        limit: int = 20,
     ) -> list[PodcastEpisode]:
         stmt = (
             select(PodcastEpisode)

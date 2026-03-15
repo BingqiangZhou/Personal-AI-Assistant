@@ -12,7 +12,9 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 @celery_app.task(bind=True, max_retries=3)
 def process_pending_transcriptions(self):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions"
+    task_name = (
+        "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions"
+    )
     queue_name = "transcription"
     metadata = None
     try:
@@ -39,7 +41,7 @@ def process_pending_transcriptions(self):
             metadata=metadata,
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 

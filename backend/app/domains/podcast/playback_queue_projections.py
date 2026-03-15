@@ -26,7 +26,8 @@ class PodcastPlaybackStateProjection(BaseModel):
 
     @classmethod
     def from_payload(
-        cls, payload: Mapping[str, Any],
+        cls,
+        payload: Mapping[str, Any],
     ) -> "PodcastPlaybackStateProjection":
         return cls.model_validate(payload)
 

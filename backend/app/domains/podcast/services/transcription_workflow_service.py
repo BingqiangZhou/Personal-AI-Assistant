@@ -54,16 +54,20 @@ class TranscriptionWorkflowService:
         db: AsyncSession,
         *,
         transcription_service_factory: Callable[
-            [AsyncSession], PodcastTranscriptionRuntimeService,
+            [AsyncSession],
+            PodcastTranscriptionRuntimeService,
         ] = PodcastTranscriptionRuntimeService,
         scheduler_factory: Callable[
-            [AsyncSession], PodcastTranscriptionScheduleService,
+            [AsyncSession],
+            PodcastTranscriptionScheduleService,
         ] = PodcastTranscriptionScheduleService,
         sync_service_factory: Callable[
-            [AsyncSession, int], PodcastSyncService,
+            [AsyncSession, int],
+            PodcastSyncService,
         ] = PodcastSyncService,
         state_manager_factory: Callable[
-            [], Awaitable[Any],
+            [],
+            Awaitable[Any],
         ] = get_transcription_state_manager,
         redis_factory: Callable[[], PodcastRedis] = get_shared_redis,
         claim_dispatched: Callable[[AsyncSession, int], Awaitable[bool]] | None = None,

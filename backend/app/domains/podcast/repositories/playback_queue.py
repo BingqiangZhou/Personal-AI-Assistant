@@ -126,7 +126,9 @@ class PodcastPlaybackQueueRepositoryMixin:
         return await self.get_effective_playback_rate(user_id, subscription_id)
 
     async def get_subscription_episodes_batch(
-        self, subscription_ids: list[int], limit_per_subscription: int = 3,
+        self,
+        subscription_ids: list[int],
+        limit_per_subscription: int = 3,
     ) -> dict[int, list[PodcastEpisode]]:
         if not subscription_ids:
             return {}
@@ -536,7 +538,9 @@ class PodcastPlaybackQueueRepositoryMixin:
         return await self.get_queue_with_items(user_id)
 
     async def reorder_items(
-        self, user_id: int, ordered_episode_ids: list[int],
+        self,
+        user_id: int,
+        ordered_episode_ids: list[int],
     ) -> PodcastQueue:
         started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)

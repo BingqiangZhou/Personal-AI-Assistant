@@ -5,7 +5,8 @@ from fastapi.testclient import TestClient
 
 
 def test_get_effective_playback_rate_success(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     mock_playback_service.get_effective_playback_rate.return_value = {
         "global_playback_rate": 1.25,
@@ -22,11 +23,14 @@ def test_get_effective_playback_rate_success(
     assert data["subscription_playback_rate"] == 2.0
     assert data["effective_playback_rate"] == 2.0
     assert data["source"] == "subscription"
-    mock_playback_service.get_effective_playback_rate.assert_awaited_once_with(subscription_id=3)
+    mock_playback_service.get_effective_playback_rate.assert_awaited_once_with(
+        subscription_id=3
+    )
 
 
 def test_apply_playback_rate_global_with_clear(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     mock_playback_service.apply_playback_rate_preference.return_value = {
         "global_playback_rate": 2.5,
@@ -56,7 +60,8 @@ def test_apply_playback_rate_global_with_clear(
 
 
 def test_apply_playback_rate_subscription_only(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     mock_playback_service.apply_playback_rate_preference.return_value = {
         "global_playback_rate": 1.0,
@@ -86,7 +91,8 @@ def test_apply_playback_rate_subscription_only(
 
 
 def test_apply_playback_rate_subscription_id_required_bilingual_error(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     mock_playback_service.apply_playback_rate_preference.side_effect = ValueError(
         "SUBSCRIPTION_ID_REQUIRED",
@@ -108,7 +114,8 @@ def test_apply_playback_rate_subscription_id_required_bilingual_error(
 
 
 def test_apply_playback_rate_validation_rejects_out_of_range(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     response_low = client.put(
         "/api/v1/podcasts/playback/rate/apply",
@@ -133,7 +140,8 @@ def test_apply_playback_rate_validation_rejects_out_of_range(
 
 
 def test_update_playback_progress_response_contains_rate_and_last_updated_at(
-    client: TestClient, mock_playback_service: AsyncMock,
+    client: TestClient,
+    mock_playback_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_playback_service.update_playback_progress.return_value = {

@@ -44,7 +44,9 @@ class SubscriptionService:
 
     # ── Schedule helpers ───────────────────────────────────────────────────
 
-    async def _get_default_schedule_settings(self) -> tuple[str, str | None, int | None]:
+    async def _get_default_schedule_settings(
+        self,
+    ) -> tuple[str, str | None, int | None]:
         from app.admin.models import SystemSettings
         from app.domains.subscription.models import UpdateFrequency
 
@@ -53,11 +55,15 @@ class SubscriptionService:
         update_day_of_week = None
 
         settings_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
+            select(SystemSettings).where(
+                SystemSettings.key == "rss.frequency_settings"
+            ),
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
-            update_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
+            update_frequency = setting.value.get(
+                "update_frequency", UpdateFrequency.HOURLY.value
+            )
             update_time = setting.value.get("update_time")
             update_day_of_week = setting.value.get("update_day_of_week")
 
@@ -117,7 +123,11 @@ class SubscriptionService:
             existing.updated_at = datetime.now(UTC)
             await self.db.commit()
             await self.db.refresh(existing)
-            return "updated", existing, f"Updated existing subscription: {existing.title}"
+            return (
+                "updated",
+                existing,
+                f"Updated existing subscription: {existing.title}",
+            )
 
         (
             update_frequency,
@@ -150,7 +160,9 @@ class SubscriptionService:
         await self.db.refresh(existing)
         return status, existing, message
 
-    def _add_subscription_to_opml(self, parent: Element, subscription: Subscription) -> None:
+    def _add_subscription_to_opml(
+        self, parent: Element, subscription: Subscription
+    ) -> None:
         outline = SubElement(parent, "outline")
         outline.set("text", subscription.title or "Untitled")
         outline.set("title", subscription.title or "Untitled")
@@ -176,14 +188,20 @@ class SubscriptionService:
         source_type: str | None = None,
     ) -> tuple:
         return await self.repo.get_user_subscriptions(
-            self.user_id, page, size, status, source_type,
+            self.user_id,
+            page,
+            size,
+            status,
+            source_type,
         )
 
     async def get_subscription(self, sub_id: int):
         sub = await self.repo.get_subscription_by_id(self.user_id, sub_id)
         if not sub:
             return None
-        count_query = select(func.count()).where(SubscriptionItem.subscription_id == sub_id)
+        count_query = select(func.count()).where(
+            SubscriptionItem.subscription_id == sub_id
+        )
         item_count = await self.db.scalar(count_query) or 0
         return sub, item_count
 
@@ -196,7 +214,12 @@ class SubscriptionService:
         bookmarked_only: bool = False,
     ) -> tuple:
         return await self.repo.get_subscription_items(
-            sub_id, self.user_id, page, size, unread_only, bookmarked_only,
+            sub_id,
+            self.user_id,
+            page,
+            size,
+            unread_only,
+            bookmarked_only,
         )
 
     async def get_all_items(
@@ -207,7 +230,11 @@ class SubscriptionService:
         bookmarked_only: bool = False,
     ) -> tuple:
         return await self.repo.get_all_user_items(
-            self.user_id, page, size, unread_only, bookmarked_only,
+            self.user_id,
+            page,
+            size,
+            unread_only,
+            bookmarked_only,
         )
 
     async def get_unread_count(self) -> int:
@@ -274,7 +301,10 @@ class SubscriptionService:
         item = await self.repo.mark_item_as_read(item_id, self.user_id)
         if not item:
             return None
-        return {"id": item.id, "read_at": item.read_at.isoformat() if item.read_at else None}
+        return {
+            "id": item.id,
+            "read_at": item.read_at.isoformat() if item.read_at else None,
+        }
 
     async def mark_item_as_unread(self, item_id: int) -> dict[str, Any] | None:
         item = await self.repo.mark_item_as_unread(item_id, self.user_id)
@@ -310,16 +340,21 @@ class SubscriptionService:
         parser = FeedParser(config)
 
         try:
-            result: FeedParseResult = await parser.parse_feed(sub.source_url, options=options)
+            result: FeedParseResult = await parser.parse_feed(
+                sub.source_url, options=options
+            )
             if not result.success and result.has_errors():
                 critical_errors = [
                     error
                     for error in result.errors
-                    if error.code in (ParseErrorCode.NETWORK_ERROR, ParseErrorCode.PARSE_ERROR)
+                    if error.code
+                    in (ParseErrorCode.NETWORK_ERROR, ParseErrorCode.PARSE_ERROR)
                 ]
                 if critical_errors:
                     error_msgs = "; ".join(error.message for error in critical_errors)
-                    await self.repo.update_fetch_status(sub.id, SubscriptionStatus.ERROR, error_msgs)
+                    await self.repo.update_fetch_status(
+                        sub.id, SubscriptionStatus.ERROR, error_msgs
+                    )
                     raise ValueError(f"Feed parsing failed: {error_msgs}")
 
             new_items = 0
@@ -342,7 +377,8 @@ class SubscriptionService:
                         },
                     )
                     if entry.published_at and (
-                        latest_published_at is None or entry.published_at > latest_published_at
+                        latest_published_at is None
+                        or entry.published_at > latest_published_at
                     ):
                         latest_published_at = entry.published_at
                 except Exception as exc:
@@ -361,7 +397,9 @@ class SubscriptionService:
             status = SubscriptionStatus.ACTIVE
             error_msg = None
             if result.has_warnings():
-                logger.warning("Warnings parsing feed %s: %s", sub.source_url, result.warnings)
+                logger.warning(
+                    "Warnings parsing feed %s: %s", sub.source_url, result.warnings
+                )
                 if result.warnings:
                     error_msg = "; ".join(result.warnings)
 
@@ -385,7 +423,9 @@ class SubscriptionService:
         except Exception as exc:
             await self.db.rollback()
             logger.error("Error fetching subscription %s: %s", sub_id, exc)
-            await self.repo.update_fetch_status(sub.id, SubscriptionStatus.ERROR, str(exc))
+            await self.repo.update_fetch_status(
+                sub.id, SubscriptionStatus.ERROR, str(exc)
+            )
             raise
         finally:
             await parser.close()
@@ -403,7 +443,9 @@ class SubscriptionService:
             try:
                 results.append(await self.fetch_subscription(sub.id))
             except Exception as exc:
-                results.append({"subscription_id": sub.id, "status": "error", "error": str(exc)})
+                results.append(
+                    {"subscription_id": sub.id, "status": "error", "error": str(exc)}
+                )
         return results
 
     # ── Category methods ───────────────────────────────────────────────────
@@ -434,14 +476,18 @@ class SubscriptionService:
         category = await self.repo.get_category_by_id(category_id, self.user_id)
         if not sub or not category:
             return False
-        return await self.repo.add_subscription_to_category(subscription_id, category_id)
+        return await self.repo.add_subscription_to_category(
+            subscription_id, category_id
+        )
 
     async def remove_subscription_from_category(
         self,
         subscription_id: int,
         category_id: int,
     ) -> bool:
-        return await self.repo.remove_subscription_from_category(subscription_id, category_id)
+        return await self.repo.remove_subscription_from_category(
+            subscription_id, category_id
+        )
 
     # ── Export methods ─────────────────────────────────────────────────────
 
@@ -461,7 +507,10 @@ class SubscriptionService:
         if user_id is not None:
             query = (
                 select(Subscription)
-                .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+                .join(
+                    UserSubscription,
+                    UserSubscription.subscription_id == Subscription.id,
+                )
                 .options(selectinload(Subscription.categories))
                 .where(
                     UserSubscription.user_id == user_id,

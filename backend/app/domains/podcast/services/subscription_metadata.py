@@ -22,7 +22,9 @@ def normalize_categories(raw_categories: list[Any]) -> list[dict[str, str]]:
 
 
 def extract_subscription_metadata(
-    subscription: Subscription, *, normalize_category_items: bool = True,
+    subscription: Subscription,
+    *,
+    normalize_category_items: bool = True,
 ) -> dict[str, Any]:
     """Extract normalized metadata fields with image URL fallback."""
     config = subscription.config or {}

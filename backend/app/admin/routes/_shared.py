@@ -1,10 +1,15 @@
 """Shared utilities for admin routes."""
 
-from datetime import UTC, datetime
-
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse, Response
 from fastapi.templating import Jinja2Templates
+
+from app.shared.time_utils import (
+    format_bytes,
+    format_number,
+    format_uptime,
+    to_local_timezone,
+)
 
 
 # ==================== Template Setup ====================
@@ -72,56 +77,3 @@ def require_payload(payload, *, detail: str):
     if payload is None:
         raise HTTPException(status_code=404, detail=detail)
     return payload
-
-
-# Custom filter to convert UTC datetime to local timezone (Asia/Shanghai, UTC+8)
-def to_local_timezone(dt: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
-    """Convert UTC datetime to Asia/Shanghai timezone and format it."""
-    if dt is None:
-        return "-"
-    # Ensure dt is timezone-aware (assume UTC if naive)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    # Convert to Asia/Shanghai timezone (UTC+8)
-    from zoneinfo import ZoneInfo
-    shanghai_tz = ZoneInfo("Asia/Shanghai")
-    local_dt = dt.astimezone(shanghai_tz)
-    return local_dt.strftime(format_str)
-
-
-# Custom filter for uptime formatting
-def format_uptime(seconds: float) -> str:
-    """Format uptime seconds to human readable string."""
-    if seconds is None:
-        return "-"
-    days = int(seconds // 86400)
-    hours = int((seconds % 86400) // 3600)
-    minutes = int((seconds % 3600) // 60)
-    if days > 0:
-        return f"{days}天 {hours}小时"
-    if hours > 0:
-        return f"{hours}小时 {minutes}分钟"
-    return f"{minutes}分钟"
-
-
-# Custom filter for bytes formatting
-def format_bytes(bytes_value: int) -> str:
-    """Format bytes to human readable string."""
-    if bytes_value is None:
-        return "-"
-    if bytes_value >= 1073741824:
-        return f"{bytes_value / 1073741824:.1f} GB"
-    if bytes_value >= 1048576:
-        return f"{bytes_value / 1048576:.1f} MB"
-    if bytes_value >= 1024:
-        return f"{bytes_value / 1024:.1f} KB"
-    return f"{bytes_value} B"
-
-
-# Custom filter for number formatting
-def format_number(value: int) -> str:
-    """Format number with thousand separators."""
-    if value is None:
-        return "-"
-    return f"{value:,}"
-

@@ -19,4 +19,6 @@ async def process_pending_transcriptions_handler(session) -> dict:
                 "status": "skipped_locked",
                 "reason": "pending_transcription_task_already_running",
             }
-        return await PodcastTaskOrchestrationService(session).process_pending_transcriptions()
+        return await PodcastTaskOrchestrationService(
+            session
+        ).process_pending_transcriptions()

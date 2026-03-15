@@ -117,7 +117,9 @@ class AuthenticationService:
 
         """
         # Get user by email or username
-        user = await self._get_user_by_email_or_username(email_or_username, email_or_username)
+        user = await self._get_user_by_email_or_username(
+            email_or_username, email_or_username
+        )
 
         if not user:
             return None
@@ -166,13 +168,15 @@ class AuthenticationService:
 
         # Get existing active sessions for this user
         existing_sessions = await self.db.execute(
-            select(UserSession).where(
+            select(UserSession)
+            .where(
                 and_(
                     UserSession.user_id == user.id,
                     UserSession.is_active,
                     UserSession.expires_at > datetime.now(UTC),
                 ),
-            ).order_by(UserSession.created_at),
+            )
+            .order_by(UserSession.created_at),
         )
         active_sessions = existing_sessions.scalars().all()
 
@@ -182,7 +186,9 @@ class AuthenticationService:
             for i in range(sessions_to_invalidate):
                 old_session = active_sessions[i]
                 old_session.is_active = False
-                logger.info(f"🔒 Invalidating old session {old_session.id} for user {user.id}")
+                logger.info(
+                    f"🔒 Invalidating old session {old_session.id} for user {user.id}"
+                )
 
         # Create tokens
         access_token = create_access_token(
@@ -276,9 +282,13 @@ class AuthenticationService:
         # Security: Rate limit token refresh (prevent abuse)
         # Allow max 10 refreshes per minute per session
         min_refresh_interval_seconds = 6  # ~10 refreshes per minute
-        time_since_last_activity = (datetime.now(UTC) - session.last_activity_at).total_seconds()
+        time_since_last_activity = (
+            datetime.now(UTC) - session.last_activity_at
+        ).total_seconds()
         if time_since_last_activity < min_refresh_interval_seconds:
-            logger.warning(f"⚠️ Rate limit: User {user_id} refreshing too frequently (interval: {time_since_last_activity}s)")
+            logger.warning(
+                f"⚠️ Rate limit: User {user_id} refreshing too frequently (interval: {time_since_last_activity}s)"
+            )
             # Still allow refresh, but log suspicious activity
 
         # Get user
@@ -398,7 +408,8 @@ class AuthenticationService:
                 or_(
                     UserSession.expires_at < datetime.now(UTC),
                     and_(
-                        UserSession.last_activity_at < datetime.now(UTC) - timedelta(days=30),
+                        UserSession.last_activity_at
+                        < datetime.now(UTC) - timedelta(days=30),
                         not UserSession.is_active,
                     ),
                 ),

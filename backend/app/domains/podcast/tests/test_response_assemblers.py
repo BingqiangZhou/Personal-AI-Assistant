@@ -374,10 +374,12 @@ def test_build_playback_and_queue_responses_from_projections():
 
 
 def test_build_pending_and_model_responses():
-    pending = build_pending_summaries_response([
-        {"id": 1, "title": "Episode 1"},
-        {"id": 2, "title": "Episode 2"},
-    ])
+    pending = build_pending_summaries_response(
+        [
+            {"id": 1, "title": "Episode 1"},
+            {"id": 2, "title": "Episode 2"},
+        ]
+    )
     models = build_summary_models_response(
         [
             {

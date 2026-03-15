@@ -15,5 +15,10 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
         ttl_seconds=3600,
     ) as acquired:
         if not acquired:
-            return {"status": "skipped_locked", "reason": "refresh_task_already_running"}
-        return await PodcastTaskOrchestrationService(session).refresh_all_podcast_feeds()
+            return {
+                "status": "skipped_locked",
+                "reason": "refresh_task_already_running",
+            }
+        return await PodcastTaskOrchestrationService(
+            session
+        ).refresh_all_podcast_feeds()

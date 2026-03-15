@@ -96,7 +96,9 @@ class TranscriptionStateCoordinator:
 
         episode_id = task.episode_id
         lock_acquired = await state_manager.acquire_task_lock(
-            episode_id, task_id, expire_seconds=3600,
+            episode_id,
+            task_id,
+            expire_seconds=3600,
         )
         if not lock_acquired:
             locked_task_id = await state_manager.is_episode_locked(episode_id)

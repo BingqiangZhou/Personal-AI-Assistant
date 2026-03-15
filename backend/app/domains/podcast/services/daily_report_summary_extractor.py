@@ -83,8 +83,7 @@ def _is_next_section_heading(line: str) -> bool:
     if _is_executive_summary_heading(line):
         return False
     return bool(
-        _MARKDOWN_HEADING_RE.match(text)
-        or _NUMBERED_HEADING_RE.match(text),
+        _MARKDOWN_HEADING_RE.match(text) or _NUMBERED_HEADING_RE.match(text),
     )
 
 

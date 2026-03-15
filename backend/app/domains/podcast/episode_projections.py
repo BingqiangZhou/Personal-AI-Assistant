@@ -65,11 +65,15 @@ class PodcastEpisodeDetailProjection(PodcastEpisodeProjection):
     related_episodes: list[dict[str, Any]] = Field(default_factory=list)
 
 
-EpisodeProjectionLike = PodcastEpisodeProjection | PodcastEpisodeDetailProjection | Mapping[str, Any]
+EpisodeProjectionLike = (
+    PodcastEpisodeProjection | PodcastEpisodeDetailProjection | Mapping[str, Any]
+)
 
 
 def episode_projection_to_payload(projection: EpisodeProjectionLike) -> dict[str, Any]:
     """Normalize projection-like inputs for response model construction."""
-    if isinstance(projection, PodcastEpisodeProjection | PodcastEpisodeDetailProjection):
+    if isinstance(
+        projection, PodcastEpisodeProjection | PodcastEpisodeDetailProjection
+    ):
         return projection.to_response_payload()
     return dict(projection)

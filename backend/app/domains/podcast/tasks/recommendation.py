@@ -12,7 +12,9 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 @celery_app.task
 def generate_podcast_recommendations():
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations"
+    task_name = (
+        "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations"
+    )
     queue_name = "ai_generation"
     try:
         result = run_async(_generate_podcast_recommendations())

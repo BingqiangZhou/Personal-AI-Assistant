@@ -74,7 +74,10 @@ class PodcastEpisodeService:
         self._feed_description_max_length = 320
 
     async def list_episodes(
-        self, filters: Any | None = None, page: int = 1, size: int = 20,
+        self,
+        filters: Any | None = None,
+        page: int = 1,
+        size: int = 20,
     ) -> tuple[list[PodcastEpisodeProjection], int]:
         """List podcast episodes with pagination.
 
@@ -116,13 +119,17 @@ class PodcastEpisodeService:
             )
 
         episodes, total = await self.repo.get_episodes_paginated(
-            self.user_id, page=page, size=size, filters=filters,
+            self.user_id,
+            page=page,
+            size=size,
+            filters=filters,
         )
 
         # Batch fetch playback states
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, episode_ids,
+            self.user_id,
+            episode_ids,
         )
 
         # Build response
@@ -202,7 +209,8 @@ class PodcastEpisodeService:
 
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, episode_ids,
+            self.user_id,
+            episode_ids,
         )
         results = self._build_episode_response(episodes, playback_states)
         results = [
@@ -295,7 +303,8 @@ class PodcastEpisodeService:
         return await self.repo.get_episode_by_id(episode_id, self.user_id)
 
     async def get_episode_with_summary(
-        self, episode_id: int,
+        self,
+        episode_id: int,
     ) -> PodcastEpisodeDetailProjection | None:
         """Get episode details with AI summary.
 
@@ -388,12 +397,16 @@ class PodcastEpisodeService:
         self,
         episode_id: int,
     ) -> TranscriptionTask | None:
-        stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
+        stmt = select(TranscriptionTask).where(
+            TranscriptionTask.episode_id == episode_id
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_recently_played(
-        self, user_id: int, limit: int = 5,
+        self,
+        user_id: int,
+        limit: int = 5,
     ) -> list[dict[str, Any]]:
         """Get recently played episodes.
 
@@ -408,7 +421,9 @@ class PodcastEpisodeService:
         return await self.repo.get_recently_played(user_id, limit)
 
     async def get_liked_episodes(
-        self, user_id: int, limit: int = 20,
+        self,
+        user_id: int,
+        limit: int = 20,
     ) -> list[PodcastEpisode]:
         """Get user's liked episodes (high completion rate).
 
@@ -423,7 +438,9 @@ class PodcastEpisodeService:
         return await self.repo.get_liked_episodes(user_id, limit)
 
     def _build_episode_response(
-        self, episodes: list[PodcastEpisode], playback_states: dict[int, Any],
+        self,
+        episodes: list[PodcastEpisode],
+        playback_states: dict[int, Any],
     ) -> list[PodcastEpisodeProjection]:
         """Build typed episode projections with playback states."""
         return build_episode_responses(
@@ -437,7 +454,10 @@ class PodcastEpisodeService:
         return self._rewrite_feed_item_description(item, hide_ai_summary=True)
 
     def _rewrite_feed_item_description(
-        self, item: PodcastEpisodeProjection | dict[str, Any], *, hide_ai_summary: bool,
+        self,
+        item: PodcastEpisodeProjection | dict[str, Any],
+        *,
+        hide_ai_summary: bool,
     ) -> PodcastEpisodeProjection:
         normalized = (
             item.to_response_payload()
@@ -454,7 +474,9 @@ class PodcastEpisodeService:
         return PodcastEpisodeProjection.from_payload(normalized)
 
     def _resolve_feed_description(
-        self, ai_summary: Any, fallback_description: Any,
+        self,
+        ai_summary: Any,
+        fallback_description: Any,
     ) -> str | None:
         summary_text = filter_thinking_content(ai_summary) if ai_summary else ""
         one_line_summary = extract_one_line_summary(summary_text)

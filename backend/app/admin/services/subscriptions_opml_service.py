@@ -27,7 +27,9 @@ class AdminSubscriptionsOpmlService:
     def __init__(
         self,
         db: AsyncSession,
-        task_orchestration_service_factory: type[PodcastTaskOrchestrationService] = PodcastTaskOrchestrationService,
+        task_orchestration_service_factory: type[
+            PodcastTaskOrchestrationService
+        ] = PodcastTaskOrchestrationService,
     ):
         self.db = db
         self._task_orchestration_service_factory = task_orchestration_service_factory
@@ -78,7 +80,8 @@ class AdminSubscriptionsOpmlService:
         for sub_data in subscriptions_data:
             try:
                 existing = await podcast_service.repo.get_subscription_by_url(
-                    user.id, sub_data.source_url,
+                    user.id,
+                    sub_data.source_url,
                 )
                 if existing:
                     skipped_count += 1

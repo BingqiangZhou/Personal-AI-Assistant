@@ -24,7 +24,8 @@ class SystemMonitorService:
         uname = platform.uname()
         boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=UTC)
         uptime_seconds = max(
-            0.0, (datetime.now(UTC) - boot_time).total_seconds(),
+            0.0,
+            (datetime.now(UTC) - boot_time).total_seconds(),
         )
         return {
             "hostname": uname.node,
@@ -139,4 +140,3 @@ class SystemMonitorService:
             "network": self.get_network_metrics(),
             "updated_at": datetime.now(UTC).isoformat(),
         }
-

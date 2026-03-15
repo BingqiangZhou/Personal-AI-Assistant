@@ -93,7 +93,9 @@ class AdminSubscriptionsCommandService:
         }
 
         setting_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
+            select(SystemSettings).where(
+                SystemSettings.key == "rss.frequency_settings"
+            ),
         )
         setting = setting_result.scalar_one_or_none()
         if setting:
@@ -255,7 +257,9 @@ class AdminSubscriptionsCommandService:
                 }, 400
 
             logger.info(
-                "RSS feed test successful for %s by user %s", source_url, username,
+                "RSS feed test successful for %s by user %s",
+                source_url,
+                username,
             )
             return {
                 "success": True,

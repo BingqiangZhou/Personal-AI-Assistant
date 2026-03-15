@@ -89,7 +89,12 @@ async def get_podcast_feed(
         settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED and cursor is None and page == 1
     )
     if should_use_first_page_keyset:
-        episodes, total, has_more, next_cursor_values = await service.list_feed_by_cursor(
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await service.list_feed_by_cursor(
             size=resolved_size,
         )
         next_page = None
@@ -106,7 +111,12 @@ async def get_podcast_feed(
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        episodes, total, has_more, next_cursor_values = await service.list_feed_by_cursor(
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await service.list_feed_by_cursor(
             size=resolved_size,
             cursor_published_at=decoded_cursor["ts"],
             cursor_episode_id=decoded_cursor["id"],
@@ -192,14 +202,21 @@ async def list_playback_history(
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        episodes, total, _, next_cursor_values = await service.list_playback_history_by_cursor(
+        (
+            episodes,
+            total,
+            _,
+            next_cursor_values,
+        ) = await service.list_playback_history_by_cursor(
             size=size,
             cursor_last_updated_at=decoded_cursor["ts"],
             cursor_episode_id=decoded_cursor["id"],
         )
         resolved_page = page
         next_cursor = (
-            encode_keyset_cursor("history", next_cursor_values[0], next_cursor_values[1])
+            encode_keyset_cursor(
+                "history", next_cursor_values[0], next_cursor_values[1]
+            )
             if next_cursor_values
             else None
         )
@@ -255,7 +272,9 @@ async def get_episode(
 ):
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:
-        raise HTTPException(status_code=404, detail="Episode not found or no permission")
+        raise HTTPException(
+            status_code=404, detail="Episode not found or no permission"
+        )
 
     return build_etag_response(
         request=request,

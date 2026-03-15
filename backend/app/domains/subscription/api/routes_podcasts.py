@@ -4,7 +4,6 @@ All endpoints here are mounted under:
     /api/v1/subscriptions/podcasts*
 """
 
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
 from app.core.etag import build_conditional_etag_response
@@ -83,7 +82,8 @@ async def add_subscription(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(
-            status_code=500, detail=f"Failed to add subscription: {exc}",
+            status_code=500,
+            detail=f"Failed to add subscription: {exc}",
         ) from exc
 
 
@@ -121,7 +121,9 @@ async def list_subscriptions(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
     category_id: int | None = Query(None, description="Category filter"),
-    status_filter: str | None = Query(None, alias="status", description="Status filter"),
+    status_filter: str | None = Query(
+        None, alias="status", description="Status filter"
+    ),
     service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     filters = PodcastSearchFilter(category_id=category_id, status=status_filter)
@@ -131,7 +133,9 @@ async def list_subscriptions(
         size=size,
     )
 
-    subscription_responses = [PodcastSubscriptionResponse(**item) for item in subscriptions]
+    subscription_responses = [
+        PodcastSubscriptionResponse(**item) for item in subscriptions
+    ]
     pages = (total + size - 1) // size
     response_data = PodcastSubscriptionListResponse(
         subscriptions=subscription_responses,
@@ -178,7 +182,9 @@ async def get_subscription(
 ):
     details = await service.get_subscription_details(subscription_id)
     if not details:
-        raise HTTPException(status_code=404, detail="Subscription not found or no permission")
+        raise HTTPException(
+            status_code=404, detail="Subscription not found or no permission"
+        )
 
     response_data = PodcastSubscriptionResponse(**details)
     return build_conditional_etag_response(
@@ -234,7 +240,9 @@ async def reparse_subscription(
     service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     try:
-        result = await service.reparse_subscription(subscription_id, force_all=force_all)
+        result = await service.reparse_subscription(
+            subscription_id, force_all=force_all
+        )
         return {"success": True, "result": result}
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -253,7 +261,9 @@ async def get_subscription_schedule(
 ):
     schedule = await service.get_subscription_schedule(subscription_id)
     if not schedule:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
     return build_schedule_config_response(schedule)
 
 
@@ -275,7 +285,9 @@ async def update_subscription_schedule(
         fetch_interval=schedule_data.fetch_interval,
     )
     if not schedule:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
     return build_schedule_config_response(schedule)
 
 

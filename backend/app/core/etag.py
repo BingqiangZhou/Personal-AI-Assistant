@@ -4,6 +4,7 @@ Provides functions for generating and validating ETag headers
 to enable 304 Not Modified responses.
 Also includes ETagResponse class for automatic ETag header generation.
 """
+
 import hashlib
 import json
 from typing import Any
@@ -70,7 +71,9 @@ def generate_etag(content: Any, weak: bool = False) -> str:
 
     """
     # Convert content to JSON string with consistent ordering
-    json_str = json.dumps(content, cls=CustomJSONEncoder, sort_keys=True, ensure_ascii=False)
+    json_str = json.dumps(
+        content, cls=CustomJSONEncoder, sort_keys=True, ensure_ascii=False
+    )
 
     # Generate SHA256 hash
     hash_value = hashlib.sha256(json_str.encode("utf-8")).hexdigest()
@@ -161,6 +164,7 @@ def matches_any_etag(current_etag: str, if_none_match_header: str | None) -> boo
 
 
 # ==================== ETag Response Classes ====================
+
 
 class ETagResponse(JSONResponse):
     """Custom JSONResponse with automatic ETag header generation.

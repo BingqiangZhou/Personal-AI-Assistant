@@ -18,7 +18,9 @@ class PodcastScheduleService:
         self.user_id = user_id
 
     def _build_schedule_projection(
-        self, subscription: Subscription, user_sub: UserSubscription,
+        self,
+        subscription: Subscription,
+        user_sub: UserSubscription,
     ) -> ScheduleConfigProjection:
         return ScheduleConfigProjection(
             id=subscription.id,
@@ -32,7 +34,8 @@ class PodcastScheduleService:
         )
 
     async def get_subscription_schedule(
-        self, subscription_id: int,
+        self,
+        subscription_id: int,
     ) -> ScheduleConfigProjection | None:
         """Get schedule settings for a specific subscription."""
         stmt = (
@@ -103,7 +106,9 @@ class PodcastScheduleService:
         )
         result = await self.db.execute(stmt)
         rows = list(result.all())
-        return [self._build_schedule_projection(sub, user_sub) for sub, user_sub in rows]
+        return [
+            self._build_schedule_projection(sub, user_sub) for sub, user_sub in rows
+        ]
 
     async def batch_update_subscription_schedules(
         self,

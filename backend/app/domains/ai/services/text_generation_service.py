@@ -136,7 +136,9 @@ class TextGenerationService:
                 )
             except Exception as exc:
                 last_error = exc
-                logger.error("Unexpected error with model %s: %s", model_config.name, exc)
+                logger.error(
+                    "Unexpected error with model %s: %s", model_config.name, exc
+                )
 
         logger.error(
             "All AI models failed for summary generation. Last error: %s",
@@ -168,7 +170,9 @@ class TextGenerationService:
 [关联问题]
 """
 
-    def _user_prompt(self, *, episode_title: str, content: str, content_type: str) -> str:
+    def _user_prompt(
+        self, *, episode_title: str, content: str, content_type: str
+    ) -> str:
         return f"""
 播客标题: {episode_title}
 内容类型: {content_type}

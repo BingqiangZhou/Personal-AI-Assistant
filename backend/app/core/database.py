@@ -35,7 +35,8 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 _engine_url: str | None = None
 _worker_runtime_lock = asyncio.Lock()
 _worker_runtimes: dict[
-    str, tuple[int | None, async_sessionmaker[AsyncSession], AsyncEngine],
+    str,
+    tuple[int | None, async_sessionmaker[AsyncSession], AsyncEngine],
 ] = {}
 
 
@@ -264,7 +265,9 @@ async def init_db(run_metadata_sync: bool = False) -> None:
                             "Database tables verified to exist (ignoring ENUM duplicate error)",
                         )
                     else:
-                        raise ValueError("Tables do not exist after ENUM error") from exc
+                        raise ValueError(
+                            "Tables do not exist after ENUM error"
+                        ) from exc
                 except Exception as verify_error:
                     logger.error(
                         "Could not verify tables after ENUM error: %s",

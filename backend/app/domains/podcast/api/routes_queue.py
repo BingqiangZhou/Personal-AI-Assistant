@@ -77,7 +77,7 @@ async def remove_queue_item(
 async def reorder_queue_items(
     request: PodcastQueueReorderRequest,
     service: PodcastQueueService = Depends(get_podcast_queue_service),
-    ):
+):
     try:
         return build_queue_response(await service.reorder_queue(request.episode_ids))
     except ValueError as exc:
@@ -102,7 +102,7 @@ async def reorder_queue_items(
 async def set_queue_current(
     request: PodcastQueueSetCurrentRequest,
     service: PodcastQueueService = Depends(get_podcast_queue_service),
-    ):
+):
     try:
         return build_queue_response(await service.set_current(request.episode_id))
     except ValueError as exc:
@@ -127,7 +127,7 @@ async def set_queue_current(
 async def activate_queue_episode(
     request: PodcastQueueActivateRequest,
     service: PodcastQueueService = Depends(get_podcast_queue_service),
-    ):
+):
     try:
         return build_queue_response(await service.activate_episode(request.episode_id))
     except ValueError as exc:

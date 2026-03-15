@@ -48,7 +48,9 @@ class AdminApiKeysService:
         offset = (page - 1) * per_page
 
         result = await self.db.execute(
-            query.order_by(AIModelConfig.priority.asc(), AIModelConfig.created_at.desc())
+            query.order_by(
+                AIModelConfig.priority.asc(), AIModelConfig.created_at.desc()
+            )
             .limit(per_page)
             .offset(offset),
         )
@@ -109,7 +111,10 @@ class AdminApiKeysService:
         try:
             model_type_enum = ModelType(model_type)
         except ValueError:
-            return {"success": False, "message": f"鏃犳晥鐨勬ā鍨嬬被鍨? {model_type}"}, 400
+            return {
+                "success": False,
+                "message": f"鏃犳晥鐨勬ā鍨嬬被鍨? {model_type}",
+            }, 400
 
         resolved_from_db = False
         effective_api_key = (api_key or "").strip()
@@ -209,7 +214,9 @@ class AdminApiKeysService:
     ) -> dict:
         encrypted_key = encrypt_data(api_key)
         if len(encrypted_key) < 44:
-            raise ValueError("API key encryption failed - invalid encrypted data length")
+            raise ValueError(
+                "API key encryption failed - invalid encrypted data length"
+            )
 
         new_config = AIModelConfig(
             name=name,
@@ -323,7 +330,9 @@ class AdminApiKeysService:
         if api_key is not None and api_key.strip():
             encrypted_key = encrypt_data(api_key)
             if len(encrypted_key) < 44:
-                raise ValueError("API key encryption failed - invalid encrypted data length")
+                raise ValueError(
+                    "API key encryption failed - invalid encrypted data length"
+                )
             model_config.api_key = encrypted_key
             model_config.api_key_encrypted = True
 
@@ -373,7 +382,9 @@ class AdminApiKeysService:
         )
         return {"success": True}
 
-    async def export_json(self, *, request, user, mode: str, export_password: str | None):
+    async def export_json(
+        self, *, request, user, mode: str, export_password: str | None
+    ):
         if mode not in ["plaintext", "encrypted"]:
             return {"success": False, "message": f"Invalid mode: {mode}"}, 400
 
@@ -434,8 +445,11 @@ class AdminApiKeysService:
                             encrypt_data_with_password(decrypted_key, export_password)
                         )
                     else:
-                        key_data["api_key_encrypted_export"] = encrypt_data_with_password(
-                            key.api_key, export_password,
+                        key_data["api_key_encrypted_export"] = (
+                            encrypt_data_with_password(
+                                key.api_key,
+                                export_password,
+                            )
                         )
                     key_data["api_key_encrypted_flag"] = True
                 except Exception:  # noqa: BLE001
@@ -567,7 +581,8 @@ class AdminApiKeysService:
                         continue
                     try:
                         api_key_plaintext = decrypt_data_with_password(
-                            encrypted_dict, import_password,
+                            encrypted_dict,
+                            import_password,
                         )
                     except ValueError as exc:
                         errors.append(
@@ -599,7 +614,9 @@ class AdminApiKeysService:
                         if api_key_plaintext:
                             encrypted_key = encrypt_data(api_key_plaintext)
                             if len(encrypted_key) < 44:
-                                errors.append(f"Row {idx + 1}: Failed to encrypt API key")
+                                errors.append(
+                                    f"Row {idx + 1}: Failed to encrypt API key"
+                                )
                                 error_count += 1
                                 continue
                             existing_key.api_key = encrypted_key

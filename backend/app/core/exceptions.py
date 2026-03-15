@@ -162,7 +162,9 @@ class FileProcessingError(BaseCustomError):
         super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
 
-async def custom_exception_handler(request: Request, exc: BaseCustomError) -> CustomJSONResponse:
+async def custom_exception_handler(
+    request: Request, exc: BaseCustomError
+) -> CustomJSONResponse:
     """Handle custom exceptions.
 
     处理自定义异常
@@ -189,7 +191,9 @@ async def custom_exception_handler(request: Request, exc: BaseCustomError) -> Cu
     return CustomJSONResponse(status_code=exc.status_code, content=content)
 
 
-async def http_exception_handler(request: Request, exc: HTTPException | StarletteHTTPException) -> CustomJSONResponse:
+async def http_exception_handler(
+    request: Request, exc: HTTPException | StarletteHTTPException
+) -> CustomJSONResponse:
     """Handle HTTP exceptions.
 
     处理 HTTP 异常
@@ -210,18 +214,22 @@ async def http_exception_handler(request: Request, exc: HTTPException | Starlett
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> CustomJSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> CustomJSONResponse:
     """Handle validation exceptions.
 
     处理验证异常
     """
     errors = []
     for error in exc.errors():
-        errors.append({
-            "field": " -> ".join(str(x) for x in error["loc"]),
-            "message": error["msg"],
-            "type": error["type"],
-        })
+        errors.append(
+            {
+                "field": " -> ".join(str(x) for x in error["loc"]),
+                "message": error["msg"],
+                "type": error["type"],
+            }
+        )
 
     logger.error(
         f"请求验证失败: {request.url.path} | "
@@ -240,7 +248,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-async def general_exception_handler(request: Request, exc: Exception) -> CustomJSONResponse:
+async def general_exception_handler(
+    request: Request, exc: Exception
+) -> CustomJSONResponse:
     """Handle general exceptions.
 
     处理通用异常
@@ -278,6 +288,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
 # Convenience functions for raising common exceptions
 # 抛出常见异常的便捷函数
 
+
 def raise_not_found(resource_type: str = "Resource", resource_id: Any = None) -> None:
     """Raise a NotFoundError with standardized message.
 
@@ -290,11 +301,16 @@ def raise_not_found(resource_type: str = "Resource", resource_id: Any = None) ->
 
     raise NotFoundError(
         message=message,
-        details={"resource_type": resource_type, "resource_id": str(resource_id) if resource_id is not None else None},
+        details={
+            "resource_type": resource_type,
+            "resource_id": str(resource_id) if resource_id is not None else None,
+        },
     )
 
 
-def raise_conflict(resource_type: str = "Resource", field: str = "field", value: Any = None) -> None:
+def raise_conflict(
+    resource_type: str = "Resource", field: str = "field", value: Any = None
+) -> None:
     """Raise a ConflictError with standardized message.
 
     抛出标准化的 ConflictError
@@ -306,7 +322,11 @@ def raise_conflict(resource_type: str = "Resource", field: str = "field", value:
 
     raise ConflictError(
         message=message,
-        details={"resource_type": resource_type, "field": field, "value": str(value) if value is not None else None},
+        details={
+            "resource_type": resource_type,
+            "field": field,
+            "value": str(value) if value is not None else None,
+        },
     )
 
 

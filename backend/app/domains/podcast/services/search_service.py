@@ -48,7 +48,11 @@ class PodcastSearchService:
         self.redis = redis or get_shared_redis()
 
     async def search_podcasts(
-        self, query: str, search_in: str = "all", page: int = 1, size: int = 20,
+        self,
+        query: str,
+        search_in: str = "all",
+        page: int = 1,
+        size: int = 20,
     ) -> tuple[list[PodcastEpisodeProjection], int]:
         """Search podcast content.
 
@@ -85,13 +89,18 @@ class PodcastSearchService:
         logger.info(f"Cache MISS for search: {query}, querying database")
 
         episodes, total = await self.repo.search_episodes(
-            self.user_id, query=query, search_in=search_in, page=page, size=size,
+            self.user_id,
+            query=query,
+            search_in=search_in,
+            page=page,
+            size=size,
         )
 
         # Batch fetch playback states
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(
-            self.user_id, episode_ids,
+            self.user_id,
+            episode_ids,
         )
 
         # Build response
@@ -158,7 +167,9 @@ class PodcastSearchService:
         return recommendations
 
     def _build_episode_response(
-        self, episodes: list[PodcastEpisode], playback_states: dict[int, Any],
+        self,
+        episodes: list[PodcastEpisode],
+        playback_states: dict[int, Any],
     ) -> list[PodcastEpisodeProjection]:
         """Build typed episode projections with playback states."""
         return build_episode_responses(

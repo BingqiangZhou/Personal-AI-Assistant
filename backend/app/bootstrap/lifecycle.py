@@ -55,7 +55,9 @@ async def application_lifespan(app: FastAPI):
                         settings.TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS,
                     )
         else:
-            logger.info("Skipped stale transcription reset; another worker owns startup lock")
+            logger.info(
+                "Skipped stale transcription reset; another worker owns startup lock"
+            )
     except Exception as exc:
         logger.error("Failed to reset stale tasks during startup: %s", exc)
 

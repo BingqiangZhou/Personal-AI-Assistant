@@ -1,5 +1,4 @@
-"""Email utilities for sending password reset emails and other notifications.
-"""
+"""Email utilities for sending password reset emails and other notifications."""
 
 import logging
 import secrets
@@ -47,7 +46,9 @@ class EmailService:
             reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
             # Format expiry time
-            expiry_str = expires_at.strftime("%Y-%m-%d %H:%M:%S UTC") if expires_at else "1 hour"
+            expiry_str = (
+                expires_at.strftime("%Y-%m-%d %H:%M:%S UTC") if expires_at else "1 hour"
+            )
 
             # Create email content
             subject = "Reset your Personal AI Assistant password"
@@ -144,11 +145,11 @@ class EmailService:
 
             # For development, just log the email content
             if settings.ENVIRONMENT == "development":
-                logger.info(f"{'='*50}")
+                logger.info(f"{'=' * 50}")
                 logger.info(f"TO: {email}")
                 logger.info(f"SUBJECT: {subject}")
                 logger.info(f"\n{text_body}")
-                logger.info(f"{'='*50}")
+                logger.info(f"{'=' * 50}")
                 return True
 
             # TODO: Implement actual email sending using SMTP
@@ -268,11 +269,11 @@ class EmailService:
 
             # For development, just log the email content
             if settings.ENVIRONMENT == "development":
-                logger.info(f"{'='*50}")
+                logger.info(f"{'=' * 50}")
                 logger.info(f"TO: {email}")
                 logger.info(f"SUBJECT: {subject}")
                 logger.info(f"\n{text_body}")
-                logger.info(f"{'='*50}")
+                logger.info(f"{'=' * 50}")
                 return True
 
             return True

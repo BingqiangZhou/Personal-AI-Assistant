@@ -90,7 +90,11 @@ async def list_subscriptions(
         source_type=source_type,
     )
     return assemble_paginated_subscription_response(
-        items, total, item_counts, pagination.page, pagination.size,
+        items,
+        total,
+        item_counts,
+        pagination.page,
+        pagination.size,
     )
 
 
@@ -104,7 +108,6 @@ async def create_subscription(
     If duplicate URL or title is found, returns the existing subscription with a message.
     """
     # Check for duplicate before creation
-
 
     # Duplicate detection is now handled at service layer with many-to-many support
     # No duplicate found - create subscription
@@ -367,7 +370,9 @@ async def add_subscription_to_category(
     """Add subscription to category."""
     success = await service.add_subscription_to_category(subscription_id, category_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Subscription or category not found")
+        raise HTTPException(
+            status_code=404, detail="Subscription or category not found"
+        )
     return {"message": "Subscription added to category"}
 
 
@@ -378,7 +383,9 @@ async def remove_subscription_from_category(
     service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Remove subscription from category."""
-    success = await service.remove_subscription_from_category(subscription_id, category_id)
+    success = await service.remove_subscription_from_category(
+        subscription_id, category_id
+    )
     if not success:
         raise HTTPException(status_code=404, detail="Mapping not found")
     return {"message": "Subscription removed from category"}

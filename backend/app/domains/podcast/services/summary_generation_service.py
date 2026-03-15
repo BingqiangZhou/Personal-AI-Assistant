@@ -1,5 +1,4 @@
-"""Database-backed AI summary generation services.
-"""
+"""Database-backed AI summary generation services."""
 
 import asyncio
 import json
@@ -140,7 +139,11 @@ class SummaryModelManager:
         )
 
     async def _call_ai_api_with_retry(
-        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any],
+        self,
+        model_config,
+        api_key: str,
+        prompt: str,
+        episode_info: dict[str, Any],
     ) -> tuple[str, float, int]:
         max_retries = 3
         base_delay = 2
@@ -157,7 +160,9 @@ class SummaryModelManager:
                 processing_time = time.time() - attempt_start
                 tokens_used = len(prompt.split()) + len(summary_content.split())
                 await self.ai_model_repo.increment_usage(
-                    model_config.id, success=True, tokens_used=tokens_used,
+                    model_config.id,
+                    success=True,
+                    tokens_used=tokens_used,
                 )
                 return summary_content, processing_time, tokens_used
             except (
@@ -206,7 +211,11 @@ class SummaryModelManager:
         raise Exception("Unexpected error in _call_ai_api_with_retry")
 
     async def _call_ai_api(
-        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any],
+        self,
+        model_config,
+        api_key: str,
+        prompt: str,
+        episode_info: dict[str, Any],
     ) -> str:
         del episode_info
         max_prompt_length = 100000
@@ -304,13 +313,15 @@ class SummaryModelManager:
 
             if "choices" not in result or not result["choices"]:
                 raise HTTPException(
-                    status_code=500, detail="Invalid response from AI API",
+                    status_code=500,
+                    detail="Invalid response from AI API",
                 )
 
             content = result["choices"][0].get("message", {}).get("content")
             if not content or not isinstance(content, str):
                 raise HTTPException(
-                    status_code=500, detail="AI API returned empty or invalid content",
+                    status_code=500,
+                    detail="AI API returned empty or invalid content",
                 )
 
             if _looks_like_html_error_page(content):
@@ -325,7 +336,9 @@ class SummaryModelManager:
             return filter_thinking_content(content).strip()
 
     def _build_default_prompt(
-        self, episode_info: dict[str, Any], transcript: str,
+        self,
+        episode_info: dict[str, Any],
+        transcript: str,
     ) -> str:
         """构建默认的摘要提示词"""
         title = episode_info.get("title", "未知标题")
@@ -461,7 +474,8 @@ class PodcastSummaryGenerationService:
     ) -> dict[str, Any]:
         lock_name = f"summary:{episode_id}"
         lock_acquired = await self.redis.acquire_lock(
-            lock_name, expire=self.summary_lock_ttl_seconds,
+            lock_name,
+            expire=self.summary_lock_ttl_seconds,
         )
         if not lock_acquired:
             return await self._wait_for_existing_summary(episode_id)
@@ -522,7 +536,9 @@ class PodcastSummaryGenerationService:
         )
 
     async def _update_episode_summary(
-        self, episode_id: int, summary_result: dict[str, Any],
+        self,
+        episode_id: int,
+        summary_result: dict[str, Any],
     ):
         from sqlalchemy import update
 

@@ -32,7 +32,9 @@ class ScheduleConfigProjection(BaseModel):
 ScheduleProjectionLike = ScheduleConfigProjection | Mapping[str, Any]
 
 
-def schedule_projection_to_payload(projection: ScheduleProjectionLike) -> dict[str, Any]:
+def schedule_projection_to_payload(
+    projection: ScheduleProjectionLike,
+) -> dict[str, Any]:
     if isinstance(projection, ScheduleConfigProjection):
         return projection.to_response_payload()
     return dict(projection)

@@ -15,8 +15,12 @@ class AdminAuditLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     username = Column(String(100), nullable=False)
-    action = Column(String(100), nullable=False, index=True)  # create, update, delete, toggle, etc.
-    resource_type = Column(String(50), nullable=False, index=True)  # apikey, subscription, user, etc.
+    action = Column(
+        String(100), nullable=False, index=True
+    )  # create, update, delete, toggle, etc.
+    resource_type = Column(
+        String(50), nullable=False, index=True
+    )  # apikey, subscription, user, etc.
     resource_id = Column(Integer, nullable=True)
     resource_name = Column(String(255), nullable=True)
     details = Column(JSON, nullable=True)  # Additional details about the operation
@@ -24,7 +28,9 @@ class AdminAuditLog(Base):
     user_agent = Column(Text, nullable=True)
     status = Column(String(20), nullable=False, default="success")  # success, failed
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )
 
     # Indexes for efficient querying
     __table_args__ = (
@@ -40,13 +46,27 @@ class SystemSettings(Base):
     __tablename__ = "system_settings"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String(100), unique=True, nullable=False, index=True, comment="Setting key")
+    key = Column(
+        String(100), unique=True, nullable=False, index=True, comment="Setting key"
+    )
     value = Column(JSON, nullable=True, comment="Setting value (JSON)")
     description = Column(String(500), nullable=True, comment="Setting description")
-    category = Column(String(50), nullable=False, default="general", comment="Setting category: general, audio, ai, etc.")
+    category = Column(
+        String(50),
+        nullable=False,
+        default="general",
+        comment="Setting category: general, audio, ai, etc.",
+    )
 
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="Created at")
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), comment="Updated at")
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="Created at"
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        comment="Updated at",
+    )
 
     def __repr__(self):
         return f"<SystemSettings(id={self.id}, key={self.key})>"
@@ -61,7 +81,12 @@ class BackgroundTaskRun(Base):
     task_name = Column(String(255), nullable=False, index=True)
     queue_name = Column(String(64), nullable=False, index=True)
     status = Column(String(20), nullable=False, index=True)  # started, success, failed
-    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), index=True)
+    started_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        index=True,
+    )
     finished_at = Column(DateTime(timezone=True), nullable=True)
     duration_ms = Column(Integer, nullable=True)
     error_message = Column(Text, nullable=True)

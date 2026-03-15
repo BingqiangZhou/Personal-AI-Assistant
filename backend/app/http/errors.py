@@ -16,6 +16,78 @@ def bilingual_http_exception(
     )
 
 
+def raise_not_found(entity_type: str, entity_id: int | str) -> None:
+    """Raise standardized 404 Not Found error.
+
+    Args:
+        entity_type: Type of entity (e.g., "User", "Subscription")
+        entity_id: ID of the entity that was not found
+
+    Raises:
+        HTTPException: 404 error with bilingual message
+    """
+    raise bilingual_http_exception(
+        message_en=f"{entity_type} not found",
+        message_zh=f"{entity_type}未找到",
+        status_code=status.HTTP_404_NOT_FOUND,
+    )
+
+
+def raise_validation_error(field_name: str, reason: str) -> None:
+    """Raise standardized 400 Bad Request validation error.
+
+    Args:
+        field_name: Name of the invalid field
+        reason: Reason for validation failure
+
+    Raises:
+        HTTPException: 400 error with bilingual message
+    """
+    raise bilingual_http_exception(
+        message_en=f"Invalid {field_name}: {reason}",
+        message_zh=f"{field_name}无效：{reason}",
+        status_code=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+def raise_unauthorized(
+    message_en: str = "Unauthorized", message_zh: str = "未授权"
+) -> None:
+    """Raise standardized 401 Unauthorized error.
+
+    Args:
+        message_en: English error message
+        message_zh: Chinese error message
+
+    Raises:
+        HTTPException: 401 error with bilingual message
+    """
+    raise bilingual_http_exception(
+        message_en=message_en,
+        message_zh=message_zh,
+        status_code=status.HTTP_401_UNAUTHORIZED,
+    )
+
+
+def raise_forbidden(
+    message_en: str = "Forbidden", message_zh: str = "禁止访问"
+) -> None:
+    """Raise standardized 403 Forbidden error.
+
+    Args:
+        message_en: English error message
+        message_zh: Chinese error message
+
+    Raises:
+        HTTPException: 403 error with bilingual message
+    """
+    raise bilingual_http_exception(
+        message_en=message_en,
+        message_zh=message_zh,
+        status_code=status.HTTP_403_FORBIDDEN,
+    )
+
+
 def register_admin_http_exception_handler(app: FastAPI) -> None:
     """Register admin-specific redirects and HTML error rendering."""
 

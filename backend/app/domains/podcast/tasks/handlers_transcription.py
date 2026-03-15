@@ -13,7 +13,9 @@ async def process_audio_transcription_handler(
     config_db_id: int | None = None,
 ) -> dict:
     """Execute transcription with lock + redis state updates."""
-    return await PodcastTaskOrchestrationService(session).process_audio_transcription_task(
+    return await PodcastTaskOrchestrationService(
+        session
+    ).process_audio_transcription_task(
         task_id=task_id,
         config_db_id=config_db_id,
     )

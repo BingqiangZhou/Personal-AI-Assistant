@@ -226,4 +226,3 @@ def build_observability_snapshot(
         "checks": checks,
         "alerts": alerts,
     }
-

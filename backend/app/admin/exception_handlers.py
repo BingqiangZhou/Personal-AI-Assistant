@@ -1,4 +1,5 @@
 """Exception handlers for Admin Panel."""
+
 import logging
 from typing import Any
 
@@ -72,11 +73,13 @@ async def csrf_exception_handler(request: Request, exc: CSRFException) -> Respon
 
     # Add page-specific context
     if current_template == "setup.html":
-        context.update({
-            "username": "",
-            "email": "",
-            "account_name": "",
-        })
+        context.update(
+            {
+                "username": "",
+                "email": "",
+                "account_name": "",
+            }
+        )
 
     # Render the template with error message
     response = templates.TemplateResponse(current_template, context)

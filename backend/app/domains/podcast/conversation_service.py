@@ -97,14 +97,11 @@ class ConversationService:
     ) -> dict[str, Any]:
         """创建新对话会话"""
         # Count existing sessions for auto-naming
-        count_stmt = (
-            select(func.count(ConversationSession.id))
-            .where(
-                and_(
-                    ConversationSession.episode_id == episode_id,
-                    ConversationSession.user_id == user_id,
-                ),
-            )
+        count_stmt = select(func.count(ConversationSession.id)).where(
+            and_(
+                ConversationSession.episode_id == episode_id,
+                ConversationSession.user_id == user_id,
+            ),
         )
         count_result = await self.db.execute(count_stmt)
         existing_count = count_result.scalar() or 0
@@ -118,7 +115,9 @@ class ConversationService:
         await self.db.commit()
         await self.db.refresh(session)
 
-        logger.info(f"Created session {session.id} for episode {episode_id}, user {user_id}")
+        logger.info(
+            f"Created session {session.id} for episode {episode_id}, user {user_id}"
+        )
         return {
             "id": session.id,
             "episode_id": session.episode_id,
@@ -211,7 +210,9 @@ class ConversationService:
         stmt = (
             select(PodcastConversation)
             .where(and_(*conditions))
-            .order_by(PodcastConversation.conversation_turn, PodcastConversation.created_at)
+            .order_by(
+                PodcastConversation.conversation_turn, PodcastConversation.created_at
+            )
             .limit(limit)
         )
         result = await self.db.execute(stmt)
@@ -246,14 +247,18 @@ class ConversationService:
             raise ValidationError(f"Episode {episode_id} not found")
 
         if not episode.ai_summary:
-            raise ValidationError("Cannot start conversation: AI summary not available for this episode")
+            raise ValidationError(
+                "Cannot start conversation: AI summary not available for this episode"
+            )
 
         # Ensure session exists
         if session_id is None:
             session_id = await self.get_or_create_default_session(episode_id, user_id)
 
         # 获取对话历史（按 session 过滤）
-        conversation_history = await self.get_conversation_history(episode_id, user_id, session_id=session_id)
+        conversation_history = await self.get_conversation_history(
+            episode_id, user_id, session_id=session_id
+        )
 
         # 确定当前对话轮次
         current_turn = len(conversation_history)
@@ -272,7 +277,9 @@ class ConversationService:
         await self.db.flush()  # 获取ID
 
         # 构建对话上下文
-        messages = self._build_conversation_context(episode, conversation_history, user_message)
+        messages = self._build_conversation_context(
+            episode, conversation_history, user_message
+        )
 
         # 调用AI API
         start_time = time.time()
@@ -296,7 +303,9 @@ class ConversationService:
         await self.db.commit()
         await self.db.refresh(assistant_conv)
 
-        logger.info(f"Conversation saved for episode {episode_id}, user {user_id}, session {session_id}, turn {current_turn + 1}")
+        logger.info(
+            f"Conversation saved for episode {episode_id}, user {user_id}, session {session_id}, turn {current_turn + 1}"
+        )
 
         return {
             "id": assistant_conv.id,
@@ -321,7 +330,7 @@ class ConversationService:
 
 ## 播客信息
 **标题**: {episode.title}
-**描述**: {episode.description or '无'}
+**描述**: {episode.description or "无"}
 
 ## AI总结内容
 {episode.ai_summary}
@@ -339,16 +348,20 @@ class ConversationService:
 
         # 添加历史对话
         for conv in conversation_history:
-            messages.append({
-                "role": conv["role"],
-                "content": conv["content"],
-            })
+            messages.append(
+                {
+                    "role": conv["role"],
+                    "content": conv["content"],
+                }
+            )
 
         # 添加当前用户消息
-        messages.append({
-            "role": "user",
-            "content": user_message,
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": user_message,
+            }
+        )
 
         return messages
 
@@ -363,12 +376,20 @@ class ConversationService:
         # 获取活跃的文本生成模型
         if model_name:
             model = await self.ai_model_repo.get_by_name(model_name)
-            if not model or not model.is_active or model.model_type != ModelType.TEXT_GENERATION:
-                raise ValidationError(f"Chat model '{model_name}' not found or not active")
+            if (
+                not model
+                or not model.is_active
+                or model.model_type != ModelType.TEXT_GENERATION
+            ):
+                raise ValidationError(
+                    f"Chat model '{model_name}' not found or not active"
+                )
             models_to_try = [model]
         else:
             # 按优先级获取所有活跃的文本生成模型
-            models_to_try = await self.ai_model_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+            models_to_try = await self.ai_model_repo.get_active_models_by_priority(
+                ModelType.TEXT_GENERATION
+            )
             if not models_to_try:
                 raise ValidationError("No active chat model found")
 
@@ -459,6 +480,7 @@ class ConversationService:
                             # Filter out <thinking> tags and content
                             # 过滤掉 <thinking> 标签及其内容
                             from app.core.utils import filter_thinking_content
+
                             original_length = len(content)
                             cleaned_content = filter_thinking_content(content)
 
@@ -548,6 +570,7 @@ class ConversationService:
         # 对于系统预设模型，从环境变量获取
         if model_config.is_system:
             from app.core.config import settings
+
             if model_config.provider == "openai":
                 return getattr(settings, "OPENAI_API_KEY", "")
             if model_config.provider == "siliconflow":
@@ -555,13 +578,18 @@ class ConversationService:
 
         # 对于用户自定义模型，使用Fernet解密
         from app.core.security import decrypt_data
+
         try:
             decrypted = decrypt_data(model_config.api_key)
             logger.info(f"Successfully decrypted API key for model {model_config.name}")
             return decrypted
         except Exception as e:
-            logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
-            raise ValidationError(f"Failed to decrypt API key for model {model_config.name}") from e
+            logger.error(
+                f"Failed to decrypt API key for model {model_config.name}: {e}"
+            )
+            raise ValidationError(
+                f"Failed to decrypt API key for model {model_config.name}"
+            ) from e
 
     async def clear_conversation_history(
         self,
@@ -582,6 +610,8 @@ class ConversationService:
         count = int(result.rowcount or 0)
 
         await self.db.commit()
-        logger.info(f"Cleared {count} conversation messages for episode {episode_id}, user {user_id}, session {session_id}")
+        logger.info(
+            f"Cleared {count} conversation messages for episode {episode_id}, user {user_id}, session {session_id}"
+        )
 
         return count

@@ -1,5 +1,4 @@
-"""AI模型配置的Pydantic模式定义
-"""
+"""AI模型配置的Pydantic模式定义"""
 
 from datetime import datetime
 from typing import Any
@@ -29,7 +28,9 @@ class AIModelConfigBase(BaseModel):
     rate_limit_per_minute: int = Field(default=60, gt=0, description="每分钟请求限制")
     cost_per_input_token: str | None = Field(None, description="每输入令牌成本")
     cost_per_output_token: str | None = Field(None, description="每输出令牌成本")
-    extra_config: dict[str, Any] | None = Field(default_factory=dict, description="额外配置参数")
+    extra_config: dict[str, Any] | None = Field(
+        default_factory=dict, description="额外配置参数"
+    )
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
 
@@ -61,7 +62,6 @@ class AIModelConfigBase(BaseModel):
 # 请求模式
 class AIModelConfigCreate(AIModelConfigBase):
     """创建AI模型配置请求模式"""
-
 
 
 class AIModelConfigUpdate(BaseModel):

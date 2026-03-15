@@ -1,15 +1,12 @@
 """Test fixtures for subscription domain tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
-from typing import Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-from app.main import app
 
 # Import all models to ensure proper registration with SQLAlchemy
 # This is required for tests to work with relationships
@@ -19,6 +16,7 @@ from app.domains.subscription.models import (
     SubscriptionStatus,
 )
 from app.domains.user.models import User, UserStatus
+from app.main import app
 
 
 # Use in-memory SQLite for testing

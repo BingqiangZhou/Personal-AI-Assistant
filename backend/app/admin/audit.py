@@ -1,4 +1,5 @@
 """Admin audit log utilities."""
+
 import logging
 from typing import Any
 

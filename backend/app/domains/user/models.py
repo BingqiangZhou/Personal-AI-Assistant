@@ -53,12 +53,22 @@ class User(Base):
     is_2fa_enabled = Column(Boolean, default=False)
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     # Relationships
-    user_subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
-    subscriptions = relationship("Subscription", secondary="user_subscriptions", viewonly=True)
-    subscription_categories = relationship("SubscriptionCategory", back_populates="user", cascade="all, delete-orphan")
+    user_subscriptions = relationship(
+        "UserSubscription", back_populates="user", cascade="all, delete-orphan"
+    )
+    subscriptions = relationship(
+        "Subscription", secondary="user_subscriptions", viewonly=True
+    )
+    subscription_categories = relationship(
+        "SubscriptionCategory", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Indexes
     __table_args__ = (
@@ -89,7 +99,9 @@ class UserSession(Base):
     ip_address = Column(String(45), nullable=True)  # IPv6 compatible
     user_agent = Column(Text, nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=False)
-    last_activity_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    last_activity_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
@@ -111,7 +123,11 @@ class PasswordReset(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_used = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     # Indexes
     __table_args__ = (

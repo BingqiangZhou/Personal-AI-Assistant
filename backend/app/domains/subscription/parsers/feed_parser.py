@@ -47,7 +47,9 @@ def strip_html_tags(text: str) -> str:
         return ""
 
     # Remove script and style content first
-    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(
+        r"<(script|style)[^>]*>.*?</\1>", "", text, flags=re.DOTALL | re.IGNORECASE
+    )
 
     # Strip tags
     text = _HTML_TAG_PATTERN.sub(" ", text)
@@ -210,13 +212,17 @@ class FeedParser:
 
             # Store raw feed for debugging if configured
             if self.config.log_raw_feed or include_raw:
-                result.raw_feed = dict(feed) if hasattr(feed, "__dict__") else {"feed": feed}
+                result.raw_feed = (
+                    dict(feed) if hasattr(feed, "__dict__") else {"feed": feed}
+                )
 
             # Parse feed metadata
             result.feed_info = self._parse_feed_info(feed, url)
 
             # Parse entries
-            entries_to_parse = feed.entries[:max_entries] if hasattr(feed, "entries") else []
+            entries_to_parse = (
+                feed.entries[:max_entries] if hasattr(feed, "entries") else []
+            )
             result.total_entries = len(feed.entries) if hasattr(feed, "entries") else 0
 
             for entry in entries_to_parse:
@@ -332,7 +338,9 @@ class FeedParser:
 
         # Debug logging for troubleshooting
         if not icon_url:
-            image_keys = [k for k in feed_data if "image" in k.lower() or "icon" in k.lower()]
+            image_keys = [
+                k for k in feed_data if "image" in k.lower() or "icon" in k.lower()
+            ]
             logger.debug(f"No image_url found. Image-related keys: {image_keys}")
 
         # Extract language
@@ -345,7 +353,8 @@ class FeedParser:
 
         # Store additional metadata
         raw_metadata = {
-            k: v for k, v in feed_data.items()
+            k: v
+            for k, v in feed_data.items()
             if k not in {"title", "description", "link", "author", "icon", "language"}
         }
 
@@ -403,7 +412,9 @@ class FeedParser:
         # Raw metadata
         raw_metadata = {}
         if include_raw:
-            raw_metadata = dict(entry) if hasattr(entry, "__dict__") else {"entry": entry}
+            raw_metadata = (
+                dict(entry) if hasattr(entry, "__dict__") else {"entry": entry}
+            )
 
         return FeedEntry(
             id=entry_id,
@@ -439,7 +450,7 @@ class FeedParser:
                 if isinstance(value, str) and value.strip():
                     # Limit content length
                     if len(value) > self.config.max_content_length:
-                        value = value[:self.config.max_content_length] + "..."
+                        value = value[: self.config.max_content_length] + "..."
 
                     # Strip HTML if configured
                     if strip_html:
@@ -530,6 +541,7 @@ class FeedParser:
         if isinstance(date_value, str):
             # Common date formats - could add more
             from email.utils import parsedate_to_datetime
+
             try:
                 return parsedate_to_datetime(date_value)
             except Exception:

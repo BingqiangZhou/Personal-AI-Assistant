@@ -43,7 +43,8 @@ def remove_timezone(dt: datetime | None) -> datetime | None:
 
 
 def ensure_timezone_aware(
-    dt: datetime | None, tz: timezone = UTC,
+    dt: datetime | None,
+    tz: timezone = UTC,
 ) -> datetime | None:
     """Ensure a datetime object is timezone-aware.
 
@@ -101,7 +102,8 @@ def parse_isoformat(dt_str: str | None) -> datetime | None:
 
 
 def format_datetime(
-    dt: datetime | None, format_str: str = "%Y-%m-%d %H:%M:%S",
+    dt: datetime | None,
+    format_str: str = "%Y-%m-%d %H:%M:%S",
 ) -> str | None:
     """Format datetime to string using specified format.
 

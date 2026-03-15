@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 async def test_transcription_model(
-    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None,
+    model: AIModelConfig,
+    api_key: str,
+    test_data: dict[str, Any] | None = None,
 ) -> str:
     """测试转录模型
     使用实际的音频文件进行测试，并与期望文本对比
@@ -32,7 +34,9 @@ async def test_transcription_model(
     # 获取测试资源路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
     test_resources_dir = os.path.join(
-        os.path.dirname(os.path.dirname(current_dir)), "core", "test_resources",
+        os.path.dirname(os.path.dirname(current_dir)),
+        "core",
+        "test_resources",
     )
 
     example_txt_path = os.path.join(test_resources_dir, "example.txt")
@@ -75,7 +79,9 @@ async def test_transcription_model(
                     api_endpoint = model.api_url
 
                 async with session.post(
-                    api_endpoint, headers=headers, data=data,
+                    api_endpoint,
+                    headers=headers,
+                    data=data,
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
@@ -101,7 +107,9 @@ async def test_transcription_model(
 
                     # 计算相似度
                     similarity = SequenceMatcher(
-                        None, expected_clean, transcribed_clean,
+                        None,
+                        expected_clean,
+                        transcribed_clean,
                     ).ratio()
                     similarity_percent = similarity * 100
 
@@ -125,7 +133,9 @@ async def test_transcription_model(
 
 
 async def test_text_generation_model(
-    model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None = None,
+    model: AIModelConfig,
+    api_key: str,
+    test_data: dict[str, Any] | None = None,
 ) -> str:
     """测试文本生成模型"""
     # 修复：如果 test_data 为 None，使用空字典
@@ -153,7 +163,9 @@ async def test_text_generation_model(
     async with (
         aiohttp.ClientSession(timeout=timeout) as session,
         session.post(
-            f"{model.api_url}/chat/completions", headers=headers, json=data,
+            f"{model.api_url}/chat/completions",
+            headers=headers,
+            json=data,
         ) as response,
     ):
         if response.status != 200:
@@ -176,7 +188,10 @@ async def test_text_generation_model(
 
 
 async def validate_api_key(
-    api_url: str, api_key: str, model_id: str | None, model_type: ModelType,
+    api_url: str,
+    api_key: str,
+    model_id: str | None,
+    model_type: ModelType,
 ) -> APIKeyValidationResponse:
     """验证API密钥"""
     start_time = time.time()
@@ -217,7 +232,9 @@ async def validate_api_key(
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 try:
                     async with session.post(
-                        target_url, headers=headers, json=data,
+                        target_url,
+                        headers=headers,
+                        json=data,
                     ) as response:
                         logger.info(f"First request status: {response.status}")
                         if response.status == 200:
@@ -242,7 +259,9 @@ async def validate_api_key(
                                 "Content-Type": "application/json",
                             }
                             async with session.post(
-                                target_url, headers=headers, json=data,
+                                target_url,
+                                headers=headers,
+                                json=data,
                             ) as response2:
                                 logger.info(
                                     f"Second request status: {response2.status}",
@@ -295,13 +314,15 @@ async def validate_api_key(
                         f"Payload error: Invalid response data. Details: {e!s}"
                     )
                     logger.error(
-                        f"ClientPayloadError to {target_url}: {e!s}", exc_info=True,
+                        f"ClientPayloadError to {target_url}: {e!s}",
+                        exc_info=True,
                     )
                 except TimeoutError:
                     # Timeout errors
                     error_message = f"Timeout error: Request to {target_url} timed out after 600 seconds"
                     logger.error(
-                        f"TimeoutError connecting to {target_url}", exc_info=True,
+                        f"TimeoutError connecting to {target_url}",
+                        exc_info=True,
                     )
                 except aiohttp.ClientError as e:
                     # Other aiohttp client errors

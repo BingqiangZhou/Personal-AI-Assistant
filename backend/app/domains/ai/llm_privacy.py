@@ -43,13 +43,15 @@ class _BatchLogStats:
     """批量日志统计器 - 使用时间窗口聚合相似日志"""
 
     def __init__(self):
-        self._stats: dict[str, dict] = defaultdict(lambda: {
-            "count": 0,
-            "pii_types": set(),
-            "first_time": None,
-            "last_time": None,
-            "has_started": False,  # 标记是否已开始（用于首次日志）
-        })
+        self._stats: dict[str, dict] = defaultdict(
+            lambda: {
+                "count": 0,
+                "pii_types": set(),
+                "first_time": None,
+                "last_time": None,
+                "has_started": False,  # 标记是否已开始（用于首次日志）
+            }
+        )
         self._window_seconds = 30  # 时间窗口：30秒内相同日志合并
 
     def add(self, user_id: int, pii_types: list[str], mode: str, timestamp: str):
@@ -97,16 +99,21 @@ class _BatchLogStats:
         result = dict(self._stats[key])
         result["pii_types"] = list(result["pii_types"])
         # 重置统计
-        self._stats[key] = {"count": 0, "pii_types": set(), "first_time": None, "last_time": None}
+        self._stats[key] = {
+            "count": 0,
+            "pii_types": set(),
+            "first_time": None,
+            "last_time": None,
+        }
         return result
+
 
 # 全局实例
 _batch_logger = _BatchLogStats()
 
 
 class ContentSanitizer:
-    """Advanced content sanitization with regex patterns for PII detection
-    """
+    """Advanced content sanitization with regex patterns for PII detection"""
 
     # Detection patterns
     PII_PATTERNS = {
@@ -116,19 +123,28 @@ class ContentSanitizer:
         "credit_card": r"\b(?:\d{4}[-\s]?){3}\d{4}\b",
         "url": r"https?://[^\s]+",
         "ip_address": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
-
         # Names (simplified - higher false positive rate)
         "name": r"\b(?:Dr\.|Mr\.|Mrs\.|Ms\.)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b",
-
         # Address-like patterns
         "street_address": r"\b\d+\s+[A-Za-z]+\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)\b",
     }
 
     # Patterns that might indicate sensitive business/personal info
     SENSITIVE_KEYWORDS = {
-        "password", "secret", "api_key", "token", "private_key",
-        "ssn", "social_security", "credit_card", "cvv", "expiry",
-        "classified", "confidence", "internal", "proprietary",
+        "password",
+        "secret",
+        "api_key",
+        "token",
+        "private_key",
+        "ssn",
+        "social_security",
+        "credit_card",
+        "cvv",
+        "expiry",
+        "classified",
+        "confidence",
+        "internal",
+        "proprietary",
     }
 
     def __init__(self, mode: str = "standard"):
@@ -141,7 +157,9 @@ class ContentSanitizer:
         self.mode = mode
         self.audit_log: list[PrivacyAuditEntry] = []
 
-    def sanitize(self, text: str, user_id: int, context: str = "rss_description") -> str:
+    def sanitize(
+        self, text: str, user_id: int, context: str = "rss_description"
+    ) -> str:
         """Main sanitization method
 
         Args:
@@ -164,12 +182,16 @@ class ContentSanitizer:
         # Step 1: Pattern-based PII removal
         for pii_type, pattern in self.PII_PATTERNS.items():
             if pii_type == "email" and self.mode in ["standard", "strict"]:
-                sanitized = re.sub(pattern, "[EMAIL_REDACTED]", sanitized, flags=re.IGNORECASE)
+                sanitized = re.sub(
+                    pattern, "[EMAIL_REDACTED]", sanitized, flags=re.IGNORECASE
+                )
                 if "[EMAIL_REDACTED]" in sanitized:
                     detected_types.add("email")
 
             elif pii_type == "phone" and self.mode in ["standard", "strict"]:
-                sanitized = re.sub(pattern, "[PHONE_REDACTED]", sanitized, flags=re.IGNORECASE)
+                sanitized = re.sub(
+                    pattern, "[PHONE_REDACTED]", sanitized, flags=re.IGNORECASE
+                )
                 if "[PHONE_REDACTED]" in sanitized:
                     detected_types.add("phone")
 
@@ -189,7 +211,9 @@ class ContentSanitizer:
             for keyword in self.SENSITIVE_KEYWORDS:
                 # Whole word matching
                 pattern = r"\b" + re.escape(keyword) + r"\b"
-                sanitized = re.sub(pattern, "[SENSITIVE]", sanitized, flags=re.IGNORECASE)
+                sanitized = re.sub(
+                    pattern, "[SENSITIVE]", sanitized, flags=re.IGNORECASE
+                )
 
         # Step 3: Handle URLs (for SSRF protection in prompt context)
         if self.mode == "strict":
@@ -216,7 +240,9 @@ class ContentSanitizer:
 
         # Safety check: if no sanitization occurred in strict mode, warn
         if self.mode == "strict" and sanitized == text:
-            logger.warning(f"Strict mode: No PII detected but content unchanged for user {user_id}")
+            logger.warning(
+                f"Strict mode: No PII detected but content unchanged for user {user_id}"
+            )
 
         return sanitized
 
@@ -248,9 +274,7 @@ class ContentSanitizer:
                 "All PII and sensitive information removed."
             )
         else:
-            privacy_notice = (
-                "NOTE: Content processed with standard privacy filters."
-            )
+            privacy_notice = "NOTE: Content processed with standard privacy filters."
 
         prompt = f"""
 {privacy_notice}
@@ -297,7 +321,9 @@ Instructions:
 
             # 判断是否应该输出批量日志
             if _batch_logger.should_log(kwargs["user_id"], kwargs["sanitize_mode"]):
-                stats = _batch_logger.get_and_reset(kwargs["user_id"], kwargs["sanitize_mode"])
+                stats = _batch_logger.get_and_reset(
+                    kwargs["user_id"], kwargs["sanitize_mode"]
+                )
                 if stats:
                     logger.debug(
                         f"PII Detection (Batch) - User: {kwargs['user_id']}, "
@@ -309,11 +335,7 @@ Instructions:
 
     def export_audit_log(self, user_id: int) -> list[dict]:
         """Export user's audit trail for GDPR compliance"""
-        return [
-            asdict(entry)
-            for entry in self.audit_log
-            if entry.user_id == user_id
-        ]
+        return [asdict(entry) for entry in self.audit_log if entry.user_id == user_id]
 
     def get_usage_stats(self) -> dict[str, int]:
         """Get privacy filter usage statistics"""
@@ -325,22 +347,25 @@ Instructions:
 
         for entry in self.audit_log:
             # Count by mode
-            stats["mode_counts"][entry.sanitize_mode] = \
+            stats["mode_counts"][entry.sanitize_mode] = (
                 stats["mode_counts"].get(entry.sanitize_mode, 0) + 1
+            )
 
             # Count PII types
             for pii_type in entry.pii_types_detected:
-                stats["pii_type_counts"][pii_type] = \
+                stats["pii_type_counts"][pii_type] = (
                     stats["pii_type_counts"].get(pii_type, 0) + 1
+                )
 
         return stats
 
 
 class PodcastSummarySanitizer(ContentSanitizer):
-    """Specialized sanitizer for podcast summaries with podcast-specific logic
-    """
+    """Specialized sanitizer for podcast summaries with podcast-specific logic"""
 
-    def summarize_episode(self, title: str, description: str, transcript: str | None, user_id: int) -> dict:
+    def summarize_episode(
+        self, title: str, description: str, transcript: str | None, user_id: int
+    ) -> dict:
         """Helper method to sanitize and summarize podcast episode for LLM processing
 
         Returns privacy-preserved inputs for AI summarization
@@ -368,6 +393,7 @@ class PodcastSummarySanitizer(ContentSanitizer):
         return {
             "sanitized_content": "\n\n".join(content_parts),
             "original_title": title,
-            "was_sanitized": safe_description != description or (transcript and safe_transcript != transcript),
+            "was_sanitized": safe_description != description
+            or (transcript and safe_transcript != transcript),
             "sanitization_mode": self.mode,
         }

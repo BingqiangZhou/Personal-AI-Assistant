@@ -17,7 +17,9 @@ def generate_totp_secret() -> str:
     return pyotp.random_base32()
 
 
-def generate_qr_code(username: str, secret: str, issuer: str = "Personal AI Assistant") -> str:
+def generate_qr_code(
+    username: str, secret: str, issuer: str = "Personal AI Assistant"
+) -> str:
     """Generate QR code for TOTP setup.
 
     Args:

@@ -83,7 +83,9 @@ async def start_transcription(
             detail=str(exc),
         ) from exc
     except Exception as exc:
-        logger.error("Failed to start transcription for episode %s: %s", episode_id, exc)
+        logger.error(
+            "Failed to start transcription for episode %s: %s", episode_id, exc
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start transcription: {exc}",
@@ -224,7 +226,9 @@ async def delete_transcription(
             detail=str(exc),
         ) from exc
     except Exception as exc:
-        logger.error("Failed to delete transcription for episode %s: %s", episode_id, exc)
+        logger.error(
+            "Failed to delete transcription for episode %s: %s", episode_id, exc
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete transcription: {exc}",
@@ -301,7 +305,9 @@ async def schedule_episode_transcription_endpoint(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("Failed to schedule transcription for episode %s: %s", episode_id, exc)
+        logger.error(
+            "Failed to schedule transcription for episode %s: %s", episode_id, exc
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Failed to schedule transcription: {exc}",
@@ -333,7 +339,9 @@ async def get_episode_transcript_endpoint(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         logger.error("Failed to get transcript for episode %s: %s", episode_id, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to get transcript: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get transcript: {exc}"
+        ) from exc
 
 
 @router.post(
@@ -346,7 +354,9 @@ async def get_episode_transcript_endpoint(
 async def batch_transcribe_subscription_endpoint(
     subscription_id: int,
     skip_existing: bool = Body(True, description="Skip episodes already transcribed"),
-    subscription_service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
+    subscription_service: PodcastSubscriptionService = Depends(
+        get_podcast_subscription_service
+    ),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service,
     ),
@@ -361,8 +371,12 @@ async def batch_transcribe_subscription_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        logger.error("Failed to batch transcribe subscription %s: %s", subscription_id, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to batch transcribe: {exc}") from exc
+        logger.error(
+            "Failed to batch transcribe subscription %s: %s", subscription_id, exc
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Failed to batch transcribe: {exc}"
+        ) from exc
 
 
 @router.get(
@@ -388,7 +402,9 @@ async def get_transcription_schedule_status(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         logger.error(
-            "Failed to get transcription status for episode %s: %s", episode_id, exc,
+            "Failed to get transcription status for episode %s: %s",
+            episode_id,
+            exc,
         )
         raise HTTPException(
             status_code=500,
@@ -418,8 +434,12 @@ async def cancel_transcription_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        logger.error("Failed to cancel transcription for episode %s: %s", episode_id, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to cancel transcription: {exc}") from exc
+        logger.error(
+            "Failed to cancel transcription for episode %s: %s", episode_id, exc
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Failed to cancel transcription: {exc}"
+        ) from exc
 
 
 @router.post(
@@ -431,7 +451,9 @@ async def cancel_transcription_endpoint(
 async def check_and_transcribe_new_episodes(
     subscription_id: int,
     hours_since_published: int = Body(24, description="Hours window for new episodes"),
-    subscription_service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
+    subscription_service: PodcastSubscriptionService = Depends(
+        get_podcast_subscription_service
+    ),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service,
     ),
@@ -446,8 +468,12 @@ async def check_and_transcribe_new_episodes(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        logger.error("Failed to check new episodes for subscription %s: %s", subscription_id, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to check new episodes: {exc}") from exc
+        logger.error(
+            "Failed to check new episodes for subscription %s: %s", subscription_id, exc
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Failed to check new episodes: {exc}"
+        ) from exc
 
 
 @router.get(

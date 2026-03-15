@@ -18,6 +18,9 @@ async def generate_pending_summaries_handler(session) -> dict:
         ttl_seconds=1800,
     ) as acquired:
         if not acquired:
-            return {"status": "skipped_locked", "reason": "summary_task_already_running"}
+            return {
+                "status": "skipped_locked",
+                "reason": "summary_task_already_running",
+            }
         workflow = SummaryWorkflowService(session)
         return await workflow.generate_pending_summaries_run()

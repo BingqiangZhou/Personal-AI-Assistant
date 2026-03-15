@@ -182,6 +182,7 @@ class PodcastTaskOrchestrationService:
             connector=connector,
             headers=headers,
         ) as http_session:
+
             async def _run_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
                 async with semaphore:
                     return await self._refresh_single_subscription(
@@ -373,7 +374,8 @@ class PodcastTaskOrchestrationService:
             }
             await repo.update_subscription_metadata(subscription_id, metadata)
             await repo.update_subscription_fetch_time(
-                subscription_id, feed.last_fetched,
+                subscription_id,
+                feed.last_fetched,
             )
 
             return {
@@ -486,7 +488,8 @@ class PodcastTaskOrchestrationService:
                 except Exception:
                     failed_count += 1
                     logger.exception(
-                        "Failed to generate daily report for user=%s", user_id,
+                        "Failed to generate daily report for user=%s",
+                        user_id,
                     )
                     await self.session.rollback()
 
@@ -506,7 +509,8 @@ class PodcastTaskOrchestrationService:
 
     async def get_task_statistics(self) -> dict:
         count_stmt = select(
-            TranscriptionTask.status, func.count(TranscriptionTask.id),
+            TranscriptionTask.status,
+            func.count(TranscriptionTask.id),
         ).group_by(TranscriptionTask.status)
         count_result = await self.session.execute(count_stmt)
         grouped = dict(count_result.all())
@@ -621,7 +625,8 @@ class PodcastTaskOrchestrationService:
             select(PodcastEpisode.id, PodcastEpisode.published_at)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .outerjoin(
-                TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id,
+                TranscriptionTask,
+                TranscriptionTask.episode_id == PodcastEpisode.id,
             )
             .where(and_(*filters))
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())

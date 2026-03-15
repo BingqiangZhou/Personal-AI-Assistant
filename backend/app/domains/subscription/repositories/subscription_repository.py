@@ -16,6 +16,7 @@ from app.domains.subscription.models import (
     SubscriptionStatus,
     UserSubscription,
 )
+from app.shared.repository_helpers import resolve_window_total
 from app.shared.schemas import SubscriptionCreate, SubscriptionUpdate
 
 
@@ -24,19 +25,6 @@ class SubscriptionRepository:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-
-    # ── Shared helpers ─────────────────────────────────────────────────────
-
-    async def _resolve_window_total(
-        self,
-        rows: list,
-        *,
-        total_index: int,
-        fallback_count_query,
-    ) -> int:
-        if rows:
-            return int(rows[0][total_index] or 0)
-        return int(await self.db.scalar(fallback_count_query) or 0)
 
     # ── Lookup helpers ─────────────────────────────────────────────────────
 
@@ -59,14 +47,18 @@ class SubscriptionRepository:
         return result.scalar_one_or_none()
 
     async def get_subscription_by_url(
-        self, user_id: int, url: str,
+        self,
+        user_id: int,
+        url: str,
     ) -> Subscription | None:
         query = select(Subscription).where(Subscription.source_url == url)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_subscription_by_title(
-        self, user_id: int, title: str,
+        self,
+        user_id: int,
+        title: str,
     ) -> Subscription | None:
         query = select(Subscription).where(
             func.lower(Subscription.title) == func.lower(title),
@@ -93,7 +85,9 @@ class SubscriptionRepository:
         return result.scalar_one_or_none()
 
     async def get_item_by_id(
-        self, item_id: int, user_id: int,
+        self,
+        item_id: int,
+        user_id: int,
     ) -> SubscriptionItem | None:
         query = (
             select(SubscriptionItem)
@@ -182,7 +176,8 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=2,
             fallback_count_query=select(func.count()).select_from(
@@ -228,7 +223,8 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
@@ -270,7 +266,8 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        total = await self._resolve_window_total(
+        total = await resolve_window_total(
+            self.db,
             rows,
             total_index=1,
             fallback_count_query=select(func.count()).select_from(
@@ -303,12 +300,15 @@ class SubscriptionRepository:
         update_day_of_week = None
 
         settings_result = await self.db.execute(
-            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings"),
+            select(SystemSettings).where(
+                SystemSettings.key == "rss.frequency_settings"
+            ),
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
             update_frequency = setting.value.get(
-                "update_frequency", UpdateFrequency.HOURLY.value,
+                "update_frequency",
+                UpdateFrequency.HOURLY.value,
             )
             update_time = setting.value.get("update_time")
             update_day_of_week = setting.value.get("update_day_of_week")
@@ -374,8 +374,12 @@ class SubscriptionRepository:
         if deleted_count == 0:
             return False
 
-        other_subs_query = select(func.count()).select_from(UserSubscription).where(
-            UserSubscription.subscription_id == sub_id,
+        other_subs_query = (
+            select(func.count())
+            .select_from(UserSubscription)
+            .where(
+                UserSubscription.subscription_id == sub_id,
+            )
         )
         remaining_count = await self.db.scalar(other_subs_query) or 0
         if remaining_count == 0:
@@ -526,7 +530,9 @@ class SubscriptionRepository:
         return processed_items, new_items
 
     async def mark_item_as_read(
-        self, item_id: int, user_id: int,
+        self,
+        item_id: int,
+        user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -538,7 +544,9 @@ class SubscriptionRepository:
         return item
 
     async def mark_item_as_unread(
-        self, item_id: int, user_id: int,
+        self,
+        item_id: int,
+        user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -549,7 +557,9 @@ class SubscriptionRepository:
         return item
 
     async def toggle_bookmark(
-        self, item_id: int, user_id: int,
+        self,
+        item_id: int,
+        user_id: int,
     ) -> SubscriptionItem | None:
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -610,7 +620,9 @@ class SubscriptionRepository:
         return True
 
     async def add_subscription_to_category(
-        self, subscription_id: int, category_id: int,
+        self,
+        subscription_id: int,
+        category_id: int,
     ) -> bool:
         query = select(SubscriptionCategoryMapping).where(
             SubscriptionCategoryMapping.subscription_id == subscription_id,
@@ -630,7 +642,9 @@ class SubscriptionRepository:
         return True
 
     async def remove_subscription_from_category(
-        self, subscription_id: int, category_id: int,
+        self,
+        subscription_id: int,
+        category_id: int,
     ) -> bool:
         query = select(SubscriptionCategoryMapping).where(
             SubscriptionCategoryMapping.subscription_id == subscription_id,

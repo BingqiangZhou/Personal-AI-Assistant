@@ -187,7 +187,10 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_page_lightweight_prefers_one_line_summary(
-        self, service, mock_repo, monkeypatch,
+        self,
+        service,
+        mock_repo,
+        monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
         now = datetime.now(UTC)
@@ -217,7 +220,10 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_cursor_lightweight_falls_back_to_collapsed_description(
-        self, service, mock_repo, monkeypatch,
+        self,
+        service,
+        mock_repo,
+        monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
         now = datetime.now(UTC)
@@ -249,7 +255,10 @@ class TestPodcastEpisodeService:
 
     @pytest.mark.asyncio
     async def test_feed_page_non_lightweight_rewrites_description_only_for_feed(
-        self, service, mock_repo, monkeypatch,
+        self,
+        service,
+        mock_repo,
+        monkeypatch,
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", False)
         now = datetime.now(UTC)
@@ -346,7 +355,9 @@ class TestPodcastPlaybackService:
 
     @pytest.mark.asyncio
     async def test_update_playback_progress_returns_projection(
-        self, service, mock_repo,
+        self,
+        service,
+        mock_repo,
     ):
         episode = Mock(audio_duration=200)
         playback = Mock(
@@ -391,7 +402,8 @@ class TestPodcastQueueService:
     async def test_get_queue_returns_projection(self, service, mock_repo):
         now = datetime.now(UTC)
         subscription = Mock(
-            title="Podcast", config={"image_url": "https://example.com/sub.jpg"},
+            title="Podcast",
+            config={"image_url": "https://example.com/sub.jpg"},
         )
         episode = Mock(
             title="Episode 1",
@@ -404,7 +416,10 @@ class TestPodcastQueueService:
         )
         queue_item = Mock(id=1, episode_id=5, position=0, episode=episode)
         queue = Mock(
-            current_episode_id=5, revision=2, updated_at=now, items=[queue_item],
+            current_episode_id=5,
+            revision=2,
+            updated_at=now,
+            items=[queue_item],
         )
         playback_state = Mock(current_position=30)
         mock_repo.get_queue_with_items.return_value = queue

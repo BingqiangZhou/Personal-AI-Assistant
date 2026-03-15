@@ -51,7 +51,10 @@ class PerformanceMetricsStore:
         return ordered[index]
 
     def track_request(
-        self, key: str, duration_ms: float, status_code: int | None = None,
+        self,
+        key: str,
+        duration_ms: float,
+        status_code: int | None = None,
     ) -> None:
         self.request_counts[key] = self.request_counts.get(key, 0) + 1
 

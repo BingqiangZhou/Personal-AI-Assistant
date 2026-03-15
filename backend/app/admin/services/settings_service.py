@@ -180,7 +180,8 @@ class AdminSettingsService:
         setting = await self._get_setting("rss.frequency_settings")
         if setting and setting.value:
             default_frequency = setting.value.get(
-                "update_frequency", UpdateFrequency.HOURLY.value,
+                "update_frequency",
+                UpdateFrequency.HOURLY.value,
             )
             default_update_time = setting.value.get("update_time", "00:00")
             default_day_of_week = setting.value.get("update_day_of_week", 1)
@@ -225,7 +226,9 @@ class AdminSettingsService:
         """Persist RSS frequency settings and fan out to user mappings."""
         settings_data = {
             "update_frequency": update_frequency,
-            "update_time": update_time if update_frequency in ["DAILY", "WEEKLY"] else None,
+            "update_time": update_time
+            if update_frequency in ["DAILY", "WEEKLY"]
+            else None,
             "update_day_of_week": update_day if update_frequency == "WEEKLY" else None,
         }
 
@@ -243,12 +246,19 @@ class AdminSettingsService:
             )
 
         user_subscriptions = (
-            await self.db.execute(
-                select(UserSubscription)
-                .join(Subscription, Subscription.id == UserSubscription.subscription_id)
-                .where(Subscription.source_type.in_(["rss", "podcast-rss"])),
+            (
+                await self.db.execute(
+                    select(UserSubscription)
+                    .join(
+                        Subscription,
+                        Subscription.id == UserSubscription.subscription_id,
+                    )
+                    .where(Subscription.source_type.in_(["rss", "podcast-rss"])),
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         total_count = 0
         for user_sub in user_subscriptions:

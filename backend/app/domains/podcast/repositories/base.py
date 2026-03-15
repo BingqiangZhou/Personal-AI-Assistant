@@ -33,20 +33,10 @@ class BasePodcastRepository:
     def _podcast_source_type_filter() -> Any:
         return Subscription.source_type.in_(["podcast-rss", "rss"])
 
-    async def _resolve_window_total(
-        self,
-        rows: list[Any],
-        *,
-        total_index: int,
-        fallback_count_query: Any,
-    ) -> int:
-        """Resolve paged total via window count with empty-page fallback."""
-        if rows:
-            return int(rows[0][total_index] or 0)
-        return int(await self.db.scalar(fallback_count_query) or 0)
-
     async def get_playback_state(
-        self, user_id: int, episode_id: int,
+        self,
+        user_id: int,
+        episode_id: int,
     ) -> PodcastPlaybackState | None:
         """Get playback state for one user and episode."""
         stmt = select(PodcastPlaybackState).where(
@@ -59,7 +49,9 @@ class BasePodcastRepository:
         return result.scalar_one_or_none()
 
     async def get_playback_states_batch(
-        self, user_id: int, episode_ids: list[int],
+        self,
+        user_id: int,
+        episode_ids: list[int],
     ) -> dict[int, PodcastPlaybackState]:
         """Batch fetch playback states for multiple episodes."""
         if not episode_ids:

@@ -6,6 +6,32 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
+def validate_password_strength(v: str) -> str:
+    """Validate password complexity.
+
+    Args:
+        v: Password string to validate
+
+    Returns:
+        Validated password string
+
+    Raises:
+        ValueError: If password doesn't meet complexity requirements
+    """
+    errors = []
+    if len(v) < 8:
+        errors.append("Password must be at least 8 characters long")
+    if not any(c.isupper() for c in v):
+        errors.append("Password must contain at least one uppercase letter (A-Z)")
+    if not any(c.islower() for c in v):
+        errors.append("Password must contain at least one lowercase letter (a-z)")
+    if not any(c.isdigit() for c in v):
+        errors.append("Password must contain at least one number (0-9)")
+    if errors:
+        raise ValueError(" | ".join(errors))
+    return v
+
+
 # Base schemas
 class BaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -29,7 +55,9 @@ class UserBase(BaseSchema):
     def validate_username(cls, v):
         """Validate username format."""
         if v is not None and not v.replace("_", "").replace("-", "").isalnum():
-            raise ValueError("Username must contain only alphanumeric characters, hyphens, and underscores")
+            raise ValueError(
+                "Username must contain only alphanumeric characters, hyphens, and underscores"
+            )
         return v
 
 
@@ -40,22 +68,7 @@ class UserCreate(UserBase):
     @classmethod
     def validate_password(cls, v):
         """Validate password strength."""
-        errors = []
-
-        if len(v) < 8:
-            errors.append("Password must be at least 8 characters long")
-        if not any(c.isupper() for c in v):
-            errors.append("Password must contain at least one uppercase letter (A-Z)")
-        if not any(c.islower() for c in v):
-            errors.append("Password must contain at least one lowercase letter (a-z)")
-        if not any(c.isdigit() for c in v):
-            errors.append("Password must contain at least one number (0-9)")
-
-        if errors:
-            # Join all errors with a separator for better readability
-            raise ValueError(" | ".join(errors))
-
-        return v
+        return validate_password_strength(v)
 
 
 class UserUpdate(BaseSchema):
@@ -228,35 +241,24 @@ class ConversationResponse(ConversationBase, TimestampedSchema):
 class ForgotPasswordRequest(BaseSchema):
     """Forgot password request schema."""
 
-    email: EmailStr = Field(..., description="Email address associated with the account")
+    email: EmailStr = Field(
+        ..., description="Email address associated with the account"
+    )
 
 
 class ResetPasswordRequest(BaseSchema):
     """Reset password request schema."""
 
     token: str = Field(..., description="Password reset token received via email")
-    new_password: str = Field(..., min_length=8, max_length=128, description="New password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=128, description="New password"
+    )
 
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, v):
         """Validate password strength."""
-        errors = []
-
-        if len(v) < 8:
-            errors.append("Password must be at least 8 characters long")
-        if not any(c.isupper() for c in v):
-            errors.append("Password must contain at least one uppercase letter (A-Z)")
-        if not any(c.islower() for c in v):
-            errors.append("Password must contain at least one lowercase letter (a-z)")
-        if not any(c.isdigit() for c in v):
-            errors.append("Password must contain at least one number (0-9)")
-
-        if errors:
-            # Join all errors with a separator for better readability
-            raise ValueError(" | ".join(errors))
-
-        return v
+        return validate_password_strength(v)
 
 
 class PasswordResetResponse(BaseSchema):

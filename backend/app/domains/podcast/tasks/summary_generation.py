@@ -13,7 +13,9 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 @celery_app.task(bind=True, max_retries=3)
 def generate_pending_summaries(self):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.summary_generation.generate_pending_summaries"
+    task_name = (
+        "app.domains.podcast.tasks.summary_generation.generate_pending_summaries"
+    )
     queue_name = "ai_generation"
     try:
         result = run_async(_generate_pending_summaries())
@@ -35,7 +37,7 @@ def generate_pending_summaries(self):
             error_message=str(exc),
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 
@@ -82,7 +84,7 @@ def generate_episode_summary(
             metadata={"episode_id": episode_id, "summary_model": summary_model},
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 

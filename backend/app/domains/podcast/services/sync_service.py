@@ -34,6 +34,7 @@ class PodcastSyncService:
         from app.domains.podcast.services.transcription_runtime_service import (
             DatabaseBackedTranscriptionService,
         )
+
         self.transcription_service = DatabaseBackedTranscriptionService(db)
 
     async def trigger_transcription(self, episode_id: int) -> dict | None:
@@ -57,5 +58,7 @@ class PodcastSyncService:
             )
             return {"task_id": result["task"].id, "episode_id": episode_id}
         except Exception as e:
-            logger.error(f"Failed to create transcription task for episode {episode_id}: {e}")
+            logger.error(
+                f"Failed to create transcription task for episode {episode_id}: {e}"
+            )
             return None

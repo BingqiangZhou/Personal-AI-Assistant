@@ -60,8 +60,7 @@ class PodcastFeed:
 
 
 class SecureRSSParser:
-    """Secure parser with complete validation pipeline
-    """
+    """Secure parser with complete validation pipeline"""
 
     def __init__(
         self,
@@ -89,7 +88,9 @@ class SecureRSSParser:
         """
         # Step 0: Detect platform
         platform = PlatformDetector.detect_platform(feed_url)
-        logger.debug(f"User {self.user_id}: Fetching RSS from {feed_url}, platform: {platform}")
+        logger.debug(
+            f"User {self.user_id}: Fetching RSS from {feed_url}, platform: {platform}"
+        )
 
         # Step 1: Validate URL
         valid_url, url_error = self.security.validate_audio_url(feed_url)
@@ -118,7 +119,9 @@ class SecureRSSParser:
                 max_episodes=max_episodes,
                 newer_than=newer_than,
             )
-            logger.debug(f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes from {platform}")
+            logger.debug(
+                f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes from {platform}"
+            )
             return True, feed, None
         except Exception as e:
             logger.error(f"Parsing error: {e}")
@@ -194,7 +197,9 @@ class SecureRSSParser:
         itunes_ns = {"itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd"}
 
         # Author
-        author = self._safe_text(channel.findtext("itunes:author", "", namespaces=itunes_ns))
+        author = self._safe_text(
+            channel.findtext("itunes:author", "", namespaces=itunes_ns)
+        )
 
         # Language
         language = self._safe_text(channel.findtext("language", ""))
@@ -206,14 +211,18 @@ class SecureRSSParser:
                 categories.append(category.get("text"))
 
         # Explicit content
-        explicit_text = self._safe_text(channel.findtext("itunes:explicit", "", namespaces=itunes_ns))
+        explicit_text = self._safe_text(
+            channel.findtext("itunes:explicit", "", namespaces=itunes_ns)
+        )
         explicit = explicit_text.lower() == "true" if explicit_text else None
 
         # Podcast image - extract from multiple sources
         image_url = self._extract_channel_image_url(channel, itunes_ns)
 
         # Podcast type
-        podcast_type = self._safe_text(channel.findtext("itunes:type", "", namespaces=itunes_ns))
+        podcast_type = self._safe_text(
+            channel.findtext("itunes:type", "", namespaces=itunes_ns)
+        )
 
         cutoff_time = ensure_timezone_aware_fetch_time(newer_than)
         episodes = []
@@ -339,7 +348,11 @@ class SecureRSSParser:
             title = self._safe_text(item.findtext("title", "Untitled"))
 
             # Description - prefer content:encoded over description, use raw HTML without sanitization
-            content_encoded = item.findtext("content:encoded", "", namespaces={"content": "http://purl.org/rss/1.0/modules/content/"})
+            content_encoded = item.findtext(
+                "content:encoded",
+                "",
+                namespaces={"content": "http://purl.org/rss/1.0/modules/content/"},
+            )
             raw_desc = content_encoded or item.findtext("description", "")
             description = raw_desc or ""  # Use raw HTML directly
 
@@ -381,7 +394,10 @@ class SecureRSSParser:
             # Transcript URL (if available)
             transcript_url = None
             # Check for podcast namespace transcript
-            transcript_element = item.find("podcast:transcript", namespaces={"podcast": "https://podcastindex.org/namespace/1.0"})
+            transcript_element = item.find(
+                "podcast:transcript",
+                namespaces={"podcast": "https://podcastindex.org/namespace/1.0"},
+            )
             if transcript_element is not None:
                 transcript_url = transcript_element.get("url")
             # Also check for simple transcript URL in custom element
@@ -398,6 +414,7 @@ class SecureRSSParser:
             else:
                 # 后备方案：使用 audio_url 的 hash 作为 guid（因为音频链接通常是最唯一的）
                 import hashlib
+
                 audio_url_hash = hashlib.md5(audio_url.encode()).hexdigest()[:16]
                 guid = f"gen_{audio_url_hash}"
 
@@ -456,6 +473,7 @@ class SecureRSSParser:
         try:
             # Handle RFC 2822 format (common in RSS)
             from email.utils import parsedate_to_datetime
+
             return parsedate_to_datetime(date_str)
         except (ValueError, TypeError, OSError):
             return datetime.now(UTC)
@@ -529,6 +547,9 @@ class SecureRSSParser:
 
         # Either ends with image extension or contains image-like patterns
         has_extension = any(url_lower.endswith(ext) for ext in image_extensions)
-        has_image_keywords = any(keyword in url_lower for keyword in ["image", "img", "photo", "pic", "cover"])
+        has_image_keywords = any(
+            keyword in url_lower
+            for keyword in ["image", "img", "photo", "pic", "cover"]
+        )
 
         return has_extension or has_image_keywords

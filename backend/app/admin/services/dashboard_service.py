@@ -16,13 +16,15 @@ class AdminDashboardService:
 
     async def get_dashboard_context(self) -> dict[str, int]:
         apikey_count = int(
-            (await self.db.execute(select(func.count()).select_from(AIModelConfig)))
-            .scalar()
+            (
+                await self.db.execute(select(func.count()).select_from(AIModelConfig))
+            ).scalar()
             or 0,
         )
         subscription_count = int(
-            (await self.db.execute(select(func.count()).select_from(Subscription)))
-            .scalar()
+            (
+                await self.db.execute(select(func.count()).select_from(Subscription))
+            ).scalar()
             or 0,
         )
         user_count = int(

@@ -50,7 +50,9 @@ async def test_start_transcription_dispatches_via_task_orchestration_service():
     )
     created_task = SimpleNamespace(id=55)
     service._load_existing_task = AsyncMock(return_value=None)
-    service._create_or_get_task_record = AsyncMock(return_value=(created_task, 11, True))
+    service._create_or_get_task_record = AsyncMock(
+        return_value=(created_task, 11, True)
+    )
 
     with patch(
         "app.domains.podcast.services.transcription_runtime_service.get_transcription_state_manager",
@@ -98,7 +100,10 @@ async def test_start_transcription_concurrent_calls_reuse_pending_task():
             service.start_transcription(episode_id=12),
         )
 
-    assert sorted(result["action"] for result in results) == ["created", "reused_pending"]
+    assert sorted(result["action"] for result in results) == [
+        "created",
+        "reused_pending",
+    ]
     assert fake_task_service.audio_transcription_calls == [
         {"task_id": 91, "config_db_id": 17},
     ]

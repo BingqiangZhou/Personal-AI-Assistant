@@ -34,7 +34,9 @@ async def settings_page(
         )
     except Exception as exc:
         logger.error("Settings page error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to load settings page") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to load settings page"
+        ) from exc
 
 
 @router.get("/settings/api/audio")
@@ -47,7 +49,9 @@ async def get_audio_settings(
         return json_payload(await service.get_audio_settings())
     except Exception as exc:
         logger.error("Get audio settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to get audio settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to get audio settings"
+        ) from exc
 
 
 @router.post("/settings/api/audio")
@@ -72,7 +76,9 @@ async def update_audio_settings(
         raise
     except Exception as exc:
         logger.error("Update audio settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to update audio settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to update audio settings"
+        ) from exc
 
 
 @router.get("/settings/frequency")
@@ -86,7 +92,9 @@ async def get_frequency_settings(
         return json_payload(await service.get_frequency_settings())
     except Exception as exc:
         logger.error("Get frequency settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to get frequency settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to get frequency settings"
+        ) from exc
 
 
 @router.post("/settings/frequency")
@@ -113,7 +121,9 @@ async def update_frequency_settings(
         raise
     except Exception as exc:
         logger.error("Update frequency settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to update frequency settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to update frequency settings"
+        ) from exc
 
 
 @router.get("/settings/api/security")
@@ -126,7 +136,9 @@ async def get_security_settings(
         return json_payload(await service.get_security_settings())
     except Exception as exc:
         logger.error("Get security settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to get security settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to get security settings"
+        ) from exc
 
 
 @router.post("/settings/api/security")
@@ -149,7 +161,9 @@ async def update_security_settings(
         raise
     except Exception as exc:
         logger.error("Update security settings error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to update security settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to update security settings"
+        ) from exc
 
 
 @router.get("/settings/api/storage/info")
@@ -162,7 +176,9 @@ async def get_storage_info(
         return json_payload(await service.get_storage_info())
     except Exception as exc:
         logger.error("Get storage info error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to get storage information") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to get storage information"
+        ) from exc
 
 
 @router.get("/settings/api/storage/cleanup/config")
@@ -175,7 +191,9 @@ async def get_cleanup_config(
         return json_payload(await service.get_cleanup_config())
     except Exception as exc:
         logger.error("Get cleanup config error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to get cleanup configuration") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to get cleanup configuration"
+        ) from exc
 
 
 @router.post("/settings/api/storage/cleanup/config")
@@ -198,7 +216,9 @@ async def update_cleanup_config(
         raise
     except Exception as exc:
         logger.error("Update cleanup config error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to update cleanup configuration") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to update cleanup configuration"
+        ) from exc
 
 
 @router.post("/settings/api/storage/cleanup/execute")
@@ -221,4 +241,6 @@ async def execute_cleanup(
         raise
     except Exception as exc:
         logger.error("Execute cleanup error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to execute cleanup") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to execute cleanup"
+        ) from exc

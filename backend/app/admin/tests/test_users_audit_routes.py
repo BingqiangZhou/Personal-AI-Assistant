@@ -67,7 +67,9 @@ async def test_reset_password_delegates_to_service_action():
 
 
 @pytest.mark.asyncio
-async def test_toggle_user_service_logs_and_returns_status(monkeypatch: pytest.MonkeyPatch):
+async def test_toggle_user_service_logs_and_returns_status(
+    monkeypatch: pytest.MonkeyPatch,
+):
     service = AdminUsersAuditService(db=AsyncMock())
     target_user = Mock(username="target", status=UserStatus.INACTIVE)
     service.toggle_user_status = AsyncMock(return_value=target_user)
@@ -89,7 +91,9 @@ async def test_toggle_user_service_logs_and_returns_status(monkeypatch: pytest.M
 
 
 @pytest.mark.asyncio
-async def test_reset_password_service_logs_and_returns_payload(monkeypatch: pytest.MonkeyPatch):
+async def test_reset_password_service_logs_and_returns_payload(
+    monkeypatch: pytest.MonkeyPatch,
+):
     service = AdminUsersAuditService(db=AsyncMock())
     target_user = Mock(username="target")
     service.reset_user_password = AsyncMock(return_value=(target_user, "new-password"))

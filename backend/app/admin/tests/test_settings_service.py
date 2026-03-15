@@ -108,7 +108,9 @@ def test_validate_frequency_settings_rejects_invalid_values(
 
 
 @pytest.mark.asyncio
-async def test_save_audio_settings_validates_persists_and_audits(monkeypatch: pytest.MonkeyPatch):
+async def test_save_audio_settings_validates_persists_and_audits(
+    monkeypatch: pytest.MonkeyPatch,
+):
     service = AdminSettingsService(db=AsyncMock())
     service.update_audio_settings = AsyncMock()
     audit_mock = AsyncMock()
@@ -130,7 +132,9 @@ async def test_save_audio_settings_validates_persists_and_audits(monkeypatch: py
 
 
 @pytest.mark.asyncio
-async def test_save_frequency_settings_returns_compatible_success_message(monkeypatch: pytest.MonkeyPatch):
+async def test_save_frequency_settings_returns_compatible_success_message(
+    monkeypatch: pytest.MonkeyPatch,
+):
     service = AdminSettingsService(db=AsyncMock())
     service.update_frequency_settings = AsyncMock(
         return_value=({"update_frequency": "DAILY"}, 5),
@@ -159,9 +163,13 @@ async def test_save_frequency_settings_returns_compatible_success_message(monkey
 
 
 @pytest.mark.asyncio
-async def test_save_cleanup_config_skips_audit_when_update_fails(monkeypatch: pytest.MonkeyPatch):
+async def test_save_cleanup_config_skips_audit_when_update_fails(
+    monkeypatch: pytest.MonkeyPatch,
+):
     service = AdminSettingsService(db=AsyncMock())
-    service.update_cleanup_config = AsyncMock(return_value={"success": False, "message": "noop"})
+    service.update_cleanup_config = AsyncMock(
+        return_value={"success": False, "message": "noop"}
+    )
     audit_mock = AsyncMock()
     monkeypatch.setattr(settings_service_module, "log_admin_action", audit_mock)
 

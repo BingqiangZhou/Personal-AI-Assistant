@@ -37,7 +37,7 @@ def generate_daily_podcast_reports(self, report_date: str | None = None):
             metadata={"report_date": report_date},
         )
         if self.request.retries < self.max_retries:
-            raise self.retry(countdown=60 * (2 ** self.request.retries)) from exc
+            raise self.retry(countdown=60 * (2**self.request.retries)) from exc
         raise
 
 

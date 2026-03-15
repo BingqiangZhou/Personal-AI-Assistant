@@ -90,7 +90,9 @@ def build_feed_response(
 ) -> PodcastFeedResponse:
     """Build the feed response envelope."""
     return PodcastFeedResponse(
-        items=[PodcastEpisodeResponse(**episode) for episode in _episode_payloads(episodes)],
+        items=[
+            PodcastEpisodeResponse(**episode) for episode in _episode_payloads(episodes)
+        ],
         has_more=has_more,
         next_page=next_page,
         next_cursor=next_cursor,
@@ -109,7 +111,9 @@ def build_episode_list_response(
 ) -> PodcastEpisodeListResponse:
     """Build the paginated episode list response."""
     return PodcastEpisodeListResponse(
-        episodes=[PodcastEpisodeResponse(**episode) for episode in _episode_payloads(episodes)],
+        episodes=[
+            PodcastEpisodeResponse(**episode) for episode in _episode_payloads(episodes)
+        ],
         total=total,
         page=page,
         size=size,
@@ -129,7 +133,9 @@ def build_playback_history_list_response(
 ) -> PodcastPlaybackHistoryListResponse:
     """Build the lightweight playback history response."""
     return PodcastPlaybackHistoryListResponse(
-        episodes=[PodcastPlaybackHistoryItemResponse(**episode) for episode in episodes],
+        episodes=[
+            PodcastPlaybackHistoryItemResponse(**episode) for episode in episodes
+        ],
         total=total,
         page=page,
         size=size,
@@ -237,7 +243,8 @@ def build_summary_response(
 ) -> PodcastSummaryResponse:
     """Build the episode summary response."""
     summary_text = summary_result.get("summary") or summary_result.get(
-        "summary_content", "",
+        "summary_content",
+        "",
     )
     model_used = summary_result.get("model_used") or summary_result.get("model_name")
     return PodcastSummaryResponse(
@@ -307,7 +314,9 @@ def build_queue_response(payload: QueueProjectionLike) -> PodcastQueueResponse:
         current_episode_id=normalized.get("current_episode_id"),
         revision=normalized["revision"],
         updated_at=normalized.get("updated_at"),
-        items=[PodcastQueueItemResponse(**item) for item in normalized.get("items", [])],
+        items=[
+            PodcastQueueItemResponse(**item) for item in normalized.get("items", [])
+        ],
     )
 
 
@@ -345,14 +354,18 @@ def build_episode_transcript_response(
     payload: EpisodeTranscriptProjectionLike,
 ) -> PodcastEpisodeTranscriptResponse:
     """Build the episode transcript response."""
-    return PodcastEpisodeTranscriptResponse(**episode_transcript_projection_to_payload(payload))
+    return PodcastEpisodeTranscriptResponse(
+        **episode_transcript_projection_to_payload(payload)
+    )
 
 
 def build_batch_transcription_response(
     payload: BatchTranscriptionProjectionLike,
 ) -> PodcastBatchTranscriptionResponse:
     """Build the batch transcription response."""
-    return PodcastBatchTranscriptionResponse(**batch_transcription_projection_to_payload(payload))
+    return PodcastBatchTranscriptionResponse(
+        **batch_transcription_projection_to_payload(payload)
+    )
 
 
 def build_transcription_schedule_status_response(
@@ -368,14 +381,18 @@ def build_transcription_cancel_response(
     payload: TranscriptionCancelProjectionLike,
 ) -> PodcastTranscriptionCancelResponse:
     """Build the transcription cancellation response."""
-    return PodcastTranscriptionCancelResponse(**transcription_cancel_projection_to_payload(payload))
+    return PodcastTranscriptionCancelResponse(
+        **transcription_cancel_projection_to_payload(payload)
+    )
 
 
 def build_check_new_episodes_response(
     payload: CheckNewEpisodesProjectionLike,
 ) -> PodcastCheckNewEpisodesResponse:
     """Build the recently-published episode scheduling response."""
-    return PodcastCheckNewEpisodesResponse(**check_new_episodes_projection_to_payload(payload))
+    return PodcastCheckNewEpisodesResponse(
+        **check_new_episodes_projection_to_payload(payload)
+    )
 
 
 def build_pending_transcriptions_response(

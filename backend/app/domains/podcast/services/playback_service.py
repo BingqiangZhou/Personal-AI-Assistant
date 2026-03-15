@@ -78,7 +78,11 @@ class PodcastPlaybackService:
             raise ValueError("Episode not found")
 
         playback = await self.repo.update_playback_progress(
-            self.user_id, episode_id, progress_seconds, is_playing, playback_rate,
+            self.user_id,
+            episode_id,
+            progress_seconds,
+            is_playing,
+            playback_rate,
         )
         await self._invalidate_stats_cache()
 
@@ -138,7 +142,8 @@ class PodcastPlaybackService:
         )
 
     async def get_playback_state(
-        self, episode_id: int,
+        self,
+        episode_id: int,
     ) -> PodcastPlaybackStateProjection | None:
         """Get playback state for an episode.
 
@@ -177,7 +182,8 @@ class PodcastPlaybackService:
         )
 
     async def get_playback_states_batch(
-        self, episode_ids: list[int],
+        self,
+        episode_ids: list[int],
     ) -> dict[int, PodcastPlaybackState]:
         """Batch fetch playback states for multiple episodes.
 

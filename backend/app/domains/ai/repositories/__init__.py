@@ -1,5 +1,4 @@
-"""AI模型配置数据访问层
-"""
+"""AI模型配置数据访问层"""
 
 from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,7 +99,8 @@ class AIModelConfigRepository:
             raise DatabaseError(f"Failed to get default model: {e!s}") from e
 
     async def get_active_models(
-        self, model_type: ModelType | None = None,
+        self,
+        model_type: ModelType | None = None,
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序"""
         try:
@@ -110,7 +110,8 @@ class AIModelConfigRepository:
 
             # 按优先级升序排序（数字越小优先级越高），然后按创建时间降序
             stmt = stmt.order_by(
-                AIModelConfig.priority.asc(), AIModelConfig.created_at.desc(),
+                AIModelConfig.priority.asc(),
+                AIModelConfig.created_at.desc(),
             )
 
             result = await self.db.execute(stmt)
@@ -119,7 +120,8 @@ class AIModelConfigRepository:
             raise DatabaseError(f"Failed to get active models: {e!s}") from e
 
     async def get_active_models_by_priority(
-        self, model_type: ModelType | None = None,
+        self,
+        model_type: ModelType | None = None,
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序（用于API调用fallback）"""
         return await self.get_active_models(model_type)
@@ -149,7 +151,8 @@ class AIModelConfigRepository:
                 update(AIModelConfig)
                 .where(
                     and_(
-                        AIModelConfig.model_type == model_type, AIModelConfig.is_default,
+                        AIModelConfig.model_type == model_type,
+                        AIModelConfig.is_default,
                     ),
                 )
                 .values(is_default=False),
@@ -193,7 +196,10 @@ class AIModelConfigRepository:
             raise DatabaseError(f"Failed to delete model config: {e!s}") from e
 
     async def increment_usage(
-        self, model_id: int, success: bool = True, tokens_used: int = 0,
+        self,
+        model_id: int,
+        success: bool = True,
+        tokens_used: int = 0,
     ) -> bool:
         """增加使用统计"""
         try:
@@ -266,7 +272,9 @@ class AIModelConfigRepository:
             raise DatabaseError(f"Failed to increment usage in bulk: {e!s}") from e
 
     async def get_usage_stats(
-        self, model_type: ModelType | None = None, limit: int = 50,
+        self,
+        model_type: ModelType | None = None,
+        limit: int = 50,
     ) -> list[dict]:
         """获取使用统计"""
         try:

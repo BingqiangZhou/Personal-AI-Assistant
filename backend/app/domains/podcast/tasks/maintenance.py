@@ -47,7 +47,9 @@ async def _cleanup_old_playback_states():
 @celery_app.task
 def cleanup_old_transcription_temp_files(days: int = 7):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.maintenance.cleanup_old_transcription_temp_files"
+    task_name = (
+        "app.domains.podcast.tasks.maintenance.cleanup_old_transcription_temp_files"
+    )
     queue_name = "maintenance"
     try:
         result = run_async(_cleanup_old_transcription_temp_files(days=days))

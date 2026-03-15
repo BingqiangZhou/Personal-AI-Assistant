@@ -44,11 +44,7 @@ class TimezoneFormatter(logging.Formatter):
             ct = ct + timedelta(hours=offset)
 
         # 默认时间格式: 2025-12-26 14:30:45
-        s = (
-            ct.strftime(datefmt)
-            if datefmt
-            else ct.strftime("%Y-%m-%d %H:%M:%S")
-        )
+        s = ct.strftime(datefmt) if datefmt else ct.strftime("%Y-%m-%d %H:%M:%S")
         return s
 
     def _get_timezone_offset(self, tz_str: str) -> float:
@@ -183,7 +179,9 @@ def setup_logging(
 
     # 记录日志系统启动信息
     logger = logging.getLogger(__name__)
-    logger.info(f"日志系统已初始化 - 级别: {log_level}, 目录: {log_dir}, 时区: {timezone}")
+    logger.info(
+        f"日志系统已初始化 - 级别: {log_level}, 目录: {log_dir}, 时区: {timezone}"
+    )
 
 
 def get_logger(name: str) -> logging.Logger:

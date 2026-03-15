@@ -26,8 +26,12 @@ router = APIRouter()
 class LoginRequest(BaseModel):
     """Login request schema."""
 
-    username: str | None = Field(None, description="Username for login (alternative to email_or_username)")
-    email_or_username: str | None = Field(None, description="Email or username for login (alternative to username)")
+    username: str | None = Field(
+        None, description="Username for login (alternative to email_or_username)"
+    )
+    email_or_username: str | None = Field(
+        None, description="Email or username for login (alternative to username)"
+    )
     password: str
     remember_me: bool = False
 

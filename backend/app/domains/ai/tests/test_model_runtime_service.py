@@ -59,7 +59,9 @@ async def test_call_transcription_model_keeps_file_handle_open(monkeypatch):
 
     runtime_service = AIModelRuntimeService(
         repo=AsyncMock(),
-        security_service=AsyncMock(get_decrypted_api_key=AsyncMock(return_value="sk-test")),
+        security_service=AsyncMock(
+            get_decrypted_api_key=AsyncMock(return_value="sk-test")
+        ),
     )
     model = SimpleNamespace(
         timeout_seconds=30,

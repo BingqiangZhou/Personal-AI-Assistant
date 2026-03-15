@@ -6,7 +6,8 @@ from fastapi.testclient import TestClient
 
 
 def test_get_profile_stats_returns_lightweight_fields(
-    client: TestClient, mock_stats_service: AsyncMock,
+    client: TestClient,
+    mock_stats_service: AsyncMock,
 ):
     mock_stats_service.get_profile_stats.return_value = {
         "total_subscriptions": 3,
@@ -30,7 +31,9 @@ def test_get_profile_stats_returns_lightweight_fields(
 
 @pytest.mark.parametrize("size", [1, 100])
 def test_get_history_lite_page_size_boundaries(
-    client: TestClient, mock_stats_service: AsyncMock, size: int,
+    client: TestClient,
+    mock_stats_service: AsyncMock,
+    size: int,
 ):
     now = datetime.now(UTC)
     mock_stats_service.list_playback_history_lite.return_value = (
@@ -62,7 +65,8 @@ def test_get_history_lite_page_size_boundaries(
 
 
 def test_get_history_lite_excludes_heavy_fields(
-    client: TestClient, mock_stats_service: AsyncMock,
+    client: TestClient,
+    mock_stats_service: AsyncMock,
 ):
     now = datetime.now(UTC)
     mock_stats_service.list_playback_history_lite.return_value = (

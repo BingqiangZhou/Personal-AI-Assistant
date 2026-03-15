@@ -37,7 +37,9 @@ def _subscription(subscription_id: int = 1) -> Subscription:
 
 
 @pytest.mark.asyncio
-async def test_remove_subscriptions_bulk_all_success(service: PodcastSubscriptionService):
+async def test_remove_subscriptions_bulk_all_success(
+    service: PodcastSubscriptionService,
+):
     service.remove_subscription = AsyncMock(return_value=True)
 
     result = await service.remove_subscriptions_bulk([1, 2, 3])

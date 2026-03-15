@@ -52,12 +52,15 @@ async def test_import_opml_queues_episode_processing_via_orchestration_service()
         return_value=subscription,
     )
 
-    with patch(
-        "app.admin.services.subscriptions_opml_service.PodcastSubscriptionService",
-        return_value=podcast_service,
-    ), patch(
-        "app.admin.services.subscriptions_opml_service.log_admin_action",
-        new=AsyncMock(),
+    with (
+        patch(
+            "app.admin.services.subscriptions_opml_service.PodcastSubscriptionService",
+            return_value=podcast_service,
+        ),
+        patch(
+            "app.admin.services.subscriptions_opml_service.log_admin_action",
+            new=AsyncMock(),
+        ),
     ):
         payload, status_code = await service.import_subscriptions_opml(
             request=request,

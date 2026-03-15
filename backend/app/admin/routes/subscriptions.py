@@ -55,7 +55,9 @@ async def subscriptions_page(
         )
     except Exception as exc:
         logger.error("Subscriptions page error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to load subscriptions") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to load subscriptions"
+        ) from exc
 
 
 @router.post("/subscriptions/update-frequency")
@@ -81,7 +83,9 @@ async def update_subscription_frequency(
         raise
     except Exception as exc:
         logger.error("Update subscription frequency error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to update frequency settings") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to update frequency settings"
+        ) from exc
 
 
 @router.put("/subscriptions/{sub_id}/edit")
@@ -109,7 +113,9 @@ async def edit_subscription(
         raise
     except Exception as exc:
         logger.error("Edit subscription error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to edit subscription") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to edit subscription"
+        ) from exc
 
 
 @router.post("/subscriptions/test-url")
@@ -147,7 +153,9 @@ async def test_all_subscriptions(
         return json_payload(payload)
     except Exception as exc:
         logger.error("Test all subscriptions error: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Failed to test subscriptions: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to test subscriptions: {exc}"
+        ) from exc
 
 
 @router.delete("/subscriptions/{sub_id}/delete")
@@ -159,7 +167,9 @@ async def delete_subscription(
 ):
     """Delete a subscription (with proper handling of podcast-related data)."""
     try:
-        payload = await service.delete_subscription(request=request, user=user, sub_id=sub_id)
+        payload = await service.delete_subscription(
+            request=request, user=user, sub_id=sub_id
+        )
         return json_payload(
             require_payload(payload, detail="Subscription not found"),
         )
@@ -167,7 +177,9 @@ async def delete_subscription(
         raise
     except Exception as exc:
         logger.error("Delete subscription error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to delete subscription") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to delete subscription"
+        ) from exc
 
 
 @router.post("/subscriptions/{sub_id}/refresh")
@@ -179,7 +191,9 @@ async def refresh_subscription(
 ):
     """Manually refresh a subscription."""
     try:
-        payload = await service.refresh_subscription(request=request, user=user, sub_id=sub_id)
+        payload = await service.refresh_subscription(
+            request=request, user=user, sub_id=sub_id
+        )
         return json_payload(
             require_payload(payload, detail="Subscription not found"),
         )
@@ -187,7 +201,9 @@ async def refresh_subscription(
         raise
     except Exception as exc:
         logger.error("Refresh subscription error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to refresh subscription") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to refresh subscription"
+        ) from exc
 
 
 @router.post("/subscriptions/batch/refresh")
@@ -202,7 +218,9 @@ async def batch_refresh_subscriptions(
         return empty_response()
     except Exception as exc:
         logger.error("Batch refresh error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to batch refresh subscriptions") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to batch refresh subscriptions"
+        ) from exc
 
 
 @router.post("/subscriptions/batch/toggle")
@@ -217,7 +235,9 @@ async def batch_toggle_subscriptions(
         return empty_response()
     except Exception as exc:
         logger.error("Batch toggle error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to batch toggle subscriptions") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to batch toggle subscriptions"
+        ) from exc
 
 
 @router.post("/subscriptions/batch/delete")
@@ -258,7 +278,9 @@ async def export_subscriptions_opml(
         return xml_download_response(content=opml_content, filename=filename)
     except Exception as exc:
         logger.error("OPML export error: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Failed to export OPML: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to export OPML: {exc}"
+        ) from exc
 
 
 @router.post("/api/subscriptions/import/opml")

@@ -173,7 +173,7 @@ class DailyReportService:
         if target_date is not None:
             return target_date
         tz = ZoneInfo(self.REPORT_TIMEZONE)
-        return (datetime.now(tz).date() - timedelta(days=1))
+        return datetime.now(tz).date() - timedelta(days=1)
 
     def _compute_window_utc(self, report_date: date) -> tuple[datetime, datetime]:
         tz = ZoneInfo(self.REPORT_TIMEZONE)

@@ -94,7 +94,9 @@ Conclusion."""
 
     def test_filter_thinking_content_nested_content(self):
         """Test thinking content with special characters / 测试包含特殊字符的 thinking 内容"""
-        input_text = "<thinking>This has <special> characters & symbols</thinking>Normal text"
+        input_text = (
+            "<thinking>This has <special> characters & symbols</thinking>Normal text"
+        )
         expected = "Normal text"
         assert filter_thinking_content(input_text) == expected
 
@@ -119,7 +121,9 @@ The actual answer is here."""
 
     def test_filter_thinking_content_think_tag_multiple(self):
         """Test multiple <think> tags / 测试多段 <think> 标签"""
-        input_text = "<think>First thought</think>Part 1<think>Second thought</think>Part 2"
+        input_text = (
+            "<think>First thought</think>Part 1<think>Second thought</think>Part 2"
+        )
         expected = "Part 1Part 2"
         assert filter_thinking_content(input_text) == expected
 
@@ -145,6 +149,8 @@ The actual answer is here."""
 
     def test_filter_thinking_content_mixed_order(self):
         """Test different order of tags / 测试标签顺序"""
-        input_text = "<think>First</think>Part 1<thinking>Second thought</thinking>Part 2"
+        input_text = (
+            "<think>First</think>Part 1<thinking>Second thought</thinking>Part 2"
+        )
         expected = "Part 1Part 2"
         assert filter_thinking_content(input_text) == expected

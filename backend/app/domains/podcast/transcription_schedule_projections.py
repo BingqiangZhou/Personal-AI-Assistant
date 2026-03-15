@@ -28,7 +28,8 @@ class EpisodeTranscriptionScheduleProjection(BaseModel):
 
     @classmethod
     def from_payload(
-        cls, payload: Mapping[str, Any],
+        cls,
+        payload: Mapping[str, Any],
     ) -> "EpisodeTranscriptionScheduleProjection":
         return cls.model_validate(payload)
 
@@ -116,7 +117,8 @@ class TranscriptionScheduleStatusProjection(BaseModel):
 
     @classmethod
     def from_payload(
-        cls, payload: Mapping[str, Any],
+        cls,
+        payload: Mapping[str, Any],
     ) -> "TranscriptionScheduleStatusProjection":
         return cls.model_validate(payload)
 
@@ -133,7 +135,9 @@ class TranscriptionCancelProjection(BaseModel):
         return self.model_dump()
 
     @classmethod
-    def from_payload(cls, payload: Mapping[str, Any]) -> "TranscriptionCancelProjection":
+    def from_payload(
+        cls, payload: Mapping[str, Any]
+    ) -> "TranscriptionCancelProjection":
         return cls.model_validate(payload)
 
 
@@ -194,7 +198,9 @@ class PendingTranscriptionsProjection(BaseModel):
         return self.model_dump()
 
     @classmethod
-    def from_payload(cls, payload: Mapping[str, Any]) -> "PendingTranscriptionsProjection":
+    def from_payload(
+        cls, payload: Mapping[str, Any]
+    ) -> "PendingTranscriptionsProjection":
         return cls.model_validate(payload)
 
 
@@ -208,7 +214,9 @@ TranscriptionScheduleStatusProjectionLike = (
 )
 TranscriptionCancelProjectionLike = TranscriptionCancelProjection | Mapping[str, Any]
 CheckNewEpisodesProjectionLike = CheckNewEpisodesProjection | Mapping[str, Any]
-PendingTranscriptionsProjectionLike = PendingTranscriptionsProjection | Mapping[str, Any]
+PendingTranscriptionsProjectionLike = (
+    PendingTranscriptionsProjection | Mapping[str, Any]
+)
 
 
 def episode_transcription_schedule_projection_to_payload(

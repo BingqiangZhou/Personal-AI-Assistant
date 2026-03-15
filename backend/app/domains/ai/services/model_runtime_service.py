@@ -110,7 +110,9 @@ class AIModelRuntimeService:
                     model.provider,
                     model.priority,
                 )
-                result = await self._call_transcription_model(model, audio_file_path, language)
+                result = await self._call_transcription_model(
+                    model, audio_file_path, language
+                )
                 await self.repo.increment_usage(model.id, success=True)
                 logger.info(
                     "Transcription request succeeded model=%s provider=%s priority=%s",

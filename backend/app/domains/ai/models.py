@@ -28,7 +28,9 @@ class AIModelConfig(Base):
     name = Column(String(100), nullable=False, index=True, comment="模型名称")
     display_name = Column(String(200), nullable=False, comment="显示名称")
     description = Column(Text, nullable=True, comment="模型描述")
-    model_type = Column(String(20), nullable=False, comment="模型类型：transcription/text_generation")
+    model_type = Column(
+        String(20), nullable=False, comment="模型类型：transcription/text_generation"
+    )
 
     # API配置
     api_url = Column(String(500), nullable=False, comment="API端点URL")
@@ -37,7 +39,12 @@ class AIModelConfig(Base):
 
     # 模型特定配置
     model_id = Column(String(200), nullable=False, comment="模型标识符")
-    provider = Column(String(100), nullable=False, default="custom", comment="提供商：openai/siliconflow/custom等")
+    provider = Column(
+        String(100),
+        nullable=False,
+        default="custom",
+        comment="提供商：openai/siliconflow/custom等",
+    )
 
     # 性能配置
     max_tokens = Column(Integer, nullable=True, comment="最大令牌数")
@@ -69,9 +76,18 @@ class AIModelConfig(Base):
     total_tokens_used = Column(Integer, default=0, comment="总令牌使用数")
 
     # 时间戳
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间")
-    last_used_at = Column(DateTime(timezone=True), nullable=True, comment="最后使用时间")
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), comment="创建时间"
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        comment="更新时间",
+    )
+    last_used_at = Column(
+        DateTime(timezone=True), nullable=True, comment="最后使用时间"
+    )
 
     # 索引
     __table_args__ = (
@@ -81,19 +97,27 @@ class AIModelConfig(Base):
     )
 
     def __repr__(self):
-        return f"<AIModelConfig(id={self.id}, name={self.name}, type={self.model_type})>"
+        return (
+            f"<AIModelConfig(id={self.id}, name={self.name}, type={self.model_type})>"
+        )
 
     def get_cost_per_input_token_float(self) -> float | None:
         """获取输入令牌成本的浮点数"""
         try:
-            return float(self.cost_per_input_token) if self.cost_per_input_token else None
+            return (
+                float(self.cost_per_input_token) if self.cost_per_input_token else None
+            )
         except (ValueError, TypeError):
             return None
 
     def get_cost_per_output_token_float(self) -> float | None:
         """获取输出令牌成本的浮点数"""
         try:
-            return float(self.cost_per_output_token) if self.cost_per_output_token else None
+            return (
+                float(self.cost_per_output_token)
+                if self.cost_per_output_token
+                else None
+            )
         except (ValueError, TypeError):
             return None
 

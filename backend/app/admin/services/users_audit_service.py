@@ -36,13 +36,17 @@ class AdminUsersAuditService:
         if action:
             count_query = count_query.where(AdminAuditLog.action == action)
         if resource_type:
-            count_query = count_query.where(AdminAuditLog.resource_type == resource_type)
+            count_query = count_query.where(
+                AdminAuditLog.resource_type == resource_type
+            )
 
         total_count = int((await self.db.execute(count_query)).scalar() or 0)
         offset = (page - 1) * per_page
         audit_logs = (
-            await self.db.execute(query.limit(per_page).offset(offset))
-        ).scalars().all()
+            (await self.db.execute(query.limit(per_page).offset(offset)))
+            .scalars()
+            .all()
+        )
         total_pages = (total_count + per_page - 1) // per_page if total_count else 0
         return {
             "audit_logs": audit_logs,
@@ -56,18 +60,23 @@ class AdminUsersAuditService:
 
     async def get_users_context(self, *, page: int, per_page: int) -> dict:
         total_count = int(
-            (await self.db.execute(select(func.count()).select_from(User))).scalar() or 0,
+            (await self.db.execute(select(func.count()).select_from(User))).scalar()
+            or 0,
         )
         total_pages = (total_count + per_page - 1) // per_page if total_count else 0
         offset = (page - 1) * per_page
         users = (
-            await self.db.execute(
-                select(User)
-                .order_by(User.created_at.desc())
-                .limit(per_page)
-                .offset(offset),
+            (
+                await self.db.execute(
+                    select(User)
+                    .order_by(User.created_at.desc())
+                    .limit(per_page)
+                    .offset(offset),
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return {
             "users": users,
             "page": page,
@@ -111,7 +120,9 @@ class AdminUsersAuditService:
             acting_user_id=user.id,
         )
         if not target_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         await log_admin_action(
             db=self.db,
@@ -126,7 +137,9 @@ class AdminUsersAuditService:
         )
         return {"success": True, "status": target_user.status}
 
-    async def reset_user_password(self, *, target_user_id: int) -> tuple[User | None, str]:
+    async def reset_user_password(
+        self, *, target_user_id: int
+    ) -> tuple[User | None, str]:
         result = await self.db.execute(select(User).where(User.id == target_user_id))
         target_user = result.scalar_one_or_none()
         if not target_user:
@@ -150,7 +163,9 @@ class AdminUsersAuditService:
             target_user_id=target_user_id,
         )
         if not target_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         await log_admin_action(
             db=self.db,
