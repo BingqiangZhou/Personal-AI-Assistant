@@ -37,6 +37,7 @@ class DioClientInitOptions {
 /// - Token refresh (via TokenRefreshService)
 /// - Automatic base URL management
 /// - Error handling with typed exceptions
+/// - Request cancellation support
 class DioClient {
   final DioClientInitOptions _initOptions;
   late final Dio _dio;
@@ -45,6 +46,9 @@ class DioClient {
 
   // ETag interceptor
   late final ETagInterceptor _etagInterceptor;
+
+  // Request cancellation support
+  final Map<String, CancelToken> _cancelTokens = {};
 
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
@@ -610,6 +614,47 @@ class DioClient {
   /// Refresh the session token
   Future<TokenRefreshResult> refreshSessionToken() {
     return _tokenRefreshService.refreshToken();
+  }
+
+  // Request cancellation support
+
+  /// Create a CancelToken for a tagged request
+  CancelToken createCancelToken(String tag) {
+    // Cancel any existing request with the same tag
+    cancelRequest(tag);
+    final token = CancelToken();
+    _cancelTokens[tag] = token;
+    return token;
+  }
+
+  /// Cancel a request by its tag
+  void cancelRequest(String tag, [String? reason]) {
+    final token = _cancelTokens.remove(tag);
+    if (token != null && !token.isCancelled) {
+      token.cancel(reason ?? 'Request cancelled by client');
+      logger.AppLogger.debug('[DioClient] Cancelled request: $tag');
+    }
+  }
+
+  /// Cancel all pending requests
+  void cancelAllRequests([String? reason]) {
+    for (final entry in _cancelTokens.entries) {
+      if (!entry.value.isCancelled) {
+        entry.value.cancel(reason ?? 'All requests cancelled by client');
+      }
+    }
+    _cancelTokens.clear();
+    logger.AppLogger.debug('[DioClient] Cancelled all pending requests');
+  }
+
+  /// Remove a completed request's token
+  void removeCancelToken(String tag) {
+    _cancelTokens.remove(tag);
+  }
+
+  /// Check if a request is cancelled
+  bool isRequestCancelled(String tag) {
+    return _cancelTokens[tag]?.isCancelled ?? true;
   }
 
   // Static factory method for ServiceLocator

@@ -115,6 +115,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
           return ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
             itemCount: itemCount,
             itemBuilder: (context, index) {
               if (index == episodesState.episodes.length) {

@@ -46,10 +46,10 @@ class AppConfig {
   static const String appName = 'Personal AI Assistant';
   static const String appVersion = '1.0.0';
 
-  // Timeouts
-  static const Duration connectionTimeout = Duration(seconds: 300);
-  static const Duration receiveTimeout = Duration(seconds: 300);
-  static const Duration sendTimeout = Duration(seconds: 300);
+  // Timeouts - Reduced from 300s to 60s for better responsiveness
+  static const Duration connectionTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
+  static const Duration sendTimeout = Duration(seconds: 60);
 
   // Pagination
   static const int defaultPageSize = 20;
@@ -85,9 +85,10 @@ class AppConstants {
   static const String appName = AppConfig.appName;
   static const String appVersion = AppConfig.appVersion;
   static String get baseUrl => '${AppConfig.apiBaseUrl}/api/v1';
-  static const int connectTimeout = 300000;
-  static const int receiveTimeout = 300000;
-  static const int sendTimeout = 300000;
+  // Timeouts in milliseconds - reduced from 300s to 60s
+  static const int connectTimeout = 60000;
+  static const int receiveTimeout = 60000;
+  static const int sendTimeout = 60000;
 
   // Storage Keys
   static const String accessTokenKey = 'access_token';

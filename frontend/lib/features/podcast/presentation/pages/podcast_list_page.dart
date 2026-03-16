@@ -890,6 +890,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       controller: _discoverListScrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: isDense ? 12 : 16),
+      cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
       itemCount: switch ((
         visibleItems.isEmpty,
         state.isCurrentTabLoadingMore,
@@ -1217,6 +1218,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     if (searchState.searchMode == search.PodcastSearchMode.episodes) {
       return ListView.builder(
         key: const Key('podcast_discover_search_results'),
+        cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
         itemCount: searchState.episodeResults.length,
         itemBuilder: (context, index) {
           final episode = searchState.episodeResults[index];
@@ -1238,6 +1240,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     return ListView.builder(
       key: const Key('podcast_discover_search_results'),
+      cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
       itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
         final result = searchState.podcastResults[index];

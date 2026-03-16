@@ -339,6 +339,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       return ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 4),
+        cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
         itemCount: itemCount,
         itemBuilder: (context, index) =>
             _buildFeedListItem(context, feedState, index, compact: true),
