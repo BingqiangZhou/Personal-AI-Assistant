@@ -302,6 +302,29 @@ class PodcastEpisodeService:
         """
         return await self.repo.get_episode_by_id(episode_id, self.user_id)
 
+    async def get_episodes_by_ids(
+        self, episode_ids: list[int], user_id: int | None = None
+    ) -> dict[int, PodcastEpisode]:
+        """Batch fetch episodes by IDs for efficient N+1 query resolution.
+
+        Args:
+            episode_ids: List of episode IDs
+            user_id: Optional user ID for filtering
+
+        Returns:
+            Dict mapping episode_id -> episode
+        """
+        if not episode_ids:
+            return {}
+
+        # Use a single query with IN clause for efficiency
+        stmt = select(PodcastEpisode).where(PodcastEpisode.id.in_(episode_ids))
+        if user_id is not None:
+            stmt = stmt.where(PodcastEpisode.user_id == user_id)
+
+        episodes = (await self.db.execute(stmt)).scalars().all()
+        return {ep.id: ep for ep in episodes}
+
     async def get_episode_with_summary(
         self,
         episode_id: int,

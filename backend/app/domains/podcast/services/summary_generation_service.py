@@ -9,9 +9,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 import aiohttp
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import HTTPException, ValidationError
+from app.core.exceptions import ValidationError
 from app.core.http_client import get_shared_http_session
 from app.core.redis import get_shared_redis
 from app.core.utils import filter_thinking_content

@@ -460,7 +460,9 @@ class AudioSplitter:
 
                 # FFmpeg -
                 await _run_ffmpeg_sync(
-                    lambda start_time=start_time, segment_duration=segment_duration, output_path=output_path: (
+                    lambda start_time=start_time,
+                    segment_duration=segment_duration,
+                    output_path=output_path: (
                         ffmpeg.input(input_path, ss=start_time, t=segment_duration)
                         .output(
                             output_path,
@@ -939,18 +941,14 @@ class PodcastTranscriptionService:
         self.default_api_key = getattr(settings, "TRANSCRIPTION_API_KEY", None)
 
     def _get_episode_storage_path(self, episode: PodcastEpisode) -> str:
-        """?"""
-        # ?
+        """Build the storage path for an episode's transcription files."""
         podcast_name = self._sanitize_filename(episode.subscription.title)
         episode_name = self._sanitize_filename(episode.title)
 
         return os.path.join(self.storage_dir, podcast_name, episode_name)
 
     def _sanitize_filename(self, filename: str) -> str:
-        """"""
-        import re
-
-        # ?
+        """Sanitize filename by removing invalid characters and truncating length."""
         filename = re.sub(r'[<>:"/\\|?*]', "", filename)
         filename = filename.replace(" ", "_")
         return filename[:100]
@@ -963,7 +961,7 @@ class PodcastTranscriptionService:
         message: str,
         error_message: str | None = None,
     ):
-        """"""
+        """Update transcription task progress and status in database."""
         update_data = {
             "status": status,
             "progress_percentage": progress,
@@ -973,7 +971,7 @@ class PodcastTranscriptionService:
         if error_message:
             update_data["error_message"] = error_message
 
-        # ?
+        # Set started_at timestamp when task begins processing
         if status == TranscriptionStatus.IN_PROGRESS and not await self._get_task_field(
             task_id,
             "started_at",

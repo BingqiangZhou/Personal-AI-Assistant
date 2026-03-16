@@ -106,10 +106,18 @@ class ConflictError(BaseCustomError):
         super().__init__(message, 409, "CONFLICT", **kwargs)
 
 
-class ValidationError(BaseCustomError):
-    """Validation exception.
+class CustomValidationError(BaseCustomError):
+    """Custom validation exception for service-layer validation.
 
-    验证异常
+    Note: Named CustomValidationError to avoid conflict with Pydantic's ValidationError.
+    Use this for business logic validation in service layers.
+    For route-layer validation errors, use raise_validation_error from app.http.errors.
+
+    自定义验证异常，用于服务层验证。
+
+    注意：命名为 CustomValidationError 以避免与 Pydantic 的 ValidationError 冲突。
+    在服务层使用此异常进行业务逻辑验证。
+    对于路由层的验证错误，请使用 app.http.errors 中的 raise_validation_error。
     """
 
     def __init__(
@@ -118,6 +126,10 @@ class ValidationError(BaseCustomError):
         **kwargs,
     ):
         super().__init__(message, 400, "VALIDATION_ERROR", **kwargs)
+
+
+# Backward compatibility alias
+ValidationError = CustomValidationError
 
 
 class DatabaseError(BaseCustomError):
@@ -285,61 +297,14 @@ def setup_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, general_exception_handler)
 
 
-# Convenience functions for raising common exceptions
-# 抛出常见异常的便捷函数
-
-
-def raise_not_found(resource_type: str = "Resource", resource_id: Any = None) -> None:
-    """Raise a NotFoundError with standardized message.
-
-    抛出标准化的 NotFoundError
-    """
-    if resource_id is not None:
-        message = f"{resource_type} with ID '{resource_id}' not found"
-    else:
-        message = f"{resource_type} not found"
-
-    raise NotFoundError(
-        message=message,
-        details={
-            "resource_type": resource_type,
-            "resource_id": str(resource_id) if resource_id is not None else None,
-        },
-    )
-
-
-def raise_conflict(
-    resource_type: str = "Resource", field: str = "field", value: Any = None
-) -> None:
-    """Raise a ConflictError with standardized message.
-
-    抛出标准化的 ConflictError
-    """
-    if value is not None:
-        message = f"{resource_type} with {field} '{value}' already exists"
-    else:
-        message = f"{resource_type} already exists"
-
-    raise ConflictError(
-        message=message,
-        details={
-            "resource_type": resource_type,
-            "field": field,
-            "value": str(value) if value is not None else None,
-        },
-    )
-
-
-def raise_validation(message: str, field: str | None = None) -> None:
-    """Raise a ValidationError with standardized message.
-
-    抛出标准化的 ValidationError
-    """
-    details = {}
-    if field:
-        details["field"] = field
-
-    raise ValidationError(
-        message=message,
-        details=details,
-    )
+# NOTE: Convenience functions for raising HTTP exceptions have been moved to app.http.errors
+# For route-layer error responses, use:
+#   - raise_not_found() from app.http.errors
+#   - raise_validation_error() from app.http.errors
+#   - raise_unauthorized() from app.http.errors
+#   - raise_forbidden() from app.http.errors
+#
+# For service-layer business logic errors, raise custom exception classes directly:
+#   - raise NotFoundError("message")
+#   - raise CustomValidationError("message")
+#   - raise ConflictError("message")

@@ -512,6 +512,10 @@ class AdminSubscriptionsCommandService:
         self,
         subscriptions: list[Subscription],
     ) -> None:
+        """Delete subscription records in bulk to avoid N+1 queries.
+
+        Optimized to use batch DELETE operations instead of per-subscription loops.
+        """
         from app.domains.podcast.models import (
             PodcastConversation,
             PodcastEpisode,
@@ -519,36 +523,53 @@ class AdminSubscriptionsCommandService:
             TranscriptionTask,
         )
 
-        for subscription in subscriptions:
-            sub_id = subscription.id
-            if subscription.source_type == "podcast-rss":
-                ep_result = await self.db.execute(
-                    select(PodcastEpisode.id).where(
-                        PodcastEpisode.subscription_id == sub_id,
-                    ),
-                )
-                episode_ids = [row[0] for row in ep_result.fetchall()]
-                if episode_ids:
-                    await self.db.execute(
-                        delete(PodcastConversation).where(
-                            PodcastConversation.episode_id.in_(episode_ids),
-                        ),
-                    )
-                    await self.db.execute(
-                        delete(PodcastPlaybackState).where(
-                            PodcastPlaybackState.episode_id.in_(episode_ids),
-                        ),
-                    )
-                    await self.db.execute(
-                        delete(TranscriptionTask).where(
-                            TranscriptionTask.episode_id.in_(episode_ids),
-                        ),
-                    )
+        if not subscriptions:
+            return
+
+        # Separate podcast-rss subscriptions from others
+        podcast_sub_ids = [
+            sub.id for sub in subscriptions if sub.source_type == "podcast-rss"
+        ]
+        all_sub_ids = [sub.id for sub in subscriptions]
+
+        # Batch delete podcast-related records for all podcast subscriptions at once
+        if podcast_sub_ids:
+            # Get all episode IDs for all podcast subscriptions in one query
+            ep_result = await self.db.execute(
+                select(PodcastEpisode.id).where(
+                    PodcastEpisode.subscription_id.in_(podcast_sub_ids),
+                ),
+            )
+            episode_ids = [row[0] for row in ep_result.fetchall()]
+
+            if episode_ids:
+                # Delete all related records in bulk
                 await self.db.execute(
-                    delete(PodcastEpisode).where(
-                        PodcastEpisode.subscription_id == sub_id,
+                    delete(PodcastConversation).where(
+                        PodcastConversation.episode_id.in_(episode_ids),
                     ),
                 )
-            await self.db.execute(delete(Subscription).where(Subscription.id == sub_id))
+                await self.db.execute(
+                    delete(PodcastPlaybackState).where(
+                        PodcastPlaybackState.episode_id.in_(episode_ids),
+                    ),
+                )
+                await self.db.execute(
+                    delete(TranscriptionTask).where(
+                        TranscriptionTask.episode_id.in_(episode_ids),
+                    ),
+                )
+
+            # Delete all episodes for all podcast subscriptions
+            await self.db.execute(
+                delete(PodcastEpisode).where(
+                    PodcastEpisode.subscription_id.in_(podcast_sub_ids),
+                ),
+            )
+
+        # Delete all subscriptions in one batch
+        await self.db.execute(
+            delete(Subscription).where(Subscription.id.in_(all_sub_ids)),
+        )
 
         await self.db.commit()
