@@ -375,7 +375,7 @@ void main() {
         // Should still show completed state with default values
         expect(find.text('Transcription Complete'), findsOneWidget);
         expect(find.text('0.0K'), findsOneWidget);
-        expect(find.text('0:00'), findsOneWidget);
+        expect(find.text('00:00'), findsOneWidget);
         expect(find.text('--'), findsOneWidget); // No accuracy data
       },
     );
