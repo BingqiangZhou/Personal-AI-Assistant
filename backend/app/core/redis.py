@@ -29,6 +29,8 @@ from time import perf_counter
 from typing import Any
 
 from redis import asyncio as aioredis
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
 
 from app.core.config import settings
 
@@ -216,8 +218,8 @@ class PodcastRedis:
             socket_connect_timeout=5,
             retry_on_timeout=True,
             max_connections=settings.REDIS_MAX_CONNECTIONS,
-            retry=aioredis.Retry(
-                aioredis.ExponentialBackoff(base=1, cap=10),
+            retry=Retry(
+                ExponentialBackoff(cap=10, base=1),
                 3,
             ),
         )
