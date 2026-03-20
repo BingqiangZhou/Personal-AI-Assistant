@@ -2947,6 +2947,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI Assistant'**
   String get sidebarAppTitle;
+
+  /// Highlights feature title
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get podcast_highlights_title;
+
+  /// Highlights loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get podcast_highlights_loading;
+
+  /// Highlights empty state message
+  ///
+  /// In en, this message translates to:
+  /// **'No highlights yet'**
+  String get podcast_highlights_empty;
+
+  /// Highlights count label
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 highlight} other{{count} highlights}}'**
+  String podcast_highlights_items(int count);
+
+  /// Highlight insight label
+  ///
+  /// In en, this message translates to:
+  /// **'Insight'**
+  String get podcast_highlights_insight;
+
+  /// Highlight novelty label
+  ///
+  /// In en, this message translates to:
+  /// **'Novelty'**
+  String get podcast_highlights_novelty;
+
+  /// Highlight actionability label
+  ///
+  /// In en, this message translates to:
+  /// **'Actionability'**
+  String get podcast_highlights_actionability;
+
+  /// Favorite highlight button
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get podcast_highlights_favorite;
+
+  /// Unfavorite highlight button
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get podcast_highlights_unfavorite;
+
+  /// Highlights date selector title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get podcast_highlights_dates;
+
+  /// No description provided for @podcast_highlights_generated_prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated at'**
+  String get podcast_highlights_generated_prefix;
 }
 
 class _AppLocalizationsDelegate

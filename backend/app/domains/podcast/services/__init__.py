@@ -2,6 +2,7 @@
 
 from .daily_report_service import DailyReportService
 from .episode_service import PodcastEpisodeService
+from .highlight_extraction_service import HighlightExtractionService
 from .playback_service import PodcastPlaybackService
 from .queue_service import PodcastQueueService
 from .schedule_service import PodcastScheduleService
@@ -31,4 +32,5 @@ __all__ = [
     "PodcastTranscriptionScheduleService",
     "SummaryWorkflowService",
     "TranscriptionWorkflowService",
+    "HighlightExtractionService",
 ]

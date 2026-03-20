@@ -1516,4 +1516,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sidebarAppTitle => 'AI 助手';
+
+  @override
+  String get podcast_highlights_title => '高光观点';
+
+  @override
+  String get podcast_highlights_loading => '加载中...';
+
+  @override
+  String get podcast_highlights_empty => '暂无高光观点';
+
+  @override
+  String podcast_highlights_items(int count) {
+    return '$count 条高光';
+  }
+
+  @override
+  String get podcast_highlights_insight => '洞察力';
+
+  @override
+  String get podcast_highlights_novelty => '新颖性';
+
+  @override
+  String get podcast_highlights_actionability => '可操作性';
+
+  @override
+  String get podcast_highlights_favorite => '收藏';
+
+  @override
+  String get podcast_highlights_unfavorite => '取消收藏';
+
+  @override
+  String get podcast_highlights_dates => '选择日期';
+
+  @override
+  String get podcast_highlights_generated_prefix => '生成于';
 }

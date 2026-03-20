@@ -11,6 +11,7 @@ import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
 import '../models/profile_stats_model.dart';
 import '../models/playback_history_lite_model.dart';
+import '../models/podcast_highlight_model.dart';
 
 part 'podcast_api_service.g.dart';
 
@@ -278,4 +279,25 @@ abstract class PodcastApiService {
   Future<List<ScheduleConfigResponse>> batchUpdateSubscriptionSchedules(
     @Body() Map<String, dynamic> requestData,
   );
+
+  // === Highlights Management ===
+
+  @GET('/podcasts/highlights')
+  Future<HighlightsListResponse> getHighlights(
+    @Query('date') String? date,
+    @Query('page') int page,
+    @Query('per_page') int perPage,
+  );
+
+  @GET('/podcasts/highlights/dates')
+  Future<HighlightDatesResponse> getHighlightDates();
+
+  @GET('/podcasts/highlights/stats')
+  Future<HighlightStatsResponse> getHighlightStats();
+
+  @POST('/podcasts/highlights/{highlightId}/toggle-favorite')
+  Future<void> toggleHighlightFavorite(@Path('highlightId') int highlightId);
+
+  @DELETE('/podcasts/highlights/{highlightId}')
+  Future<void> deleteHighlight(@Path('highlightId') int highlightId);
 }

@@ -2117,5 +2117,51 @@
     "sidebarAppTitle":  "AI Assistant",
     "@sidebarAppTitle":  {
                              "description":  "App title shown in the desktop sidebar header"
-                         }
+                         },
+    "podcast_highlights_title":  "Highlights",
+    "@podcast_highlights_title":  {
+                                       "description":  "Highlights feature title"
+                                   },
+    "podcast_highlights_loading":  "Loading...",
+    "@podcast_highlights_loading":  {
+                                          "description":  "Highlights loading message"
+                                      },
+    "podcast_highlights_empty":  "No highlights yet",
+    "@podcast_highlights_empty":  {
+                                        "description":  "Highlights empty state message"
+                                    },
+    "podcast_highlights_items":  "{count, plural, one{1 highlight} other{{count} highlights}}",
+    "@podcast_highlights_items":  {
+                                        "description":  "Highlights count label",
+                                        "placeholders":  {
+                                                             "count":  {
+                                                                           "type":  "int"
+                                                                       }
+                                                         }
+                                    },
+    "podcast_highlights_insight":  "Insight",
+    "@podcast_highlights_insight":  {
+                                          "description":  "Highlight insight label"
+                                      },
+    "podcast_highlights_novelty":  "Novelty",
+    "@podcast_highlights_novelty":  {
+                                          "description":  "Highlight novelty label"
+                                      },
+    "podcast_highlights_actionability":  "Actionability",
+    "@podcast_highlights_actionability":  {
+                                                "description":  "Highlight actionability label"
+                                            },
+    "podcast_highlights_favorite":  "Favorite",
+    "@podcast_highlights_favorite":  {
+                                            "description":  "Favorite highlight button"
+                                        },
+    "podcast_highlights_unfavorite":  "Unfavorite",
+    "@podcast_highlights_unfavorite":  {
+                                                "description":  "Unfavorite highlight button"
+                                            },
+    "podcast_highlights_dates":  "Select Date",
+    "@podcast_highlights_dates":  {
+                                          "description":  "Highlights date selector title"
+                                      },
+    "podcast_highlights_generated_prefix":  "Generated at"
 }

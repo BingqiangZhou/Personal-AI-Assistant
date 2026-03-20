@@ -1565,4 +1565,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sidebarAppTitle => 'AI Assistant';
+
+  @override
+  String get podcast_highlights_title => 'Highlights';
+
+  @override
+  String get podcast_highlights_loading => 'Loading...';
+
+  @override
+  String get podcast_highlights_empty => 'No highlights yet';
+
+  @override
+  String podcast_highlights_items(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count highlights',
+      one: '1 highlight',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get podcast_highlights_insight => 'Insight';
+
+  @override
+  String get podcast_highlights_novelty => 'Novelty';
+
+  @override
+  String get podcast_highlights_actionability => 'Actionability';
+
+  @override
+  String get podcast_highlights_favorite => 'Favorite';
+
+  @override
+  String get podcast_highlights_unfavorite => 'Unfavorite';
+
+  @override
+  String get podcast_highlights_dates => 'Select Date';
+
+  @override
+  String get podcast_highlights_generated_prefix => 'Generated at';
 }

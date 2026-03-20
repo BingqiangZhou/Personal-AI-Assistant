@@ -8,15 +8,12 @@ part of 'podcast_search_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 播客搜索 Notifier
 
 @ProviderFor(PodcastSearchNotifier)
 final podcastSearchProvider = PodcastSearchNotifierProvider._();
 
-/// 播客搜索 Notifier
 final class PodcastSearchNotifierProvider
     extends $NotifierProvider<PodcastSearchNotifier, PodcastSearchState> {
-  /// 播客搜索 Notifier
   PodcastSearchNotifierProvider._()
     : super(
         from: null,
@@ -45,9 +42,7 @@ final class PodcastSearchNotifierProvider
 }
 
 String _$podcastSearchNotifierHash() =>
-    r'3fdfc308989350eb3d3be25190a5486ec3a06479';
-
-/// 播客搜索 Notifier
+    r'6477cc99eadf0bbb0253936a54074b03bc64773a';
 
 abstract class _$PodcastSearchNotifier extends $Notifier<PodcastSearchState> {
   PodcastSearchState build();

@@ -635,6 +635,145 @@ class PodcastConversation(Base):
         return f"<PodcastConversation(id={self.id}, episode_id={self.episode_id}, role='{self.role}')>"
 
 
+class HighlightExtractionTask(Base):
+    """高光提取任务
+
+    跟踪播客单集高光观点提取的整个生命周期
+    """
+
+    __tablename__ = "highlight_extraction_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    episode_id = Column(
+        Integer,
+        ForeignKey("podcast_episodes.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+
+    # 任务状态
+    status = Column(
+        Enum(
+            "pending",
+            "in_progress",
+            "completed",
+            "failed",
+            name="highlightextractionstatus",
+        ),
+        default="pending",
+        nullable=False,
+    )
+    progress = Column(Float, default=0.0)
+
+    # 结果统计
+    highlights_count = Column(Integer, default=0)
+    processing_time = Column(Float)
+
+    # 错误信息
+    error_message = Column(Text)
+
+    # 模型信息
+    model_used = Column(String(100))
+
+    # 时间戳
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    started_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+
+    # Relationships
+    episode = relationship("PodcastEpisode", backref="highlight_extraction_task")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_highlight_extraction_episode", "episode_id", unique=True),
+        Index("idx_highlight_extraction_status", "status"),
+        Index("idx_highlight_extraction_created", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<HighlightExtractionTask(id={self.id}, episode_id={self.episode_id}, status='{self.status}')>"
+
+
+class EpisodeHighlight(Base):
+    """播客高光观点
+
+    存储从播客单集中提取的核心观点和洞察
+    """
+
+    __tablename__ = "episode_highlights"
+
+    id = Column(Integer, primary_key=True, index=True)
+    episode_id = Column(
+        Integer,
+        ForeignKey("podcast_episodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # 高光内容
+    original_text = Column(Text, nullable=False)  # 原文引用（核心字段）
+    context_before = Column(Text)  # 前文上下文（可选）
+    context_after = Column(Text)  # 后文上下文（可选）
+
+    # 评分维度 (0-10分)
+    insight_score = Column(Float, nullable=False)  # 洞察力评分
+    novelty_score = Column(Float, nullable=False)  # 新颖性评分
+    actionability_score = Column(Float, nullable=False)  # 可操作性评分
+    overall_score = Column(Float, nullable=False)  # 综合评分
+
+    # 元数据
+    speaker_hint = Column(String(200))  # 说话人提示
+    timestamp_hint = Column(String(50))  # 时间戳提示
+    topic_tags = Column(JSON, default=list)  # 话题标签列表
+
+    # 生成信息
+    model_used = Column(String(100))  # 使用的LLM模型
+    extraction_task_id = Column(
+        Integer,
+        ForeignKey("highlight_extraction_tasks.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # 用户交互
+    is_user_favorited = Column(Boolean, default=False)  # 用户是否收藏
+
+    # 状态
+    status = Column(
+        String(20),
+        default="active",
+    )  # active/archived/deleted
+
+    # 时间戳
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    # Relationships
+    episode = relationship("PodcastEpisode", backref="highlights")
+    extraction_task = relationship("HighlightExtractionTask", backref="highlights")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_episode_highlight_episode", "episode_id"),
+        Index("idx_episode_highlight_status", "status"),
+        Index("idx_episode_highlight_overall_score", "overall_score"),
+        Index("idx_episode_highlight_favorited", "is_user_favorited"),
+        Index("idx_episode_highlight_created", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<EpisodeHighlight(id={self.id}, episode_id={self.episode_id}, overall_score={self.overall_score})>"
+
+
 # 辅助方法：判断订阅是否播客
 def is_podcast_subscription(subscription) -> bool:
     """判断Subscription是否播客类型"""

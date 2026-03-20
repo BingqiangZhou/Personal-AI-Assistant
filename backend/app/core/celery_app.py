@@ -41,6 +41,11 @@ def _build_beat_schedule() -> dict[str, Any]:
             "schedule": crontab(hour=19, minute=30),
             "options": {"queue": "ai_generation"},
         },
+        "extract-pending-highlights": {
+            "task": "app.domains.podcast.tasks.highlight_extraction.extract_pending_highlights",
+            "schedule": crontab(minute=15),  # 每小时15分执行
+            "options": {"queue": "ai_generation"},
+        },
     }
     if settings.TRANSCRIPTION_BACKLOG_ENABLED:
         beat_schedule["process-pending-transcriptions"] = {
@@ -116,6 +121,12 @@ def create_celery_app() -> Celery:
                 "queue": "ai_generation",
             },
             "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports": {
+                "queue": "ai_generation",
+            },
+            "app.domains.podcast.tasks.highlight_extraction.extract_episode_highlights": {
+                "queue": "ai_generation",
+            },
+            "app.domains.podcast.tasks.highlight_extraction.extract_pending_highlights": {
                 "queue": "ai_generation",
             },
         },

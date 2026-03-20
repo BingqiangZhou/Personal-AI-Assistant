@@ -2118,5 +2118,51 @@
     "sidebarAppTitle":  "AI 助手",
     "@sidebarAppTitle":  {
                              "description":  "桌面端侧边栏标题"
-                         }
+                         },
+    "podcast_highlights_title":  "高光观点",
+    "@podcast_highlights_title":  {
+                                       "description":  "高光观点功能标题"
+                                   },
+    "podcast_highlights_loading":  "加载中...",
+    "@podcast_highlights_loading":  {
+                                          "description":  "高光观点加载中提示"
+                                      },
+    "podcast_highlights_empty":  "暂无高光观点",
+    "@podcast_highlights_empty":  {
+                                        "description":  "高光观点空状态提示"
+                                    },
+    "podcast_highlights_items":  "{count} 条高光",
+    "@podcast_highlights_items":  {
+                                        "description":  "高光观点数量文案",
+                                        "placeholders":  {
+                                                             "count":  {
+                                                                           "type":  "int"
+                                                                       }
+                                                         }
+                                    },
+    "podcast_highlights_insight":  "洞察力",
+    "@podcast_highlights_insight":  {
+                                          "description":  "高光观点-洞察力标签"
+                                      },
+    "podcast_highlights_novelty":  "新颖性",
+    "@podcast_highlights_novelty":  {
+                                          "description":  "高光观点-新颖性标签"
+                                      },
+    "podcast_highlights_actionability":  "可操作性",
+    "@podcast_highlights_actionability":  {
+                                                "description":  "高光观点-可操作性标签"
+                                            },
+    "podcast_highlights_favorite":  "收藏",
+    "@podcast_highlights_favorite":  {
+                                            "description":  "收藏高光观点按钮"
+                                        },
+    "podcast_highlights_unfavorite":  "取消收藏",
+    "@podcast_highlights_unfavorite":  {
+                                                "description":  "取消收藏高光观点按钮"
+                                            },
+    "podcast_highlights_dates":  "选择日期",
+    "@podcast_highlights_dates":  {
+                                          "description":  "高光观点日期选择器标题"
+                                      },
+    "podcast_highlights_generated_prefix":  "生成于"
 }

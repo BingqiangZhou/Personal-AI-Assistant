@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../data/models/podcast_highlight_model.dart';
+import 'highlight_score_indicator.dart';
+
+/// Card widget for displaying a podcast highlight.
+///
+/// Shows the original quote, overall score badge, three-dimensional scores,
+/// episode source, topic tags, and favorite button.
+class HighlightCard extends ConsumerWidget {
+  const HighlightCard({
+    super.key,
+    required this.highlight,
+    this.onFavoriteToggle,
+    this.onTap,
+    this.isCompact = false,
+  });
+
+  final HighlightResponse highlight;
+  final VoidCallback? onFavoriteToggle;
+  final VoidCallback? onTap;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final tokens = theme.extension<MindriverThemeExtension>();
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: (tokens?.glassSurfaceStrong ?? Colors.white).withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.34 : 0.76,
+                ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.52),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (tokens?.glassShadow ?? Colors.black).withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.08,
+                ),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              isCompact ? 14 : 16,
+              isCompact ? 14 : 16,
+              isCompact ? 12 : 16,
+              isCompact ? 12 : 14,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context, theme),
+                if (!isCompact) ...[
+                  const SizedBox(height: 10),
+                  _buildOriginalQuote(context, theme),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  _buildCompactQuote(context, theme),
+                ],
+                const SizedBox(height: 10),
+                _buildScoresSection(context, theme),
+                const SizedBox(height: 10),
+                _buildMetadataSection(context, theme),
+                if (highlight.topicTags.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildTopicTags(context, theme),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, ThemeData theme) {
+    return Row(
+      children: [
+        _buildOverallScoreBadge(context, theme),
+        const Spacer(),
+        if (highlight.isUserFavorited || _canFavorite())
+          _buildFavoriteButton(context, theme),
+      ],
+    );
+  }
+
+  Widget _buildOverallScoreBadge(BuildContext context, ThemeData theme) {
+    final score = highlight.overallScore;
+    final scoreText = score.toStringAsFixed(1);
+    final scoreColor = _getScoreColor(score, theme);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: scoreColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.star_rounded,
+            size: 14,
+            color: scoreColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            scoreText,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scoreColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFavoriteButton(BuildContext context, ThemeData theme) {
+    final isFavorited = highlight.isUserFavorited;
+
+    return Tooltip(
+      message: isFavorited ? '取消收藏' : '收藏',
+      child: IconButton(
+        onPressed: _canFavorite() ? onFavoriteToggle : null,
+        icon: Icon(
+          isFavorited ? Icons.bookmark : Icons.bookmark_border_rounded,
+          size: isCompact ? 18 : 20,
+        ),
+        style: IconButton.styleFrom(
+          minimumSize: const Size(32, 32),
+          maximumSize: const Size(32, 32),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: EdgeInsets.zero,
+          foregroundColor: isFavorited
+              ? AppColors.sunRay
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOriginalQuote(BuildContext context, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.format_quote_rounded,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '原文引用',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            highlight.originalText,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactQuote(BuildContext context, ThemeData theme) {
+    return Text(
+      highlight.originalText,
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurface,
+        height: 1.45,
+        fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
+  Widget _buildScoresSection(BuildContext context, ThemeData theme) {
+    return HighlightScoreIndicator(
+      insightScore: highlight.insightScore,
+      noveltyScore: highlight.noveltyScore,
+      actionabilityScore: highlight.actionabilityScore,
+      isDense: isCompact,
+    );
+  }
+
+  Widget _buildMetadataSection(BuildContext context, ThemeData theme) {
+    return Row(
+      children: [
+        Icon(
+          Icons.podcasts_rounded,
+          size: 13,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            highlight.episodeTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopicTags(BuildContext context, ThemeData theme) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: highlight.topicTags.take(4).map((tag) {
+        return Chip(
+          label: Text(
+            tag,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          backgroundColor: theme.colorScheme.secondaryContainer.withValues(
+            alpha: 0.4,
+          ),
+          side: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Color _getScoreColor(double score, ThemeData theme) {
+    if (score >= 8.5) {
+      return AppColors.leaf;
+    } else if (score >= 7.0) {
+      return AppColors.primary;
+    } else if (score >= 5.5) {
+      return AppColors.sunGlow;
+    }
+    return theme.colorScheme.onSurfaceVariant;
+  }
+
+  bool _canFavorite() {
+    return true;
+  }
+}

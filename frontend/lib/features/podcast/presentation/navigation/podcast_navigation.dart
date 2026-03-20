@@ -168,6 +168,25 @@ class PodcastNavigation {
     );
   }
 
+  /// Navigate to highlights page
+  static void goToHighlights(
+    BuildContext context, {
+    DateTime? date,
+    String? source,
+  }) {
+    final routingContext = _resolveRoutingContext(context);
+    if (routingContext == null) {
+      return;
+    }
+    GoRouter.of(routingContext).pushNamed(
+      'highlights',
+      queryParameters: {
+        if (date != null) 'date': EpisodeCardUtils.formatDate(date),
+        if (source != null && source.isNotEmpty) 'source': source,
+      },
+    );
+  }
+
   /// Pop to podcast list
   static void popToList(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.settings.name == 'podcast');

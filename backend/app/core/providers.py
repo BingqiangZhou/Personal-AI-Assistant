@@ -28,6 +28,7 @@ from app.domains.podcast.repositories import (
 )
 from app.domains.podcast.services.daily_report_service import DailyReportService
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
+from app.domains.podcast.services.highlight_service import HighlightService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.queue_service import PodcastQueueService
 from app.domains.podcast.services.schedule_service import PodcastScheduleService
@@ -376,6 +377,14 @@ def get_daily_report_service(
     return DailyReportService(db, user_id)
 
 
+def get_highlight_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+    user_id: int = Depends(get_token_user_id),
+) -> HighlightService:
+    """Provide request-scoped podcast highlight service."""
+    return HighlightService(db, user_id)
+
+
 def get_summary_workflow_service(
     db: AsyncSession = Depends(get_db_session_dependency),
 ) -> SummaryWorkflowService:
@@ -419,6 +428,7 @@ __all__ = [
     "get_current_user",
     "get_daily_report_service",
     "get_db_session_dependency",
+    "get_highlight_service",
     "get_podcast_episode_repository",
     "get_podcast_episode_service",
     "get_podcast_parser",

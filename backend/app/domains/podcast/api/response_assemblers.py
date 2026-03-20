@@ -23,6 +23,10 @@ from app.domains.podcast.schemas import (
     ConversationSessionListResponse,
     ConversationSessionResponse,
     DailyReportDateItem,
+    HighlightDatesResponse,
+    HighlightListResponse,
+    HighlightResponse,
+    HighlightStatsResponse,
     PlaybackRateEffectiveResponse,
     PodcastBatchTranscriptionResponse,
     PodcastCheckNewEpisodesResponse,
@@ -432,3 +436,25 @@ def build_summary_models_response(
         for model in models
     ]
     return SummaryModelsResponse(models=model_infos, total=len(model_infos))
+
+
+def build_highlight_list_response(payload: dict[str, Any]) -> HighlightListResponse:
+    """Build the highlights list response."""
+    items = [HighlightResponse(**item) for item in payload.get("items", [])]
+    return HighlightListResponse(
+        items=items,
+        total=payload["total"],
+        page=payload["page"],
+        per_page=payload["per_page"],
+        has_more=payload["has_more"],
+    )
+
+
+def build_highlight_dates_response(payload: dict[str, Any]) -> HighlightDatesResponse:
+    """Build the highlight dates response."""
+    return HighlightDatesResponse(dates=payload.get("dates", []))
+
+
+def build_highlight_stats_response(payload: dict[str, Any]) -> HighlightStatsResponse:
+    """Build the highlight stats response."""
+    return HighlightStatsResponse(**payload)

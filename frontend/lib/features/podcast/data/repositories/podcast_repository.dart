@@ -12,6 +12,7 @@ import '../models/podcast_conversation_model.dart';
 import '../models/schedule_config_model.dart';
 import '../models/profile_stats_model.dart';
 import '../models/playback_history_lite_model.dart';
+import '../models/podcast_highlight_model.dart';
 import '../services/podcast_api_service.dart';
 
 class PodcastRepository {
@@ -619,6 +620,53 @@ class PodcastRepository {
         'subscription_ids': subscriptionIds,
         'schedule_data': request.toJson(),
       });
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // === Highlights Management ===
+
+  Future<HighlightsListResponse> getHighlights({
+    DateTime? date,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final dateParam = date != null ? EpisodeCardUtils.formatDate(date) : null;
+      return await _apiService.getHighlights(dateParam, page, perPage);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<HighlightDatesResponse> getHighlightDates() async {
+    try {
+      return await _apiService.getHighlightDates();
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<HighlightStatsResponse> getHighlightStats() async {
+    try {
+      return await _apiService.getHighlightStats();
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<void> toggleHighlightFavorite(int highlightId) async {
+    try {
+      await _apiService.toggleHighlightFavorite(highlightId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<void> deleteHighlight(int highlightId) async {
+    try {
+      await _apiService.deleteHighlight(highlightId);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

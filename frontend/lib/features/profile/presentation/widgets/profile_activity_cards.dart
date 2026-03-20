@@ -49,6 +49,13 @@ class ProfileActivityCards extends ConsumerWidget {
       isLoading: isLoading,
     );
 
+    // Highlights stats
+    final highlightStatsAsync = ref.watch(highlightStatsProvider);
+    final highlightsCount = highlightStatsAsync.maybeWhen(
+      data: (value) => value?.totalHighlights.toString() ?? '0',
+      orElse: () => '...',
+    );
+
     if (isMobile) {
       return Column(
         children: [
@@ -100,6 +107,17 @@ class ProfileActivityCards extends ConsumerWidget {
                 PodcastNavigation.goToDailyReport(context, source: 'profile'),
             showChevron: true,
             cardKey: const Key('profile_daily_report_card'),
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            icon: Icons.lightbulb_outline,
+            label: l10n.podcast_highlights_title,
+            value: highlightsCount,
+            color: scheme.primary,
+            onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
+            showChevron: true,
+            cardKey: const Key('profile_highlights_card'),
           ),
         ],
       );
@@ -156,6 +174,16 @@ class ProfileActivityCards extends ConsumerWidget {
                 PodcastNavigation.goToDailyReport(context, source: 'profile'),
             showChevron: true,
             cardKey: const Key('profile_daily_report_card'),
+          ),
+          _buildActivityCard(
+            context,
+            icon: Icons.lightbulb_outline,
+            label: l10n.podcast_highlights_title,
+            value: highlightsCount,
+            color: scheme.primary,
+            onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
+            showChevron: true,
+            cardKey: const Key('profile_highlights_card'),
           ),
         ];
 

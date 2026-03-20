@@ -14,6 +14,7 @@ import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/pages/podcast_daily_report_page.dart';
+import '../../features/podcast/presentation/pages/podcast_highlights_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
 import '../../features/profile/presentation/pages/profile_cache_management_page.dart';
@@ -90,6 +91,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final parsedDate = _parseDateOnlyQuery(dateParam);
           return _PlayerAwareRouteFrame(
             child: PodcastDailyReportPage(
+              initialDate: parsedDate,
+              source: state.uri.queryParameters['source'],
+            ),
+          );
+        },
+      ),
+
+      // Highlights route (no bottom nav)
+      GoRoute(
+        path: '/highlights',
+        name: 'highlights',
+        builder: (context, state) {
+          final dateParam = state.uri.queryParameters['date'];
+          final parsedDate = _parseDateOnlyQuery(dateParam);
+          return _PlayerAwareRouteFrame(
+            child: PodcastHighlightsPage(
               initialDate: parsedDate,
               source: state.uri.queryParameters['source'],
             ),
