@@ -5,14 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// ============================================================
-/// Arctic Garden Design System - 北极花园设计系统
+/// Arctic Garden Design System - 北极花园设计系统 (DEPRECATED)
 ///
-/// Typography System (简约精致):
-/// - Headings: Outfit (几何感、精致、现代)
-/// - Body: Plus Jakarta Sans (优雅、清晰、易读)
-/// - Mono: JetBrains Mono (代码、数据展示)
+/// This file is deprecated. Use app_theme.dart instead.
+/// 此文件已弃用。请使用 app_theme.dart。
 /// ============================================================
 
+@Deprecated('Use AppTheme from app_theme.dart instead')
 class ArcticTheme {
   ArcticTheme._();
 
@@ -29,11 +28,10 @@ class ArcticTheme {
       isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
     );
     final extension = isDark
-        ? MindriverThemeExtension.dark
-        : MindriverThemeExtension.light;
+        ? AppThemeExtension.dark
+        : AppThemeExtension.light;
 
-    // Arctic Garden Typography: Instrument Serif + DM Sans
-    final googleTextTheme = _buildArcticGardenTextTheme(textTheme);
+    final googleTextTheme = _buildGoogleTextTheme(textTheme);
 
     return ThemeData(
       useMaterial3: true,
@@ -69,25 +67,21 @@ class ArcticTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: isDark
-            ? extension.glassSurfaceStrong.withValues(alpha: 0.72)
-            : extension.glassSurfaceStrong,
+        color: scheme.surface,
         elevation: 0,
-        shadowColor: extension.glassShadow,
+        shadowColor: extension.shadowMd.color,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(extension.cardRadius),
-          side: BorderSide(color: extension.glassBorder),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: isDark
-            ? extension.glassSurfaceStrong
-            : Colors.white.withValues(alpha: 0.98),
+        backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(extension.panelRadius),
-          side: BorderSide(color: extension.glassBorder),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
         titleTextStyle: GoogleFonts.outfit(
           textStyle: textTheme.headlineSmall,
@@ -102,8 +96,8 @@ class ArcticTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.8),
+            ? scheme.surfaceContainerHighest
+            : scheme.surface,
         hintStyle: GoogleFonts.plusJakartaSans(
           textStyle: textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -115,8 +109,8 @@ class ArcticTheme {
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+          horizontal: 16,
+          vertical: 14,
         ),
         border: _inputBorder(extension, scheme.outlineVariant),
         enabledBorder: _inputBorder(extension, scheme.outlineVariant),
@@ -129,21 +123,19 @@ class ArcticTheme {
         focusedErrorBorder: _inputBorder(extension, scheme.error, width: 1.4),
       ),
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         iconColor: scheme.onSurfaceVariant,
         textColor: scheme.onSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(extension.cardRadius)),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.75),
+        backgroundColor: scheme.surfaceContainerHighest,
         selectedColor: scheme.primary.withValues(alpha: 0.14),
         disabledColor: scheme.surfaceContainerHighest,
         secondarySelectedColor: scheme.primary.withValues(alpha: 0.16),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         labelStyle: GoogleFonts.plusJakartaSans(
           textStyle: textTheme.labelMedium?.copyWith(color: scheme.onSurface),
         ),
@@ -155,14 +147,14 @@ class ArcticTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: scheme.surface,
         contentTextStyle: GoogleFonts.plusJakartaSans(
           textStyle: textTheme.bodyMedium?.copyWith(
             color: scheme.onSurface,
           ),
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(extension.cardRadius),
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
         ),
         behavior: SnackBarBehavior.floating,
@@ -179,7 +171,7 @@ class ArcticTheme {
         elevation: 0,
         focusElevation: 0,
         hoverElevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(extension.buttonRadius)),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.transparent,
@@ -227,7 +219,7 @@ class ArcticTheme {
         style: _buttonStyle(
           scheme.primary,
           scheme.onPrimary,
-          radius: 20,
+          radius: extension.buttonRadius,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           textStyle: GoogleFonts.plusJakartaSans(
@@ -241,7 +233,7 @@ class ArcticTheme {
         style: _buttonStyle(
           scheme.primary,
           scheme.onPrimary,
-          radius: 20,
+          radius: extension.buttonRadius,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           textStyle: GoogleFonts.plusJakartaSans(
@@ -257,7 +249,7 @@ class ArcticTheme {
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
           backgroundColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           textStyle: GoogleFonts.plusJakartaSans(
@@ -271,7 +263,7 @@ class ArcticTheme {
         style: TextButton.styleFrom(
           foregroundColor: scheme.onSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           textStyle: GoogleFonts.plusJakartaSans(
@@ -282,7 +274,7 @@ class ArcticTheme {
         ),
       ),
       checkboxTheme: CheckboxThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         side: BorderSide(color: scheme.outlineVariant),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
@@ -291,9 +283,7 @@ class ArcticTheme {
             if (states.contains(WidgetState.selected)) {
               return scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12);
             }
-            return isDark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.white.withValues(alpha: 0.55);
+            return scheme.surfaceContainerHighest;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             return states.contains(WidgetState.selected)
@@ -304,7 +294,7 @@ class ArcticTheme {
             BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
           ),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(extension.buttonRadius)),
           ),
         ),
       ),
@@ -320,30 +310,30 @@ class ArcticTheme {
     );
 
     return base.copyWith(
-      primary: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
-      onPrimary: isDark ? const Color(0xFF0A0F1C) : Colors.white,
+      primary: isDark ? const Color(0xFF60A5FA) : AppColors.primary,
+      onPrimary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
       primaryContainer: isDark
-          ? const Color(0xFF1E3A5F)
-          : const Color(0xFFE0F2FE),
+          ? AppColors.primaryContainerDark
+          : AppColors.primaryContainer,
       onPrimaryContainer: isDark
           ? AppColors.darkTextPrimary
-          : const Color(0xFF0C4A6E),
-      secondary: isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4),
-      onSecondary: isDark ? const Color(0xFF0A1520) : Colors.white,
+          : const Color(0xFF1E3A8A),
+      secondary: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+      onSecondary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
       secondaryContainer: isDark
-          ? const Color(0xFF164E63)
-          : const Color(0xFFCFFAFE),
+          ? const Color(0xFF1E293B)
+          : const Color(0xFFF1F5F9),
       onSecondaryContainer: isDark
           ? AppColors.darkTextPrimary
-          : const Color(0xFF115E59),
-      tertiary: isDark ? const Color(0xFF34D399) : const Color(0xFF10B981),
-      onTertiary: isDark ? const Color(0xFF0A2015) : Colors.white,
+          : const Color(0xFF334155),
+      tertiary: isDark ? const Color(0xFF22C55E) : const Color(0xFF16A34A),
+      onTertiary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
       tertiaryContainer: isDark
           ? const Color(0xFF14532D)
-          : const Color(0xFFD1FAE5),
+          : const Color(0xFFDCFCE7),
       onTertiaryContainer: isDark
           ? const Color(0xFFECFDF5)
-          : const Color(0xFF065F46),
+          : const Color(0xFF166534),
       error: AppColors.error,
       onError: Colors.white,
       errorContainer: isDark
@@ -361,20 +351,20 @@ class ArcticTheme {
           : AppColors.lightTextSecondary,
       outline: isDark ? AppColors.darkOutline : AppColors.lightOutline,
       outlineVariant: isDark
-          ? const Color(0xFF334155)
-          : const Color(0xFFCBD5E1),
+          ? AppColors.darkOutlineVariant
+          : AppColors.lightOutlineVariant,
       shadow: Colors.black,
       scrim: Colors.black,
     );
   }
 
   static OutlineInputBorder _inputBorder(
-    MindriverThemeExtension extension,
+    AppThemeExtension extension,
     Color color, {
     double width = 1,
   }) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(extension.cardRadius),
+      borderRadius: BorderRadius.circular(extension.inputRadius),
       borderSide: BorderSide(color: color, width: width),
     );
   }
@@ -412,7 +402,7 @@ class ArcticTheme {
       displaySmall: TextStyle(
         fontSize: 48,
         height: 1.1,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         letterSpacing: -1.5,
         color: primary,
       ),
@@ -433,7 +423,7 @@ class ArcticTheme {
       headlineSmall: TextStyle(
         fontSize: 20,
         height: 1.25,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         letterSpacing: -0.3,
         color: primary,
       ),
@@ -477,7 +467,7 @@ class ArcticTheme {
       labelLarge: TextStyle(
         fontSize: 14,
         height: 1.2,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
         color: primary,
       ),
@@ -498,10 +488,9 @@ class ArcticTheme {
     );
   }
 
-  /// Build Arctic Garden typography with Outfit + Plus Jakarta Sans
-  static TextTheme _buildArcticGardenTextTheme(TextTheme baseTheme) {
+  /// Build typography with Outfit + Plus Jakarta Sans
+  static TextTheme _buildGoogleTextTheme(TextTheme baseTheme) {
     return baseTheme.copyWith(
-      // Display & Headings - Outfit (几何感、精致、现代)
       displaySmall: GoogleFonts.outfit(
         textStyle: baseTheme.displaySmall,
       ),
@@ -517,7 +506,6 @@ class ArcticTheme {
       titleLarge: GoogleFonts.outfit(
         textStyle: baseTheme.titleLarge,
       ),
-      // Body & Labels - Plus Jakarta Sans (优雅、清晰、易读)
       titleMedium: GoogleFonts.plusJakartaSans(
         textStyle: baseTheme.titleMedium,
       ),

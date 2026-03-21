@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -186,7 +187,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
 
   Widget _buildHighlightsPanel(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final l10n = AppLocalizations.of(context)!;
     final highlightsAsync = ref.watch(highlightsProvider);
     final selectedDate = ref.watch(selectedHighlightDateProvider);
@@ -207,7 +208,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
       return _buildEmptyState(context, headerDate);
     }
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
       borderRadius: tokens.panelRadius,
       child: Column(
@@ -318,9 +319,9 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
-      borderRadius: mindriverThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).panelRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -373,10 +374,10 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
 
   Widget _buildEmptyState(BuildContext context, DateTime headerDate) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
       borderRadius: tokens.panelRadius,
       child: Column(
@@ -449,7 +450,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                 constraints: BoxConstraints(maxWidth: maxPanelWidth),
                 child: Material(
                   color: Colors.transparent,
-                  child: GlassPanel(
+                  child: SurfacePanel(
                     key: const Key('highlights_calendar_panel'),
                     padding: const EdgeInsets.all(16),
                     borderRadius: 26,
@@ -688,7 +689,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     bool isDisabled = false,
   }) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final normalizedDay = _toDateOnly(day);
     final selected = isSelected || _isSameDate(normalizedDay, selectedDate);
     Color textColor = theme.colorScheme.onSurface;

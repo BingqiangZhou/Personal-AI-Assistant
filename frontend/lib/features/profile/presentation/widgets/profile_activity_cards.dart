@@ -214,7 +214,7 @@ class ProfileActivityCards extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        child: GlassPanel(
+        child: SurfacePanel(
           borderRadius: 20,
           showHighlight: false,
           child: Row(

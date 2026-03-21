@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../localization/app_localizations.dart';
+import '../theme/app_colors.dart';
 import 'app_shells.dart';
 
 /// Base class for styled empty state widgets.
@@ -33,7 +34,7 @@ class StyledEmptyState extends StatelessWidget {
     final resolvedIconColor = iconColor ?? scheme.primary;
 
     return Center(
-      child: GlassPanel(
+      child: SurfacePanel(
         padding: const EdgeInsets.all(28),
         backgroundColor: backgroundColor,
         child: ConstrainedBox(
@@ -207,7 +208,7 @@ class EmptyLibraryState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
 
     return StyledEmptyState(
       icon: Icons.library_books,
@@ -251,7 +252,7 @@ class EmptyConversationsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
 
     return StyledEmptyState(
       icon: Icons.chat_bubble_outline,

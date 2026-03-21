@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 
@@ -65,23 +63,13 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     final accessoryBodyPadding = bottomAccessory != null
         ? bottomAccessoryBodyPadding
         : 0.0;
-    final bottomBackdropHeight =
-        dockReserve + accessoryBodyPadding + globalOverlayBodyPadding + 36;
+    final totalBottomReserve = dockReserve + accessoryBodyPadding + globalOverlayBodyPadding;
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
       appBar: appBar,
       body: Stack(
         children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _BottomBackdrop(
-              key: const Key('custom_adaptive_navigation_bottom_backdrop'),
-              height: bottomBackdropHeight,
-            ),
-          ),
           Stack(
             children: [
               RepaintBoundary(
@@ -89,10 +77,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   duration: _kBottomAccessoryPaddingTransition,
                   curve: Curves.easeOutCubic,
                   padding: EdgeInsets.only(
-                    bottom:
-                        accessoryBodyPadding +
-                        globalOverlayBodyPadding +
-                        dockReserve,
+                    bottom: totalBottomReserve,
                   ),
                   child: body ?? const SizedBox.shrink(),
                 ),
@@ -125,7 +110,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                 kPodcastGlobalPlayerMobileViewportPadding,
               ),
               child: Align(
-                child: _GlassDock(
+                child: _CleanDock(
                   key: const Key('custom_adaptive_navigation_mobile_dock'),
                   width: width < 420
                       ? width - (kPodcastGlobalPlayerMobileViewportPadding * 2)
@@ -147,20 +132,23 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       body: Row(
         children: [
           SizedBox(
-            width: 86,
-            child: _GlassSidebar(
-              compact: true,
-              child: Column(
-                children: [
-                  const SizedBox(height: 18),
-                  _buildBrandLogoBadge(context),
-                  const SizedBox(height: 18),
-                  ..._buildNavigationItems(context, compact: true),
-                  const Spacer(),
-                  if (destinations.isNotEmpty)
-                    _buildProfileNavigationItem(context, compact: true),
-                  const SizedBox(height: 12),
-                ],
+            width: 72,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: _CleanSidebar(
+                compact: true,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 18),
+                    _buildBrandLogoBadge(context),
+                    const SizedBox(height: 18),
+                    ..._buildNavigationItems(context, compact: true),
+                    const Spacer(),
+                    if (destinations.isNotEmpty)
+                      _buildProfileNavigationItem(context, compact: true),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
           ),
@@ -189,7 +177,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       body: Row(
         children: [
           TweenAnimationBuilder<double>(
-            tween: Tween<double>(end: expanded ? 280 : 80),
+            tween: Tween<double>(end: expanded ? 256 : 72),
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             builder: (context, animatedWidth, child) {
@@ -199,7 +187,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                 width: animatedWidth,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                  child: _GlassSidebar(
+                  child: _CleanSidebar(
                     compact: showCompact,
                     child: showCompact
                         ? _buildDesktopCollapsedSidebar(context)
@@ -315,7 +303,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       width: 38,
       height: 38,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         child: Image.asset('assets/icons/Logo3.png', fit: BoxFit.contain),
       ),
     );
@@ -381,13 +369,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final scheme = Theme.of(context).colorScheme;
+    final extension = appThemeOf(context);
     return Tooltip(
       message: destination.label,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(extension.navItemRadius),
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
@@ -398,7 +387,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               color: isSelected
                   ? scheme.primary.withValues(alpha: 0.14)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(extension.navItemRadius),
             ),
             child: Center(
               child: isSelected
@@ -419,12 +408,13 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final extension = appThemeOf(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(extension.navItemRadius),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         hoverColor: Colors.transparent,
@@ -435,7 +425,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             color: isSelected
                 ? scheme.primary.withValues(alpha: 0.14)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(extension.navItemRadius),
           ),
           child: Row(
             children: [
@@ -508,7 +498,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         hoverColor: Colors.transparent,
@@ -527,7 +517,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   color: isSelected
                       ? scheme.primary.withValues(alpha: 0.14)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: isSelected
                     ? (destination.selectedIcon ?? destination.icon)
@@ -573,10 +563,10 @@ class ResponsiveContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final tokens =
-        Theme.of(context).extension<MindriverThemeExtension>() ??
+        Theme.of(context).extension<AppThemeExtension>() ??
         (Theme.of(context).brightness == Brightness.dark
-            ? MindriverThemeExtension.dark
-            : MindriverThemeExtension.light);
+            ? AppThemeExtension.dark
+            : AppThemeExtension.light);
 
     final topPadding = MediaQuery.viewPaddingOf(context).top;
     final resolvedPadding =
@@ -608,8 +598,9 @@ class ResponsiveContainer extends StatelessWidget {
   }
 }
 
-class _GlassSidebar extends StatelessWidget {
-  const _GlassSidebar({required this.child, required this.compact});
+/// Clean sidebar with solid background and subtle border
+class _CleanSidebar extends StatelessWidget {
+  const _CleanSidebar({required this.child, required this.compact});
 
   final Widget child;
   final bool compact;
@@ -617,40 +608,31 @@ class _GlassSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens =
-        theme.extension<MindriverThemeExtension>() ??
-        (theme.brightness == Brightness.dark
-            ? MindriverThemeExtension.dark
-            : MindriverThemeExtension.light);
+    final scheme = theme.colorScheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(compact ? 28 : 32),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tokens.glassSurfaceStrong.withValues(
-              alpha: tokens.navBackdropOpacity,
-            ),
-            borderRadius: BorderRadius.circular(compact ? 28 : 32),
-            border: Border.all(color: tokens.glassBorder),
-            boxShadow: [
-              BoxShadow(
-                color: tokens.glassShadow,
-                blurRadius: 30,
-                offset: const Offset(0, 16),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(compact ? 16 : 20),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          child: child,
-        ),
+        ],
       ),
+      child: child,
     );
   }
 }
 
-class _GlassDock extends StatelessWidget {
-  const _GlassDock({super.key, required this.child, required this.width});
+/// Clean dock with solid background and shadow
+class _CleanDock extends StatelessWidget {
+  const _CleanDock({super.key, required this.child, required this.width});
 
   final Widget child;
   final double width;
@@ -658,87 +640,25 @@ class _GlassDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens =
-        theme.extension<MindriverThemeExtension>() ??
-        (theme.brightness == Brightness.dark
-            ? MindriverThemeExtension.dark
-            : MindriverThemeExtension.light);
+    final scheme = theme.colorScheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          width: width,
-          decoration: BoxDecoration(
-            color: tokens.glassSurfaceStrong.withValues(
-              alpha: tokens.navBackdropOpacity,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: tokens.glassBorder),
-            boxShadow: [
-              BoxShadow(
-                color: tokens.glassShadow,
-                blurRadius: 32,
-                offset: const Offset(0, 18),
-              ),
-            ],
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          child: child,
-        ),
+        ],
       ),
-    );
-  }
-}
-
-class _BottomBackdrop extends StatelessWidget {
-  const _BottomBackdrop({super.key, required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens =
-        theme.extension<MindriverThemeExtension>() ??
-        (theme.brightness == Brightness.dark
-            ? MindriverThemeExtension.dark
-            : MindriverThemeExtension.light);
-    final baseColor = Color.alphaBlend(
-      theme.colorScheme.surface.withValues(
-        alpha: theme.brightness == Brightness.dark ? 0.16 : 0.24,
-      ),
-      theme.scaffoldBackgroundColor,
-    );
-
-    return IgnorePointer(
-      child: SizedBox(
-        height: height,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: baseColor,
-                gradient: tokens.shellGradient,
-              ),
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    baseColor.withValues(alpha: 0),
-                    baseColor.withValues(alpha: 0.58),
-                    baseColor,
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: child,
     );
   }
 }

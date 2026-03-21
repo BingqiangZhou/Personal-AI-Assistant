@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -104,9 +105,9 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                               );
                             }
 
-                            return GlassPanel(
+                            return SurfacePanel(
                               padding: EdgeInsets.zero,
-                              borderRadius: mindriverThemeOf(
+                              borderRadius: appThemeOf(
                                 context,
                               ).panelRadius,
                               child: Column(
@@ -245,9 +246,9 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
       );
     }
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
-      borderRadius: mindriverThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).panelRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

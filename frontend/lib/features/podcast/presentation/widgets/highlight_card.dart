@@ -27,7 +27,7 @@ class HighlightCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final tokens = theme.extension<MindriverThemeExtension>();
+    final tokens = theme.extension<AppThemeExtension>();
 
     return Material(
       color: Colors.transparent,

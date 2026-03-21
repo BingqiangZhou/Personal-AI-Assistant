@@ -217,7 +217,7 @@ class AuroraBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<MindriverThemeExtension>();
+    final tokens = Theme.of(context).extension<AppThemeExtension>();
 
     return Stack(
       fit: StackFit.expand,

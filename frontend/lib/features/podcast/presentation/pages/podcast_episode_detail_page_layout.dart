@@ -40,7 +40,7 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
     BuildContext context,
     PodcastEpisodeDetailResponse episode,
   ) {
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
 
     return Align(
       alignment: Alignment.topCenter,

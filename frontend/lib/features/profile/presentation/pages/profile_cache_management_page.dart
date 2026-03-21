@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -666,10 +667,10 @@ class _ProfileCacheManagementPageState
     final theme = Theme.of(context);
     final palette = _CachePagePalette.of(theme);
 
-    return GlassPanel(
+    return SurfacePanel(
       key: const Key('cache_manage_content_panel'),
       padding: EdgeInsets.zero,
-      borderRadius: mindriverThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).panelRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

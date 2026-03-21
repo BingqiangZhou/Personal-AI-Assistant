@@ -2,10 +2,10 @@ part of 'podcast_episode_detail_page.dart';
 
 extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
   Widget _buildTabSurface(Widget child, {Key? key}) {
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final theme = Theme.of(context);
 
-    return GlassPanel(
+    return SurfacePanel(
       key: key,
       padding: EdgeInsets.zero,
       borderRadius: tokens.panelRadius,

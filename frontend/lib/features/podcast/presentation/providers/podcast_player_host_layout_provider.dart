@@ -318,8 +318,8 @@ double _resolvePlayerMaxWidth(
   required double horizontalPadding,
 }) {
   final themeTokens =
-      Theme.of(context).extension<MindriverThemeExtension>() ??
-      MindriverThemeExtension.light;
+      Theme.of(context).extension<AppThemeExtension>() ??
+      AppThemeExtension.light;
   final maxContentWidth = switch (layoutMode) {
     PodcastPlayerLayoutMode.mobile => availableWidth,
     PodcastPlayerLayoutMode.tablet => 920.0,

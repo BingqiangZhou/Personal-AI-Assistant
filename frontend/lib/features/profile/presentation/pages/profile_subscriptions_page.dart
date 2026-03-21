@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -292,9 +293,9 @@ class _ProfileSubscriptionsPageState
       );
     }
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
-      borderRadius: mindriverThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).panelRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -359,9 +360,9 @@ class _ProfileSubscriptionsPageState
       );
     }
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
-      borderRadius: mindriverThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).panelRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -18,7 +18,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
     final labels = _episodeDetailTabLabels();
     final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
 
-    return GlassPanel(
+    return SurfacePanel(
       key: const Key('podcast_episode_detail_primary_tabs'),
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       backgroundColor: Theme.of(
@@ -80,7 +80,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
     final labels = _episodeDetailTabLabels();
     final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
 
-    return GlassPanel(
+    return SurfacePanel(
       key: const Key('podcast_episode_detail_primary_tabs'),
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       backgroundColor: Theme.of(

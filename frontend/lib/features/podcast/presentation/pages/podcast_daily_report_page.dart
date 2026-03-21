@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/time_formatter.dart';
 import '../../../../core/widgets/app_shells.dart';
@@ -153,7 +154,7 @@ class _PodcastDailyReportPageState
   Widget _buildRegenerateButton(DateTime? targetDate) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     return FilledButton.tonalIcon(
       key: const Key('daily_report_regenerate_button'),
       onPressed: _isGeneratingDailyReport || targetDate == null
@@ -202,7 +203,7 @@ class _PodcastDailyReportPageState
   Widget _buildDailyReportPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final reportAsync = ref.watch(dailyReportProvider);
     final selectedDate = ref.watch(selectedDailyReportDateProvider);
     final report = reportAsync.value;
@@ -284,7 +285,7 @@ class _PodcastDailyReportPageState
       );
     }
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
       borderRadius: tokens.panelRadius,
       child: Column(
@@ -344,10 +345,10 @@ class _PodcastDailyReportPageState
     required String subtitle,
     required Widget child,
   }) {
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final theme = Theme.of(context);
 
-    return GlassPanel(
+    return SurfacePanel(
       padding: EdgeInsets.zero,
       borderRadius: tokens.panelRadius,
       child: Column(
@@ -410,7 +411,7 @@ class _PodcastDailyReportPageState
   ) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final metaLine =
         '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
 
@@ -514,7 +515,7 @@ class _PodcastDailyReportPageState
                 constraints: BoxConstraints(maxWidth: maxPanelWidth),
                 child: Material(
                   color: Colors.transparent,
-                  child: GlassPanel(
+                  child: SurfacePanel(
                     key: const Key('daily_report_calendar_panel'),
                     padding: const EdgeInsets.all(16),
                     borderRadius: 26,
@@ -755,7 +756,7 @@ class _PodcastDailyReportPageState
     bool isDisabled = false,
   }) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final normalizedDay = _toDateOnly(day);
     final selected = isSelected || _isSameDate(normalizedDay, selectedDate);
     Color textColor = theme.colorScheme.onSurface;

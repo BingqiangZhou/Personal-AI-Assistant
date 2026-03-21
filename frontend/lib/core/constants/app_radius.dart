@@ -12,7 +12,7 @@ import '../theme/app_colors.dart';
 
 /// Design tokens for border radius throughout the app.
 ///
-/// These values align with [MindriverThemeExtension] and should be used
+/// These values align with [AppThemeExtension] and should be used
 /// consistently instead of hardcoded values.
 class AppRadius {
   AppRadius._();
@@ -21,7 +21,7 @@ class AppRadius {
   // CORE RADIUS VALUES - 核心圆角值（有机形态）
   // ============================================================
 
-  // Primary shapes from MindriverThemeExtension
+  // Primary shapes from AppThemeExtension
   static const double cardValue = 20.0; // 卡片圆角（更精致）
   static const double panelValue = 28.0; // 面板圆角（更精致）
   static const double buttonValue = 18.0; // 按钮圆角（更精致）
@@ -101,14 +101,14 @@ extension AppRadiusExtension on BuildContext {
   /// Get the card radius from the current theme.
   double get cardRadius {
     final extension =
-        Theme.of(this).extension<MindriverThemeExtension>();
+        Theme.of(this).extension<AppThemeExtension>();
     return extension?.cardRadius ?? AppRadius.cardValue;
   }
 
   /// Get the panel radius from the current theme.
   double get panelRadius {
     final extension =
-        Theme.of(this).extension<MindriverThemeExtension>();
+        Theme.of(this).extension<AppThemeExtension>();
     return extension?.panelRadius ?? AppRadius.panelValue;
   }
 }

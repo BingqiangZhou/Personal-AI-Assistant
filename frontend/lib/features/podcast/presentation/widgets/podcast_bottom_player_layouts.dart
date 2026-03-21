@@ -8,7 +8,7 @@ class _ReservedBottomBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final baseColor = Color.alphaBlend(
       theme.colorScheme.surface.withValues(
         alpha: theme.brightness == Brightness.dark ? 0.20 : 0.28,
@@ -232,7 +232,7 @@ class _PodcastExpandedOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
+    final tokens = appThemeOf(context);
     final mediaSize = MediaQuery.sizeOf(context);
     final maxPanelWidth = math.min(
       mediaSize.width - (viewportSpec.dockHorizontalPadding * 2),
@@ -369,7 +369,7 @@ class _ExpandedPanelContent extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: mindriverThemeOf(context).glassBorder,
+                  color: appThemeOf(context).glassBorder,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),

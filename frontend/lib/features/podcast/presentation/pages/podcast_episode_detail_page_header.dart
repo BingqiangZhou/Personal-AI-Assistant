@@ -69,7 +69,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     ];
 
     if (isWide) {
-      return GlassPanel(
+      return SurfacePanel(
         key: key,
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Row(
@@ -119,7 +119,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
           : episode.audioDuration! * 1000,
     );
 
-    return GlassPanel(
+    return SurfacePanel(
       key: key,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: SizedBox(
