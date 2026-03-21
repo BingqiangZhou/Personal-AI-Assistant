@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.22.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.22.1...v0.22.2) - 2026-03-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.22.2))
+
+### ⚡ Performance
+
+- *(podcast)* Optimize highlight queries and loading performance ([c66360e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c66360e85aaf7545d70a17c70c00cb48ea28ad99))
+
+### 🐛 Bug Fixes
+
+- *(db)* Revert highlight extraction status to String type ([7eaa1be](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7eaa1be7b4b7e300b76ee5873dab67e12fe8cdab))
+- *(podcast)* Use UserSubscription table for user filtering in highlight queries ([159c24a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/159c24abae63cc48ddff2a72c04bc711a3ea7e93))
+
+### 🚜 Refactor
+
+- *(profile)* Consolidate highlight stats into profile stats response ([9ec4568](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9ec4568288165c31ccaf8c899057a84d623b872c))
+- *(profile)* Add hideTitle option to AppSectionHeader for cleaner UI ([7b19180](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7b191802892a8783e122539c2948e4ec7f7a1815))
+
+
+
 ## [0.22.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.22.0...v0.22.1) - 2026-03-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.22.1))
 
 ### 🐛 Bug Fixes
