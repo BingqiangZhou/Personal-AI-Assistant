@@ -322,10 +322,10 @@ class _PodcastDailyReportPageState
                     child: ListView.separated(
                       controller: _reportItemsScrollController,
                       key: const Key('daily_report_items_scroll'),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                      padding: EdgeInsets.zero,
                       itemCount: currentReport.items.length,
                       separatorBuilder: (_, separatorIndex) =>
-                          const SizedBox(height: 12),
+                          const SizedBox.shrink(),
                       itemBuilder: (itemContext, index) {
                         final item = currentReport.items[index];
                         return _buildReportItemCard(itemContext, item);

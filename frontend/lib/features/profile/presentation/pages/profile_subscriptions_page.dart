@@ -315,7 +315,7 @@ class _ProfileSubscriptionsPageState
             child: ListView.builder(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              padding: EdgeInsets.zero,
               itemCount: subscriptions.length + 1,
               itemBuilder: (context, index) {
                 if (index == subscriptions.length) {
@@ -386,10 +386,7 @@ class _ProfileSubscriptionsPageState
     AppLocalizations l10n,
   ) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: kPodcastRowCardHorizontalMargin,
-        vertical: kPodcastRowCardVerticalMargin,
-      ),
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
         side: BorderSide.none,

@@ -136,12 +136,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                     child: ListView.builder(
                                       physics:
                                           const AlwaysScrollableScrollPhysics(),
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        16,
-                                        16,
-                                        20,
-                                      ),
+                                      padding: EdgeInsets.zero,
                                       itemCount: episodes.length,
                                       itemBuilder: (context, index) {
                                         final episode = episodes[index];
@@ -276,10 +271,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
     PlaybackHistoryLiteItem episode,
   ) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: kPodcastRowCardHorizontalMargin,
-        vertical: kPodcastRowCardVerticalMargin,
-      ),
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
         side: BorderSide.none,
