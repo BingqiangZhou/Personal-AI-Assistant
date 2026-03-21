@@ -123,6 +123,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                       title: l10n.profile_viewed_title,
                                       subtitle:
                                           '${episodes.length} recently played episodes',
+                                      hideTitle: true,
                                     ),
                                   ),
                                   Divider(

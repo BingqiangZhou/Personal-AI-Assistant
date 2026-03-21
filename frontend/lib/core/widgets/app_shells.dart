@@ -195,11 +195,13 @@ class AppSectionHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.hideTitle = false,
   });
 
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final bool hideTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -211,9 +213,9 @@ class AppSectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: theme.textTheme.titleLarge),
+              if (!hideTitle) Text(title, style: theme.textTheme.titleLarge),
               if (subtitle != null) ...[
-                const SizedBox(height: 4),
+                if (!hideTitle) const SizedBox(height: 4),
                 Text(
                   subtitle!,
                   style: theme.textTheme.bodyMedium?.copyWith(

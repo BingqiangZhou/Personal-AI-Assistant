@@ -303,6 +303,7 @@ class _ProfileSubscriptionsPageState
             child: AppSectionHeader(
               title: l10n.profile_subscriptions,
               subtitle: '$total subscribed shows',
+              hideTitle: true,
             ),
           ),
           Divider(
