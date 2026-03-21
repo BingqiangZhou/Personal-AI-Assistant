@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import date, datetime, time
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,13 +63,15 @@ class HighlightService:
             base_query = base_query.where(EpisodeHighlight.overall_score >= min_score)
 
         if date_from is not None:
+            # Use datetime range instead of func.date() to allow index usage
             base_query = base_query.where(
-                func.date(EpisodeHighlight.created_at) >= date_from
+                EpisodeHighlight.created_at >= datetime.combine(date_from, time.min)
             )
 
         if date_to is not None:
+            # Use datetime range instead of func.date() to allow index usage
             base_query = base_query.where(
-                func.date(EpisodeHighlight.created_at) <= date_to
+                EpisodeHighlight.created_at <= datetime.combine(date_to, time.max)
             )
 
         if favorited_only:
@@ -156,9 +158,13 @@ class HighlightService:
 
     async def get_stats(self) -> dict:
         """Get highlight statistics for Profile card."""
-        # Count total highlights
-        count_query = (
-            select(func.count(EpisodeHighlight.id))
+        # Single query combining count, avg, and max for better performance
+        stats_query = (
+            select(
+                func.count(EpisodeHighlight.id).label("total"),
+                func.avg(EpisodeHighlight.overall_score).label("avg_score"),
+                func.max(EpisodeHighlight.created_at).label("latest_created_at"),
+            )
             .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
@@ -169,40 +175,12 @@ class HighlightService:
                 )
             )
         )
-        count_result = await self.db.execute(count_query)
-        total_highlights = count_result.scalar() or 0
+        result = await self.db.execute(stats_query)
+        row = result.one()
 
-        # Calculate average score
-        avg_query = (
-            select(func.avg(EpisodeHighlight.overall_score))
-            .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
-            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
-            .where(
-                and_(
-                    UserSubscription.user_id == self.user_id,
-                    EpisodeHighlight.status == "active",
-                )
-            )
-        )
-        avg_result = await self.db.execute(avg_query)
-        avg_score = avg_result.scalar() or 0.0
-
-        # Get latest extraction date
-        latest_query = (
-            select(func.max(EpisodeHighlight.created_at))
-            .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
-            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
-            .where(
-                and_(
-                    UserSubscription.user_id == self.user_id,
-                    EpisodeHighlight.status == "active",
-                )
-            )
-        )
-        latest_result = await self.db.execute(latest_query)
-        latest_created_at = latest_result.scalar()
+        total_highlights = row.total or 0
+        avg_score = row.avg_score or 0.0
+        latest_created_at = row.latest_created_at
 
         latest_extraction_date = None
         if latest_created_at:

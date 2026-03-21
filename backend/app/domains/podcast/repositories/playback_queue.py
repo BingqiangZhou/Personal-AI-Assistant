@@ -234,6 +234,26 @@ class PodcastPlaybackQueueRepositoryMixin:
         result = await self.db.execute(stmt)
         return result.unique().scalar_one()
 
+    async def _refresh_queue_with_items(self, queue: PodcastQueue) -> PodcastQueue:
+        """Refresh queue with all relations loaded efficiently.
+
+        This is more efficient than get_queue_with_items when we already have
+        the queue object, as it avoids the initial get_or_create_queue query.
+        """
+        await self.db.refresh(queue)
+        stmt = (
+            select(PodcastQueue)
+            .options(
+                joinedload(PodcastQueue.items)
+                .joinedload(PodcastQueueItem.episode)
+                .joinedload(PodcastEpisode.subscription),
+                joinedload(PodcastQueue.current_episode),
+            )
+            .where(PodcastQueue.id == queue.id)
+        )
+        result = await self.db.execute(stmt)
+        return result.unique().scalar_one()
+
     @staticmethod
     def _sorted_queue_items(queue: PodcastQueue) -> list[PodcastQueueItem]:
         return sorted(queue.items, key=lambda item: (item.position, item.id))
@@ -427,7 +447,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)
 
     async def remove_item(self, user_id: int, episode_id: int) -> PodcastQueue:
         started_at = perf_counter()
@@ -470,7 +490,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)
 
     async def activate_episode(
         self,
@@ -531,7 +551,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)
 
     async def reorder_items(
         self,
@@ -581,7 +601,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)
 
     async def set_current(self, user_id: int, episode_id: int) -> PodcastQueue:
         started_at = perf_counter()
@@ -620,7 +640,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)
 
     async def complete_current(self, user_id: int) -> PodcastQueue:
         started_at = perf_counter()
@@ -669,4 +689,4 @@ class PodcastPlaybackQueueRepositoryMixin:
             revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return await self._refresh_queue_with_items(queue)

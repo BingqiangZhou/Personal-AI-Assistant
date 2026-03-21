@@ -290,56 +290,40 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
           format: ApplePodcastRssFormat.json,
         );
 
+        // Parallel loading for better performance
+        final (showsResponse, episodesResponse) = await (
+          showsFuture,
+          episodesFuture,
+        ).wait;
+
         List<PodcastDiscoverItem>? shows;
         List<PodcastDiscoverItem>? episodes;
 
-        if (selectedTab == PodcastDiscoverTab.podcasts) {
-          final showsResponse = await showsFuture;
-          shows = _mapChartItems(
-            showsResponse,
-            defaultKind: PodcastDiscoverKind.podcasts,
+        shows = _mapChartItems(
+          showsResponse,
+          defaultKind: PodcastDiscoverKind.podcasts,
+        );
+        episodes = _mapChartItems(
+          episodesResponse,
+          defaultKind: PodcastDiscoverKind.podcastEpisodes,
+        );
+
+        // Early update for current tab for faster perceived loading
+        if (selectedTab == PodcastDiscoverTab.podcasts && _isRequestActive(requestId)) {
+          state = state.copyWith(
+            topShows: shows,
+            showsPagination: _paginationStateFor(
+              requestedLimit: CacheConstants.discoverInitialFetchLimit,
+              loadedCount: shows.length,
+            ),
           );
-          if (_isRequestActive(requestId)) {
-            state = state.copyWith(
-              isLoading: false,
-              isRefreshing: false,
-              topShows: shows,
-              showsPagination: _paginationStateFor(
-                requestedLimit: CacheConstants.discoverInitialFetchLimit,
-                loadedCount: shows.length,
-              ),
-              selectedCategory: PodcastDiscoverState.allCategoryValue,
-              clearError: true,
-            );
-          }
-          final episodesResponse = await episodesFuture;
-          episodes = _mapChartItems(
-            episodesResponse,
-            defaultKind: PodcastDiscoverKind.podcastEpisodes,
-          );
-        } else {
-          final episodesResponse = await episodesFuture;
-          episodes = _mapChartItems(
-            episodesResponse,
-            defaultKind: PodcastDiscoverKind.podcastEpisodes,
-          );
-          if (_isRequestActive(requestId)) {
-            state = state.copyWith(
-              isLoading: false,
-              isRefreshing: false,
-              topEpisodes: episodes,
-              episodesPagination: _paginationStateFor(
-                requestedLimit: CacheConstants.discoverInitialFetchLimit,
-                loadedCount: episodes.length,
-              ),
-              selectedCategory: PodcastDiscoverState.allCategoryValue,
-              clearError: true,
-            );
-          }
-          final showsResponse = await showsFuture;
-          shows = _mapChartItems(
-            showsResponse,
-            defaultKind: PodcastDiscoverKind.podcasts,
+        } else if (selectedTab == PodcastDiscoverTab.episodes && _isRequestActive(requestId)) {
+          state = state.copyWith(
+            topEpisodes: episodes,
+            episodesPagination: _paginationStateFor(
+              requestedLimit: CacheConstants.discoverInitialFetchLimit,
+              loadedCount: episodes.length,
+            ),
           );
         }
 

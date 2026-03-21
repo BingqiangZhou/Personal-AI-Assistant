@@ -8,8 +8,8 @@ class CacheConstants {
   // ==================== Cache Durations ====================
 
   /// Cache duration for the podcast feed (episodes from all subscriptions).
-  /// Short duration since new episodes can appear frequently.
-  static const Duration feedCacheDuration = Duration(seconds: 30);
+  /// Balanced duration to reduce API calls while keeping content fresh.
+  static const Duration feedCacheDuration = Duration(minutes: 2);
 
   /// Default cache duration for list data that doesn't change often.
   static const Duration defaultListCacheDuration = Duration(minutes: 5);

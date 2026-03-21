@@ -762,6 +762,9 @@ class EpisodeHighlight(Base):
         Index("idx_episode_highlight_overall_score", "overall_score"),
         Index("idx_episode_highlight_favorited", "is_user_favorited"),
         Index("idx_episode_highlight_created", "created_at"),
+        # Composite index for date range queries and date-ordered results
+        # Note: Migration uses DESC for created_at to optimize get_highlight_dates
+        Index("idx_episode_highlight_status_created", "status", "created_at"),
     )
 
     def __repr__(self):
