@@ -653,13 +653,7 @@ class HighlightExtractionTask(Base):
 
     # 任务状态
     status = Column(
-        Enum(
-            "pending",
-            "in_progress",
-            "completed",
-            "failed",
-            name="highlightextractionstatus",
-        ),
+        String(20),
         default="pending",
         nullable=False,
     )
