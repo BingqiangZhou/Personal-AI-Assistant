@@ -624,9 +624,18 @@ class HighlightExtractionService:
                 "model_used": task.model_used,
             }
         elif task.status == "in_progress":
-            raise ValidationError(
-                f"Highlight extraction already in progress for episode {episode_id}"
-            )
+            # Check if this is a stale task (started more than 1 hour ago)
+            # If so, reset and continue; otherwise skip
+            stale_threshold = datetime.now(UTC) - timedelta(hours=1)
+            if task.started_at and task.started_at < stale_threshold:
+                # Stale task, reset and continue processing
+                task.started_at = datetime.now(UTC)
+                task.error_message = None
+            else:
+                # Recently started by another worker, skip
+                raise ValidationError(
+                    f"Highlight extraction already in progress for episode {episode_id}"
+                )
         else:
             # Failed or pending, reset to in_progress
             task.status = "in_progress"
