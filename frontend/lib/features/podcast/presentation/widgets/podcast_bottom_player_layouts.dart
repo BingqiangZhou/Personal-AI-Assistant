@@ -135,9 +135,11 @@ class _MiniDockBody extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: onExpand,
-            child: _CoverImage(
-              imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
-              size: 48,
+            child: RepaintBoundary(
+              child: _CoverImage(
+                imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
+                size: 48,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -382,7 +384,9 @@ class _ExpandedPanelContent extends StatelessWidget {
           const SizedBox(height: 10),
           const _ExpandedProgressSection(),
           const SizedBox(height: 10),
-          const _TransportRow(),
+          RepaintBoundary(
+            child: const _TransportRow(),
+          ),
         ],
       ),
     );
@@ -440,9 +444,11 @@ class _ExpandedHero extends ConsumerWidget {
       children: [
         KeyedSubtree(
           key: const Key('podcast_bottom_player_expanded_cover'),
-          child: _CoverImage(
-            imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
-            size: imageSize,
+          child: RepaintBoundary(
+            child: _CoverImage(
+              imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
+              size: imageSize,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -602,42 +608,46 @@ class _ExpandedProgressSectionState
     return Column(
       key: const Key('podcast_bottom_player_expanded_progress'),
       children: [
-        SliderTheme(
-          data: theme.sliderTheme.copyWith(
-            activeTrackColor: theme.colorScheme.primary,
-            inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
-            thumbColor: theme.colorScheme.primary,
-            overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-            trackHeight: 3,
-          ),
-          child: Slider(
-            key: const Key('podcast_bottom_player_progress_slider'),
-            value: effectivePositionMs.clamp(0, durationMs).toDouble(),
-            max: durationMs.toDouble(),
-            onChangeStart: _startScrub,
-            onChanged: _updateScrub,
-            onChangeEnd: _finishScrub,
+        RepaintBoundary(
+          child: SliderTheme(
+            data: theme.sliderTheme.copyWith(
+              activeTrackColor: theme.colorScheme.primary,
+              inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
+              thumbColor: theme.colorScheme.primary,
+              overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+              trackHeight: 3,
+            ),
+            child: Slider(
+              key: const Key('podcast_bottom_player_progress_slider'),
+              value: effectivePositionMs.clamp(0, durationMs).toDouble(),
+              max: durationMs.toDouble(),
+              onChangeStart: _startScrub,
+              onChanged: _updateScrub,
+              onChangeEnd: _finishScrub,
+            ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatMilliseconds(effectivePositionMs),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+        RepaintBoundary(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatMilliseconds(effectivePositionMs),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              Text(
-                _formatMilliseconds(progress.durationMs),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+                Text(
+                  _formatMilliseconds(progress.durationMs),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

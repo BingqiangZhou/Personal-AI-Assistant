@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/text_processing_cache.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import 'podcast_empty_state.dart';
 import '../providers/transcription_providers.dart';
@@ -315,7 +316,7 @@ class TranscriptDisplayWidgetState
 
   Widget _buildFullTranscript(BuildContext context, String content) {
     // 根据句号分段（支持中英文句号）
-    final segments = _splitIntoSentences(content);
+    final segments = TextProcessingCache.getCachedSentences(content);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -328,35 +329,6 @@ class TranscriptDisplayWidgetState
         },
       ),
     );
-  }
-
-  /// 将文本根据句号分段（支持中英文句号）
-  List<String> _splitIntoSentences(String text) {
-    final segments = <String>[];
-
-    // 使用正则表达式按句号分段，支持：
-    // - 中文句号 。
-    // - 英文句号 .
-    // - 问号 ?
-    // - 感叹号 ！!
-    // - 省略号 ......
-    final sentencePattern = RegExp(r'[^。.！!？?]+[。.！!？?]+[^。.！!？?]*');
-
-    final matches = sentencePattern.allMatches(text);
-
-    for (final match in matches) {
-      final sentence = match.group(0)?.trim();
-      if (sentence != null && sentence.isNotEmpty) {
-        segments.add(sentence);
-      }
-    }
-
-    // 如果没有匹配到任何句子，返回原文本
-    if (segments.isEmpty) {
-      return [text];
-    }
-
-    return segments;
   }
 
   Widget _buildSentenceSegment(

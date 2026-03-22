@@ -12,25 +12,33 @@ class _TransportRow extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _PlaybackSpeedChip(
-              speed: ref.watch(audioPlaybackRateProvider),
-              onTap: () => _showSpeedSelector(context, ref),
+            RepaintBoundary(
+              child: _PlaybackSpeedChip(
+                speed: ref.watch(audioPlaybackRateProvider),
+                onTap: () => _showSpeedSelector(context, ref),
+              ),
             ),
             const SizedBox(width: 8),
-            const _SkipButton(
-              keyValue: 'podcast_bottom_player_rewind_10',
-              deltaMs: -10000,
-              icon: Icons.replay_10_rounded,
-              tooltipLocalizationKey: _TooltipKey.rewind10,
+            const RepaintBoundary(
+              child: _SkipButton(
+                keyValue: 'podcast_bottom_player_rewind_10',
+                deltaMs: -10000,
+                icon: Icons.replay_10_rounded,
+                tooltipLocalizationKey: _TooltipKey.rewind10,
+              ),
             ),
             const SizedBox(width: 10),
-            const _PlayPauseButtonLarge(),
+            const RepaintBoundary(
+              child: _PlayPauseButtonLarge(),
+            ),
             const SizedBox(width: 10),
-            const _SkipButton(
-              keyValue: 'podcast_bottom_player_forward_30',
-              deltaMs: 30000,
-              icon: Icons.forward_30_rounded,
-              tooltipLocalizationKey: _TooltipKey.forward30,
+            const RepaintBoundary(
+              child: _SkipButton(
+                keyValue: 'podcast_bottom_player_forward_30',
+                deltaMs: 30000,
+                icon: Icons.forward_30_rounded,
+                tooltipLocalizationKey: _TooltipKey.forward30,
+              ),
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -254,12 +262,14 @@ class _MiniProgressIndicator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(audioMiniProgressProvider);
-    return LinearProgressIndicator(
-      key: const Key('podcast_bottom_player_mini_progress'),
-      value: progress.progress,
-      minHeight: 4,
-      color: progressColor,
-      backgroundColor: progressTrackColor,
+    return RepaintBoundary(
+      child: LinearProgressIndicator(
+        key: const Key('podcast_bottom_player_mini_progress'),
+        value: progress.progress,
+        minHeight: 4,
+        color: progressColor,
+        backgroundColor: progressTrackColor,
+      ),
     );
   }
 }

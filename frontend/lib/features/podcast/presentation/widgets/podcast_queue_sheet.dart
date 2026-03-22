@@ -706,7 +706,9 @@ class _QueueListItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                _QueueItemCover(item: item, isCurrent: isCurrent, size: 42),
+                RepaintBoundary(
+                  child: _QueueItemCover(item: item, isCurrent: isCurrent, size: 42),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -915,7 +917,9 @@ class _QueueItemCover extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: const _EqualizerBadge(),
+                child: const RepaintBoundary(
+                  child: _EqualizerBadge(),
+                ),
               ),
             ),
         ],

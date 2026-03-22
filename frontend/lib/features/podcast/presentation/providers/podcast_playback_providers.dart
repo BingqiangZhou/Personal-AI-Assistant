@@ -59,7 +59,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   // Position debounce fields
   Timer? _positionDebounceTimer;
   int? _pendingPositionMs;
-  static const Duration _positionDebounceInterval = Duration(milliseconds: 200);
+  // Dynamic debounce intervals based on playback state
+  static const Duration _positionDebounceIntervalPlaying = Duration(milliseconds: 500);
+  static const Duration _positionDebounceIntervalPaused = Duration(milliseconds: 100);
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
@@ -502,9 +504,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         }
       } else if (state.position != positionMs) {
         // Debounce small position changes
+        // Use longer interval when playing to reduce UI updates
+        final debounceInterval = state.isPlaying
+            ? _positionDebounceIntervalPlaying
+            : _positionDebounceIntervalPaused;
         _pendingPositionMs = positionMs;
         _positionDebounceTimer?.cancel();
-        _positionDebounceTimer = Timer(_positionDebounceInterval, () {
+        _positionDebounceTimer = Timer(debounceInterval, () {
           if (_isDisposed || !ref.mounted) return;
           _positionDebounceTimer = null;
           final pending = _pendingPositionMs;
