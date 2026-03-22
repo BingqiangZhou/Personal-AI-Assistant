@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/scroll_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/time_formatter.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
@@ -438,7 +439,6 @@ class _QueueList extends ConsumerStatefulWidget {
 }
 
 class _QueueListState extends ConsumerState<_QueueList> {
-  static const double _kEstimatedItemExtent = 88;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -485,7 +485,7 @@ class _QueueListState extends ConsumerState<_QueueList> {
       return;
     }
 
-    final targetOffset = math.max(0.0, index * _kEstimatedItemExtent - 96);
+    final targetOffset = math.max(0.0, index * ScrollConstants.queueItemExtent - 96);
     final maxOffset = _scrollController.position.maxScrollExtent;
     final clampedOffset = math.min(targetOffset, maxOffset);
 
@@ -509,7 +509,8 @@ class _QueueListState extends ConsumerState<_QueueList> {
     return ReorderableListView.builder(
       scrollController: _scrollController,
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
-      itemExtent: _kEstimatedItemExtent,
+      itemExtent: ScrollConstants.queueItemExtent,
+      cacheExtent: ScrollConstants.defaultCacheExtent,
       buildDefaultDragHandles: false,
       physics: const AlwaysScrollableScrollPhysics(),
       proxyDecorator: (child, index, animation) {

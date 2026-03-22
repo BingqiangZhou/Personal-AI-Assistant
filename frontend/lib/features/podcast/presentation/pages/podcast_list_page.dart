@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/scroll_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
@@ -33,8 +34,6 @@ class PodcastListPage extends ConsumerStatefulWidget {
 }
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
-  static const double _kDiscoverLoadMoreExtentThreshold = 320;
-
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _discoverListScrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -109,7 +108,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
 
     final position = _discoverListScrollController.position;
-    if (position.extentAfter > _kDiscoverLoadMoreExtentThreshold) {
+    if (position.extentAfter > ScrollConstants.loadMoreThreshold) {
       return;
     }
 
@@ -901,7 +900,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       controller: _discoverListScrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: isDense ? 12 : 16),
-      cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
+      cacheExtent: ScrollConstants.largeListCacheExtent,
       itemCount: switch ((
         visibleItems.isEmpty,
         state.isCurrentTabLoadingMore,
@@ -994,13 +993,15 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ),
               ),
               SizedBox(width: isDense ? 4 : 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: PodcastImageWidget(
-                  imageUrl: item.artworkUrl,
-                  width: imageSize,
-                  height: imageSize,
-                  iconSize: 24,
+              RepaintBoundary(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: PodcastImageWidget(
+                    imageUrl: item.artworkUrl,
+                    width: imageSize,
+                    height: imageSize,
+                    iconSize: 24,
+                  ),
                 ),
               ),
               SizedBox(width: isDense ? 10 : 12),
@@ -1229,7 +1230,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     if (searchState.searchMode == search.PodcastSearchMode.episodes) {
       return ListView.builder(
         key: const Key('podcast_discover_search_results'),
-        cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
+        cacheExtent: ScrollConstants.largeListCacheExtent,
         itemCount: searchState.episodeResults.length,
         itemBuilder: (context, index) {
           final episode = searchState.episodeResults[index];
@@ -1251,7 +1252,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     return ListView.builder(
       key: const Key('podcast_discover_search_results'),
-      cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
+      cacheExtent: ScrollConstants.largeListCacheExtent,
       itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
         final result = searchState.podcastResults[index];

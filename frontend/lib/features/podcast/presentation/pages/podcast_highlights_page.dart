@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/constants/scroll_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/widgets/app_shells.dart';
@@ -237,7 +238,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                 controller: _scrollController,
                 key: const Key('highlights_scroll'),
                 padding: EdgeInsets.zero,
-                cacheExtent: 500,
+                cacheExtent: ScrollConstants.defaultCacheExtent,
                 itemCount: highlights.length + (_isLoadingMore ? 1 : 0),
                 separatorBuilder: (_, index) => const SizedBox.shrink(),
                 itemBuilder: (itemContext, index) {

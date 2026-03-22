@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/constants/scroll_constants.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/utils/text_processing_cache.dart';
 import '../../../../core/widgets/app_shells.dart';
@@ -23,7 +24,6 @@ class PodcastFeedPage extends ConsumerStatefulWidget {
 class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   final Set<int> _addingEpisodeIds = <int>{};
   final ScrollController _scrollController = ScrollController();
-  static const double _loadMoreThresholdPx = 320;
   bool _awaitingInitialFeed = true;
 
   @override
@@ -54,7 +54,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       return;
     }
     final remaining = position.maxScrollExtent - position.pixels;
-    if (remaining > _loadMoreThresholdPx) {
+    if (remaining > ScrollConstants.loadMoreThreshold) {
       return;
     }
 
@@ -339,7 +339,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       return ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 4),
-        cacheExtent: 1000, // Cache 1000 pixels for smoother scrolling
+        cacheExtent: ScrollConstants.largeListCacheExtent,
         itemCount: itemCount,
         itemBuilder: (context, index) =>
             _buildFeedListItem(context, feedState, index, compact: true),
