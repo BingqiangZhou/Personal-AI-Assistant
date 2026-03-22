@@ -233,6 +233,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                 controller: _scrollController,
                 key: const Key('highlights_scroll'),
                 padding: EdgeInsets.zero,
+                cacheExtent: 500,
                 itemCount: highlights.length + (_isLoadingMore ? 1 : 0),
                 separatorBuilder: (_, index) => const SizedBox.shrink(),
                 itemBuilder: (itemContext, index) {

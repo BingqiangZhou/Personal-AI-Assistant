@@ -274,7 +274,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     try {
       final storage = ref.read(localStorageServiceProvider);
       await storage.saveString(snapshotKey, jsonEncode(payload));
-    } catch (_) {}
+    } catch (e) {
+      logger.AppLogger.debug('[Playback] Failed to persist playback snapshot: $e');
+    }
   }
 
   Future<_LastPlaybackSnapshot?> _loadLastPlaybackSnapshot() async {
@@ -309,7 +311,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         playbackRate: playbackRate,
         savedAt: savedAt,
       );
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Playback] Failed to load playback snapshot: $e');
       return null;
     }
   }
@@ -891,7 +894,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         );
       }
       _schedulePersistLastPlaybackSnapshot(immediate: true);
-    } catch (_) {}
+    } catch (e) {
+      logger.AppLogger.debug('[PlaybackRestore] Failed to restore from server: $e');
+    }
   }
 
   Future<PodcastEpisodeModel> _resolveEpisodeForPlayback(

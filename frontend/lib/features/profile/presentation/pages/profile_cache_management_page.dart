@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/widgets/app_shells.dart';
@@ -186,7 +187,8 @@ class _ProfileCacheManagementPageState
         totalBytes: imagesBytes + audioBytes + otherBytes,
         objects: objects,
       );
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Cache] Failed to load cache stats: $e');
       return _emptyStats;
     }
   }
@@ -277,6 +279,7 @@ class _ProfileCacheManagementPageState
       showTopFloatingNotice(context, message: l10n.profile_cache_cleared);
       await _refresh();
     } catch (e) {
+      logger.AppLogger.debug('[Cache] Failed to delete category: $e');
       if (!mounted) return;
       showTopFloatingNotice(
         context,

@@ -704,8 +704,8 @@ class ConversationChatWidgetState
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     // 确保_selectedModel在可用列表中
-    if (_selectedModel != null &&
-        !models.any((m) => m.id == _selectedModel!.id)) {
+    final selectedModelId = _selectedModel?.id;
+    if (selectedModelId != null && !models.any((m) => m.id == selectedModelId)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {

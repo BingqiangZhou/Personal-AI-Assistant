@@ -183,14 +183,16 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: PodcastImageWidget(
-          imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
-          width: coverSize,
-          height: coverSize,
-          iconSize: coverIconSize,
-          iconColor: theme.colorScheme.onPrimaryContainer,
+      child: RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: PodcastImageWidget(
+            imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+            width: coverSize,
+            height: coverSize,
+            iconSize: coverIconSize,
+            iconColor: theme.colorScheme.onPrimaryContainer,
+          ),
         ),
       ),
     );

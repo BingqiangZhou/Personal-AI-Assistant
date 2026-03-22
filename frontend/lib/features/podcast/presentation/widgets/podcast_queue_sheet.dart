@@ -509,6 +509,7 @@ class _QueueListState extends ConsumerState<_QueueList> {
     return ReorderableListView.builder(
       scrollController: _scrollController,
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
+      itemExtent: _kEstimatedItemExtent,
       buildDefaultDragHandles: false,
       physics: const AlwaysScrollableScrollPhysics(),
       proxyDecorator: (child, index, animation) {

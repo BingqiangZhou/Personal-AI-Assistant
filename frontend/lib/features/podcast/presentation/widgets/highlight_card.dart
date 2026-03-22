@@ -160,44 +160,46 @@ class HighlightCard extends ConsumerWidget {
 
   Widget _buildOriginalQuote(BuildContext context, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.format_quote_rounded,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.podcast_highlights_original_quote,
-                style: theme.textTheme.labelSmall?.copyWith(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.format_quote_rounded,
+                  size: 16,
                   color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            highlight.originalText,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
-              height: 1.5,
+                const SizedBox(width: 6),
+                Text(
+                  l10n.podcast_highlights_original_quote,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              highlight.originalText,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

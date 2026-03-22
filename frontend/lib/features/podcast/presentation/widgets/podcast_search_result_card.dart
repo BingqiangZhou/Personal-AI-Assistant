@@ -61,20 +61,22 @@ class PodcastSearchResultCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    kPodcastRowCardImageRadius,
-                  ),
-                  child: SizedBox(
-                    key: const Key('podcast_search_result_card_artwork'),
-                    width: imageSize,
-                    height: imageSize,
-                    child: PodcastImageWidget(
-                      imageUrl: result.artworkUrl100,
+                RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      kPodcastRowCardImageRadius,
+                    ),
+                    child: SizedBox(
+                      key: const Key('podcast_search_result_card_artwork'),
                       width: imageSize,
                       height: imageSize,
-                      iconSize: 24,
-                      iconColor: theme.colorScheme.onPrimaryContainer,
+                      child: PodcastImageWidget(
+                        imageUrl: result.artworkUrl100,
+                        width: imageSize,
+                        height: imageSize,
+                        iconSize: 24,
+                        iconColor: theme.colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
                 ),

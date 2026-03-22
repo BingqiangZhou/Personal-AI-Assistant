@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
@@ -206,9 +207,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         throw Exception('No RSS feed url for this show');
       }
 
+      final feedUrl = lookup!.feedUrl;
+      if (feedUrl == null) {
+        throw Exception('RSS feed url is null');
+      }
+
       await ref
           .read(podcastSubscriptionProvider.notifier)
-          .addSubscription(feedUrl: lookup!.feedUrl!);
+          .addSubscription(feedUrl: feedUrl);
 
       if (!mounted) return;
       setState(() {
@@ -282,7 +288,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         return null;
       }
       return _DiscoverEpisodeSelection(showId: showId, episode: episode);
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Discover] Failed to resolve episode selection: $e');
       _showErrorNotice(l10n.podcast_failed_load_episodes);
       return null;
     }
@@ -335,7 +342,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           );
         },
       );
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Discover] Failed to show podcast episodes: $e');
       _showErrorNotice(l10n.podcast_failed_load_episodes);
     }
   }
@@ -416,7 +424,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     try {
       await ref.read(audioPlayerProvider.notifier).playEpisode(discoverEpisode);
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Discover] Failed to play episode: $e');
       _showErrorNotice(l10n.podcast_player_no_audio);
     }
   }
@@ -436,7 +445,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         episodeTrackId: episode.trackId,
         country: country,
       );
-    } catch (_) {
+    } catch (e) {
+      logger.AppLogger.debug('[Search] Failed to resolve episode: $e');
       return null;
     }
   }

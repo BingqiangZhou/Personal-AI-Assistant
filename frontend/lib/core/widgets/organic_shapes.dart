@@ -330,12 +330,13 @@ class FloatingOrb extends StatefulWidget {
 }
 
 class _FloatingOrbState extends State<FloatingOrb>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
@@ -343,7 +344,17 @@ class _FloatingOrbState extends State<FloatingOrb>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _controller.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
