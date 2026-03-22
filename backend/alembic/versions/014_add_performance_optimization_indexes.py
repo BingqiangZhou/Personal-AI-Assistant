@@ -20,10 +20,8 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "014"
 down_revision: str | None = "013"
-branch_labels: Sequence[str] | None
-None
-depends_on: Sequence[str] | None
- None
+branch_labels: Sequence[str] | None = None
+depends_on: Sequence[str] | None = None
 
 
 def upgrade() -> None:
