@@ -957,6 +957,65 @@ class PodcastRedis:
         await self._record_command_timing("INCR", (perf_counter() - incr_started) * 1000)
         return True
 
+    # === Raw Client Access (for advanced use cases) ===
+
+    def pipeline(self):
+        """Return a Redis pipeline context manager."""
+        return self._PipelineContextManager(self)
+
+    class _PipelineContextManager:
+        """Context manager for Redis pipeline operations."""
+
+        def __init__(self, redis_helper: "PodcastRedis"):
+            self._redis = redis_helper
+            self._client = None
+            self._pipe = None
+
+        async def __aenter__(self):
+            self._client = await self._redis._get_client()
+            self._pipe = self._client.pipeline()
+            return self._pipe
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            if self._pipe:
+                await self._pipe.execute()
+
+        def __getattr__(self, name):
+            """Delegate attribute access to the pipeline."""
+            return getattr(self._pipe, name)
+
+    async def incr(self, key: str) -> int:
+        """Increment the value of a key by 1."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.incr(key)
+        await self._record_command_timing("INCR", (perf_counter() - started) * 1000)
+        return int(result or 0)
+
+    async def expire(self, key: str, seconds: int) -> bool:
+        """Set a key's time to live in seconds."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.expire(key, seconds)
+        await self._record_command_timing("EXPIRE", (perf_counter() - started) * 1000)
+        return bool(result)
+
+    async def get(self, key: str) -> str | None:
+        """Get the value of a key (raw access)."""
+        return await self.cache_get(key)
+
+    async def setex(self, key: str, ttl: int, value: str) -> bool:
+        """Set key with expiry (raw access)."""
+        return await self.cache_set(key, value, ttl)
+
+    async def ttl(self, key: str) -> int:
+        """Get the time to live for a key in seconds."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.ttl(key)
+        await self._record_command_timing("TTL", (perf_counter() - started) * 1000)
+        return int(result or -1)
+
     async def close(self):
         """Close Redis connection"""
         if self._client:

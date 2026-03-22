@@ -3,6 +3,7 @@
 Uses lazy imports to avoid circular dependencies with admin services.
 """
 
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base_providers import get_db_session_dependency

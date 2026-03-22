@@ -4,6 +4,11 @@ This package organizes providers by domain to improve maintainability
 and reduce circular dependency risks.
 """
 
+from typing import Annotated
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.providers.auth_providers import (
     get_authentication_service,
     get_current_active_user,
@@ -87,46 +92,67 @@ __all__ = [
 ]
 
 # Admin providers are imported lazily to avoid circular dependencies
-def get_admin_apikeys_service(**kwargs):
+def get_admin_apikeys_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_apikeys_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_admin_dashboard_context(**kwargs):
+def get_admin_dashboard_context(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_dashboard_context as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_admin_settings_service(**kwargs):
+def get_admin_settings_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_settings_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_admin_setup_auth_service(**kwargs):
+def get_admin_setup_auth_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_setup_auth_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_admin_subscriptions_service(**kwargs):
+def get_admin_subscriptions_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_subscriptions_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_admin_users_audit_service(**kwargs):
+def get_admin_users_audit_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import admin service to avoid circular dependencies."""
     from app.core.providers.admin_providers import get_admin_users_audit_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
-def get_ai_model_config_service(**kwargs):
+def get_ai_model_config_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
     """Lazily import AI service to avoid circular dependencies."""
     from app.core.providers.ai_providers import get_ai_model_config_service as _get
-    return _get(**kwargs)
+
+    return _get(db)
 
 
 __all__.extend([
