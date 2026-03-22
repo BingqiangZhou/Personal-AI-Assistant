@@ -232,9 +232,9 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
               child: ListView.separated(
                 controller: _scrollController,
                 key: const Key('highlights_scroll'),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                padding: EdgeInsets.zero,
                 itemCount: highlights.length + (_isLoadingMore ? 1 : 0),
-                separatorBuilder: (_, index) => const SizedBox(height: 12),
+                separatorBuilder: (_, index) => const SizedBox.shrink(),
                 itemBuilder: (itemContext, index) {
                   if (index >= highlights.length) {
                     return _buildLoadingMoreIndicator(itemContext);

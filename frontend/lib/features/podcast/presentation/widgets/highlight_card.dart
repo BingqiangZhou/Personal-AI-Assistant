@@ -64,14 +64,15 @@ class HighlightCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildHeader(context, theme),
+                // 原文放在最上面
                 if (!isCompact) ...[
-                  const SizedBox(height: 10),
                   _buildOriginalQuote(context, theme),
                 ] else ...[
-                  const SizedBox(height: 8),
                   _buildCompactQuote(context, theme),
                 ],
+                // 分数和收藏按钮放在原文下面
+                const SizedBox(height: 10),
+                _buildHeader(context, theme),
                 const SizedBox(height: 10),
                 _buildScoresSection(context, theme),
                 const SizedBox(height: 10),

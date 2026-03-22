@@ -385,15 +385,18 @@ class PodcastAnalyticsRepositoryMixin:
         latest_report_result = await self.db.execute(latest_report_stmt)
         latest_report_date = latest_report_result.scalar_one_or_none()
 
-        # Count highlights from user's subscriptions
+        # Count highlights from user's active subscriptions
         highlight_count_stmt = (
             select(func.count(EpisodeHighlight.id))
             .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
+            .join(
+                UserSubscription,
+                Subscription.id == UserSubscription.subscription_id,
+            )
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
+                    *self._active_user_subscription_filters(user_id),
                     EpisodeHighlight.status == "active",
                 )
             )
