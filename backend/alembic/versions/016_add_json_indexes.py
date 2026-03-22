@@ -4,18 +4,11 @@ Revision ID: 016
 Revises: 015
 Create Date: 2026-03-22 00:00:00.000000
 
-This migration adds GIN indexes with jsonb_path_ops for all JSON columns
-to improve performance of JSON path queries and containment operations.
+This migration adds GIN indexes for JSON/JSONB columns to improve
+performance of JSON path queries and containment operations.
 
-Benefits:
-- 10-100x faster JSON path queries (e.g., metadata->>'key')
-- Efficient containment operators (@>, ?)
-- Better query plans for JSON filtering operations
-
-PostgreSQL GIN indexes with jsonb_path_ops:
-- Smaller index size than default GIN
-- Optimized for @> and ? operators
-- Perfect for common JSON query patterns
+Note: Uses default GIN operator class which works with both json and jsonb types.
+For jsonb columns, jsonb_path_ops would be more efficient but requires ALTER COLUMN.
 """
 
 from collections.abc import Sequence
@@ -32,27 +25,28 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Add GIN indexes for all JSON columns."""
+    """Add GIN indexes for JSON columns using default operator class."""
 
     # Users table - settings and preferences JSON columns
+    # Note: Using default GIN operator class (works with json type)
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_users_settings_gin
-        ON users USING GIN (settings jsonb_path_ops);
+        ON users USING GIN (settings);
         """
     )
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_users_preferences_gin
-        ON users USING GIN (preferences jsonb_path_ops);
+        ON users USING GIN (preferences);
         """
     )
 
-    # Podcast episodes - metadata_json column
+    # Podcast episodes - metadata column (stored as 'metadata' in DB)
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_podcast_episodes_metadata_gin
-        ON podcast_episodes USING GIN ("metadata" jsonb_path_ops);
+        ON podcast_episodes USING GIN ("metadata");
         """
     )
 
@@ -60,7 +54,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_transcription_tasks_chunk_info_gin
-        ON transcription_tasks USING GIN (chunk_info jsonb_path_ops);
+        ON transcription_tasks USING GIN (chunk_info);
         """
     )
 
@@ -68,7 +62,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_ai_model_configs_extra_config_gin
-        ON ai_model_configs USING GIN (extra_config jsonb_path_ops);
+        ON ai_model_configs USING GIN (extra_config);
         """
     )
 
@@ -76,15 +70,15 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_details_gin
-        ON admin_audit_logs USING GIN (details jsonb_path_ops);
+        ON admin_audit_logs USING GIN (details);
         """
     )
 
-    # Background task runs - metadata_json column (stored as 'metadata')
+    # Background task runs - metadata column
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_background_task_runs_metadata_gin
-        ON background_task_runs USING GIN ("metadata" jsonb_path_ops);
+        ON background_task_runs USING GIN ("metadata");
         """
     )
 
@@ -92,7 +86,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_system_settings_value_gin
-        ON system_settings USING GIN (value jsonb_path_ops);
+        ON system_settings USING GIN (value);
         """
     )
 
@@ -100,7 +94,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_episode_highlights_topic_tags_gin
-        ON episode_highlights USING GIN (topic_tags jsonb_path_ops);
+        ON episode_highlights USING GIN (topic_tags);
         """
     )
 
@@ -108,27 +102,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS idx_user_sessions_device_info_gin
-        ON user_sessions USING GIN (device_info jsonb_path_ops);
-        """
-    )
-
-    # Add comments for documentation
-    op.execute(
-        """
-        COMMENT ON INDEX idx_users_settings_gin IS
-        'GIN index for JSON path queries on user settings';
-        """
-    )
-    op.execute(
-        """
-        COMMENT ON INDEX idx_podcast_episodes_metadata_gin IS
-        'GIN index for JSON path queries on episode metadata';
-        """
-    )
-    op.execute(
-        """
-        COMMENT ON INDEX idx_transcription_tasks_chunk_info_gin IS
-        'GIN index for JSON path queries on transcription chunk info';
+        ON user_sessions USING GIN (device_info);
         """
     )
 
