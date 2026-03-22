@@ -624,9 +624,10 @@ class HighlightExtractionService:
                 "model_used": task.model_used,
             }
         elif task.status == "in_progress":
-            # Check if this is a stale task (started more than 1 hour ago)
+            # Check if this is a stale task (started more than 30 minutes ago)
             # If so, reset and continue; otherwise skip
-            stale_threshold = datetime.now(UTC) - timedelta(hours=1)
+            # Aligned with Celery task timeout (25 min hard limit)
+            stale_threshold = datetime.now(UTC) - timedelta(minutes=30)
             if task.started_at and task.started_at < stale_threshold:
                 # Stale task, reset and continue processing
                 task.started_at = datetime.now(UTC)
@@ -804,8 +805,12 @@ class HighlightExtractionService:
         )
 
     async def _reset_stale_highlight_claims(self) -> None:
-        """Reset stale in-progress tasks."""
-        stale_before = datetime.now(UTC) - timedelta(hours=1)
+        """Reset stale in-progress tasks.
+
+        Tasks are considered stale if started more than 30 minutes ago,
+        aligned with Celery task timeout (25 min hard limit).
+        """
+        stale_before = datetime.now(UTC) - timedelta(minutes=30)
         stmt = (
             update(HighlightExtractionTask)
             .where(
@@ -828,11 +833,12 @@ class HighlightExtractionService:
 
         Find episodes that:
         - Have transcript content
-        - Don't have a completed highlight extraction task
+        - Don't have a completed or in-progress highlight extraction task
         """
-        # Subquery to find episodes with completed highlight extraction
-        completed_task_subquery = select(HighlightExtractionTask.episode_id).where(
-            HighlightExtractionTask.status == "completed"
+        # Subquery to find episodes with non-claimable task status
+        # (completed = already done, in_progress = currently being processed)
+        non_claimable_subquery = select(HighlightExtractionTask.episode_id).where(
+            HighlightExtractionTask.status.in_(["completed", "in_progress"])
         )
 
         claim_stmt = (
@@ -841,7 +847,7 @@ class HighlightExtractionService:
                 and_(
                     PodcastEpisode.transcript_content.is_not(None),
                     PodcastEpisode.transcript_content != "",
-                    ~PodcastEpisode.id.in_(completed_task_subquery),
+                    ~PodcastEpisode.id.in_(non_claimable_subquery),
                 ),
             )
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
@@ -854,7 +860,12 @@ class HighlightExtractionService:
         if not episode_ids:
             return []
 
-        # Create tasks for claimed episodes
+        # Create or reset tasks for claimed episodes
+        # Note: We set status to "pending" here, and extract_highlights_for_episode()
+        # will set it to "in_progress" when it starts processing.
+        # This avoids the conflict where we set "in_progress" here but then
+        # extract_highlights_for_episode() detects it and throws "already in progress".
+        claimed_ids: list[int] = []
         for episode_id in episode_ids:
             # Check if task exists
             existing_stmt = select(HighlightExtractionTask).where(
@@ -866,22 +877,24 @@ class HighlightExtractionService:
             if existing_task is None:
                 task = HighlightExtractionTask(
                     episode_id=episode_id,
-                    status="in_progress",
-                    started_at=datetime.now(UTC),
+                    status="pending",
+                    started_at=None,  # Will be set when processing starts
                 )
                 self.db.add(task)
+                claimed_ids.append(episode_id)
             elif existing_task.status == "in_progress":
-                # Already in progress, skip - will be handled by stale task reset
-                # or is currently being processed by another worker
+                # Should not happen due to query filter, but defensive check
+                # This episode is already being processed, skip it
                 continue
             else:
-                # Failed or pending, reset to in_progress
-                existing_task.status = "in_progress"
-                existing_task.started_at = datetime.now(UTC)
+                # Failed or pending, reset to pending (not in_progress!)
+                existing_task.status = "pending"
+                existing_task.started_at = None
                 existing_task.error_message = None
+                claimed_ids.append(episode_id)
 
         await self.db.commit()
-        return episode_ids
+        return claimed_ids
 
     async def _reset_claimed_highlight_status(self, episode_id: int) -> None:
         """Reset claimed status for an episode."""

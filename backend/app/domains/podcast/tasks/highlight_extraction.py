@@ -1,6 +1,9 @@
 """Celery tasks for highlight extraction flows."""
 
+import logging
 from datetime import UTC, datetime
+
+from celery.exceptions import SoftTimeLimitExceeded
 
 from app.core.celery_app import celery_app
 from app.domains.podcast.services.highlight_extraction_service import (
@@ -10,6 +13,8 @@ from app.domains.podcast.tasks.handlers_highlight import (
     extract_pending_highlights_handler,
 )
 from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_session
+
+logger = logging.getLogger(__name__)
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -68,7 +73,12 @@ async def _extract_episode_highlights(
         )
 
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(
+    bind=True,
+    max_retries=3,
+    soft_time_limit=20 * 60,  # 20 minutes soft timeout
+    time_limit=25 * 60,  # 25 minutes hard timeout (below global 30 min)
+)
 def extract_pending_highlights(self):
     """Extract highlights for episodes with transcripts but no highlights."""
     started_at = datetime.now(UTC)
@@ -86,6 +96,18 @@ def extract_pending_highlights(self):
             finished_at=datetime.now(UTC),
         )
         return result
+    except SoftTimeLimitExceeded as exc:
+        logger.warning("Highlight extraction soft timeout exceeded")
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="failed",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="Soft timeout exceeded (20 minutes)",
+        )
+        # Don't retry on timeout - tasks will be picked up in next run
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,
