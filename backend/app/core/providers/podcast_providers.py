@@ -30,6 +30,7 @@ from app.domains.podcast.services.transcription_workflow_service import (
 
 from .auth_providers import get_token_user_id
 from .base_providers import get_db_session_dependency, get_redis_client
+from .subscription_providers import get_subscription_repository
 
 
 # Lazy import repositories to avoid circular dependencies
@@ -124,7 +125,7 @@ def get_podcast_subscription_service(
     db: AsyncSession = Depends(get_db_session_dependency),
     user_id: int = Depends(get_token_user_id),
     repo = Depends(get_podcast_subscription_repository),
-    subscription_repo = Depends("app.core.providers.subscription_providers:get_subscription_repository"),
+    subscription_repo = Depends(get_subscription_repository),
     redis: PodcastRedis = Depends(get_redis_client),
     parser = Depends(get_podcast_parser),
 ) -> PodcastSubscriptionService:
