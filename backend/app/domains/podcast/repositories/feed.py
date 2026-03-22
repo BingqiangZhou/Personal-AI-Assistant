@@ -170,6 +170,7 @@ class PodcastFeedRepositoryMixin:
             except (TypeError, ValueError):
                 logger.warning("Invalid cached feed total count for user %s", user_id)
 
+        Subscription, UserSubscription = _get_subscription_models()
         count_query = (
             select(func.count(PodcastEpisode.id))
             .select_from(PodcastEpisode)
