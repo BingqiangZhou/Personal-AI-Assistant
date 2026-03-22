@@ -314,9 +314,8 @@ class PodcastRedis:
             return int(result or 0)
 
     async def _ping_client(self, client: aioredis.Redis) -> None:
-        started = perf_counter()
+        # Note: Do NOT record timing here to avoid circular call with _get_client()
         await client.ping()
-        await self._record_command_timing("PING", (perf_counter() - started) * 1000)
 
     async def _get_client(self) -> aioredis.Redis:
         """Get Redis client instance"""
