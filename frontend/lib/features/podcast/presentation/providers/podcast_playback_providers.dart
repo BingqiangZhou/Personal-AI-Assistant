@@ -107,6 +107,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   ProcessingState? _lastProcessingState;
   bool _isHandlingQueueCompletion = false;
   DateTime? _lastPlaybackSyncAt;
+  bool _isSyncingPlaybackState = false; // Prevent concurrent sync requests
   static const Duration _syncInterval = Duration(seconds: 15);
   static const Duration _lastPlaybackSnapshotDebounce = Duration(seconds: 2);
   _PlaybackRateSelectionCache? _playbackRateSelectionCache;
@@ -1577,6 +1578,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> _updatePlaybackStateOnServer({bool immediate = false}) async {
     if (_isDisposed) return;
 
+    // Skip if a sync is already in progress (prevents duplicate requests)
+    if (_isSyncingPlaybackState) return;
+
     final episode = state.currentEpisode;
     if (episode == null) return;
     if (!shouldSyncPlaybackToServer(episode)) return;
@@ -1599,25 +1603,39 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     required int positionMs,
     required bool isPlaying,
   }) async {
-    _timers.cancel(_kSyncThrottleTimer);
-    final success = await _sendPlaybackSnapshot(
-      episode: episode,
-      positionMs: positionMs,
-      isPlaying: isPlaying,
-    );
-    if (success) {
-      _lastPlaybackSyncAt = DateTime.now();
+    if (_isSyncingPlaybackState) return;
+    _isSyncingPlaybackState = true;
+    try {
+      _timers.cancel(_kSyncThrottleTimer);
+      final success = await _sendPlaybackSnapshot(
+        episode: episode,
+        positionMs: positionMs,
+        isPlaying: isPlaying,
+      );
+      if (success) {
+        _lastPlaybackSyncAt = DateTime.now();
+      }
+    } finally {
+      _isSyncingPlaybackState = false;
     }
   }
 
   Future<void> _scheduleThrottledSync(PodcastEpisodeModel episode) async {
+    // Skip if already syncing
+    if (_isSyncingPlaybackState) return;
+
     final now = DateTime.now();
     final lastSync = _lastPlaybackSyncAt;
 
     if (lastSync == null || now.difference(lastSync) >= _syncInterval) {
-      final success = await _sendPlaybackUpdate(episode);
-      if (success) {
-        _lastPlaybackSyncAt = DateTime.now();
+      _isSyncingPlaybackState = true;
+      try {
+        final success = await _sendPlaybackUpdate(episode);
+        if (success) {
+          _lastPlaybackSyncAt = DateTime.now();
+        }
+      } finally {
+        _isSyncingPlaybackState = false;
       }
       return;
     }
@@ -1628,14 +1646,17 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     final remaining = _syncInterval - now.difference(lastSync);
     _timers.create(_kSyncThrottleTimer, remaining, () {
-      if (_isDisposed) return;
+      if (_isDisposed || _isSyncingPlaybackState) return;
       final currentEpisode = state.currentEpisode;
       if (currentEpisode == null) return;
 
+      _isSyncingPlaybackState = true;
       _sendPlaybackUpdate(currentEpisode).then((success) {
         if (success) {
           _lastPlaybackSyncAt = DateTime.now();
         }
+      }).whenComplete(() {
+        _isSyncingPlaybackState = false;
       });
     });
   }

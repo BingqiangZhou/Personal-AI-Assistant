@@ -304,16 +304,92 @@ class PodcastRedis(
     async def invalidate_user_stats(self, user_id: int) -> None:
         """Invalidate user stats cache."""
         client = await self._get_client()
-        await PodcastCacheOperations.invalidate_user_stats(
-            self, client, user_id, cache_delete_func=self.cache_delete
-        )
+        key = f"podcast:stats:{user_id}"
+        started = perf_counter()
+        await client.delete(key)
+        await self._record_command_timing("DEL", (perf_counter() - started) * 1000)
 
     async def invalidate_profile_stats(self, user_id: int) -> None:
         """Invalidate profile stats cache."""
         client = await self._get_client()
-        await PodcastCacheOperations.invalidate_profile_stats(
-            self, client, user_id, cache_delete_func=self.cache_delete
+        key = f"podcast:stats:profile:{user_id}"
+        started = perf_counter()
+        await client.delete(key)
+        await self._record_command_timing("DEL", (perf_counter() - started) * 1000)
+
+    # === User Progress ===
+
+    async def set_user_progress(self, user_id: int, episode_id: int, progress: float) -> None:
+        """Set user progress (30 days TTL)."""
+        client = await self._get_client()
+        key = f"podcast:progress:{user_id}:{episode_id}"
+        started = perf_counter()
+        await client.setex(key, CacheTTL.PLAYBACK_PROGRESS, str(progress))
+        await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+
+    async def get_user_progress(self, user_id: int, episode_id: int) -> float | None:
+        """Get user listening progress."""
+        client = await self._get_client()
+        key = f"podcast:progress:{user_id}:{episode_id}"
+        started = perf_counter()
+        progress = await client.get(key)
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        return float(progress) if progress else None
+
+    # === Episode Metadata ===
+
+    async def set_episode_metadata(self, episode_id: int, metadata: dict) -> None:
+        """Cache episode metadata (24 hours TTL)."""
+        client = await self._get_client()
+        key = f"podcast:meta:{episode_id}"
+        started = perf_counter()
+        await client.hset(key, mapping=metadata)
+        await client.expire(key, CacheTTL.EPISODE_METADATA)
+        await self._record_command_timing("HSET", (perf_counter() - started) * 1000)
+
+    # === Distributed Lock ===
+
+    async def acquire_lock(
+        self, lock_name: str, expire: int = CacheTTL.LOCK_TIMEOUT, value: str = "1"
+    ) -> bool:
+        """Acquire distributed lock. Returns True if lock acquired."""
+        client = await self._get_client()
+        key = f"podcast:lock:{lock_name}"
+        started = perf_counter()
+        result = await client.set(key, value, ex=expire, nx=True)
+        await self._record_command_timing("SET", (perf_counter() - started) * 1000)
+        return bool(result)
+
+    async def acquire_owned_lock(
+        self, lock_name: str, *, expire: int = CacheTTL.LOCK_TIMEOUT
+    ) -> str | None:
+        """Acquire a lock and return its owner token when successful."""
+        import secrets
+        client = await self._get_client()
+        token = secrets.token_urlsafe(16)
+        key = f"podcast:lock:{lock_name}"
+        started = perf_counter()
+        acquired = await client.set(key, token, ex=expire, nx=True)
+        await self._record_command_timing("SET", (perf_counter() - started) * 1000)
+        return token if acquired else None
+
+    async def release_owned_lock(self, lock_name: str, token: str) -> bool:
+        """Release a lock only when the stored token matches the caller token."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.eval(
+            """
+            if redis.call("get", KEYS[1]) == ARGV[1] then
+                return redis.call("del", KEYS[1])
+            end
+            return 0
+            """,
+            1,
+            f"podcast:lock:{lock_name}",
+            token,
         )
+        await self._record_command_timing("EVAL", (perf_counter() - started) * 1000)
+        return bool(result)
 
     # === Anti-Stampede Cache ===
 
