@@ -8,13 +8,14 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import PodcastRedis, get_shared_redis
-from app.domains.podcast.repositories import PodcastStatsRepository
-from app.domains.podcast.services.cache_utils import (
+from app.core.redis import (
+    PodcastRedis,
+    get_shared_redis,
     safe_cache_get,
     safe_cache_invalidate,
     safe_cache_write,
 )
+from app.domains.podcast.repositories import PodcastStatsRepository
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 
 

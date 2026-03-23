@@ -30,6 +30,11 @@ from app.core.redis.rate_limit import RateLimitOperations
 from app.core.redis.metrics import MetricsOperations, _METRICS_COMMANDS_KEY, _METRICS_CACHE_KEY, _METRICS_CACHE_PENETRATION_KEY
 from app.core.redis.sorted_set import SortedSetOperations
 from app.core.redis.penetration import PenetrationOperations, _NULL_VALUE_MARKER, _NULL_CACHE_TTL
+from app.core.redis.cache import (
+    safe_cache_get,
+    safe_cache_write,
+    safe_cache_invalidate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -444,4 +449,8 @@ __all__ = [
     "_METRICS_CACHE_PENETRATION_KEY",
     "_NULL_VALUE_MARKER",
     "_NULL_CACHE_TTL",
+    # Safe cache helpers
+    "safe_cache_get",
+    "safe_cache_write",
+    "safe_cache_invalidate",
 ]
