@@ -112,7 +112,8 @@ void main() {
 
       final notifier = container.read(serverConfigProvider.notifier);
 
-      await notifier.updateServerUrl('http://192.168.1.100:8000');
+      // Use clearData: false to avoid needing other providers
+      await notifier.updateServerUrl('http://192.168.1.100:8000', clearData: false);
 
       final state = container.read(serverConfigProvider);
 
@@ -130,7 +131,8 @@ void main() {
 
       final notifier = container.read(serverConfigProvider.notifier);
 
-      await notifier.updateServerUrl('http://192.168.1.100:8000/');
+      // Use clearData: false to avoid needing other providers
+      await notifier.updateServerUrl('http://192.168.1.100:8000/', clearData: false);
 
       final state = container.read(serverConfigProvider);
 
@@ -147,7 +149,8 @@ void main() {
       final notifier = container.read(serverConfigProvider.notifier);
 
       // Test that updateServerUrl removes /api/v1 suffix
-      await notifier.updateServerUrl('http://192.168.1.100:8000/api/v1');
+      // Use clearData: false to avoid needing other providers
+      await notifier.updateServerUrl('http://192.168.1.100:8000/api/v1', clearData: false);
 
       final state = container.read(serverConfigProvider);
 
