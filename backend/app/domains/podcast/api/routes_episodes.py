@@ -509,7 +509,7 @@ async def get_summary_models(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-# ── Search & recommendations ──────────────────────────────────────────────
+# ── Search ──────────────────────────────────────────────────────────────────
 
 
 @router.get(
@@ -548,18 +548,6 @@ async def search_podcasts(
         size=size,
         subscription_id=0,
     )
-
-
-@router.get(
-    "/recommendations",
-    response_model=list[dict],
-    summary="Get podcast recommendations",
-)
-async def get_recommendations(
-    limit: int = Query(10, ge=1, le=50, description="Recommendation count"),
-    service: PodcastSearchService = Depends(get_podcast_search_service),
-):
-    return await service.get_recommendations(limit=limit)
 
 
 __all__ = ["generate_summary", "router"]

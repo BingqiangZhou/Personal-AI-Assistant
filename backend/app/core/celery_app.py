@@ -117,9 +117,6 @@ def create_celery_app() -> Celery:
             "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files": {
                 "queue": "maintenance",
             },
-            "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations": {
-                "queue": "ai_generation",
-            },
             "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports": {
                 "queue": "ai_generation",
             },

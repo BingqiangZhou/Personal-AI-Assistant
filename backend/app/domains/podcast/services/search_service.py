@@ -1,6 +1,6 @@
-"""Podcast Search Service - Handles podcast content search and recommendations.
+"""Podcast Search Service - Handles podcast content search.
 
-播客搜索服务 - 处理播客内容搜索和推荐
+播客搜索服务 - 处理播客内容搜索
 """
 
 import logging
@@ -19,11 +19,10 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastSearchService:
-    """Service for searching podcast content and generating recommendations.
+    """Service for searching podcast content.
 
     Handles:
     - Searching episodes by title, description, summary
-    - Generating recommendations based on listening history
     """
 
     def __init__(
@@ -129,41 +128,6 @@ class PodcastSearchService:
         )
 
         return results, total
-
-    async def get_recommendations(self, limit: int = 10) -> list[dict]:
-        """Get podcast recommendations based on user history.
-
-        Args:
-            limit: Maximum number of recommendations
-
-        Returns:
-            List of recommendation dicts
-
-        """
-        # Get user's liked episodes (high completion rate)
-        liked_episodes = await self.repo.get_liked_episodes(self.user_id, limit=20)
-
-        # Simple recommendation logic based on listening history
-        # TODO: Implement content-based recommendation algorithm
-
-        recommendations = []
-        for ep in liked_episodes[:limit]:
-            recommendations.append(
-                {
-                    "episode_id": ep.id,
-                    "title": ep.title,
-                    "description": ep.description[:150] + "..."
-                    if len(ep.description) > 150
-                    else ep.description,
-                    "subscription_title": ep.subscription.title
-                    if ep.subscription
-                    else None,
-                    "recommendation_reason": "Based on your listening history",
-                    "match_score": 0.85,
-                },
-            )
-
-        return recommendations
 
     def _build_episode_response(
         self,

@@ -15,7 +15,6 @@ def test_registered_task_names_snapshot() -> None:
         "app.domains.podcast.tasks.maintenance.cleanup_old_transcription_temp_files",
         "app.domains.podcast.tasks.maintenance.log_periodic_task_statistics",
         "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files",
-        "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations",
         "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports",
     }
     assert expected_names.issubset(registered_names)

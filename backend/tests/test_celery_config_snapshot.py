@@ -12,7 +12,6 @@ def test_celery_task_routes_snapshot() -> None:
     assert "app.domains.podcast.tasks.transcription.process_audio_transcription" in task_routes
     assert "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions" in task_routes
     assert "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states" in task_routes
-    assert "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations" in task_routes
     assert "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports" in task_routes
 
     assert task_routes[

@@ -26,7 +26,6 @@ from app.domains.podcast.models import (
 )
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
 from app.domains.podcast.services.daily_report_service import DailyReportService
-from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
@@ -662,43 +661,6 @@ class PodcastTaskOrchestrationService:
             "status": "success",
             "total_candidates": total_candidates,
             **dispatch_result,
-            "processed_at": datetime.now(UTC).isoformat(),
-        }
-
-    async def generate_podcast_recommendations(self) -> dict:
-        batch_size = max(1, settings.TASK_ORCHESTRATION_USER_BATCH_SIZE)
-        last_user_id = 0
-        processed_users = 0
-        recommendations_generated = 0
-
-        while True:
-            stmt = (
-                select(User.id)
-                .where(
-                    and_(
-                        User.status == UserStatus.ACTIVE,
-                        User.id > last_user_id,
-                    ),
-                )
-                .order_by(User.id.asc())
-                .limit(batch_size)
-            )
-            user_ids = list((await self.session.execute(stmt)).scalars().all())
-            if not user_ids:
-                break
-
-            for user_id in user_ids:
-                service = PodcastSearchService(self.session, user_id)
-                recommendations = await service.get_recommendations(limit=20)
-                recommendations_generated += len(recommendations)
-
-            processed_users += len(user_ids)
-            last_user_id = user_ids[-1]
-
-        return {
-            "status": "success",
-            "processed_users": processed_users,
-            "recommendations_generated": recommendations_generated,
             "processed_at": datetime.now(UTC).isoformat(),
         }
 

@@ -481,15 +481,6 @@ class TestPodcastSearchService:
         assert results == []
         assert total == 0
 
-    @pytest.mark.asyncio
-    async def test_get_recommendations_empty(self, service, mock_repo):
-        """测试空推荐结果"""
-        mock_repo.get_liked_episodes.return_value = []
-
-        results = await service.get_recommendations(limit=10)
-
-        assert results == []
-
 
 class TestPodcastSyncService:
     """测试播客同步服务"""

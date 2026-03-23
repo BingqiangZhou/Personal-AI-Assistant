@@ -7,11 +7,8 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_security_and_service_layers_mocked() -> None:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
     from app.domains.ai.llm_privacy import ContentSanitizer
     from app.domains.podcast.integration.security import PodcastSecurityValidator
-    from app.domains.podcast.services.search_service import PodcastSearchService
 
     validator = PodcastSecurityValidator()
     sanitizer = ContentSanitizer("standard")
@@ -23,27 +20,6 @@ async def test_security_and_service_layers_mocked() -> None:
     sanitized = sanitizer.sanitize("foo@test.com 13800138000", 1, "test")
     assert "[EMAIL_REDACTED]" in sanitized
     assert "[PHONE_REDACTED]" in sanitized
-
-    with patch("app.domains.podcast.services.search_service.PodcastSearchRepository") as mock_repo_cls:
-        repo = AsyncMock()
-        episode_one = MagicMock()
-        episode_one.id = 1
-        episode_one.title = "Episode 1"
-        episode_one.description = "Description 1"
-        episode_one.subscription = MagicMock(title="Podcast A")
-
-        episode_two = MagicMock()
-        episode_two.id = 2
-        episode_two.title = "Episode 2"
-        episode_two.description = "Description 2"
-        episode_two.subscription = MagicMock(title="Podcast B")
-
-        repo.get_liked_episodes.return_value = [episode_one, episode_two]
-        mock_repo_cls.return_value = repo
-
-        service = PodcastSearchService(AsyncMock(spec=AsyncSession), user_id=1)
-        recommendations = await service.get_recommendations(limit=20)
-        assert len(recommendations) == 2
 
 
 @pytest.mark.asyncio

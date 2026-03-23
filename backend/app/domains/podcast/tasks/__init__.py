@@ -16,7 +16,6 @@ from app.domains.podcast.tasks.opml_import import process_opml_subscription_epis
 from app.domains.podcast.tasks.pending_transcription import (
     process_pending_transcriptions,
 )
-from app.domains.podcast.tasks.recommendation import generate_podcast_recommendations
 from app.domains.podcast.tasks.subscription_sync import refresh_all_podcast_feeds
 from app.domains.podcast.tasks.summary_generation import (
     generate_episode_summary,
@@ -38,7 +37,6 @@ __all__ = [
     "generate_daily_podcast_reports",
     "generate_episode_summary",
     "generate_pending_summaries",
-    "generate_podcast_recommendations",
     "log_periodic_task_statistics",
     "process_audio_transcription",
     "process_opml_subscription_episodes",

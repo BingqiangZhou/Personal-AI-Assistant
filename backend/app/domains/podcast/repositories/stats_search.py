@@ -12,7 +12,7 @@ class PodcastSearchRepository(
     PodcastAnalyticsRepositoryMixin,
     PodcastPlaybackQueueRepositoryMixin,
 ):
-    """Repository used by search and recommendations."""
+    """Repository used by search service."""
 
 
 class PodcastStatsRepository(
