@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.29.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.28.0...v0.29.0) - 2026-03-23 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.29.0))
+
+### 🚀 Features
+
+- *(podcast)* Integrate highlights view into transcript display with dual view mode ([79d035f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/79d035fc4ed7838c44226bd5983dc2f39aae6b89))
+
+### 🚜 Refactor
+
+- *(redis,ui)* Simplify cache API and unify card styling ([b01e2fd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b01e2fdbceaaaa82281dacbbd06bb1bef3105266))
+
+
+
 ## [0.28.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.27.0...v0.28.0) - 2026-03-23 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.28.0))
 
 ### 🐛 Bug Fixes
