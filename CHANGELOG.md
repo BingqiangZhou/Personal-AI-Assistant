@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.28.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.27.0...v0.28.0) - 2026-03-23 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.28.0))
+
+### 🐛 Bug Fixes
+
+- *(core)* Resolve database connection pool exhaustion and reduce API access frequency ([9858435](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9858435c6c2762f69cad7ccd7ccb0db9ebabd4a3))
+- *(redis)* Correct cache_delete function binding in invalidate methods ([461eaf3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/461eaf3efdce7283b92c997b2b653dcf0c408cfd))
+- *(test)* Use clearData: false in ServerConfigNotifier tests ([a2bc841](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a2bc84107f7bcacbc3cd63e62c67dc5357fcd316))
+- *(playback)* Prevent concurrent sync requests and fix cache invalidation binding ([5007ded](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5007ded5c1814d0351a9670f0850ffe9deeb478b))
+
+### 🚀 Features
+
+- *(core)* Add cache penetration protection, warming, and migrate admin routes to API prefix ([9663868](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/96638688026512427eedc4c484aaba6e86bd0a7b))
+
+### 🚜 Refactor
+
+- *(core)* Restructure Redis module and add centralized cache TTL configuration ([c4073ae](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c4073aeac34490b07d1e734abf82b83bcfd11790))
+- *(core)* Remove deprecated files and inline sync service functionality ([a8a3fe9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a8a3fe9f6f26b22de3af3d1ea04c5e6f8b1cd761))
+- *(core)* Simplify backend architecture - Phase 1 ([9a233f8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9a233f8dec516121811222fec211a9b12e8041a1))
+- *(podcast)* Unify _get_subscription_models import ([6af7f2c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6af7f2c433d11bcd72ef5e68d1d1e4ce65e2637d))
+- *(podcast)* Inline transcription helpers into workflow service ([7380ec7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7380ec7707ee6b7f30f0cc886b12b7e51d5e3622))
+- *(podcast)* Remove unused recommendations feature ([1e89051](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1e89051ca5eadffb9033ad4cc933e4ed82459750))
+- *(frontend)* Remove unused widgets and utilities (~2,740 lines) ([7eb6264](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7eb6264d364e549679995f08193aea172b1c8515))
+- *(frontend)* Remove unused code and deprecated patterns ([9d335b4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9d335b4754bd640a26f38f4ccdd78a9e4295afb8))
+
+
+
 ## [0.27.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.26.0...v0.27.0) - 2026-03-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.27.0))
 
 ### ⚡ Performance
