@@ -17,13 +17,11 @@ logger = logging.getLogger(__name__)
 class PodcastCacheOperations:
     """Podcast-specific cache operations mixin."""
 
-    @staticmethod
-    def _stable_hash(value: str) -> str:
+    def _stable_hash(self, value: str) -> str:
         normalized = value.strip().lower()
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
-    @staticmethod
-    def _subscription_index_key(user_id: int) -> str:
+    def _subscription_index_key(self, user_id: int) -> str:
         return f"podcast:subscriptions:index:{user_id}"
 
     def _subscription_list_key(
@@ -43,8 +41,7 @@ class PodcastCacheOperations:
         token = self._stable_hash(payload_str)
         return f"podcast:subscriptions:v2:{user_id}:{token}"
 
-    @staticmethod
-    def _episode_index_key(subscription_id: int) -> str:
+    def _episode_index_key(self, subscription_id: int) -> str:
         return f"podcast:episodes:index:{subscription_id}"
 
     def _hash_search_query(
@@ -80,35 +77,35 @@ class PodcastCacheOperations:
     ) -> str | None:
         """Get cached RSS feed"""
         key = f"podcast:cache:v2:{self._stable_hash(feed_url)}"
-        return await cache_get_func(client, key)
+        return await cache_get_func(key)
 
     async def set_cached_feed(
         self, client: Any, feed_url: str, xml_content: str, cache_set_func: Any = None
     ) -> None:
         """Cache RSS feed (15 minutes)"""
         key = f"podcast:cache:v2:{self._stable_hash(feed_url)}"
-        await cache_set_func(client, key, xml_content, ttl=CacheTTL.FEED_CACHE)
+        await cache_set_func(key, xml_content, ttl=CacheTTL.FEED_CACHE)
     # === AI Summary ===
     async def get_ai_summary(
         self, client: Any, episode_id: int, version: str = "v1", cache_get_func: Any = None
     ) -> str | None:
         """Get cached AI summary"""
         key = f"podcast:summary:{episode_id}:{version}"
-        return await cache_get_func(client, key)
+        return await cache_get_func(key)
     async def set_ai_summary(
         self,
         client: Any, episode_id: int, summary: str, version: str = "v1", cache_set_func: Any = None
     ) -> None:
         """Cache AI summary (7 days)"""
         key = f"podcast:summary:{episode_id}:{version}"
-        await cache_set_func(client, key, summary, ttl=CacheTTL.AI_SUMMARY)
+        await cache_set_func(key, summary, ttl=CacheTTL.AI_SUMMARY)
     # === User Progress ===
     async def get_user_progress(
         self, client: Any, user_id: int, episode_id: int, cache_get_func: Any = None
     ) -> float | None:
         """Get user listening progress"""
         key = f"podcast:progress:{user_id}:{episode_id}"
-        progress = await cache_get_func(client, key)
+        progress = await cache_get_func(key)
         return float(progress) if progress else None
 
     async def set_user_progress(
@@ -116,7 +113,7 @@ class PodcastCacheOperations:
     ) -> None:
         """Set user progress (30 days)"""
         key = f"podcast:progress:{user_id}:{episode_id}"
-        await cache_set_func(client, key, str(progress), ttl=CacheTTL.PLAYBACK_PROGRESS)
+        await cache_set_func(key, str(progress), ttl=CacheTTL.PLAYBACK_PROGRESS)
 
     # === Subscription List Cache ===
     async def get_subscription_list(
@@ -130,7 +127,7 @@ class PodcastCacheOperations:
     ) -> dict | None:
         """Get cached subscription list (15 minutes TTL)"""
         key = self._subscription_list_key(user_id, page, size, filters=filters)
-        return await cache_get_json_func(client, key)
+        return await cache_get_json_func(key)
     async def set_subscription_list(
         self,
         client: Any,
@@ -180,34 +177,34 @@ class PodcastCacheOperations:
     ) -> dict | None:
         """Get cached user statistics (30 minutes TTL)"""
         key = f"podcast:stats:{user_id}"
-        return await cache_get_json_func(client, key)
+        return await cache_get_json_func(key)
     async def set_user_stats(
         self, client: Any, user_id: int, stats: dict, cache_set_json_func: Any = None
     ) -> bool:
         """Cache user statistics (30 minutes TTL)"""
         key = f"podcast:stats:{user_id}"
-        return await cache_set_json_func(client, key, stats, ttl=CacheTTL.STATS_LONG)
+        return await cache_set_json_func(key, stats, ttl=CacheTTL.STATS_LONG)
     async def invalidate_user_stats(self, client: Any, user_id: int, cache_delete_func: Any = None) -> None:
         """Invalidate user stats cache"""
         key = f"podcast:stats:{user_id}"
-        await cache_delete_func(client, key)
+        await cache_delete_func(key)
     # === Profile Stats Cache ===
     async def get_profile_stats(
         self, client: Any, user_id: int, cache_get_json_func: Any = None
     ) -> dict | None:
         """Get cached profile statistics (10 minutes TTL)."""
         key = f"podcast:stats:profile:{user_id}"
-        return await cache_get_json_func(client, key)
+        return await cache_get_json_func(key)
     async def set_profile_stats(
         self, client: Any, user_id: int, stats: dict, cache_set_json_func: Any = None
     ) -> bool:
         """Cache profile statistics (10 minutes TTL)."""
         key = f"podcast:stats:profile:{user_id}"
-        return await cache_set_json_func(client, key, stats, ttl=CacheTTL.STATS_SHORT)
+        return await cache_set_json_func(key, stats, ttl=CacheTTL.STATS_SHORT)
     async def invalidate_profile_stats(self, client: Any, user_id: int, cache_delete_func: Any = None) -> None:
         """Invalidate profile stats cache."""
         key = f"podcast:stats:profile:{user_id}"
-        await cache_delete_func(client, key)
+        await cache_delete_func(key)
     # === Episode List Cache ===
     async def get_episode_list(
         self, client: Any, subscription_id: int, page: int, size: int, cache_get_json_func: Any = None

@@ -68,7 +68,7 @@ class CacheOperations:
 
     async def cache_get_json(self, key: str, client: Any, record_lookup: Any = None) -> Any | None:
         """Get and parse JSON from cache."""
-        data = await self.cache_get(client, key)
+        data = await self.cache_get(key)
         if data:
             try:
                 value = json.loads(data)
@@ -91,7 +91,7 @@ class CacheOperations:
 
         try:
             json_str = json.dumps(value, cls=RedisJSONEncoder)
-            return await self.cache_set(client, key, json_str, ttl)
+            return await self.cache_set(key, json_str, ttl=ttl)
         except (TypeError, ValueError):
             return False
 

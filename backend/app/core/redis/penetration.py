@@ -47,7 +47,7 @@ class PenetrationOperations:
             - Data doesn't exist and wasn't cached before
         """
         # Try to get from cache first
-        cached_value = await cache_get_func(client, key)
+        cached_value = await cache_get_func(key)
         if cached_value is not None:
             if cached_value == _NULL_VALUE_MARKER:
                 # Null value cached - data doesn't exist
@@ -66,13 +66,13 @@ class PenetrationOperations:
 
         if value is None:
             # Data doesn't exist - cache null marker to prevent penetration
-            await cache_set_func(client, key, _NULL_VALUE_MARKER, ttl=_NULL_CACHE_TTL)
+            await cache_set_func(key, _NULL_VALUE_MARKER, ttl=_NULL_CACHE_TTL)
             if record_penetration:
                 await record_penetration(client, key)
             return None, False
 
         # Cache the actual value
-        await cache_set_func(client, key, json.dumps(value), ttl=ttl)
+        await cache_set_func(key, json.dumps(value), ttl=ttl)
         return value, False
 
     async def cache_get_json_with_null_protection(
@@ -115,7 +115,7 @@ class PenetrationOperations:
         Returns:
             True if successfully set
         """
-        return await cache_set_func(client, key, _NULL_VALUE_MARKER, ttl=_NULL_CACHE_TTL)
+        return await cache_set_func(key, _NULL_VALUE_MARKER, ttl=_NULL_CACHE_TTL)
 
     async def is_null_value_cached(
         self, client: Any, key: str, cache_get_func: Any = None
@@ -128,7 +128,7 @@ class PenetrationOperations:
         Returns:
             True if key has null marker cached
         """
-        value = await cache_get_func(client, key)
+        value = await cache_get_func(key)
         return value == _NULL_VALUE_MARKER
 
     async def invalidate_null_cache(

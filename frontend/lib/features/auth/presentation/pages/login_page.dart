@@ -140,7 +140,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         isLoading: isLoading,
         child: AuthShell(
           title: l10n.auth_welcome_back,
-          subtitle: l10n.auth_sign_in_subtitle,
+          subtitle: '',
           header: Column(
             children: [
               Material(

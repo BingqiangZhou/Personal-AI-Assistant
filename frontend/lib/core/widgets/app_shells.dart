@@ -761,11 +761,13 @@ class AuthShell extends StatelessWidget {
                           title,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            subtitle,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
                         const SizedBox(height: 28),
                         child,
                       ],

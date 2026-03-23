@@ -216,6 +216,7 @@ class ProfileActivityCards extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         child: SurfacePanel(
           borderRadius: 20,
+          showBorder: false,
           showHighlight: false,
           child: Row(
             children: [

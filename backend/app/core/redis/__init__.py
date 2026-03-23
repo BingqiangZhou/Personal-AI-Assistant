@@ -77,11 +77,7 @@ class PodcastRedis(
     This class combines all operation mixins into a unified interface.
     """
 
-    # Import static methods from mixins
-    _stable_hash = PodcastCacheOperations._stable_hash
-    _subscription_index_key = PodcastCacheOperations._subscription_index_key
-    _subscription_list_key = PodcastCacheOperations._subscription_list_key
-    _episode_index_key = PodcastCacheOperations._episode_index_key
+    # Import static methods from mixins (only true static methods)
     _hash_search_query = PodcastCacheOperations._hash_search_query
     _cache_namespace = MetricsOperations._cache_namespace
 
@@ -183,11 +179,11 @@ class PodcastRedis(
 
     async def get(self, key: str) -> str | None:
         """Get the value of a key (raw access)."""
-        return await self.cache_get(await self._get_client(), key)
+        return await self.cache_get(key)
 
     async def setex(self, key: str, ttl: int, value: str) -> bool:
         """Set key with expiry (raw access)."""
-        return await self.cache_set(await self._get_client(), key, value, ttl)
+        return await self.cache_set(key, value, ttl=ttl)
 
     async def ttl(self, key: str) -> int:
         """Get the time to live for a key in seconds."""
@@ -284,20 +280,33 @@ class PodcastRedis(
 
     async def cache_get_json(self, key: str) -> Any | None:
         """Get and parse JSON from cache."""
-        return await CacheOperations.cache_get_json(
-            key,
-            await self._get_client(),
-            record_lookup=self._record_cache_lookup
-        )
+        client = await self._get_client()
+        started = perf_counter()
+        data = await client.get(key)
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        if data:
+            try:
+                value = json.loads(data)
+                await self._record_cache_lookup(key, hit=True)
+                return value
+            except json.JSONDecodeError:
+                await self._record_cache_lookup(key, hit=False)
+                return None
+        await self._record_cache_lookup(key, hit=False)
+        return None
 
     async def cache_set_json(self, key: str, value: Any, ttl: int = CacheTTL.DEFAULT) -> bool:
         """Serialize and cache JSON value."""
-        return await CacheOperations.cache_set_json(
-            key,
-            await self._get_client(),
-            value,
-            ttl,
-        )
+        from app.core.redis.client import RedisJSONEncoder
+        client = await self._get_client()
+        started = perf_counter()
+        try:
+            json_str = json.dumps(value, cls=RedisJSONEncoder)
+            result = await client.setex(key, ttl, json_str)
+            await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+            return bool(result)
+        except (TypeError, ValueError):
+            return False
 
     # === Stats Cache Invalidation ===
 
@@ -315,6 +324,137 @@ class PodcastRedis(
         key = f"podcast:stats:profile:{user_id}"
         started = perf_counter()
         await client.delete(key)
+        await self._record_command_timing("DEL", (perf_counter() - started) * 1000)
+
+    # === User Stats Wrapper Methods ===
+
+    async def get_user_stats(self, user_id: int) -> dict | None:
+        """Get cached user statistics."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.get_user_stats(
+            self, client, user_id, cache_get_json_func=self.cache_get_json
+        )
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        return result
+
+    async def set_user_stats(self, user_id: int, stats: dict) -> bool:
+        """Cache user statistics."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.set_user_stats(
+            self, client, user_id, stats, cache_set_json_func=self.cache_set_json
+        )
+        await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+        return result
+
+    async def get_profile_stats(self, user_id: int) -> dict | None:
+        """Get cached profile statistics."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.get_profile_stats(
+            self, client, user_id, cache_get_json_func=self.cache_get_json
+        )
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        return result
+
+    async def set_profile_stats(self, user_id: int, stats: dict) -> bool:
+        """Cache profile statistics."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.set_profile_stats(
+            self, client, user_id, stats, cache_set_json_func=self.cache_set_json
+        )
+        await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+        return result
+
+    # === Subscription List Wrapper Methods ===
+
+    async def get_subscription_list(
+        self,
+        user_id: int,
+        page: int,
+        size: int,
+        filters: dict[str, Any] | None = None
+    ) -> dict | None:
+        """Get cached subscription list."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.get_subscription_list(
+            self, client, user_id, page, size, filters=filters,
+            cache_get_json_func=self.cache_get_json
+        )
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        return result
+
+    async def set_subscription_list(
+        self,
+        user_id: int,
+        page: int,
+        size: int,
+        data: dict,
+        filters: dict[str, Any] | None = None
+    ) -> bool:
+        """Cache subscription list."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.set_subscription_list(
+            self, client, user_id, page, size, data, filters=filters,
+            cache_set_json_func=self.cache_set_json,
+            expire_func=self._record_command_timing
+        )
+        await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+        return result
+
+    async def invalidate_subscription_list(self, user_id: int) -> None:
+        """Invalidate all subscription list caches for a user."""
+        client = await self._get_client()
+        started = perf_counter()
+        await PodcastCacheOperations.invalidate_subscription_list(
+            self, client, user_id,
+            scan_keys_func=self.scan_keys,
+            delete_keys_func=self._delete_keys
+        )
+        await self._record_command_timing("DEL", (perf_counter() - started) * 1000)
+
+    # === Episode List Wrapper Methods ===
+
+    async def get_episode_list(
+        self, subscription_id: int, page: int, size: int
+    ) -> dict | None:
+        """Get cached episode list."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.get_episode_list(
+            self, client, subscription_id, page, size,
+            cache_get_json_func=self.cache_get_json
+        )
+        await self._record_command_timing("GET", (perf_counter() - started) * 1000)
+        return result
+
+    async def set_episode_list(
+        self, subscription_id: int, page: int, size: int, data: dict
+    ) -> bool:
+        """Cache episode list."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await PodcastCacheOperations.set_episode_list(
+            self, client, subscription_id, page, size, data,
+            cache_set_json_func=self.cache_set_json,
+            expire_func=self._record_command_timing
+        )
+        await self._record_command_timing("SETEX", (perf_counter() - started) * 1000)
+        return result
+
+    async def invalidate_episode_list(self, subscription_id: int) -> None:
+        """Invalidate all episode list caches for a subscription."""
+        client = await self._get_client()
+        started = perf_counter()
+        await PodcastCacheOperations.invalidate_episode_list(
+            self, client, subscription_id,
+            scan_keys_func=self.scan_keys,
+            delete_keys_func=self._delete_keys
+        )
         await self._record_command_timing("DEL", (perf_counter() - started) * 1000)
 
     # === User Progress ===

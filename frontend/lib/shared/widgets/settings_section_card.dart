@@ -32,7 +32,13 @@ class SettingsSectionCard extends StatelessWidget {
         ),
         Card(
           margin: cardMargin,
-          shape: cardShape,
+          shape: cardShape ??
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide.none,
+              ),
+          elevation: 0,
+          color: theme.colorScheme.surface,
           child: Column(children: children),
         ),
       ],

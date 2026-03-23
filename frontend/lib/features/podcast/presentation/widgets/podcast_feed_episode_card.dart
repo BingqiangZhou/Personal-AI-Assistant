@@ -46,9 +46,12 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
       margin: compact
           ? const EdgeInsets.symmetric(horizontal: 4, vertical: 6)
           : null,
-      shape: compact
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
-          : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide.none,
+      ),
+      elevation: 0,
+      color: theme.colorScheme.surface,
       child: InkWell(
         onTap: onOpenDetail,
         borderRadius: BorderRadius.circular(12),
