@@ -12,6 +12,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache_ttl import CacheTTL
 from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.subscription.models import Subscription, SubscriptionStatus, UserSubscription
 from app.domains.user.models import User, UserStatus
@@ -20,7 +21,7 @@ from app.domains.user.models import User, UserStatus
 logger = logging.getLogger(__name__)
 
 # Cache TTL settings
-WARMED_CACHE_TTL_SECONDS = 3600  # 1 hour
+WARMED_CACHE_TTL_SECONDS = CacheTTL.DEFAULT  # 1 hour
 ACTIVE_USER_DAYS = 7  # Consider users active if they logged in within 7 days
 MAX_ACTIVE_USERS_TO_WARM = 100  # Limit to avoid excessive memory usage
 MAX_POPULAR_PODCASTS = 50  # Limit popular podcasts to warm
@@ -50,13 +51,10 @@ class CacheWarmupService:
         start_time = datetime.now(UTC)
 
         try:
-            # Run warm-up tasks concurrently
-            await asyncio.gather(
-                self._warm_active_users_subscriptions(),
-                self._warm_popular_podcasts(),
-                self._warm_system_settings(),
-                return_exceptions=True,
-            )
+            # Run warm-up tasks sequentially to avoid SQLAlchemy session concurrency issues
+            await self._warm_active_users_subscriptions()
+            await self._warm_popular_podcasts()
+            await self._warm_system_settings()
 
             duration = (datetime.now(UTC) - start_time).total_seconds()
             logger.info(

@@ -58,11 +58,18 @@ class InMemoryRateLimiter:
     """Simple in-memory rate limiter for single-instance deployments.
 
     Uses sliding window algorithm for accurate rate limiting.
+    Includes memory protection with max entries limit.
     """
+
+    # Maximum number of unique keys to track (prevents memory exhaustion)
+    _MAX_ENTRIES = 10000
+    # Cleanup threshold (trigger cleanup when entries exceed this)
+    _CLEANUP_THRESHOLD = 8000
 
     def __init__(self) -> None:
         self._requests: dict[str, list[float]] = {}
         self._lock = asyncio.Lock()
+        self._last_cleanup = time.time()
 
     async def is_allowed(
         self,
@@ -84,6 +91,10 @@ class InMemoryRateLimiter:
         window_start = now - window_seconds
 
         async with self._lock:
+            # Periodic cleanup to prevent memory growth
+            if len(self._requests) > self._CLEANUP_THRESHOLD:
+                await self._cleanup_locked(now - 3600)  # Clean entries older than 1 hour
+
             # Get existing requests for this key
             requests = self._requests.get(key, [])
 
@@ -96,12 +107,36 @@ class InMemoryRateLimiter:
                 retry_after = int(oldest + window_seconds - now) + 1
                 return False, 0, retry_after
 
+            # Check memory limit before adding new key
+            if key not in self._requests and len(self._requests) >= self._MAX_ENTRIES:
+                # Evict oldest key to make room (LRU-style)
+                oldest_key = min(self._requests.keys(), key=lambda k: min(self._requests[k]) if self._requests[k] else now)
+                del self._requests[oldest_key]
+                logger.warning("Rate limiter reached max entries, evicted oldest key")
+
             # Record this request
             requests.append(now)
             self._requests[key] = requests
 
             remaining = max_requests - len(requests)
             return True, remaining, 0
+
+    async def _cleanup_locked(self, cutoff: float) -> int:
+        """Internal cleanup method (must be called with lock held)."""
+        initial_count = len(self._requests)
+
+        self._requests = {
+            key: timestamps
+            for key, timestamps in self._requests.items()
+            if any(ts > cutoff for ts in timestamps)
+        }
+
+        removed = initial_count - len(self._requests)
+        if removed > 0:
+            logger.debug("Rate limiter cleanup removed %d expired keys", removed)
+
+        self._last_cleanup = time.time()
+        return removed
 
     async def cleanup_expired(self, max_age_seconds: int = 3600) -> int:
         """Remove expired entries to prevent memory growth.
@@ -113,30 +148,27 @@ class InMemoryRateLimiter:
         cutoff = now - max_age_seconds
 
         async with self._lock:
-            initial_count = len(self._requests)
-
-            self._requests = {
-                key: timestamps
-                for key, timestamps in self._requests.items()
-                if any(ts > cutoff for ts in timestamps)
-            }
-
-            removed = initial_count - len(self._requests)
-            if removed > 0:
-                logger.debug("Rate limiter cleanup removed %d expired keys", removed)
-
-            return removed
+            return await self._cleanup_locked(cutoff)
 
 
 class RedisRateLimiter:
     """Redis-based rate limiter for distributed deployments.
 
     Uses Lua script for atomic rate limiting to prevent race conditions.
+    Falls back to in-memory rate limiting when Redis is unavailable.
     """
 
     def __init__(self, redis_client: Any) -> None:
         self._redis = redis_client
         self._script = None
+        # Fallback in-memory limiter for degraded mode
+        self._fallback_limiter = InMemoryRateLimiter()
+        self._consecutive_failures = 0
+        self._circuit_open = False
+        self._circuit_open_until = 0.0
+        # Circuit breaker thresholds
+        self._failure_threshold = 5
+        self._recovery_timeout = 60.0  # seconds
 
     async def _ensure_script_loaded(self) -> None:
         """Lazy load and cache the Lua script."""
@@ -161,6 +193,21 @@ class RedisRateLimiter:
         """
         redis_key = f"rate_limit:{key}"
 
+        # Check if circuit breaker is open
+        now = time.time()
+        if self._circuit_open:
+            if now < self._circuit_open_until:
+                # Circuit is open, use fallback limiter
+                logger.debug("Circuit breaker open, using fallback rate limiter")
+                return await self._fallback_limiter.is_allowed(
+                    key, max_requests, window_seconds
+                )
+            else:
+                # Recovery timeout passed, try to close circuit
+                self._circuit_open = False
+                self._consecutive_failures = 0
+                logger.info("Circuit breaker reset, attempting Redis recovery")
+
         try:
             await self._ensure_script_loaded()
 
@@ -172,6 +219,9 @@ class RedisRateLimiter:
 
             new_count, ttl = result
 
+            # Reset failure counter on success
+            self._consecutive_failures = 0
+
             if new_count == -1:
                 # Limit exceeded
                 retry_after = max(1, ttl) if ttl > 0 else window_seconds
@@ -181,9 +231,29 @@ class RedisRateLimiter:
             return True, remaining, 0
 
         except Exception as e:
-            logger.error("Redis rate limiter error: %s", e)
-            # Fail open - allow request if Redis is unavailable
-            return True, max_requests, 0
+            self._consecutive_failures += 1
+            logger.warning(
+                "Redis rate limiter error (failure %d/%d): %s",
+                self._consecutive_failures,
+                self._failure_threshold,
+                e,
+            )
+
+            # Check if we should open the circuit breaker
+            if self._consecutive_failures >= self._failure_threshold:
+                self._circuit_open = True
+                self._circuit_open_until = now + self._recovery_timeout
+                logger.error(
+                    "Circuit breaker opened due to %d consecutive failures. "
+                    "Using fallback limiter for %.0f seconds.",
+                    self._consecutive_failures,
+                    self._recovery_timeout,
+                )
+
+            # Use fallback limiter instead of failing open
+            return await self._fallback_limiter.is_allowed(
+                key, max_requests, window_seconds
+            )
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):

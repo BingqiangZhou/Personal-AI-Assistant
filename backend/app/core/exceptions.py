@@ -313,16 +313,121 @@ async def circuit_open_exception_handler(
     )
 
 
+async def database_connection_exception_handler(
+    request: Request, exc: Exception
+) -> CustomJSONResponse:
+    """Handle database connection exceptions.
+
+    处理数据库连接异常 - 返回503服务不可用
+    """
+    logger.error(
+        f"数据库连接错误: {exc.__class__.__name__} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"消息: {exc!s}",
+        exc_info=True,
+    )
+
+    return CustomJSONResponse(
+        status_code=503,
+        content={
+            "detail": "Database connection error. Please try again later.",
+            "type": "DATABASE_CONNECTION_ERROR",
+            "status_code": 503,
+            "message_en": "Database connection error. Please try again later.",
+            "message_zh": "数据库连接错误，请稍后重试。",
+        },
+        headers={"Retry-After": "10"},
+    )
+
+
+async def redis_connection_exception_handler(
+    request: Request, exc: Exception
+) -> CustomJSONResponse:
+    """Handle Redis connection exceptions.
+
+    处理Redis连接异常 - 返回503服务不可用
+    """
+    logger.error(
+        f"Redis连接错误: {exc.__class__.__name__} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"消息: {exc!s}",
+        exc_info=True,
+    )
+
+    return CustomJSONResponse(
+        status_code=503,
+        content={
+            "detail": "Cache service error. Please try again later.",
+            "type": "CACHE_CONNECTION_ERROR",
+            "status_code": 503,
+            "message_en": "Cache service error. Please try again later.",
+            "message_zh": "缓存服务错误，请稍后重试。",
+        },
+        headers={"Retry-After": "5"},
+    )
+
+
+async def timeout_exception_handler(
+    request: Request, exc: Exception
+) -> CustomJSONResponse:
+    """Handle timeout exceptions.
+
+    处理超时异常 - 返回504网关超时
+    """
+    logger.warning(
+        f"请求超时: {exc.__class__.__name__} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"消息: {exc!s}",
+    )
+
+    return CustomJSONResponse(
+        status_code=504,
+        content={
+            "detail": "Request timeout. Please try again.",
+            "type": "REQUEST_TIMEOUT",
+            "status_code": 504,
+            "message_en": "Request timeout. Please try again.",
+            "message_zh": "请求超时，请重试。",
+        },
+    )
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
     """Setup exception handlers for the FastAPI app.
 
     为 FastAPI 应用设置异常处理器
     """
+    import asyncio
+
     app.add_exception_handler(BaseCustomError, custom_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(CircuitOpenError, circuit_open_exception_handler)
+
+    # Database connection errors
+    from sqlalchemy.exc import (
+        DBAPIError,
+        InterfaceError,
+        OperationalError,
+    )
+
+    app.add_exception_handler(OperationalError, database_connection_exception_handler)
+    app.add_exception_handler(InterfaceError, database_connection_exception_handler)
+    app.add_exception_handler(DBAPIError, database_connection_exception_handler)
+
+    # Timeout errors
+    app.add_exception_handler(asyncio.TimeoutError, timeout_exception_handler)
+    app.add_exception_handler(TimeoutError, timeout_exception_handler)
+
+    # Redis connection errors (ConnectionError is a base class, so we handle it carefully)
+    # Note: We don't want to catch all ConnectionError as it may include network issues
+    # Instead, we'll let Redis-specific errors be caught by the rate limiter's circuit breaker
+
+    # General exception handler (must be last)
     app.add_exception_handler(Exception, general_exception_handler)
 
 

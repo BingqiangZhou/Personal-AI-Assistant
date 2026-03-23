@@ -24,6 +24,7 @@ Recommended naming conventions:
 import asyncio
 import hashlib
 import json
+import logging
 import secrets
 from contextlib import suppress
 from datetime import datetime, timedelta
@@ -35,7 +36,9 @@ from redis.backoff import ExponentialBackoff
 from redis.retry import Retry
 
 from app.core.config import settings
+from app.core.cache_ttl import CacheTTL
 
+logger = logging.getLogger(__name__)
 
 _shared_redis: "PodcastRedis | None" = None
 
@@ -58,6 +61,26 @@ _METRICS_TTL_SECONDS = 3600  # Metrics expire after 1 hour
 # Null value cache marker and TTL
 _NULL_VALUE_MARKER = "__NULL__"
 _NULL_CACHE_TTL = 60  # 60 seconds for null value caching
+
+
+class _DeferredScript:
+    """Deferred Lua script that gets the client when executed.
+
+    This handles the case where register_script is called before
+    the Redis client is initialized (e.g., during middleware setup).
+    """
+
+    def __init__(self, redis_helper: "PodcastRedis", script: str):
+        self._redis = redis_helper
+        self._script = script
+        self._cached_script = None
+
+    async def __call__(self, keys: list[str] = None, args: list[Any] = None):
+        """Execute the script with the given keys and arguments."""
+        if self._cached_script is None:
+            client = await self._redis._get_client()
+            self._cached_script = client.register_script(self._script)
+        return await self._cached_script(keys=keys, args=args)
 
 
 class PodcastRedis:
@@ -370,12 +393,31 @@ class PodcastRedis:
             )
             return int(result or 0)
 
-    async def _ping_client(self, client: aioredis.Redis) -> None:
-        # Note: Do NOT record timing here to avoid circular call with _get_client()
-        await client.ping()
+    async def _ping_client(self, client: aioredis.Redis, *, timeout: float = 2.0) -> bool:
+        """Ping Redis client with timeout.
+
+        Note: Do NOT record timing here to avoid circular call with _get_client()
+
+        Args:
+            client: Redis client to ping
+            timeout: Timeout in seconds (default 2.0)
+
+        Returns:
+            True if ping successful, False otherwise
+        """
+        try:
+            async with asyncio.timeout(timeout):
+                await client.ping()
+            return True
+        except (TimeoutError, asyncio.TimeoutError):
+            logger.warning("Redis ping timed out after %.1f seconds", timeout)
+            return False
+        except Exception as e:
+            logger.warning("Redis ping failed: %s", e)
+            return False
 
     async def _get_client(self) -> aioredis.Redis:
-        """Get Redis client instance"""
+        """Get Redis client instance with automatic reconnection."""
         current_loop_token = self._current_loop_token()
 
         # Celery prefork workers call asyncio.run() per task. When loop changes,
@@ -389,8 +431,10 @@ class PodcastRedis:
                 await old_client.close()
 
         if self._client is None:
-            self._client = self._build_client()
-            await self._ping_client(self._client)
+            new_client = self._build_client()
+            if not await self._ping_client(new_client):
+                raise ConnectionError("Failed to connect to Redis after initial ping")
+            self._client = new_client
             self._client_loop_token = current_loop_token
             self._last_health_check_at = perf_counter()
             return self._client
@@ -399,16 +443,39 @@ class PodcastRedis:
         if (now - self._last_health_check_at) < self._health_check_interval_seconds:
             return self._client
 
-        try:
-            await self._ping_client(self._client)
+        # Health check needed
+        if await self._ping_client(self._client):
             self._last_health_check_at = now
-        except Exception:
-            # Reconnect if health check fails
-            self._client = self._build_client()
-            await self._ping_client(self._client)
-            self._client_loop_token = current_loop_token
-            self._last_health_check_at = perf_counter()
-        return self._client
+            return self._client
+
+        # Health check failed, try to reconnect
+        logger.warning("Redis health check failed, attempting reconnection")
+        old_client = self._client
+        self._client = None
+
+        # Close old client
+        with suppress(Exception):
+            await old_client.close()
+
+        # Try to reconnect with retry
+        max_retries = 3
+        for attempt in range(max_retries):
+            new_client = self._build_client()
+            if await self._ping_client(new_client):
+                self._client = new_client
+                self._client_loop_token = current_loop_token
+                self._last_health_check_at = perf_counter()
+                logger.info("Redis reconnection successful on attempt %d", attempt + 1)
+                return self._client
+
+            # Wait before retry (exponential backoff)
+            if attempt < max_retries - 1:
+                await asyncio.sleep(0.5 * (2 ** attempt))
+
+        # All reconnection attempts failed
+        raise ConnectionError(
+            f"Failed to reconnect to Redis after {max_retries} attempts"
+        )
 
     # === Cache Operations ===
 
@@ -420,7 +487,7 @@ class PodcastRedis:
         await self._record_command_timing("GET", (perf_counter() - started) * 1000)
         return value
 
-    async def cache_set(self, key: str, value: str, ttl: int = 3600) -> bool:
+    async def cache_set(self, key: str, value: str, ttl: int = CacheTTL.DEFAULT) -> bool:
         """Set cached value with TTL"""
         client = await self._get_client()
         started = perf_counter()
@@ -442,7 +509,7 @@ class PodcastRedis:
         self,
         key: str,
         loader: Any,
-        ttl: int = 3600,
+        ttl: int = CacheTTL.DEFAULT,
         lock_timeout: int = 10,
         max_wait_time: float = 3.0,
     ) -> tuple[Any, bool]:
@@ -538,8 +605,8 @@ class PodcastRedis:
         self,
         key: str,
         loader: Any,
-        ttl: int = 3600,
-        stale_ttl: int = 300,
+        ttl: int = CacheTTL.DEFAULT,
+        stale_ttl: int = CacheTTL.STALE_REFRESH,
     ) -> Any:
         """Get cached value with stale-while-revalidate pattern.
 
@@ -637,7 +704,7 @@ class PodcastRedis:
     async def set_episode_metadata(self, episode_id: int, metadata: dict) -> None:
         """Cache episode metadata (24 hours)"""
         key = f"podcast:meta:{episode_id}"
-        await self.cache_hset(key, metadata, ttl=86400)
+        await self.cache_hset(key, metadata, ttl=CacheTTL.EPISODE_METADATA)
 
     async def get_cached_feed(self, feed_url: str) -> str | None:
         """Get cached RSS feed"""
@@ -647,7 +714,7 @@ class PodcastRedis:
     async def set_cached_feed(self, feed_url: str, xml_content: str) -> None:
         """Cache RSS feed (15 minutes)"""
         key = f"podcast:cache:v2:{self._stable_hash(feed_url)}"
-        await self.cache_set(key, xml_content, ttl=900)
+        await self.cache_set(key, xml_content, ttl=CacheTTL.FEED_CACHE)
 
     async def get_ai_summary(self, episode_id: int, version: str = "v1") -> str | None:
         """Get cached AI summary"""
@@ -662,7 +729,7 @@ class PodcastRedis:
     ) -> None:
         """Cache AI summary (7 days)"""
         key = f"podcast:summary:{episode_id}:{version}"
-        await self.cache_set(key, summary, ttl=604800)
+        await self.cache_set(key, summary, ttl=CacheTTL.AI_SUMMARY)
 
     async def get_user_progress(self, user_id: int, episode_id: int) -> float | None:
         """Get user listening progress"""
@@ -678,7 +745,7 @@ class PodcastRedis:
     ) -> None:
         """Set user progress (30 days)"""
         key = f"podcast:progress:{user_id}:{episode_id}"
-        await self.cache_set(key, str(progress), ttl=2592000)
+        await self.cache_set(key, str(progress), ttl=CacheTTL.PLAYBACK_PROGRESS)
 
     # === JSON Cache Helpers ===
 
@@ -696,7 +763,7 @@ class PodcastRedis:
         await self._record_cache_lookup(key, hit=False)
         return None
 
-    async def cache_set_json(self, key: str, value: Any, ttl: int = 3600) -> bool:
+    async def cache_set_json(self, key: str, value: Any, ttl: int = CacheTTL.DEFAULT) -> bool:
         """Serialize and cache JSON value"""
         try:
             json_str = json.dumps(value, cls=RedisJSONEncoder)
@@ -768,7 +835,7 @@ class PodcastRedis:
     async def set_user_stats(self, user_id: int, stats: dict) -> bool:
         """Cache user statistics (30 minutes TTL)"""
         key = f"podcast:stats:{user_id}"
-        return await self.cache_set_json(key, stats, ttl=1800)
+        return await self.cache_set_json(key, stats, ttl=CacheTTL.STATS_LONG)
 
     async def invalidate_user_stats(self, user_id: int) -> None:
         """Invalidate user stats cache"""
@@ -783,7 +850,7 @@ class PodcastRedis:
     async def set_profile_stats(self, user_id: int, stats: dict) -> bool:
         """Cache profile statistics (10 minutes TTL)."""
         key = f"podcast:stats:profile:{user_id}"
-        return await self.cache_set_json(key, stats, ttl=600)
+        return await self.cache_set_json(key, stats, ttl=CacheTTL.STATS_SHORT)
 
     async def invalidate_profile_stats(self, user_id: int) -> None:
         """Invalidate profile stats cache."""
@@ -878,7 +945,7 @@ class PodcastRedis:
         """Cache search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
         key = f"podcast:search:v2:{hash_key}"
-        return await self.cache_set_json(key, data, ttl=300)
+        return await self.cache_set_json(key, data, ttl=CacheTTL.STALE_REFRESH)
 
     # === Batch Invalidation ===
 
@@ -1114,6 +1181,34 @@ class PodcastRedis:
         await self._record_command_timing("TTL", (perf_counter() - started) * 1000)
         return int(result or -1)
 
+    def register_script(self, script: str):
+        """Register a Lua script for execution.
+
+        This is a synchronous wrapper that returns a Script object
+        which can be used to execute the script later.
+
+        Args:
+            script: The Lua script content.
+
+        Returns:
+            A Script object that can be called to execute the script.
+        """
+        # Get the client synchronously - this is safe because register_script
+        # just creates a Script object that will be executed later
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if self._client is None:
+            # Client not initialized yet - return a deferred script
+            # that will get the client when executed
+            return _DeferredScript(self, script)
+
+        return self._client.register_script(script)
+
     async def close(self):
         """Close Redis connection"""
         if self._client:
@@ -1130,7 +1225,7 @@ class PodcastRedis:
         self,
         key: str,
         loader: Any,
-        ttl: int = 3600,
+        ttl: int = CacheTTL.DEFAULT,
     ) -> tuple[Any, bool]:
         """Get cached value with null value caching to prevent cache penetration.
 
@@ -1153,7 +1248,7 @@ class PodcastRedis:
         if cached_value is not None:
             if cached_value == _NULL_VALUE_MARKER:
                 # Null value cached - data doesn't exist
-                await self._record_cache_lookup(key, hit=True)
+                # Only record penetration, not as cache hit (to avoid double counting)
                 await self._record_cache_penetration(key)
                 return None, True
             # Actual data cached
@@ -1178,7 +1273,7 @@ class PodcastRedis:
         self,
         key: str,
         loader: Any,
-        ttl: int = 3600,
+        ttl: int = CacheTTL.DEFAULT,
     ) -> Any:
         """Get JSON cached value with null protection (simplified API).
 
@@ -1229,6 +1324,8 @@ class PodcastRedis:
     async def invalidate_null_cache(self, pattern: str | None = None) -> int:
         """Invalidate null value caches.
 
+        Uses Lua script for efficient batch processing.
+
         Args:
             pattern: Optional key pattern to match (e.g., "podcast:meta:*").
                      If None, clears all null markers (use with caution).
@@ -1237,21 +1334,63 @@ class PodcastRedis:
             Number of keys deleted
 
         """
+        if pattern is None:
+            # This would be expensive - scan all keys and delete null markers
+            # Not recommended for production use
+            logger.warning("invalidate_null_cache called without pattern - skipping")
+            return 0
+
         client = await self._get_client()
+        started = perf_counter()
 
-        if pattern:
-            # Delete null values matching pattern
-            count = 0
-            async for key in client.scan_iter(match=pattern):
-                value = await client.get(key)
-                if value == _NULL_VALUE_MARKER:
-                    await self._delete_keys_nonblocking(key)
-                    count += 1
-            return count
+        # Use Lua script for efficient batch processing
+        # SCAN + check + delete in one round-trip per batch
+        lua_script = """
+        local cursor = ARGV[1]
+        local pattern = ARGV[2]
+        local null_marker = ARGV[3]
+        local count = 0
 
-        # This would be expensive - scan all keys and delete null markers
-        # Not recommended for production use
-        return 0
+        local result = redis.call('SCAN', cursor, 'MATCH', pattern, 'COUNT', 100)
+        local new_cursor = result[1]
+        local keys = result[2]
+
+        for _, key in ipairs(keys) do
+            local value = redis.call('GET', key)
+            if value == null_marker then
+                redis.call('DEL', key)
+                count = count + 1
+            end
+        end
+
+        return {new_cursor, count}
+        """
+        script = client.register_script(lua_script)
+
+        total_deleted = 0
+        cursor = "0"
+
+        while True:
+            result = await script(args=[cursor, pattern, _NULL_VALUE_MARKER])
+            cursor = str(result[0])
+            batch_deleted = int(result[1])
+            total_deleted += batch_deleted
+
+            if cursor == "0":
+                break
+
+        await self._record_command_timing(
+            "INVALIDATE_NULL_CACHE", (perf_counter() - started) * 1000
+        )
+
+        if total_deleted > 0:
+            logger.info(
+                "Invalidated %d null cache entries matching pattern %s",
+                total_deleted,
+                pattern,
+            )
+
+        return total_deleted
 
     async def get_penetration_metrics(self) -> dict[str, Any]:
         """Get cache penetration metrics.

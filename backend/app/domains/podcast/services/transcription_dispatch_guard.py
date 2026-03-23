@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache_ttl import CacheTTL
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import TranscriptionTask
 from app.domains.podcast.utils.status_helpers import status_value
@@ -34,7 +35,7 @@ class TranscriptionDispatchGuard:
 
         redis = self.redis_factory()
         key = f"podcast:transcription:dispatched:{task_id}"
-        if await redis.set_if_not_exists(key, "1", ttl=7200):
+        if await redis.set_if_not_exists(key, "1", ttl=CacheTTL.hours(2)):
             return True
 
         status_stmt = select(TranscriptionTask.status).where(

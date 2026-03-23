@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.admin.storage_service import StorageCleanupService
+from app.core.cache_ttl import CacheTTL
 from app.core.config import settings
 from app.core.database import worker_db_session
 from app.core.datetime_utils import ensure_timezone_aware_fetch_time
@@ -431,7 +432,7 @@ class PodcastTaskOrchestrationService:
 
     async def _claim_dispatched(self, session: AsyncSession, task_id: int) -> bool:
         key = f"podcast:transcription:dispatched:{task_id}"
-        if await self.redis.set_if_not_exists(key, "1", ttl=7200):
+        if await self.redis.set_if_not_exists(key, "1", ttl=CacheTTL.hours(2)):
             return True
 
         status_stmt = select(TranscriptionTask.status).where(

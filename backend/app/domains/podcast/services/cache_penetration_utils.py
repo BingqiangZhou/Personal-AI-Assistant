@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
+from app.core.cache_ttl import CacheTTL
 from app.core.redis import PodcastRedis, get_shared_redis
 
 
@@ -22,7 +23,7 @@ async def get_with_null_protection(
     loader: Callable[[], Awaitable[T]],
     *,
     redis: PodcastRedis | None = None,
-    ttl: int = 3600,
+    ttl: int = CacheTTL.DEFAULT,  # 1 hour
 ) -> tuple[T | None, bool]:
     """Get cached value with null value caching to prevent cache penetration.
 
@@ -43,7 +44,7 @@ async def get_with_null_protection(
         episode, from_cache = await get_with_null_protection(
             f"episode:{episode_id}",
             lambda: repo.get_episode_by_id(episode_id),
-            ttl=3600,
+            ttl=CacheTTL.EPISODE_METADATA,
         )
         if episode is None:
             raise HTTPException(404, "Episode not found")
@@ -63,7 +64,7 @@ async def get_json_with_null_protection(
     loader: Callable[[], Awaitable[Any]],
     *,
     redis: PodcastRedis | None = None,
-    ttl: int = 3600,
+    ttl: int = CacheTTL.DEFAULT,  # 1 hour
 ) -> Any:
     """Get JSON cached value with null protection (simplified API).
 
@@ -80,7 +81,7 @@ async def get_json_with_null_protection(
         data = await get_json_with_null_protection(
             f"subscription:{sub_id}",
             lambda: fetch_subscription_data(sub_id),
-            ttl=900,
+            ttl=CacheTTL.FEED_CACHE,
         )
 
     """
