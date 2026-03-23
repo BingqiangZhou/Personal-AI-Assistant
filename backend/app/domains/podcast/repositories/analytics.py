@@ -26,13 +26,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _get_subscription_models():
-    """Lazy import subscription models to maintain domain boundaries."""
-    from app.domains.subscription.models import Subscription, UserSubscription
-
-    return Subscription, UserSubscription
-
-
 class PodcastAnalyticsRepositoryMixin:
     """Search, recent activity, and aggregated stats."""
 

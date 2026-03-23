@@ -13,21 +13,11 @@ from sqlalchemy.orm import attributes, joinedload
 
 from app.core.datetime_utils import sanitize_published_date
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.repositories.base import _get_subscription_models
 
 # Use TYPE_CHECKING to avoid runtime dependency on subscription domain
 if TYPE_CHECKING:
     from app.domains.subscription.models import Subscription, UserSubscription
-
-
-def _get_subscription_models():
-    """Lazy import subscription models to maintain domain boundaries.
-
-    Returns:
-        Tuple of (Subscription, UserSubscription) models
-    """
-    from app.domains.subscription.models import Subscription, UserSubscription
-
-    return Subscription, UserSubscription
 
 
 class PodcastContentRepositoryMixin:
