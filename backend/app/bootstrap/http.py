@@ -41,6 +41,7 @@ def configure_middlewares(app: FastAPI) -> None:
             "/openapi.json",
             "/metrics",
             "/metrics/summary",
+            "/api/v1/podcasts/episodes",  # Playback updates (frequent polling)
         },
     )
     try:

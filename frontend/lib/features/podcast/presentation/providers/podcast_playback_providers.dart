@@ -107,7 +107,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   ProcessingState? _lastProcessingState;
   bool _isHandlingQueueCompletion = false;
   DateTime? _lastPlaybackSyncAt;
-  static const Duration _syncInterval = Duration(seconds: 2);
+  static const Duration _syncInterval = Duration(seconds: 15);
   static const Duration _lastPlaybackSnapshotDebounce = Duration(seconds: 2);
   _PlaybackRateSelectionCache? _playbackRateSelectionCache;
 

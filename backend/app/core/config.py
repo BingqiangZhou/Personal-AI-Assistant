@@ -84,12 +84,13 @@ class Settings(BaseSettings):
     SECRET_KEY: str | None = None
     ENVIRONMENT: str = "development"
 
-    # Database - Pool sizing adjusted for podcast-heavy workloads
-    # Base calculation: 5 domains × 6 concurrent/domain × 2 buffer = 60 connections
+    # Database - Pool sizing adjusted for multi-worker Docker deployment
+    # With 8 worker processes (4 gunicorn + 4 celery), each needs smaller pool
+    # Total capacity: 8 workers × (5 + 10) = 120 connections (within 200 limit)
     DATABASE_URL: str | None = None
     READ_DATABASE_URL: str | None = None  # Read replica URL (optional, defaults to DATABASE_URL)
-    DATABASE_POOL_SIZE: int = 20
-    DATABASE_MAX_OVERFLOW: int = 40
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_MAX_OVERFLOW: int = 10
 
     # Database timeout settings
     DATABASE_POOL_TIMEOUT: int = 30  # Max wait for connection (seconds)

@@ -299,6 +299,22 @@ class PodcastRedis(
             ttl,
         )
 
+    # === Stats Cache Invalidation ===
+
+    async def invalidate_user_stats(self, user_id: int) -> None:
+        """Invalidate user stats cache."""
+        client = await self._get_client()
+        await PodcastCacheOperations.invalidate_user_stats(
+            self, client, user_id, cache_delete_func=CacheOperations.cache_delete
+        )
+
+    async def invalidate_profile_stats(self, user_id: int) -> None:
+        """Invalidate profile stats cache."""
+        client = await self._get_client()
+        await PodcastCacheOperations.invalidate_profile_stats(
+            self, client, user_id, cache_delete_func=CacheOperations.cache_delete
+        )
+
     # === Anti-Stampede Cache ===
 
     async def cache_get_with_lock(
