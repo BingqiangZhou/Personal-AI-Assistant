@@ -11,7 +11,6 @@ from .stats_service import PodcastStatsService
 from .subscription_service import PodcastSubscriptionService
 from .summary_generation_service import PodcastSummaryGenerationService
 from .summary_workflow_service import SummaryWorkflowService
-from .sync_service import PodcastSyncService
 from .transcription_runtime_service import PodcastTranscriptionRuntimeService
 from .transcription_schedule_service import PodcastTranscriptionScheduleService
 from .transcription_workflow_service import TranscriptionWorkflowService
@@ -27,7 +26,6 @@ __all__ = [
     "PodcastStatsService",
     "PodcastSubscriptionService",
     "PodcastSummaryGenerationService",
-    "PodcastSyncService",
     "PodcastTranscriptionRuntimeService",
     "PodcastTranscriptionScheduleService",
     "SummaryWorkflowService",

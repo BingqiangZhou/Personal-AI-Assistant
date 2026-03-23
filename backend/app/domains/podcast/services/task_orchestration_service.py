@@ -27,7 +27,6 @@ from app.domains.podcast.models import (
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
 from app.domains.podcast.services.daily_report_service import DailyReportService
 from app.domains.podcast.services.search_service import PodcastSearchService
-from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
@@ -419,7 +418,6 @@ class PodcastTaskOrchestrationService:
     def _build_transcription_workflow(self) -> TranscriptionWorkflowService:
         return TranscriptionWorkflowService(
             self.session,
-            sync_service_factory=PodcastSyncService,
             state_manager_factory=get_transcription_state_manager,
             redis_factory=lambda: self.redis,
             claim_dispatched=self._claim_dispatched,

@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.models import PodcastEpisode
-from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.podcast.services.transcription_dispatch_guard import (
     TranscriptionDispatchGuard,
 )
@@ -61,10 +60,6 @@ class TranscriptionWorkflowService:
             [AsyncSession],
             PodcastTranscriptionScheduleService,
         ] = PodcastTranscriptionScheduleService,
-        sync_service_factory: Callable[
-            [AsyncSession, int],
-            PodcastSyncService,
-        ] = PodcastSyncService,
         state_manager_factory: Callable[
             [],
             Awaitable[Any],
@@ -76,7 +71,6 @@ class TranscriptionWorkflowService:
         self.db = db
         self.transcription_service_factory = transcription_service_factory
         self.scheduler_factory = scheduler_factory
-        self.sync_service_factory = sync_service_factory
         self.state_manager_factory = state_manager_factory
         self.redis_factory = redis_factory
         self.claim_dispatched = claim_dispatched
@@ -362,16 +356,24 @@ class TranscriptionWorkflowService:
                 "episode_id": episode_id,
             }
 
-        sync_service = self.sync_service_factory(self.db, user_id)
-        transcription_task = await sync_service.trigger_transcription(episode_id)
-        if not transcription_task:
+        # Directly use transcription service instead of sync_service wrapper
+        transcription_service = self.transcription_service_factory(self.db)
+        result = await transcription_service.start_transcription(episode_id)
+        if not result or not result.get("task"):
             raise RuntimeError(
                 f"Failed to trigger transcription for episode={episode_id}, user={user_id}",
             )
 
+        logger.info(
+            "Triggered transcription task %s for episode %s (action=%s)",
+            result["task"].id,
+            episode_id,
+            result.get("action"),
+        )
+
         return {
             "status": "queued",
             "episode_id": episode_id,
-            "transcription_task_id": transcription_task["task_id"],
+            "transcription_task_id": result["task"].id,
             "processed_at": datetime.now(UTC).isoformat(),
         }
