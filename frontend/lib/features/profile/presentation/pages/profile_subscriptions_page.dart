@@ -13,7 +13,6 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subsc
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/add_podcast_dialog.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 
@@ -148,25 +147,6 @@ class _ProfileSubscriptionsPageState
               showDialog(
                 context: context,
                 builder: (context) => const AddPodcastDialog(),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildActionButton(
-            context,
-            key: const Key('profile_subscriptions_action_bulk_import'),
-            tooltip: l10n.podcast_bulk_import,
-            icon: Icons.playlist_add_outlined,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => BulkImportDialog(
-                  onImport: (urls) async {
-                    await ref
-                        .read(podcastSubscriptionProvider.notifier)
-                        .addSubscriptionsBatch(feedUrls: urls);
-                  },
-                ),
               );
             },
           ),

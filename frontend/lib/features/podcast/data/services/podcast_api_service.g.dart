@@ -50,29 +50,6 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<dynamic> addSubscriptionsBatch(
-    List<PodcastSubscriptionCreateRequest> request,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = request.map((e) => e.toJson()).toList();
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/subscriptions/podcasts/bulk',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
   Future<PodcastSubscriptionListResponse> listSubscriptions(
     int page,
     int size,

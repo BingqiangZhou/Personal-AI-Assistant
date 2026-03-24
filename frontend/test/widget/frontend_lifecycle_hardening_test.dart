@@ -13,7 +13,6 @@ import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/summary_providers.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation_chat_widget.dart';
 import 'package:personal_ai_assistant/shared/widgets/server_config_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +28,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() {
-    debugBulkImportRssUrlValidator = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_secureStorageChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -119,32 +117,6 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-
-  testWidgets('BulkImportDialog ignores validation completion after dispose', (
-    tester,
-  ) async {
-    final validationCompleter = Completer<bool>();
-    debugBulkImportRssUrlValidator = (_) => validationCompleter.future;
-
-    await tester.pumpWidget(
-      _buildTestApp(Scaffold(body: BulkImportDialog(onImport: (_) async {}))),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.byType(TextField).first,
-      'https://example.com/feed.xml',
-    );
-    await tester.tap(find.byIcon(Icons.auto_awesome));
-    await tester.pump();
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    validationCompleter.complete(true);
-    await tester.pump();
-    await tester.pump();
-
-    expect(tester.takeException(), isNull);
-  });
 
   testWidgets('ConversationChatWidget cancels delayed auto-scroll on dispose', (
     tester,

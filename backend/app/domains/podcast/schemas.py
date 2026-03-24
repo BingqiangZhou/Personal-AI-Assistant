@@ -491,16 +491,6 @@ class PodcastProfileStatsResponse(PodcastBaseSchema):
     total_highlights: int = 0
 
 
-class PodcastSubscriptionBatchResponse(PodcastBaseSchema):
-    """播客批量订阅响应"""
-
-    results: list[dict[str, Any]]
-    total_requested: int
-    success_count: int
-    skipped_count: int
-    error_count: int
-
-
 # === Transcription相关 ===
 
 

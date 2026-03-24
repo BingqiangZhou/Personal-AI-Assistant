@@ -7,7 +7,6 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/add_podcast_dialog.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_subscriptions_page.dart';
 
 class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
@@ -147,7 +146,7 @@ void main() {
     );
   });
 
-  testWidgets('shows add/import actions in app bar and opens dialogs', (
+  testWidgets('shows add action in app bar and opens dialog', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -188,33 +187,11 @@ void main() {
         isTrue,
       ),
     );
-    expect(
-      find.byKey(const Key('profile_subscriptions_action_bulk_import')),
-      findsOneWidget,
-    );
-    expect(
-      tester.widget<HeaderCapsuleActionButton>(
-        find.byKey(const Key('profile_subscriptions_action_bulk_import')),
-      ),
-      isA<HeaderCapsuleActionButton>().having(
-        (button) => button.circular,
-        'circular',
-        isTrue,
-      ),
-    );
 
     await tester.tap(find.byKey(const Key('profile_subscriptions_action_add')));
     await tester.pumpAndSettle();
     expect(find.byType(AddPodcastDialog), findsOneWidget);
     Navigator.of(tester.element(find.byType(AddPodcastDialog))).pop();
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.byKey(const Key('profile_subscriptions_action_bulk_import')),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(BulkImportDialog), findsOneWidget);
-    Navigator.of(tester.element(find.byType(BulkImportDialog))).pop();
     await tester.pumpAndSettle();
   });
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../providers/podcast_providers.dart';
-import 'bulk_import_dialog.dart';
 
 class AddPodcastDialog extends ConsumerStatefulWidget {
   const AddPodcastDialog({super.key});
@@ -106,31 +105,6 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                         }
                         return null;
                       },
-                    ),
-                    const SizedBox(height: 24),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Text(l10n.podcast_need_many),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            showDialog(
-                              context: context,
-                              builder: (context) => BulkImportDialog(
-                                onImport: (urls) async {
-                                  await ref
-                                      .read(
-                                        podcastSubscriptionProvider.notifier,
-                                      )
-                                      .addSubscriptionsBatch(feedUrls: urls);
-                                },
-                              ),
-                            );
-                          },
-                          child: Text(l10n.podcast_bulk_import),
-                        ),
-                      ],
                     ),
                   ],
                 ),

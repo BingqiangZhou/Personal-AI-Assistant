@@ -18,7 +18,6 @@ from app.domains.podcast.api.response_assemblers import (
 )
 from app.domains.podcast.schemas import (
     PodcastSearchFilter,
-    PodcastSubscriptionBatchResponse,
     PodcastSubscriptionBulkDelete,
     PodcastSubscriptionBulkDeleteResponse,
     PodcastSubscriptionCreate,
@@ -85,30 +84,6 @@ async def add_subscription(
             status_code=500,
             detail=f"Failed to add subscription: {exc}",
         ) from exc
-
-
-@router.post(
-    "/bulk",
-    response_model=PodcastSubscriptionBatchResponse,
-    summary="Bulk add podcast subscriptions",
-)
-async def create_subscriptions_batch(
-    subscriptions_data: list[PodcastSubscriptionCreate],
-    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
-):
-    results = await service.add_subscriptions_batch(subscriptions_data)
-
-    success_count = sum(1 for item in results if item["status"] == "success")
-    skipped_count = sum(1 for item in results if item["status"] == "skipped")
-    error_count = sum(1 for item in results if item["status"] == "error")
-
-    return PodcastSubscriptionBatchResponse(
-        results=results,
-        total_requested=len(subscriptions_data),
-        success_count=success_count,
-        skipped_count=skipped_count,
-        error_count=error_count,
-    )
 
 
 @router.get(
