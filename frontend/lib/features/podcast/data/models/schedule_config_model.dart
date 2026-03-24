@@ -118,10 +118,11 @@ class ScheduleConfigResponse extends Equatable {
 
   /// Get display text for next update time
   String? get nextUpdateDisplay {
-    if (nextUpdateAt == null) return null;
+    final updateTime = nextUpdateAt;
+    if (updateTime == null) return null;
 
     // Convert UTC to local time for display
-    final localTime = nextUpdateAt!.toLocal();
+    final localTime = updateTime.toLocal();
 
     // Format: 2025-01-15 14:30
     final year = localTime.year;

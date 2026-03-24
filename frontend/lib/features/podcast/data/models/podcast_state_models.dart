@@ -64,8 +64,9 @@ class PodcastFeedState extends Equatable {
   bool isDataFresh({
     Duration cacheDuration = CacheConstants.feedCacheDuration,
   }) {
-    if (lastRefreshTime == null) return false;
-    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
+    final refreshTime = lastRefreshTime;
+    if (refreshTime == null) return false;
+    return DateTime.now().difference(refreshTime) < cacheDuration;
   }
 
   @override
@@ -147,8 +148,9 @@ class PodcastEpisodesState extends Equatable {
   bool isDataFresh({
     Duration cacheDuration = CacheConstants.defaultListCacheDuration,
   }) {
-    if (lastRefreshTime == null) return false;
-    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
+    final refreshTime = lastRefreshTime;
+    if (refreshTime == null) return false;
+    return DateTime.now().difference(refreshTime) < cacheDuration;
   }
 
   @override
@@ -227,8 +229,9 @@ class PodcastSubscriptionState extends Equatable {
   bool isDataFresh({
     Duration cacheDuration = CacheConstants.defaultListCacheDuration,
   }) {
-    if (lastRefreshTime == null) return false;
-    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
+    final refreshTime = lastRefreshTime;
+    if (refreshTime == null) return false;
+    return DateTime.now().difference(refreshTime) < cacheDuration;
   }
 
   @override

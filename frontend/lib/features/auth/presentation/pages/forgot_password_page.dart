@@ -62,8 +62,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         return;
       }
 
-      if (next.error != null && next.error!.isNotEmpty) {
-        showTopFloatingNotice(context, message: next.error!, isError: true);
+      final error = next.error;
+      if (error != null && error.isNotEmpty) {
+        showTopFloatingNotice(context, message: error, isError: true);
       }
     });
   }

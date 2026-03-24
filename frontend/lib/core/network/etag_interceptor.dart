@@ -128,8 +128,10 @@ class ETagInterceptor extends Interceptor {
       final cached = _getCachedResponse(key);
 
       if (cached != null) {
-        if (err.response?.headers != null) {
-          err.response!.headers.forEach((name, values) {
+        final response = err.response;
+        final headers = response?.headers;
+        if (headers != null) {
+          headers.forEach((name, values) {
             cached.headers.set(name, values);
           });
         }

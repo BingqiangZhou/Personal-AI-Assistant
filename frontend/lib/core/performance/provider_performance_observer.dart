@@ -128,13 +128,17 @@ base class DetailedProviderObserver extends ProviderObserver {
     // Add to rebuild history
     _rebuildHistory.putIfAbsent(providerName, () => []).add(now);
 
+    // Get history list (guaranteed to exist after putIfAbsent)
+    final history = _rebuildHistory[providerName];
+    if (history == null) return;
+
     // Clean old rebuilds outside the tracking window
-    _rebuildHistory[providerName]!.removeWhere(
+    history.removeWhere(
       (time) => now.difference(time) > trackingWindow,
     );
 
     // Check if rebuild frequency is too high
-    final recentRebuilds = _rebuildHistory[providerName]!.length;
+    final recentRebuilds = history.length;
     if (recentRebuilds > rebuildWarningThreshold) {
       logger.AppLogger.warning(
         '[HIGH REBUILD FREQUENCY] "$providerName" has rebuilt '

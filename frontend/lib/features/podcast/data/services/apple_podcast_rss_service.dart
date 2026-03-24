@@ -142,6 +142,7 @@ class ApplePodcastRssService {
         'Apple RSS raw API returned status ${response.statusCode}',
       );
     }
+    // At this point, response.data is guaranteed to be non-null
     return response.data!;
   }
 

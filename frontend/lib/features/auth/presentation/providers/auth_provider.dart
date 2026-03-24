@@ -528,13 +528,15 @@ class AuthNotifier extends Notifier<AuthState> {
       logger.AppLogger.debug('=============================');
 
       // Try fieldErrors first (from our updated code)
-      if (error.fieldErrors != null && error.fieldErrors!.isNotEmpty) {
-        return Map<String, String>.from(error.fieldErrors!);
+      final fieldErrors = error.fieldErrors;
+      if (fieldErrors != null && fieldErrors.isNotEmpty) {
+        return Map<String, String>.from(fieldErrors);
       }
 
       // Fall back to details (for backward compatibility)
-      if (error.details != null && error.details!.isNotEmpty) {
-        return Map<String, String>.from(error.details!);
+      final details = error.details;
+      if (details != null && details.isNotEmpty) {
+        return Map<String, String>.from(details);
       }
     }
     return null;

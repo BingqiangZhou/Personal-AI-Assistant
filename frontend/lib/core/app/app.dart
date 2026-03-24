@@ -129,8 +129,10 @@ class _PersonalAIAssistantAppState
 
   @override
   void dispose() {
-    if (_routeSyncRouter != null && _routeSyncListener != null) {
-      _routeSyncRouter!.routerDelegate.removeListener(_routeSyncListener!);
+    final router = _routeSyncRouter;
+    final listener = _routeSyncListener;
+    if (router != null && listener != null) {
+      router.routerDelegate.removeListener(listener);
     }
     // CRITICAL: Release audio resources when app is disposed
     // This ensures the audio player and (on mobile) the AudioService foreground service are properly cleaned up

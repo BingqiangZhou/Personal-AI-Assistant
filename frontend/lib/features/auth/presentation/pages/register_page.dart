@@ -46,36 +46,38 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _register() async {
     final l10n = context.l10n;
-    if (_formKey.currentState!.validate() && _agreeToTerms) {
-      if (_rememberMe) {
-        await _secureStorage.write(
-          key: AppConstants.savedUsernameKey,
-          value: _emailController.text.trim(),
-        );
-        await _secureStorage.write(
-          key: AppConstants.savedPasswordKey,
-          value: _passwordController.text,
-        );
-      } else {
-        await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-        await _secureStorage.delete(key: AppConstants.savedPasswordKey);
-      }
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
-      ref
-          .read(authProvider.notifier)
-          .register(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            username: _usernameController.text.trim(),
-            rememberMe: _rememberMe,
-          );
-    } else if (!_agreeToTerms) {
+    if (!_agreeToTerms) {
       showTopFloatingNotice(
         context,
         message: l10n.auth_agree_terms,
         isError: true,
       );
+      return;
     }
+
+    if (_rememberMe) {
+      await _secureStorage.write(
+        key: AppConstants.savedUsernameKey,
+        value: _emailController.text.trim(),
+      );
+      await _secureStorage.write(
+        key: AppConstants.savedPasswordKey,
+        value: _passwordController.text,
+      );
+    } else {
+      await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+      await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+    }
+
+    ref.read(authProvider.notifier).register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      username: _usernameController.text.trim(),
+      rememberMe: _rememberMe,
+    );
   }
 
   @override

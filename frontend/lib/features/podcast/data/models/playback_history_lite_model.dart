@@ -45,8 +45,9 @@ class PlaybackHistoryLiteItem extends Equatable {
   }
 
   String get formattedDuration {
-    if (audioDuration == null) return '--:--';
-    return TimeFormatter.formatDuration(Duration(seconds: audioDuration!));
+    final duration = audioDuration;
+    if (duration == null) return '--:--';
+    return TimeFormatter.formatDuration(Duration(seconds: duration));
   }
 
   @override

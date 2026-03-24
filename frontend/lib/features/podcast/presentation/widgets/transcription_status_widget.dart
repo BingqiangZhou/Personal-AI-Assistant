@@ -23,22 +23,23 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (transcription == null) {
+    final t = transcription;
+    if (t == null) {
       return _buildNotStartedState(context, ref);
     }
 
-    switch (transcription!.transcriptionStatus) {
+    switch (t.transcriptionStatus) {
       case TranscriptionStatus.pending:
         return _buildPendingState(context);
       case TranscriptionStatus.downloading:
       case TranscriptionStatus.converting:
       case TranscriptionStatus.transcribing:
       case TranscriptionStatus.processing:
-        return _buildProcessingState(context, transcription!);
+        return _buildProcessingState(context, t);
       case TranscriptionStatus.completed:
-        return _buildCompletedState(context, transcription!, ref);
+        return _buildCompletedState(context, t, ref);
       case TranscriptionStatus.failed:
-        return _buildFailedState(context, transcription!, ref);
+        return _buildFailedState(context, t, ref);
     }
   }
 
@@ -437,7 +438,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     ),
 
                     // Debug info (if available)
-                    if (transcription.debugMessage != null) ...[
+                    if (transcription.debugMessage case final debugMsg?) ...[
                       SizedBox(height: isSmallScreen ? 12 : 16),
                       Container(
                         padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
@@ -458,7 +459,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                             SizedBox(width: isSmallScreen ? 6 : 8),
                             Expanded(
                               child: Text(
-                                transcription.debugMessage!,
+                                debugMsg,
                                 style: TextStyle(
                                   fontSize: isSmallScreen ? 10 : 11,
                                   fontFamily: 'monospace',
@@ -477,48 +478,52 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     if (transcription.wordCount != null ||
                         transcription.durationSeconds != null) ...[
                       SizedBox(height: isSmallScreen ? 10 : 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (transcription.durationSeconds != null) ...[
-                            Icon(
-                              Icons.schedule,
-                              size: isSmallScreen ? 12 : 14,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            SizedBox(width: isSmallScreen ? 3 : 4),
-                            Text(
-                              l10n.transcription_duration_label(
-                                _formatDuration(transcription.durationSeconds!),
-                              ),
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 11 : 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                          if (transcription.wordCount != null &&
-                              transcription.durationSeconds != null)
-                            SizedBox(width: isSmallScreen ? 12 : 16),
-                          if (transcription.wordCount != null) ...[
-                            Icon(
-                              Icons.text_fields,
-                              size: isSmallScreen ? 12 : 14,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            SizedBox(width: isSmallScreen ? 3 : 4),
-                            Text(
-                              l10n.transcription_words_label(
-                                (transcription.wordCount! / 1000)
-                                    .toStringAsFixed(1),
-                              ),
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 11 : 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ],
+                      Builder(
+                        builder: (context) {
+                          final wordCount = transcription.wordCount;
+                          final durationSeconds = transcription.durationSeconds;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (durationSeconds != null) ...[
+                                Icon(
+                                  Icons.schedule,
+                                  size: isSmallScreen ? 12 : 14,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                                SizedBox(width: isSmallScreen ? 3 : 4),
+                                Text(
+                                  l10n.transcription_duration_label(
+                                    _formatDuration(durationSeconds),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 11 : 12,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                              if (wordCount != null && durationSeconds != null)
+                                SizedBox(width: isSmallScreen ? 12 : 16),
+                              if (wordCount != null) ...[
+                                Icon(
+                                  Icons.text_fields,
+                                  size: isSmallScreen ? 12 : 14,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                                SizedBox(width: isSmallScreen ? 3 : 4),
+                                Text(
+                                  l10n.transcription_words_label(
+                                    (wordCount / 1000).toStringAsFixed(1),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 11 : 12,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ],

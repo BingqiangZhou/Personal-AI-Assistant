@@ -281,11 +281,12 @@ class HeaderCapsuleActionButton extends StatelessWidget {
       child: button,
     );
 
-    if (tooltip == null || tooltip!.trim().isEmpty) {
+    final tooltipText = tooltip;
+    if (tooltipText == null || tooltipText.trim().isEmpty) {
       return wrapped;
     }
 
-    return Tooltip(message: tooltip!, child: wrapped);
+    return Tooltip(message: tooltipText, child: wrapped);
   }
 }
 
@@ -421,7 +422,8 @@ class HeroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasEyebrow = eyebrow != null && eyebrow!.trim().isNotEmpty;
+    final eyebrowText = eyebrow;
+    final hasEyebrow = eyebrowText != null && eyebrowText.trim().isNotEmpty;
     final hasSubtitle = subtitle.trim().isNotEmpty;
     final compactHeader = !hasEyebrow && !hasSubtitle && badges.isEmpty;
 
@@ -454,7 +456,7 @@ class HeroHeader extends StatelessWidget {
                     children: [
                       if (hasEyebrow) ...[
                         Text(
-                          eyebrow!,
+                          eyebrowText,
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w500,

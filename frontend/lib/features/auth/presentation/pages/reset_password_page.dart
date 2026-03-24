@@ -30,7 +30,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   void initState() {
     super.initState();
     // Check if token is provided
-    if (widget.token == null || widget.token!.isEmpty) {
+    final token = widget.token;
+    if (token == null || token.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showErrorDialog(
           'Invalid reset link. Please request a new password reset.',
@@ -68,22 +69,22 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   void _submitResetPassword() {
-    if (_formKey.currentState!.validate()) {
-      if (widget.token == null || widget.token!.isEmpty) {
-        _showErrorDialog(
-          'Invalid reset link. Please request a new password reset.',
-          context,
-        );
-        return;
-      }
+    final formState = _formKey.currentState;
+    final token = widget.token;
+    if (formState == null || !formState.validate()) return;
 
-      ref
-          .read(authProvider.notifier)
-          .resetPassword(
-            token: widget.token!,
-            newPassword: _passwordController.text,
-          );
+    if (token == null || token.isEmpty) {
+      _showErrorDialog(
+        'Invalid reset link. Please request a new password reset.',
+        context,
+      );
+      return;
     }
+
+    ref.read(authProvider.notifier).resetPassword(
+      token: token,
+      newPassword: _passwordController.text,
+    );
   }
 
   bool _hasMinLength(String password) => password.length >= 8;
@@ -106,8 +107,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
         setState(() {
           _passwordReset = true;
         });
-      } else if (next.error != null) {
-        showTopFloatingNotice(context, message: next.error!, isError: true);
+      } else if (next.error case final error?) {
+        showTopFloatingNotice(context, message: error, isError: true);
       }
     });
 

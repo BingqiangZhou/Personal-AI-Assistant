@@ -900,7 +900,7 @@ class ConversationChatWidgetState
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            if (widget.aiSummary != null && widget.aiSummary!.isNotEmpty)
+            if (widget.aiSummary case final summary? when summary.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -932,9 +932,9 @@ class ConversationChatWidgetState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.aiSummary!.length > 200
-                          ? '${widget.aiSummary!.substring(0, 200)}...'
-                          : widget.aiSummary!,
+                      summary.length > 200
+                          ? '${summary.substring(0, 200)}...'
+                          : summary,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         height: 1.5,

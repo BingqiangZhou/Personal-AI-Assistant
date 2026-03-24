@@ -318,8 +318,9 @@ class DioClient {
 
   Future<void> _applySavedBaseUrl() async {
     try {
-      final savedUrl = await (_initOptions.savedBaseUrlLoader != null
-          ? _initOptions.savedBaseUrlLoader!()
+      final loader = _initOptions.savedBaseUrlLoader;
+      final savedUrl = await (loader != null
+          ? loader()
           : _loadSavedBaseUrlFromSharedPrefs());
       if (savedUrl != null && savedUrl.isNotEmpty) {
         var normalizedUrl = savedUrl.trim();
@@ -636,11 +637,12 @@ class DioClient {
 
     if (!isRefreshRequest) {
       final refreshResult = await _tokenRefreshService.refreshToken();
-      if (refreshResult.success && refreshResult.accessToken != null) {
+      final newAccessToken = refreshResult.accessToken;
+      if (refreshResult.success && newAccessToken != null) {
         try {
           final response = await _retryRequest(
             error.requestOptions,
-            refreshResult.accessToken!,
+            newAccessToken,
           );
           logger.AppLogger.debug(
             '[AUTH] refresh_reason=none should_clear_tokens=false retry_result=success',

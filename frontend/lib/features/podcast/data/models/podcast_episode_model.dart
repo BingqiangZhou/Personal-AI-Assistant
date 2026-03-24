@@ -190,25 +190,31 @@ class PodcastEpisodeModel extends Equatable {
 
   // Helper getters
   String get formattedDuration {
-    if (audioDuration == null) return '--:--';
-    return TimeFormatter.formatDuration(Duration(seconds: audioDuration!));
+    final duration = audioDuration;
+    if (duration == null) return '--:--';
+    return TimeFormatter.formatDuration(Duration(seconds: duration));
   }
 
   String get formattedPlaybackPosition {
-    if (playbackPosition == null) return '00:00';
-    return TimeFormatter.formatDuration(Duration(seconds: playbackPosition!));
+    final position = playbackPosition;
+    if (position == null) return '00:00';
+    return TimeFormatter.formatDuration(Duration(seconds: position));
   }
 
   double get progressPercentage {
-    if (audioDuration == null || playbackPosition == null) return 0.0;
-    return (playbackPosition! / audioDuration!).clamp(0.0, 1.0);
+    final duration = audioDuration;
+    final position = playbackPosition;
+    if (duration == null || position == null) return 0.0;
+    return (position / duration).clamp(0.0, 1.0);
   }
 
   String get episodeIdentifier {
-    if (season != null && episodeNumber != null) {
-      return 'S${season!.toString().padLeft(2, '0')}E${episodeNumber!.toString().padLeft(2, '0')}';
-    } else if (episodeNumber != null) {
-      return 'Episode $episodeNumber';
+    final s = season;
+    final ep = episodeNumber;
+    if (s != null && ep != null) {
+      return 'S${s.toString().padLeft(2, '0')}E${ep.toString().padLeft(2, '0')}';
+    } else if (ep != null) {
+      return 'Episode $ep';
     }
     return '';
   }
@@ -446,25 +452,31 @@ class PodcastEpisodeDetailResponse extends Equatable {
 
   // Helper getters for UI display
   String get formattedDuration {
-    if (audioDuration == null) return '--:--';
-    return TimeFormatter.formatDuration(Duration(seconds: audioDuration!));
+    final duration = audioDuration;
+    if (duration == null) return '--:--';
+    return TimeFormatter.formatDuration(Duration(seconds: duration));
   }
 
   String get formattedPlaybackPosition {
-    if (playbackPosition == null) return '00:00';
-    return TimeFormatter.formatDuration(Duration(seconds: playbackPosition!));
+    final position = playbackPosition;
+    if (position == null) return '00:00';
+    return TimeFormatter.formatDuration(Duration(seconds: position));
   }
 
   double get progressPercentage {
-    if (audioDuration == null || playbackPosition == null) return 0.0;
-    return (playbackPosition! / audioDuration!).clamp(0.0, 1.0);
+    final duration = audioDuration;
+    final position = playbackPosition;
+    if (duration == null || position == null) return 0.0;
+    return (position / duration).clamp(0.0, 1.0);
   }
 
   String get episodeIdentifier {
-    if (season != null && episodeNumber != null) {
-      return 'S${season!.toString().padLeft(2, '0')}E${episodeNumber!.toString().padLeft(2, '0')}';
-    } else if (episodeNumber != null) {
-      return 'Episode $episodeNumber';
+    final s = season;
+    final ep = episodeNumber;
+    if (s != null && ep != null) {
+      return 'S${s.toString().padLeft(2, '0')}E${ep.toString().padLeft(2, '0')}';
+    } else if (ep != null) {
+      return 'Episode $ep';
     }
     return '';
   }

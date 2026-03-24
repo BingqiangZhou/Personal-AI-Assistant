@@ -157,8 +157,9 @@ class PodcastTranscriptionResponse extends Equatable {
 
   /// 获取进度百分比
   double get progressPercentage {
-    if (processingProgress != null) {
-      return processingProgress!.clamp(0.0, 100.0);
+    final progress = processingProgress;
+    if (progress != null) {
+      return progress.clamp(0.0, 100.0);
     }
     if (isCompleted) return 100.0;
     if (isFailed) return 0.0;
@@ -221,9 +222,11 @@ class TranscriptDialogueSegment extends Equatable {
 
   /// 格式化时间戳
   String get formattedTimestamp {
-    if (timestamp != null) return timestamp!;
-    if (startTime != null) {
-      final duration = Duration(seconds: startTime!.round());
+    final ts = timestamp;
+    if (ts != null) return ts;
+    final start = startTime;
+    if (start != null) {
+      final duration = Duration(seconds: start.round());
       final minutes = duration.inMinutes.remainder(60);
       final seconds = duration.inSeconds.remainder(60);
       return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';

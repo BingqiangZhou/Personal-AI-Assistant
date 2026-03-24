@@ -521,12 +521,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // Only log when state actually changes
       if (kDebugMode && _lastPlayingState != playbackState.playing) {
+        final lastStateStr = switch (_lastPlayingState) {
+          null => 'initial',
+          true => 'playing',
+          false => 'paused',
+        };
         logger.AppLogger.debug(
-          '[Playback] Playback state changed: ${_lastPlayingState == null
-              ? "initial"
-              : _lastPlayingState!
-              ? "playing"
-              : "paused"} -> ${playbackState.playing ? "playing" : "paused"}',
+          '[Playback] Playback state changed: $lastStateStr -> ${playbackState.playing ? "playing" : "paused"}',
         );
         _lastPlayingState = playbackState.playing;
       }

@@ -64,33 +64,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      if (_rememberMe) {
-        await _secureStorage.write(
-          key: AppConstants.savedUsernameKey,
-          value: _emailController.text.trim(),
-        );
-        await _secureStorage.write(
-          key: AppConstants.savedPasswordKey,
-          value: _passwordController.text,
-        );
-      } else {
-        await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-        await _secureStorage.delete(key: AppConstants.savedPasswordKey);
-      }
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
-      if (!mounted) {
-        return;
-      }
-
-      ref
-          .read(authProvider.notifier)
-          .login(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            rememberMe: _rememberMe,
-          );
+    if (_rememberMe) {
+      await _secureStorage.write(
+        key: AppConstants.savedUsernameKey,
+        value: _emailController.text.trim(),
+      );
+      await _secureStorage.write(
+        key: AppConstants.savedPasswordKey,
+        value: _passwordController.text,
+      );
+    } else {
+      await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+      await _secureStorage.delete(key: AppConstants.savedPasswordKey);
     }
+
+    if (!mounted) {
+      return;
+    }
+
+    ref.read(authProvider.notifier).login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      rememberMe: _rememberMe,
+    );
   }
 
   /// Show server configuration dialog (using shared dialog)
