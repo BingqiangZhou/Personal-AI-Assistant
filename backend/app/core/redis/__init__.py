@@ -488,6 +488,56 @@ class PodcastRedis(
         await client.expire(key, CacheTTL.EPISODE_METADATA)
         await self._record_command_timing("HSET", (perf_counter() - started) * 1000)
 
+    # === Sorted Set Operations ===
+
+    async def sorted_set_add(self, key: str, member: str, score: float) -> int:
+        """Add or update one member in a sorted set."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await SortedSetOperations.sorted_set_add(self, client, key, member, score)
+        await self._record_command_timing("ZADD", (perf_counter() - started) * 1000)
+        return result
+
+    async def sorted_set_remove(self, key: str, *members: str) -> int:
+        """Remove one or more members from a sorted set."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await SortedSetOperations.sorted_set_remove(self, client, key, *members)
+        await self._record_command_timing("ZREM", (perf_counter() - started) * 1000)
+        return result
+
+    async def sorted_set_cardinality(self, key: str) -> int:
+        """Return the number of members in a sorted set."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await SortedSetOperations.sorted_set_cardinality(self, client, key)
+        await self._record_command_timing("ZCARD", (perf_counter() - started) * 1000)
+        return result
+
+    async def sorted_set_range_by_score(
+        self, key: str, min_score: float | str, max_score: float | str
+    ) -> list[str]:
+        """Return sorted-set members whose scores fall within the inclusive range."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await SortedSetOperations.sorted_set_range_by_score(
+            self, client, key, min_score, max_score
+        )
+        await self._record_command_timing("ZRANGEBYSCORE", (perf_counter() - started) * 1000)
+        return result
+
+    async def sorted_set_remove_by_score(
+        self, key: str, min_score: float | str, max_score: float | str
+    ) -> int:
+        """Remove sorted-set members whose scores fall within the inclusive range."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await SortedSetOperations.sorted_set_remove_by_score(
+            self, client, key, min_score, max_score
+        )
+        await self._record_command_timing("ZREMRANGEBYSCORE", (perf_counter() - started) * 1000)
+        return result
+
     # === Distributed Lock ===
 
     async def acquire_lock(
