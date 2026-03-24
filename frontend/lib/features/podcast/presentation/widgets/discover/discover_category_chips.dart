@@ -1,0 +1,129 @@
+import 'package:flutter/material.dart';
+
+import '../../../../../core/localization/app_localizations_extension.dart';
+import '../../providers/podcast_discover_provider.dart';
+
+/// Horizontal scrollable category chips for discover page
+class DiscoverCategoryChips extends StatelessWidget {
+  const DiscoverCategoryChips({
+    super.key,
+    required this.state,
+    required this.onCategorySelected,
+  });
+
+  final PodcastDiscoverState state;
+  final ValueChanged<String> onCategorySelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final categories = state.categories;
+    final theme = Theme.of(context);
+    final selected = state.selectedCategory;
+
+    final chipItems = <String>[
+      '__all__',
+      ...categories,
+    ];
+    final keyOccurrences = <String, int>{};
+
+    return SingleChildScrollView(
+      key: const Key('podcast_discover_category_chips'),
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          for (var index = 0; index < chipItems.length; index++) ...[
+            () {
+              final rawValue = chipItems[index];
+              final baseKey = _normalizeCategoryKey(rawValue);
+              final count = (keyOccurrences[baseKey] ?? 0) + 1;
+              keyOccurrences[baseKey] = count;
+              final uniqueKey = count == 1 ? baseKey : '${baseKey}_$count';
+
+              return RepaintBoundary(
+                key: ValueKey('category_chip_$uniqueKey'),
+                child: _CategoryChip(
+                  theme: theme,
+                  label: rawValue == '__all__'
+                      ? l10n.podcast_filter_all
+                      : rawValue,
+                  selected: rawValue == '__all__'
+                      ? selected == '__all__'
+                      : selected.toLowerCase() == rawValue.toLowerCase(),
+                  onSelected: (_) => onCategorySelected(rawValue),
+                  keyValue: uniqueKey,
+                ),
+              );
+            }(),
+            if (index != chipItems.length - 1) const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _normalizeCategoryKey(String value) {
+    final normalized = value.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '_',
+    );
+    final trimmed = normalized.replaceAll(RegExp(r'^_+|_+$'), '');
+    return trimmed.isEmpty ? 'category' : trimmed;
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.theme,
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+    required this.keyValue,
+  });
+
+  final ThemeData theme;
+  final String label;
+  final bool selected;
+  final ValueChanged<bool> onSelected;
+  final String keyValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedBackgroundColor = theme.colorScheme.onSurfaceVariant;
+    final selectedLabelColor = theme.colorScheme.surface;
+
+    return ChoiceChip(
+      key: Key(
+        'podcast_discover_category_chip_${_normalizeCategoryKey(keyValue)}',
+      ),
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      selected: selected,
+      onSelected: onSelected,
+      showCheckmark: false,
+      visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
+      side: selected
+          ? BorderSide(color: selectedBackgroundColor)
+          : BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      labelStyle: theme.textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: selected
+            ? selectedLabelColor
+            : theme.colorScheme.onSurfaceVariant,
+      ),
+      selectedColor: selectedBackgroundColor,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+    );
+  }
+
+  String _normalizeCategoryKey(String value) {
+    final normalized = value.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '_',
+    );
+    final trimmed = normalized.replaceAll(RegExp(r'^_+|_+$'), '');
+    return trimmed.isEmpty ? 'category' : trimmed;
+  }
+}

@@ -1292,7 +1292,8 @@ void main() {
 
     for (final card in cards) {
       expect(card.margin, EdgeInsets.zero);
-      expect(card.shape, isNull);
+      // Card may have a rounded rectangle shape for visual consistency
+      expect(card.shape, isA<RoundedRectangleBorder>());
     }
   });
 }

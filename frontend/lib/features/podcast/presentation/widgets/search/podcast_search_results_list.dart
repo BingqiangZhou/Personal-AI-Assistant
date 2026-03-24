@@ -1,0 +1,190 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../core/localization/app_localizations_extension.dart';
+import '../../../../../core/localization/app_localizations.dart';
+import '../../../data/models/itunes_episode_lookup_model.dart';
+import '../../../data/models/podcast_search_model.dart';
+import '../../../data/utils/podcast_url_utils.dart';
+import '../../providers/podcast_subscription_selectors.dart';
+import '../podcast_search_result_card.dart';
+import '../podcast_episode_search_result_card.dart';
+import '../../providers/podcast_search_provider.dart' as search;
+
+/// Search results list widget for displaying podcast/episode search results
+class PodcastSearchResultsList extends ConsumerWidget {
+  const PodcastSearchResultsList({
+    super.key,
+    required this.searchState,
+    required this.onEpisodeTap,
+    required this.onEpisodePlay,
+    required this.onPodcastSubscribe,
+    required this.isDense,
+  });
+
+  final search.PodcastSearchState searchState;
+  final ValueChanged<ITunesPodcastEpisodeResult> onEpisodeTap;
+  final ValueChanged<ITunesPodcastEpisodeResult> onEpisodePlay;
+  final ValueChanged<PodcastSearchResult> onPodcastSubscribe;
+  final bool isDense;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+
+    if (searchState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (searchState.error != null) {
+      return _buildErrorView(context, l10n, searchState.error!);
+    }
+
+    final resultsEmpty = searchState.searchMode == search.PodcastSearchMode.episodes
+        ? searchState.episodeResults.isEmpty
+        : searchState.podcastResults.isEmpty;
+
+    if (resultsEmpty) {
+      return Center(
+        child: Text(
+          l10n.podcast_search_no_results,
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
+    }
+
+    if (searchState.searchMode == search.PodcastSearchMode.episodes) {
+      return _buildEpisodeResults(context, l10n);
+    }
+
+    return _buildPodcastResults(context, ref);
+  }
+
+  Widget _buildErrorView(BuildContext context, AppLocalizations l10n, String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 44),
+          const SizedBox(height: 12),
+          Text(error, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => onEpisodeTap as void Function(String)?,
+            icon: const Icon(Icons.refresh),
+            label: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEpisodeResults(BuildContext context, AppLocalizations l10n) {
+    return ListView.builder(
+      key: const Key('podcast_discover_search_results'),
+      cacheExtent: 200.0,
+      itemCount: searchState.episodeResults.length,
+      itemBuilder: (context, index) {
+        final episode = searchState.episodeResults[index];
+        return _EpisodeSearchResultItem(
+          episode: episode,
+          isDense: isDense,
+          onTap: () => onEpisodeTap(episode),
+          onPlay: () => onEpisodePlay(episode),
+        );
+      },
+    );
+  }
+
+  Widget _buildPodcastResults(BuildContext context, WidgetRef ref) {
+    final normalizedSubscribedFeedUrls = ref.watch(
+      subscribedNormalizedFeedUrlsProvider,
+    );
+    final normalizedSubscribingFeedUrls = ref.watch(
+      subscribingNormalizedFeedUrlsProvider,
+    );
+
+    return ListView.builder(
+      key: const Key('podcast_discover_search_results'),
+      cacheExtent: 200.0,
+      itemCount: searchState.podcastResults.length,
+      itemBuilder: (context, index) {
+        final result = searchState.podcastResults[index];
+        return _PodcastSearchResultItem(
+          result: result,
+          isDense: isDense,
+          searchCountry: searchState.searchCountry,
+          normalizedSubscribedFeedUrls: normalizedSubscribedFeedUrls,
+          normalizedSubscribingFeedUrls: normalizedSubscribingFeedUrls,
+          onSubscribe: onPodcastSubscribe,
+        );
+      },
+    );
+  }
+}
+
+class _EpisodeSearchResultItem extends StatelessWidget {
+  const _EpisodeSearchResultItem({
+    required this.episode,
+    required this.isDense,
+    required this.onTap,
+    required this.onPlay,
+  });
+
+  final ITunesPodcastEpisodeResult episode;
+  final bool isDense;
+  final VoidCallback onTap;
+  final VoidCallback onPlay;
+
+  @override
+  Widget build(BuildContext context) {
+    return PodcastEpisodeSearchResultCard(
+      episode: episode,
+      dense: isDense,
+      onTap: onTap,
+      onPlay: onPlay,
+      key: ValueKey('episode_search_${episode.trackId}'),
+    );
+  }
+}
+
+class _PodcastSearchResultItem extends StatelessWidget {
+  const _PodcastSearchResultItem({
+    required this.result,
+    required this.isDense,
+    required this.searchCountry,
+    required this.normalizedSubscribedFeedUrls,
+    required this.normalizedSubscribingFeedUrls,
+    required this.onSubscribe,
+  });
+
+  final PodcastSearchResult result;
+  final bool isDense;
+  final PodcastCountry searchCountry;
+  final Set<String> normalizedSubscribedFeedUrls;
+  final Set<String> normalizedSubscribingFeedUrls;
+  final ValueChanged<PodcastSearchResult> onSubscribe;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedResultFeedUrl = result.feedUrl == null
+        ? null
+        : PodcastUrlUtils.normalizeFeedUrl(result.feedUrl!);
+    final isSubscribed =
+        normalizedResultFeedUrl != null &&
+        normalizedSubscribedFeedUrls.contains(normalizedResultFeedUrl);
+    final isSubscribing =
+        normalizedResultFeedUrl != null &&
+        normalizedSubscribingFeedUrls.contains(normalizedResultFeedUrl);
+
+    return PodcastSearchResultCard(
+      result: result,
+      onSubscribe: onSubscribe,
+      isSubscribed: isSubscribed,
+      isSubscribing: isSubscribing,
+      searchCountry: searchCountry,
+      dense: isDense,
+      key: ValueKey('search_${result.feedUrl}'),
+    );
+  }
+}

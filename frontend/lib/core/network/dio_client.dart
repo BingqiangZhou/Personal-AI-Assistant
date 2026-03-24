@@ -15,18 +15,182 @@ import '../constants/app_constants.dart' as constants;
 import 'exceptions/network_exceptions.dart';
 import '../utils/app_logger.dart' as logger;
 
+/// Normalizes API responses to handle inconsistent response shapes.
+///
+/// This addresses the backend inconsistency where list endpoints may return
+/// data under either 'items' or 'subscriptions' keys.
+///
+/// Expected normalized shape for list responses:
+/// ```json
+/// {
+///   "items": [...],      // Standardized list key
+///   "total": 123,        // Total count (when paginated)
+///   "page": 1,           // Current page (when paginated)
+///   "size": 20           // Page size (when paginated)
+/// }
+/// ```
+///
+/// Example backend responses that need normalization:
+/// ```json
+/// // Subscriptions endpoint - uses 'subscriptions' key
+/// {"subscriptions": [...], "total": 10}
+///
+/// // Other endpoints - use 'items' key
+/// {"items": [...], "total": 50}
+/// ```
+@immutable
+class ApiResponseNormalizer {
+  /// Normalize a response data map to use consistent field names.
+  ///
+  /// This handles cases where the backend returns 'subscriptions' instead
+  /// of 'items' for list endpoints.
+  static Map<String, dynamic> normalize(dynamic data) {
+    if (data == null) {
+      return {};
+    }
+
+    if (data is! Map) {
+      return data is List ? {'items': data} : {'data': data};
+    }
+
+    final map = Map<String, dynamic>.from(data);
+
+    // Normalize 'subscriptions' to 'items' for consistency
+    if (map.containsKey('subscriptions') && !map.containsKey('items')) {
+      final normalized = Map<String, dynamic>.from(map);
+      normalized['items'] = normalized.remove('subscriptions');
+      logger.AppLogger.debug(
+        '[ApiResponseNormalizer] Normalized "subscriptions" -> "items"',
+      );
+      return normalized;
+    }
+
+    // Ensure 'items' exists for list responses
+    if (!map.containsKey('items') && map.containsKey('total')) {
+      // Has 'total' but no 'items' - likely a list response
+      final normalized = Map<String, dynamic>.from(map);
+      // Find the list value
+      for (final key in map.keys) {
+        if (map[key] is List) {
+          normalized['items'] = normalized.remove(key);
+          logger.AppLogger.debug(
+            '[ApiResponseNormalizer] Normalized "$key" -> "items"',
+          );
+          break;
+        }
+      }
+      return normalized;
+    }
+
+    return map;
+  }
+
+  /// Extract the items list from a normalized response.
+  static List<T> extractItems<T>(dynamic data) {
+    final normalized = normalize(data);
+    final items = normalized['items'];
+
+    if (items == null) {
+      return [];
+    }
+
+    if (items is! List) {
+      logger.AppLogger.warning(
+        '[ApiResponseNormalizer] Expected "items" to be a List, got ${items.runtimeType}',
+      );
+      return [];
+    }
+
+    return items.cast<T>();
+  }
+
+  /// Extract total count from a normalized response.
+  static int extractTotal(dynamic data, {int defaultValue = 0}) {
+    final normalized = normalize(data);
+    final total = normalized['total'];
+
+    if (total == null) {
+      return defaultValue;
+    }
+
+    if (total is int) {
+      return total;
+    }
+
+    if (total is String) {
+      return int.tryParse(total) ?? defaultValue;
+    }
+
+    return defaultValue;
+  }
+
+  /// Check if a response is a paginated list response.
+  static bool isPaginatedResponse(dynamic data) {
+    final normalized = normalize(data);
+    return normalized.containsKey('items') && normalized.containsKey('total');
+  }
+}
+
 typedef SavedServerBaseUrlLoader = Future<String?> Function();
+
+/// Options for configuring retry behavior on network failures.
+@immutable
+class RetryOptions {
+  /// Maximum number of retry attempts for transient failures.
+  final int maxRetries;
+
+  /// Initial delay before the first retry.
+  final Duration initialDelay;
+
+  /// Multiplier for exponential backoff (e.g., 2.0 = delay doubles each retry).
+  final double backoffMultiplier;
+
+  const RetryOptions({
+    this.maxRetries = 3,
+    this.initialDelay = const Duration(seconds: 1),
+    this.backoffMultiplier = 2.0,
+  });
+
+  /// Calculate delay for a given retry attempt (0-indexed).
+  Duration getDelay(int attempt) {
+    final delayMs = initialDelay.inMilliseconds * pow(backoffMultiplier, attempt);
+    return Duration(milliseconds: delayMs.round());
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RetryOptions &&
+        other.maxRetries == maxRetries &&
+        other.initialDelay == initialDelay &&
+        other.backoffMultiplier == backoffMultiplier;
+  }
+
+  @override
+  int get hashCode => Object.hash(maxRetries, initialDelay, backoffMultiplier);
+}
+
+double pow(double base, int exponent) {
+  if (exponent == 0) return 1.0;
+  double result = 1.0;
+  for (int i = 0; i < exponent; i++) {
+    result *= base;
+  }
+  return result;
+}
 
 @immutable
 class DioClientInitOptions {
   final bool applySavedBaseUrlOnInit;
   final String? initialServerBaseUrl;
   final SavedServerBaseUrlLoader? savedBaseUrlLoader;
+  final RetryOptions retryOptions;
 
   const DioClientInitOptions({
     this.applySavedBaseUrlOnInit = false,
     this.initialServerBaseUrl,
     this.savedBaseUrlLoader,
+    this.retryOptions = const RetryOptions(),
   });
 }
 
@@ -50,13 +214,20 @@ class DioClient {
   // Request cancellation support
   final Map<String, CancelToken> _cancelTokens = {};
 
+  // Retry options
+  final RetryOptions _retryOptions;
+
+  // Retry tracking for in-flight requests
+  final Map<String, int> _retryAttempts = {};
+
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
   static const String _etagInvalidateAfterWriteKey =
       'etag_invalidate_after_write';
 
   DioClient({DioClientInitOptions initOptions = const DioClientInitOptions()})
-    : _initOptions = initOptions {
+    : _initOptions = initOptions,
+      _retryOptions = initOptions.retryOptions {
     // Initialize ETag interceptor
     _etagInterceptor = ETagInterceptor();
 
@@ -231,13 +402,24 @@ class DioClient {
       );
     }
 
+    // Normalize response data for consistent API response handling
+    final originalData = response.data;
+    final normalizedData = ApiResponseNormalizer.normalize(originalData);
+
+    // Only update if normalization changed the structure
+    if (normalizedData != originalData) {
+      response.data = normalizedData;
+      logger.AppLogger.debug(
+        '[ApiResponseNormalizer] Normalized response for ${response.requestOptions.path}',
+      );
+    }
+
     // Debug subscriptions list response shape
     if (response.requestOptions.path == '/subscriptions/podcasts') {
       final data = response.data;
       if (data is Map) {
         logger.AppLogger.debug(
           '?? [Subscriptions Response] keys=${data.keys.toList()} '
-          'subscriptions=${(data['subscriptions'] as List?)?.length} '
           'items=${(data['items'] as List?)?.length} '
           'total=${data['total']}',
         );
@@ -293,6 +475,49 @@ class DioClient {
     );
     logger.AppLogger.debug('   Type: ${error.type}');
     logger.AppLogger.debug('   Message: ${error.message}');
+
+    // Check if we should retry this request
+    final retryKey = _getRetryKey(error.requestOptions);
+    final currentAttempt = _retryAttempts[retryKey] ?? 0;
+
+    if (_shouldRetry(error, currentAttempt)) {
+      final nextAttempt = currentAttempt + 1;
+      _retryAttempts[retryKey] = nextAttempt;
+
+      final delay = _retryOptions.getDelay(currentAttempt);
+      logger.AppLogger.debug(
+        '[RETRY] Attempt $nextAttempt/${_retryOptions.maxRetries} '
+        'after ${delay.inMilliseconds}ms',
+      );
+
+      // Wait before retrying
+      await Future.delayed(delay);
+
+      try {
+        final response = await _dio.fetch(error.requestOptions);
+        // Success - remove retry tracking
+        _retryAttempts.remove(retryKey);
+        logger.AppLogger.debug(
+          '[RETRY] Success on attempt $nextAttempt',
+        );
+        handler.resolve(response);
+        return;
+      } on DioException catch (retryError) {
+        // Retry failed, will be handled by this interceptor again
+        logger.AppLogger.debug(
+          '[RETRY] Attempt $nextAttempt failed: ${retryError.type}',
+        );
+        // Continue to normal error handling below
+      }
+    } else if (currentAttempt > 0) {
+      // Exhausted retries or non-retryable error after retries
+      _retryAttempts.remove(retryKey);
+      if (currentAttempt >= _retryOptions.maxRetries) {
+        logger.AppLogger.debug(
+          '[RETRY] Exhausted $currentAttempt attempts, giving up',
+        );
+      }
+    }
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -657,6 +882,63 @@ class DioClient {
   /// Check if a request is cancelled
   bool isRequestCancelled(String tag) {
     return _cancelTokens[tag]?.isCancelled ?? true;
+  }
+
+  // Retry support methods
+
+  /// Generate a unique key for tracking retry attempts.
+  String _getRetryKey(RequestOptions options) {
+    return '${options.method}:${options.path}:${options.queryParameters.toString()}';
+  }
+
+  /// Determine if an error should trigger a retry.
+  bool _shouldRetry(DioException error, int currentAttempt) {
+    // Check if we've exceeded max retries
+    if (currentAttempt >= _retryOptions.maxRetries) {
+      return false;
+    }
+
+    // Only retry on transient failures
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        // Retry on timeout
+        return true;
+      case DioExceptionType.connectionError:
+        // Retry on connection failure
+        return true;
+      case DioExceptionType.badResponse:
+        final statusCode = error.response?.statusCode;
+        if (statusCode != null) {
+          // Retry on 5xx server errors
+          if (statusCode >= 500 && statusCode < 600) {
+            return true;
+          }
+          // Retry on 429 Too Many Requests
+          if (statusCode == 429) {
+            return true;
+          }
+        }
+        // Don't retry on 4xx client errors (except 429)
+        return false;
+      case DioExceptionType.cancel:
+        // Don't retry cancelled requests
+        return false;
+      case DioExceptionType.badCertificate:
+        // Don't retry on certificate errors
+        return false;
+      case DioExceptionType.unknown:
+        // Check if it's a network-related error
+        final errorText = error.message?.toLowerCase() ?? '';
+        if (errorText.contains('socket') ||
+            errorText.contains('network') ||
+            errorText.contains('connection') ||
+            errorText.contains('failed')) {
+          return true;
+        }
+        return false;
+    }
   }
 
   // Static factory method for ServiceLocator
