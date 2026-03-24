@@ -316,13 +316,14 @@ class _PodcastEpisodeDetailPageState
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final episodeDetail = episodeDetailAsync.asData?.value;
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.transparent,
           endDrawerEnableOpenDragGesture: false,
-          endDrawer: episodeDetailAsync.asData?.value == null
+          endDrawer: episodeDetail == null
               ? null
-              : _buildChatDrawer(episodeDetailAsync.asData!.value!),
+              : _buildChatDrawer(episodeDetail),
           body: episodeDetailAsync.when(
             data: (episodeDetail) {
               if (episodeDetail == null) {

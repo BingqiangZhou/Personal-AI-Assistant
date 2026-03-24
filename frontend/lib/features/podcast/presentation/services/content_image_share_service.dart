@@ -399,8 +399,9 @@ class ContentImageShareService {
     _isShareInProgress = true;
 
     final typeLabel = _resolveTypeLabel(context, payload.contentType);
-    final sourceLabel = payload.sourceLabel?.trim().isNotEmpty == true
-        ? payload.sourceLabel!.trim()
+    final rawSourceLabel = payload.sourceLabel;
+    final sourceLabel = rawSourceLabel != null && rawSourceLabel.trim().isNotEmpty
+        ? rawSourceLabel.trim()
         : typeLabel;
     final truncatedSuffix = l10n.podcast_share_truncated(payload.maxChars);
 

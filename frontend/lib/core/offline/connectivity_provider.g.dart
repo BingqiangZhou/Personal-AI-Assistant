@@ -45,7 +45,7 @@ final class ConnectivityNotifierProvider
 }
 
 String _$connectivityNotifierHash() =>
-    r'6979f04bd5ddf90c97027a1042084825f1b4de32';
+    r'64b3aaf2c0f71dd1f98fae8a60983757a2e1081c';
 
 /// Provider for network connectivity monitoring
 
@@ -110,4 +110,49 @@ final class IsOnlineProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$isOnlineHash() => r'9e9d22824e74e053c66d01d8ba03a888fa3ba357';
+String _$isOnlineHash() => r'3d2ac554928b736fbda0d82997a79f9c93f05be9';
+
+/// Simple boolean provider for offline status
+
+@ProviderFor(isOffline)
+final isOfflineProvider = IsOfflineProvider._();
+
+/// Simple boolean provider for offline status
+
+final class IsOfflineProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Simple boolean provider for offline status
+  IsOfflineProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isOfflineProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isOfflineHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return isOffline(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$isOfflineHash() => r'cee47319754131f376207e310f4f533caf4ad8cb';

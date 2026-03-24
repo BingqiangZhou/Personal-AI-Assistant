@@ -548,9 +548,10 @@ class _ExpandedHero extends ConsumerWidget {
   }
 
   String _buildEpisodeMetaLine(PodcastEpisodeModel episode) {
+    final subscriptionTitle = episode.subscriptionTitle;
+    final trimmedTitle = subscriptionTitle?.trim();
     final parts = <String>[
-      if ((episode.subscriptionTitle ?? '').trim().isNotEmpty)
-        episode.subscriptionTitle!.trim(),
+      if (trimmedTitle != null && trimmedTitle.isNotEmpty) trimmedTitle,
       episode.publishedAt.toString().split(' ')[0],
       episode.formattedDuration,
     ];

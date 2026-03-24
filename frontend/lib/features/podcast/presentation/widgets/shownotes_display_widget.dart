@@ -243,20 +243,27 @@ class ShownotesDisplayWidgetState
   }
 
   String _resolveShownotesContent(PodcastEpisodeDetailResponse episode) {
-    if (episode.description?.isNotEmpty == true) {
-      return episode.description!;
+    final description = episode.description;
+    if (description != null && description.isNotEmpty) {
+      return description;
     }
 
-    if (episode.aiSummary?.isNotEmpty == true) {
-      return episode.aiSummary!;
+    final aiSummary = episode.aiSummary;
+    if (aiSummary != null && aiSummary.isNotEmpty) {
+      return aiSummary;
     }
 
-    if (episode.metadata != null && episode.metadata!['shownotes'] != null) {
-      return episode.metadata!['shownotes'].toString();
+    final metadata = episode.metadata;
+    if (metadata != null) {
+      final shownotes = metadata['shownotes'];
+      if (shownotes != null) {
+        return shownotes.toString();
+      }
     }
 
-    if (episode.subscription != null) {
-      final subscriptionDesc = episode.subscription!['description'];
+    final subscription = episode.subscription;
+    if (subscription != null) {
+      final subscriptionDesc = subscription['description'];
       if (subscriptionDesc != null && subscriptionDesc.toString().isNotEmpty) {
         return subscriptionDesc.toString();
       }
@@ -467,7 +474,8 @@ class ShownotesDisplayWidgetState
     final widgets = <Widget>[];
     for (var index = 0; index < _sections.length; index++) {
       final section = _sections[index];
-      final sectionKey = _sectionKeys[section.anchor.id]!;
+      final sectionKey = _sectionKeys[section.anchor.id];
+      if (sectionKey == null) continue; // Skip if key not found
       widgets.add(
         Container(
           key: sectionKey,

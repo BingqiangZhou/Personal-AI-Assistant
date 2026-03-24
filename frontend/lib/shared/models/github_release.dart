@@ -53,26 +53,33 @@ class GitHubRelease {
   /// Create GitHubRelease from JSON
   factory GitHubRelease.fromJson(Map<String, dynamic> json) {
     // Extract version from tagName (remove 'v' prefix if present)
-    String version = json['tag_name'] as String;
+    final tagNameValue = json['tag_name'];
+    if (tagNameValue == null) {
+      throw const FormatException('tag_name is required');
+    }
+    String version = tagNameValue as String;
     if (version.startsWith('v')) {
       version = version.substring(1);
     }
 
-    // Parse assets
+    // Parse assets safely
     final assetsList = <GitHubAsset>[];
-    if (json['assets'] != null) {
-      for (var asset in json['assets'] as List) {
-        assetsList.add(GitHubAsset.fromJson(asset as Map<String, dynamic>));
+    final assetsJson = json['assets'];
+    if (assetsJson is List) {
+      for (final asset in assetsJson) {
+        if (asset is Map<String, dynamic>) {
+          assetsList.add(GitHubAsset.fromJson(asset));
+        }
       }
     }
 
     return GitHubRelease(
-      tagName: json['tag_name'] as String,
-      name: json['name'] as String? ?? json['tag_name'] as String,
+      tagName: tagNameValue,
+      name: (json['name'] as String?) ?? tagNameValue,
       version: version,
-      body: json['body'] as String? ?? '',
-      prerelease: json['prerelease'] as bool? ?? false,
-      draft: json['draft'] as bool? ?? false,
+      body: (json['body'] as String?) ?? '',
+      prerelease: (json['prerelease'] as bool?) ?? false,
+      draft: (json['draft'] as bool?) ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       publishedAt: DateTime.parse(json['published_at'] as String),
       htmlUrl: json['html_url'] as String,

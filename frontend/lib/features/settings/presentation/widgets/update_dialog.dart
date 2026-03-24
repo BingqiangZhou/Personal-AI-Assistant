@@ -702,11 +702,12 @@ class _ManualUpdateCheckDialogState
     BuildContext context,
     AppUpdateState state,
   ) {
+    final release = state.latestRelease;
     final shouldRedirect =
         !state.isLoading &&
         state.error == null &&
         state.hasUpdate &&
-        state.latestRelease != null &&
+        release != null &&
         !_redirectingToUpdateDialog;
 
     if (!shouldRedirect) {
@@ -714,7 +715,6 @@ class _ManualUpdateCheckDialogState
     }
 
     _redirectingToUpdateDialog = true;
-    final release = state.latestRelease!;
     final currentVersion = state.currentVersion;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

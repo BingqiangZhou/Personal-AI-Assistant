@@ -373,9 +373,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       subscriptionTitle: episode.collectionName,
       description: episode.description ?? episode.shortDescription,
       audioUrl: audioUrl,
-      audioDuration: episode.trackTimeMillis == null
-          ? null
-          : (episode.trackTimeMillis! / 1000).round(),
+      audioDuration: switch (episode.trackTimeMillis) {
+        null => null,
+        final millis => (millis / 1000).round(),
+      },
       publishedAt: episode.releaseDate ?? now,
       imageUrl: episode.artworkUrl600 ?? episode.artworkUrl100,
       itemLink: episode.trackViewUrl,
@@ -499,10 +500,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (discoverState.error != null &&
+    final error = discoverState.error;
+    if (error != null &&
         discoverState.topShows.isEmpty &&
         discoverState.topEpisodes.isEmpty) {
-      return _buildErrorView(context, l10n, discoverState.error!);
+      return _buildErrorView(context, l10n, error);
     }
 
     return Column(

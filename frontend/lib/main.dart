@@ -17,7 +17,20 @@ import 'core/theme/theme_provider.dart';
 import 'core/utils/app_logger.dart' as logger;
 import 'features/podcast/presentation/providers/audio_handler.dart';
 
-late final PodcastAudioHandler audioHandler;
+PodcastAudioHandler? _audioHandler;
+
+/// Get the audio handler instance.
+/// Throws StateError if accessed before initialization.
+PodcastAudioHandler get audioHandler {
+  final handler = _audioHandler;
+  if (handler == null) {
+    throw StateError('AudioHandler not initialized. Ensure main() has completed initialization before accessing audioHandler.');
+  }
+  return handler;
+}
+
+/// Check if audio handler is initialized.
+bool get isAudioHandlerInitialized => _audioHandler != null;
 
 void main() {
   runZonedGuarded(
@@ -47,7 +60,7 @@ void main() {
       final isMobile = Platform.isAndroid || Platform.isIOS;
 
       if (isMobile) {
-        audioHandler = await AudioService.init(
+        _audioHandler = await AudioService.init(
           builder: PodcastAudioHandler.new,
           config: const AudioServiceConfig(
             androidNotificationChannelId: 'com.personal_ai_assistant.audio',
@@ -62,7 +75,7 @@ void main() {
         );
         logger.AppLogger.info('AudioService initialized (mobile platform)');
       } else {
-        audioHandler = PodcastAudioHandler();
+        _audioHandler = PodcastAudioHandler();
         logger.AppLogger.info(
           'PodcastAudioHandler initialized (desktop platform)',
         );

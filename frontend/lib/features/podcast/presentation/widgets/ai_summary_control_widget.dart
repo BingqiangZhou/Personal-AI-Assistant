@@ -80,8 +80,9 @@ class _AISummaryControlWidgetState
   }
 
   String? _resolvedModelName() {
-    if (_selectedModel != null) {
-      return _selectedModel!.name;
+    final selected = _selectedModel;
+    if (selected != null) {
+      return selected.name;
     }
 
     final models = ref.read(availableModelsProvider).asData?.value;

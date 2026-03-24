@@ -66,11 +66,12 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
   }
 
   bool _isFresh() {
-    if (_lastLoadedAt == null) {
+    final loadedAt = _lastLoadedAt;
+    if (loadedAt == null) {
       return false;
     }
     final cacheDuration = ref.read(dailyReportCacheDurationProvider);
-    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+    return DateTime.now().difference(loadedAt) < cacheDuration;
   }
 
   Future<PodcastDailyReportResponse?> load({
@@ -184,11 +185,12 @@ class DailyReportDatesNotifier
   }
 
   bool _isFresh() {
-    if (_lastLoadedAt == null) {
+    final loadedAt = _lastLoadedAt;
+    if (loadedAt == null) {
       return false;
     }
     final cacheDuration = ref.read(dailyReportDatesCacheDurationProvider);
-    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+    return DateTime.now().difference(loadedAt) < cacheDuration;
   }
 
   DateTime _toDateOnly(DateTime value) {

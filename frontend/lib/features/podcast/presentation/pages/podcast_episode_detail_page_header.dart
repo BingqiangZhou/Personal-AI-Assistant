@@ -165,8 +165,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (episode.itemLink != null &&
-                      episode.itemLink!.trim().isNotEmpty) ...[
+                  if (episode.itemLink case final link? when link.trim().isNotEmpty) ...[
                     const SizedBox(height: 6),
                     _buildMobileSourceLinkAction(episode, l10n),
                   ],

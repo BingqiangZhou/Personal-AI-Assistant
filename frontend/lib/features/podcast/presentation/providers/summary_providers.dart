@@ -69,7 +69,7 @@ class SummaryState {
   });
 
   bool get hasError => errorMessage != null;
-  bool get hasSummary => summary != null && summary!.isNotEmpty;
+  bool get hasSummary => summary?.isNotEmpty ?? false;
   bool get isSuccess => hasSummary && !isLoading && !hasError;
 
   SummaryState copyWith({

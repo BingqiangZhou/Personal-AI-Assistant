@@ -172,8 +172,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.child != null) {
-      return Scaffold(body: widget.child!);
+    final child = widget.child;
+    if (child != null) {
+      return Scaffold(body: child);
     }
 
     final currentRoute = ref.watch(currentRouteProvider);

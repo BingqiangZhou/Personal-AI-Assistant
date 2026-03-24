@@ -99,9 +99,9 @@ class HighlightMatcher {
       }
 
       // Try fuzzy match with contextBefore
-      if (highlight.contextBefore != null &&
-          highlight.contextBefore!.isNotEmpty) {
-        final normalizedContext = _normalize(highlight.contextBefore!);
+      final contextBefore = highlight.contextBefore;
+      if (contextBefore != null && contextBefore.isNotEmpty) {
+        final normalizedContext = _normalize(contextBefore);
         // Check if at least 50% of context matches
         final contextPartialLength = (normalizedContext.length * 0.5).floor();
         if (contextPartialLength >= 5) {

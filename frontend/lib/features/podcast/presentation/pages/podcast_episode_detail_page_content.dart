@@ -216,26 +216,30 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
     final summaryNotifier = ref.read(provider.notifier);
     final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
     final transcriptionState = ref.watch(transcriptionProvider);
+
+    final episodeTranscript = episode.transcriptContent;
     final hasEpisodeTranscript =
-        episode.transcriptContent != null &&
-        episode.transcriptContent!.isNotEmpty;
+        episodeTranscript != null && episodeTranscript.isNotEmpty;
+
+    final loadedTranscript = transcriptionState.value?.transcriptContent;
     final hasLoadedTranscript =
-        transcriptionState.value?.transcriptContent != null &&
-        transcriptionState.value!.transcriptContent!.isNotEmpty;
+        loadedTranscript != null && loadedTranscript.isNotEmpty;
+
+    final episodeSummary = episode.aiSummary;
     final hasExistingSummary =
         summaryState.hasSummary ||
-        (episode.aiSummary != null && episode.aiSummary!.isNotEmpty);
+        (episodeSummary != null && episodeSummary.isNotEmpty);
     final canManageSummary =
         hasEpisodeTranscript || hasLoadedTranscript || hasExistingSummary;
 
-    if (episode.aiSummary != null &&
-        episode.aiSummary!.isNotEmpty &&
+    if (episodeSummary != null &&
+        episodeSummary.isNotEmpty &&
         !summaryState.hasSummary &&
         !summaryState.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           summaryNotifier.updateSummary(
-            episode.aiSummary!,
+            episodeSummary,
             modelUsed: episode.summaryModelUsed,
             processingTime: episode.summaryProcessingTime,
           );

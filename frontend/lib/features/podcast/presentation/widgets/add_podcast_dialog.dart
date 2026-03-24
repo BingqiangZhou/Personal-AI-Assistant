@@ -24,7 +24,8 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
   }
 
   Future<void> _addSubscription() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() {
       _isLoading = true;

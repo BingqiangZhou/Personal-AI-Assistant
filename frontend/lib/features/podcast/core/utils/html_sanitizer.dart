@@ -156,19 +156,19 @@ class HtmlSanitizer {
     }
 
     // Validate URL attributes
-    if (tagName == 'a' && element.attributes.containsKey('href')) {
-      final href = element.attributes['href']!;
-      if (!_isValidUrl(href)) {
+    if (tagName == 'a') {
+      final href = element.attributes['href'];
+      if (href != null && !_isValidUrl(href)) {
         element.attributes.remove('href');
-      } else {
+      } else if (href != null) {
         // Add rel="nofollow noopener" for external links
         element.attributes['rel'] = 'nofollow noopener';
       }
     }
 
-    if (tagName == 'img' && element.attributes.containsKey('src')) {
-      final src = element.attributes['src']!;
-      if (!_isValidUrl(src)) {
+    if (tagName == 'img') {
+      final src = element.attributes['src'];
+      if (src != null && !_isValidUrl(src)) {
         element.remove();
       }
     }
@@ -286,14 +286,14 @@ class HtmlSanitizer {
       final document = parser.parse(html);
       final links = document.querySelectorAll('a');
       return links
-          .where((link) {
+          .map((link) {
             final href = link.attributes['href'];
-            return href != null && _isValidUrl(href);
+            if (href == null || !_isValidUrl(href)) {
+              return null;
+            }
+            return (text: link.text.trim(), url: href);
           })
-          .map((link) => (
-            text: link.text.trim(),
-            url: link.attributes['href']!,
-          ))
+          .whereType<({String text, String url})>()
           .toList();
     } catch (e) {
       return [];
