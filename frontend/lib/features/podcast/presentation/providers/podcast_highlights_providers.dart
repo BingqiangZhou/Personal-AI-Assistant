@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
+import '../../../../core/constants/cache_constants.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/utils/time_formatter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -14,26 +15,6 @@ import 'podcast_core_providers.dart';
 final selectedHighlightDateProvider =
     NotifierProvider<SelectedHighlightDateNotifier, DateTime?>(
   SelectedHighlightDateNotifier.new,
-);
-
-/// 高光列表缓存时长
-final highlightCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
-/// 高光日期缓存时长
-final highlightDatesCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
-/// 高光统计数据缓存时长
-final highlightStatsCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
-/// 单集高光缓存时长
-final episodeHighlightsCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
 );
 
 /// 单集高光 Provider (用于转录页面集成)
@@ -115,8 +96,7 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
     if (_lastLoadedAt == null) {
       return false;
     }
-    final cacheDuration = ref.read(highlightCacheDurationProvider);
-    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+    return DateTime.now().difference(_lastLoadedAt!) < CacheConstants.defaultListCacheDuration;
   }
 
   Future<HighlightsListResponse?> load({
@@ -291,7 +271,7 @@ class HighlightDatesNotifier
     if (_lastLoadedAt == null) {
       return false;
     }
-    final cacheDuration = ref.read(highlightDatesCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
   }
 
@@ -364,7 +344,7 @@ class HighlightStatsNotifier
     if (_lastLoadedAt == null) {
       return false;
     }
-    final cacheDuration = ref.read(highlightStatsCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
   }
 

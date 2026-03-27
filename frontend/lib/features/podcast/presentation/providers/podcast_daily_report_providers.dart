@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
+import '../../../../core/constants/cache_constants.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 import '../../../../core/utils/time_formatter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -14,13 +15,6 @@ final selectedDailyReportDateProvider =
     NotifierProvider<SelectedDailyReportDateNotifier, DateTime?>(
       SelectedDailyReportDateNotifier.new,
     );
-final dailyReportCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-final dailyReportDatesCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
 final dailyReportProvider =
     AsyncNotifierProvider<DailyReportNotifier, PodcastDailyReportResponse?>(
       DailyReportNotifier.new,
@@ -59,7 +53,7 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
     if (loadedAt == null) {
       return false;
     }
-    final cacheDuration = ref.read(dailyReportCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(loadedAt) < cacheDuration;
   }
 
@@ -178,7 +172,7 @@ class DailyReportDatesNotifier
     if (loadedAt == null) {
       return false;
     }
-    final cacheDuration = ref.read(dailyReportDatesCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(loadedAt) < cacheDuration;
   }
 

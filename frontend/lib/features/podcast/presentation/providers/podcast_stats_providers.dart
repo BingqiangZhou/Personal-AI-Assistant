@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/cache_constants.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 import '../../data/models/playback_history_lite_model.dart';
 import '../../data/models/podcast_episode_model.dart';
@@ -24,10 +25,6 @@ final profileStatsProvider =
     AsyncNotifierProvider<ProfileStatsNotifier, ProfileStatsModel?>(
       ProfileStatsNotifier.new,
     );
-final profileStatsCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
 class ProfileStatsNotifier extends AsyncNotifier<ProfileStatsModel?> {
   late final PodcastRepository _repository;
   DateTime? _lastLoadedAt;
@@ -41,7 +38,7 @@ class ProfileStatsNotifier extends AsyncNotifier<ProfileStatsModel?> {
 
   bool _isFresh() {
     if (_lastLoadedAt == null) return false;
-    final cacheDuration = ref.read(profileStatsCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
   }
 
@@ -113,10 +110,6 @@ final playbackHistoryLiteProvider =
       PlaybackHistoryLiteNotifier,
       PlaybackHistoryLiteResponse?
     >(PlaybackHistoryLiteNotifier.new);
-final playbackHistoryLiteCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(minutes: 5),
-);
-
 class PlaybackHistoryLiteNotifier
     extends AsyncNotifier<PlaybackHistoryLiteResponse?> {
   late final PodcastRepository _repository;
@@ -131,7 +124,7 @@ class PlaybackHistoryLiteNotifier
 
   bool _isFresh() {
     if (_lastLoadedAt == null) return false;
-    final cacheDuration = ref.read(playbackHistoryLiteCacheDurationProvider);
+    final cacheDuration = CacheConstants.defaultListCacheDuration;
     return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
   }
 
