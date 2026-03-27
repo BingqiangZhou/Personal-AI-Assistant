@@ -23,88 +23,61 @@ class PodcastRepository {
   static const String _dailyReportTimezone = 'Asia/Shanghai';
   static const String _dailyReportScheduleTime = '03:30';
 
+  /// Generic wrapper that converts [DioException] to [NetworkException].
+  ///
+  /// Eliminates the repetitive try/catch pattern across all API methods.
+  Future<T> _apiCall<T>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // === Subscription Management ===
 
   Future<PodcastSubscriptionModel> addSubscription({
     required String feedUrl,
     List<int>? categoryIds,
-  }) async {
-    try {
-      final request = PodcastSubscriptionCreateRequest(
-        feedUrl: feedUrl,
-        categoryIds: categoryIds,
-      );
-      return await _apiService.addSubscription(request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.addSubscription(
+            PodcastSubscriptionCreateRequest(
+              feedUrl: feedUrl,
+              categoryIds: categoryIds,
+            ),
+          ));
 
   Future<PodcastSubscriptionListResponse> listSubscriptions({
     int page = 1,
     int size = 20,
     int? categoryId,
     String? status,
-  }) async {
-    try {
-      return await _apiService.listSubscriptions(
-        page,
-        size,
-        categoryId,
-        status,
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.listSubscriptions(page, size, categoryId, status));
 
-  Future<PodcastSubscriptionModel> getSubscription(int subscriptionId) async {
-    try {
-      return await _apiService.getSubscription(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastSubscriptionModel> getSubscription(int subscriptionId) =>
+      _apiCall(() => _apiService.getSubscription(subscriptionId));
 
-  Future<void> deleteSubscription(int subscriptionId) async {
-    try {
-      await _apiService.deleteSubscription(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> deleteSubscription(int subscriptionId) =>
+      _apiCall(() => _apiService.deleteSubscription(subscriptionId));
 
   Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions({
     required List<int> subscriptionIds,
-  }) async {
-    try {
-      final request = PodcastSubscriptionBulkDeleteRequest(
-        subscriptionIds: subscriptionIds,
-      );
-      return await _apiService.bulkDeleteSubscriptions(request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.bulkDeleteSubscriptions(
+            PodcastSubscriptionBulkDeleteRequest(
+              subscriptionIds: subscriptionIds,
+            ),
+          ));
 
-  Future<void> refreshSubscription(int subscriptionId) async {
-    try {
-      await _apiService.refreshSubscription(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> refreshSubscription(int subscriptionId) =>
+      _apiCall(() => _apiService.refreshSubscription(subscriptionId));
 
   Future<ReparseResponse> reparseSubscription(
     int subscriptionId,
     bool forceAll,
-  ) async {
-    try {
-      return await _apiService.reparseSubscription(subscriptionId, forceAll);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  ) =>
+      _apiCall(() => _apiService.reparseSubscription(subscriptionId, forceAll));
 
   // === Episode Management ===
 
@@ -112,13 +85,8 @@ class PodcastRepository {
     required int page,
     required int pageSize,
     String? cursor,
-  }) async {
-    try {
-      return await _apiService.getPodcastFeed(page, pageSize, cursor);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getPodcastFeed(page, pageSize, cursor));
 
   Future<PodcastDailyReportResponse> getDailyReport({DateTime? date}) async {
     try {
@@ -194,50 +162,30 @@ class PodcastRepository {
     int size = 20,
     bool? hasSummary,
     bool? isPlayed,
-  }) async {
-    try {
-      return await _apiService.listEpisodes(
-        subscriptionId,
-        page,
-        size,
-        hasSummary,
-        isPlayed,
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.listEpisodes(
+            subscriptionId,
+            page,
+            size,
+            hasSummary,
+            isPlayed,
+          ));
 
-  Future<PodcastEpisodeDetailResponse> getEpisode(int episodeId) async {
-    try {
-      return await _apiService.getEpisode(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastEpisodeDetailResponse> getEpisode(int episodeId) =>
+      _apiCall(() => _apiService.getEpisode(episodeId));
 
   Future<PodcastEpisodeListResponse> getPlaybackHistory({
     int page = 1,
     int size = 50,
     String? cursor,
-  }) async {
-    try {
-      return await _apiService.getPlaybackHistory(page, size, cursor);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getPlaybackHistory(page, size, cursor));
 
   Future<PlaybackHistoryLiteResponse> getPlaybackHistoryLite({
     int page = 1,
     int size = 100,
-  }) async {
-    try {
-      return await _apiService.getPlaybackHistoryLite(page, size);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getPlaybackHistoryLite(page, size));
 
   // === Playback Management ===
 
@@ -246,119 +194,67 @@ class PodcastRepository {
     required int position,
     required bool isPlaying,
     double playbackRate = 1.0,
-  }) async {
-    try {
-      final request = PodcastPlaybackUpdateRequest(
-        position: position,
-        isPlaying: isPlaying,
-        playbackRate: playbackRate,
-      );
-      return await _apiService.updatePlaybackProgress(episodeId, request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.updatePlaybackProgress(
+            episodeId,
+            PodcastPlaybackUpdateRequest(
+              position: position,
+              isPlaying: isPlaying,
+              playbackRate: playbackRate,
+            ),
+          ));
 
-  Future<PodcastPlaybackStateResponse> getPlaybackState(int episodeId) async {
-    try {
-      return await _apiService.getPlaybackState(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastPlaybackStateResponse> getPlaybackState(int episodeId) =>
+      _apiCall(() => _apiService.getPlaybackState(episodeId));
 
   Future<PlaybackRateEffectiveResponse> getEffectivePlaybackRate({
     int? subscriptionId,
-  }) async {
-    try {
-      return await _apiService.getEffectivePlaybackRate(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getEffectivePlaybackRate(subscriptionId));
 
   Future<PlaybackRateEffectiveResponse> applyPlaybackRatePreference({
     required double playbackRate,
     required bool applyToSubscription,
     int? subscriptionId,
-  }) async {
-    try {
-      final request = PlaybackRateApplyRequest(
-        playbackRate: playbackRate,
-        applyToSubscription: applyToSubscription,
-        subscriptionId: subscriptionId,
-      );
-      return await _apiService.applyPlaybackRatePreference(request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.applyPlaybackRatePreference(
+            PlaybackRateApplyRequest(
+              playbackRate: playbackRate,
+              applyToSubscription: applyToSubscription,
+              subscriptionId: subscriptionId,
+            ),
+          ));
 
   // === Queue Management ===
 
-  Future<PodcastQueueModel> getQueue() async {
-    try {
-      return await _apiService.getQueue();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> getQueue() =>
+      _apiCall(() => _apiService.getQueue());
 
-  Future<PodcastQueueModel> addQueueItem(int episodeId) async {
-    try {
-      return await _apiService.addQueueItem(
-        PodcastQueueAddItemRequest(episodeId: episodeId),
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> addQueueItem(int episodeId) =>
+      _apiCall(() => _apiService.addQueueItem(
+            PodcastQueueAddItemRequest(episodeId: episodeId),
+          ));
 
-  Future<PodcastQueueModel> removeQueueItem(int episodeId) async {
-    try {
-      return await _apiService.removeQueueItem(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> removeQueueItem(int episodeId) =>
+      _apiCall(() => _apiService.removeQueueItem(episodeId));
 
-  Future<PodcastQueueModel> reorderQueueItems(List<int> episodeIds) async {
-    try {
-      return await _apiService.reorderQueueItems(
-        PodcastQueueReorderRequest(episodeIds: episodeIds),
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> reorderQueueItems(List<int> episodeIds) =>
+      _apiCall(() => _apiService.reorderQueueItems(
+            PodcastQueueReorderRequest(episodeIds: episodeIds),
+          ));
 
-  Future<PodcastQueueModel> setQueueCurrent(int episodeId) async {
-    try {
-      return await _apiService.setQueueCurrent(
-        PodcastQueueSetCurrentRequest(episodeId: episodeId),
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> setQueueCurrent(int episodeId) =>
+      _apiCall(() => _apiService.setQueueCurrent(
+            PodcastQueueSetCurrentRequest(episodeId: episodeId),
+          ));
 
-  Future<PodcastQueueModel> activateQueueEpisode(int episodeId) async {
-    try {
-      return await _apiService.activateQueueEpisode(
-        PodcastQueueActivateRequest(episodeId: episodeId),
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> activateQueueEpisode(int episodeId) =>
+      _apiCall(() => _apiService.activateQueueEpisode(
+            PodcastQueueActivateRequest(episodeId: episodeId),
+          ));
 
-  Future<PodcastQueueModel> completeQueueCurrent() async {
-    try {
-      return await _apiService.completeQueueCurrent(const {});
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastQueueModel> completeQueueCurrent() =>
+      _apiCall(() => _apiService.completeQueueCurrent(const {}));
 
   // === Summary Management ===
 
@@ -368,36 +264,22 @@ class PodcastRepository {
     bool? useTranscript,
     String? summaryModel,
     String? customPrompt,
-  }) async {
-    try {
-      final request = PodcastSummaryRequest(
-        forceRegenerate: forceRegenerate,
-        useTranscript: useTranscript,
-        summaryModel: summaryModel,
-        customPrompt: customPrompt,
-      );
-      return await _apiService.generateSummary(episodeId, request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.generateSummary(
+            episodeId,
+            PodcastSummaryRequest(
+              forceRegenerate: forceRegenerate,
+              useTranscript: useTranscript,
+              summaryModel: summaryModel,
+              customPrompt: customPrompt,
+            ),
+          ));
 
-  Future<List<SummaryModelInfo>> getSummaryModels() async {
-    try {
-      final response = await _apiService.getSummaryModels();
-      return response.models;
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<List<SummaryModelInfo>> getSummaryModels() =>
+      _apiCall(() async => (await _apiService.getSummaryModels()).models);
 
-  Future<void> getPendingSummaries() async {
-    try {
-      await _apiService.getPendingSummaries();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> getPendingSummaries() =>
+      _apiCall(() => _apiService.getPendingSummaries());
 
   // === Search ===
 
@@ -406,31 +288,16 @@ class PodcastRepository {
     String searchIn = 'all',
     int page = 1,
     int size = 20,
-  }) async {
-    try {
-      return await _apiService.searchPodcasts(query, searchIn, page, size);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.searchPodcasts(query, searchIn, page, size));
 
   // === Statistics ===
 
-  Future<PodcastStatsResponse> getStats() async {
-    try {
-      return await _apiService.getStats();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<PodcastStatsResponse> getStats() =>
+      _apiCall(() => _apiService.getStats());
 
-  Future<ProfileStatsModel> getProfileStats() async {
-    try {
-      return await _apiService.getProfileStats();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<ProfileStatsModel> getProfileStats() =>
+      _apiCall(() => _apiService.getProfileStats());
 
   // === Transcription Management ===
 
@@ -451,150 +318,85 @@ class PodcastRepository {
     bool forceRegenerate = false,
     int? chunkSizeMb,
     String? transcriptionModel,
-  }) async {
-    try {
-      final request = PodcastTranscriptionRequest(
-        forceRegenerate: forceRegenerate,
-        chunkSizeMb: chunkSizeMb,
-        transcriptionModel: transcriptionModel,
-      );
-      return await _apiService.startTranscription(episodeId, request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.startTranscription(
+            episodeId,
+            PodcastTranscriptionRequest(
+              forceRegenerate: forceRegenerate,
+              chunkSizeMb: chunkSizeMb,
+              transcriptionModel: transcriptionModel,
+            ),
+          ));
 
-  Future<void> deleteTranscription(int episodeId) async {
-    try {
-      await _apiService.deleteTranscription(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> deleteTranscription(int episodeId) =>
+      _apiCall(() => _apiService.deleteTranscription(episodeId));
 
   // === Conversation Management ===
 
   Future<ConversationSessionListResponse> getConversationSessions({
     required int episodeId,
-  }) async {
-    try {
-      return await _apiService.getConversationSessions(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getConversationSessions(episodeId));
 
   Future<ConversationSession> createConversationSession({
     required int episodeId,
     String? title,
-  }) async {
-    try {
-      return await _apiService.createConversationSession(episodeId, {
-        'title': title,
-      });
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.createConversationSession(episodeId, {
+            'title': title,
+          }));
 
   Future<PodcastConversationClearResponse> deleteConversationSession({
     required int episodeId,
     required int sessionId,
-  }) async {
-    try {
-      return await _apiService.deleteConversationSession(episodeId, sessionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.deleteConversationSession(episodeId, sessionId));
 
   Future<PodcastConversationHistoryResponse> getConversationHistory({
     required int episodeId,
     int limit = 50,
     int? sessionId,
-  }) async {
-    try {
-      return await _apiService.getConversationHistory(
-        episodeId,
-        limit,
-        sessionId,
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getConversationHistory(episodeId, limit, sessionId));
 
   Future<PodcastConversationSendResponse> sendConversationMessage({
     required int episodeId,
     required PodcastConversationSendRequest request,
-  }) async {
-    try {
-      return await _apiService.sendConversationMessage(episodeId, request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.sendConversationMessage(episodeId, request));
 
   Future<PodcastConversationClearResponse> clearConversationHistory({
     required int episodeId,
     int? sessionId,
-  }) async {
-    try {
-      return await _apiService.clearConversationHistory(episodeId, sessionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.clearConversationHistory(episodeId, sessionId));
 
   // === Schedule Management ===
 
   Future<ScheduleConfigResponse> getSubscriptionSchedule(
     int subscriptionId,
-  ) async {
-    try {
-      return await _apiService.getSubscriptionSchedule(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  ) =>
+      _apiCall(() => _apiService.getSubscriptionSchedule(subscriptionId));
 
   Future<ScheduleConfigResponse> updateSubscriptionSchedule(
     int subscriptionId,
     ScheduleConfigUpdateRequest request,
-  ) async {
-    try {
-      return await _apiService.updateSubscriptionSchedule(
-        subscriptionId,
-        request,
-      );
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  ) =>
+      _apiCall(() => _apiService.updateSubscriptionSchedule(subscriptionId, request));
 
   /// Get all subscription schedules
-  Future<List<ScheduleConfigResponse>> getAllSubscriptionSchedules() async {
-    try {
-      return await _apiService.getAllSubscriptionSchedules();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<List<ScheduleConfigResponse>> getAllSubscriptionSchedules() =>
+      _apiCall(() => _apiService.getAllSubscriptionSchedules());
 
   /// Batch update subscription schedules
   Future<List<ScheduleConfigResponse>> batchUpdateSubscriptionSchedules(
     List<int> subscriptionIds,
     ScheduleConfigUpdateRequest request,
-  ) async {
-    try {
-      return await _apiService.batchUpdateSubscriptionSchedules({
-        'subscription_ids': subscriptionIds,
-        'schedule_data': request.toJson(),
-      });
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  ) =>
+      _apiCall(() => _apiService.batchUpdateSubscriptionSchedules({
+            'subscription_ids': subscriptionIds,
+            'schedule_data': request.toJson(),
+          }));
 
   // === Highlights Management ===
 
@@ -603,52 +405,26 @@ class PodcastRepository {
     int page = 1,
     int perPage = 20,
     int? episodeId,
-  }) async {
-    try {
-      final dateParam = date != null ? TimeFormatter.formatDate(date) : null;
-      return await _apiService.getHighlights(dateParam, page, perPage, episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  }) =>
+      _apiCall(() => _apiService.getHighlights(
+            date != null ? TimeFormatter.formatDate(date) : null,
+            page,
+            perPage,
+            episodeId,
+          ));
 
-  Future<HighlightDatesResponse> getHighlightDates() async {
-    try {
-      return await _apiService.getHighlightDates();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<HighlightDatesResponse> getHighlightDates() =>
+      _apiCall(() => _apiService.getHighlightDates());
 
-  Future<HighlightStatsResponse> getHighlightStats() async {
-    try {
-      return await _apiService.getHighlightStats();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<HighlightStatsResponse> getHighlightStats() =>
+      _apiCall(() => _apiService.getHighlightStats());
 
-  Future<void> toggleHighlightFavorite(int highlightId) async {
-    try {
-      await _apiService.toggleHighlightFavorite(highlightId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> toggleHighlightFavorite(int highlightId) =>
+      _apiCall(() => _apiService.toggleHighlightFavorite(highlightId));
 
-  Future<void> deleteHighlight(int highlightId) async {
-    try {
-      await _apiService.deleteHighlight(highlightId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<void> deleteHighlight(int highlightId) =>
+      _apiCall(() => _apiService.deleteHighlight(highlightId));
 
-  Future<HighlightExtractResponse> extractEpisodeHighlights(int episodeId) async {
-    try {
-      return await _apiService.extractEpisodeHighlights(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
+  Future<HighlightExtractResponse> extractEpisodeHighlights(int episodeId) =>
+      _apiCall(() => _apiService.extractEpisodeHighlights(episodeId));
 }
