@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
+_logger = logging.getLogger(__name__)
 
 from app.core.database import (
     create_isolated_session_factory,
@@ -53,17 +56,25 @@ def log_task_run(
     error_message: str | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> None:
-    run_async(
-        _insert_run_async(
-            task_name=task_name,
-            queue_name=queue_name,
-            status=status,
-            started_at=started_at,
-            finished_at=finished_at,
-            error_message=error_message,
-            metadata=metadata,
-        ),
-    )
+    """Record a task run to the BackgroundTaskRun table.
+
+    Failures are logged but never propagated to the caller, so they
+    cannot mask the original task exception or prevent retry logic.
+    """
+    try:
+        run_async(
+            _insert_run_async(
+                task_name=task_name,
+                queue_name=queue_name,
+                status=status,
+                started_at=started_at,
+                finished_at=finished_at,
+                error_message=error_message,
+                metadata=metadata,
+            ),
+        )
+    except Exception:
+        _logger.exception("Failed to log task run for %s", task_name)
 
 
 @asynccontextmanager

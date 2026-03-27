@@ -46,6 +46,12 @@ def extract_episode_highlights(
         )
         return result
     except Exception as exc:
+        logger.exception(
+            "extract_episode_highlights failed for episode_id=%s (retry %d/%d)",
+            episode_id,
+            self.request.retries,
+            self.max_retries,
+        )
         log_task_run(
             task_name=task_name,
             queue_name=queue_name,
@@ -109,6 +115,11 @@ def extract_pending_highlights(self):
         # Don't retry on timeout - tasks will be picked up in next run
         raise
     except Exception as exc:
+        logger.exception(
+            "extract_pending_highlights failed (retry %d/%d)",
+            self.request.retries,
+            self.max_retries,
+        )
         log_task_run(
             task_name=task_name,
             queue_name=queue_name,
