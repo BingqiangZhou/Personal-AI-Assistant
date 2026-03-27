@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
 import '../../data/models/podcast_subscription_model.dart';
 import '../widgets/shared/episode_card_utils.dart';
 
@@ -86,16 +85,12 @@ class PodcastNavigation {
   const PodcastNavigation._();
 
   static BuildContext? _resolveRoutingContext(BuildContext context) {
-    try {
-      GoRouter.of(context);
+    // Use maybeOf instead of try-catch for cleaner control flow
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
       return context;
-    } catch (e, stackTrace) {
-      logger.AppLogger.debug(
-        '[PodcastNavigation] GoRouter not found in context, falling back to appNavigatorKey: $e',
-      );
-      logger.AppLogger.debug('[PodcastNavigation] Stack trace: $stackTrace');
-      return appNavigatorKey.currentContext;
     }
+    return appNavigatorKey.currentContext;
   }
 
   /// Navigate to episodes page
@@ -192,8 +187,11 @@ class PodcastNavigation {
     );
   }
 
-  /// Pop to podcast list
+  /// Navigate to podcast list page deterministically
   static void popToList(BuildContext context) {
-    Navigator.of(context).popUntil((route) => route.settings.name == 'podcast');
+    final routingContext = _resolveRoutingContext(context);
+    if (routingContext != null) {
+      GoRouter.of(routingContext).go('/podcast');
+    }
   }
 }

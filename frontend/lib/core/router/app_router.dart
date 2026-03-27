@@ -415,12 +415,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Helper for refreshListenable
+// Helper for refreshListenable - only notifies on auth status changes, not every field update
 class AuthStateListenable extends ChangeNotifier {
   final Ref ref;
 
   AuthStateListenable(this.ref) {
-    ref.listen(authProvider, (previous, next) {
+    ref.listen(authProvider.select((s) => s.isAuthenticated), (previous, next) {
       notifyListeners();
     });
   }
@@ -435,21 +435,15 @@ class ErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-                          const SizedBox(),
-          AppEmptyState(
+      body: AppEmptyState(
             icon: Icons.error_outline,
             title: l10n.unknown_error,
             subtitle: error?.toString() ?? l10n.unknown_error,
             action: FilledButton(
-              onPressed: () => context.go('/splash'),
+              onPressed: () => context.go('/home'),
               child: Text(l10n.home),
             ),
           ),
-        ],
-      ),
     );
   }
 }
