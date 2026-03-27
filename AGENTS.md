@@ -15,14 +15,16 @@
 - Lint/format (backend): `uv run ruff check .` and `uv run ruff format .`
 - Backend tests: `uv run pytest`
 - Frontend deps: `cd frontend && flutter pub get`
-- Frontend tests: `flutter test test/widget/`
+- Frontend code gen: `cd frontend && dart run build_runner build` (required after modifying `@riverpod`, `@RestApi`, `@JsonSerializable` files)
+- Frontend tests: `flutter test` (unit: `test/unit/`, widget: `test/widget/`, integration: `test/integration/`)
+- Frontend l10n: `flutter gen-l10n` (after editing `app_localizations_en.arb` or `app_localizations_zh.arb`)
 - Docker backend verification (required): `cd docker && docker-compose up -d`
 
 ## Coding Style & Naming Conventions
 - Backend uses `ruff` for linting/formatting; do not use `black`, `isort`, or `flake8`.
 - Use `uv` for Python package management; avoid `pip install`.
 - Follow async/await patterns for I/O in the backend.
-- Frontend uses Material 3 (`useMaterial3: true`) and the custom `AdaptiveScaffoldWrapper`.
+- Frontend uses Material 3 (`useMaterial3: true`) and `CustomAdaptiveNavigation` with `Breakpoints` class.
 
 ## Testing Guidelines
 - Backend: pytest with async tests; run `uv run pytest` before PRs.

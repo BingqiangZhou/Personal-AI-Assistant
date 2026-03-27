@@ -2,8 +2,8 @@
 
 [![Version](https://img.shields.io/badge/version-0.32.0-blue)](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.32.0)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org/)
-[![Flutter](https://img.shields.io/badge/flutter-3.0+-cyan)](https://flutter.dev/)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
+[![Dart](https://img.shields.io/badge/dart-3.8+-cyan)](https://dart.dev/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com/)
 
 一个可扩展的私人 AI 助手，集成了播客订阅、音频播放和 AI 功能。旨在通过本地化部署和 AI 能力，打造个人化的信息处理中心。
@@ -65,7 +65,7 @@
 ## 技术架构
 
 ### 后端 (Python FastAPI)
-- **框架**: FastAPI 3.10+
+- **框架**: FastAPI + Uvicorn/Gunicorn
 - **包管理**: uv
 - **数据库**: PostgreSQL 15 + SQLAlchemy 2.0 (Async)
 - **缓存/消息队列**: Redis 7
@@ -75,45 +75,49 @@
 
 ```
 backend/app/
-├── core/           # 核心基础设施（配置、安全、数据库、异常）
-├── shared/         # 共享层（ schemas、utils、constants）
-└── domains/        # 领域层（user、podcast、assistant、admin、ai）
+├── bootstrap/      # 应用初始化（路由注册、生命周期、缓存预热）
+├── core/           # 核心基础设施（配置、安全、数据库、中间件、可观测性）
+├── shared/         # 共享层（schemas、utils、constants）
+├── domains/        # 领域层（user、subscription、podcast、ai、admin）
+└── contexts/       # DDD 限界上下文（content、ingestion、playback）[重构中]
 ```
 
 ### 前端 (Flutter)
-- **框架**: Flutter 3.x
+- **框架**: Flutter (Dart 3.8+)
 - **UI**: Material 3 Design System
-- **状态管理**: Riverpod 2.x
-- **路由**: GoRouter
-- **网络**: Dio
-- **本地存储**: Hive + flutter_secure_storage
-- **音频**: audioplayers 6.5.1 + audio_service
+- **状态管理**: Riverpod 3.x
+- **路由**: GoRouter (StatefulShellRoute)
+- **网络**: Dio + Retrofit
+- **本地存储**: SharedPreferences + flutter_secure_storage
+- **音频**: audioplayers + audio_service
+- **平台**: Android, iOS, Windows, Linux, macOS, Web
 
 ```
 frontend/lib/
-├── core/           # 核心层（constants、error、network、storage）
-├── shared/         # 共享层（widgets、theme、extensions）
-└── features/       # 功能模块（auth、home、podcast、ai、profile、admin）
+├── core/           # 核心层（app、network、router、storage、theme、localization）
+├── shared/         # 共享层（models、themes、widgets）
+└── features/       # 功能模块
+    ├── auth/       # 认证（data/domain/presentation）
+    ├── home/       # 主页
+    ├── podcast/    # 播客（core/data/presentation）
+    ├── profile/    # 个人中心
+    ├── settings/   # 设置
+    └── splash/     # 启动页
 ```
 
 ## 快速开始
 
 ### 前置要求
 - Docker & Docker Compose（运行 PostgreSQL、Redis）
-- Python 3.10+
+- Python 3.11+
 - uv（包管理）
-- Flutter 3.0+
+- Flutter (Dart 3.8+)
 
 ### 1. 启动基础设施
 
 ```bash
 cd docker
-
-# Windows
-scripts\start.bat
-
-# Linux/Mac
-docker compose -f docker-compose.podcast.yml up -d --build
+docker compose up -d --build
 ```
 
 ### 2. 后端开发
@@ -150,6 +154,8 @@ flutter run
 |------|------|
 | [CHANGELOG.md](CHANGELOG.md) | 版本更新日志 |
 | [CLAUDE.md](CLAUDE.md) | Claude Code 开发规范 |
+| [AGENTS.md](AGENTS.md) | AI Agent 协作规范 |
+| [docs/FEATURES.md](docs/FEATURES.md) | 功能特性详细说明 |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | 部署指南 |
 | [backend/README.md](backend/README.md) | 后端开发指南 |
 | [frontend/README.md](frontend/README.md) | Flutter 开发指南 |
@@ -176,11 +182,15 @@ flutter test test/widget/
 personal-ai-assistant/
 ├── backend/          # FastAPI 后端
 ├── frontend/         # Flutter 前端
-├── docker/           # Docker 配置
+├── docker/           # Docker 配置 (7 个服务)
 ├── docs/             # 详细文档
 ├── specs/            # 功能规格
+├── scripts/          # 工具脚本
+├── data/             # 密钥存储
 ├── CLAUDE.md         # 开发规范
+├── AGENTS.md         # AI Agent 协作规范
 ├── CHANGELOG.md      # 更新日志
+├── cliff.toml        # Changelog 生成配置
 └── README.md         # 项目说明
 ```
 
