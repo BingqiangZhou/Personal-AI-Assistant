@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.32.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.31.0...v0.32.0) - 2026-03-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.32.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove 4 unused deps, move flutter_native_splash to dev_deps ([729d441](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/729d44110c90399f0a49f72609f73ea5e00223e5))
+- Delete unused app_icons, error_handler, episode_provider_cache ([81e8361](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/81e8361364c8f0b8e852fa79d9e911cc0fbe997d))
+- Delete unused core/performance monitoring module ([757a595](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/757a5958d32b3d0cd90283c13843b46f569acd14))
+- Delete orphaned test files for removed error_handler and performance modules ([7ef5a4e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7ef5a4e6c3129ba82fa99104048fa45c6285feda))
+- Update backend and frontend dependencies ([ad09a72](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ad09a72ca52289b3b2157b8ea888c9a0f66e9386))
+
+### 🐛 Bug Fixes
+
+- *(frontend)* Resolve merge conflicts and source code compilation errors ([90d5298](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/90d52985a424f254ffe63b6ee0b6df6bb95683e6))
+- *(frontend)* Remove unused imports after widget refactoring ([b8850ba](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b8850baee6057663578e1e7a4862e75c632c100a))
+- *(frontend)* Fix test compilation errors after refactoring ([00a8178](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/00a81789282aabb429efc4da017eead9aee28924))
+- *(frontend)* Rewrite home navigation test to use StatefulShellRoute and fix warnings ([940f6f6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/940f6f60f6d7c92268b382a51c1781b54321a33f))
+- *(frontend)* Fix all remaining test failures after refactoring ([247a36c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/247a36c66b56250fdcc618d10ece0e9afc6e0486))
+
+### 🚜 Refactor
+
+- Remove duplicate AppBreakpoints, use Breakpoints class ([ab18147](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ab1814757fe76d2a347769b4c75166bf0cfa195d))
+- Remove unused AppConfig constants and duplicate AppConstants wrapper ([dc75c2f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dc75c2f5cffd819b09b1313592ee724de211c258))
+- Move auth_event from core to features/auth ([3163c92](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3163c929ce63b7aba7d914553c8bb9cfca105605))
+- Remove dartz from auth, use exception-based error handling ([2f4a688](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2f4a688ccd9d521f39dd1d652b0fa545b8131438))
+- Move formatDate to core/utils, fix data-presentation layer violation ([bb47c71](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bb47c71b8a0c3f933f0c6e11c57f89eeed1b39d0))
+- Extract shared sameDate utility ([d3086ba](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d3086ba10242a953fa1349f87f48e82a6ea8fbe5))
+- Replace 8 identical cache duration providers with CacheConstants ([0d7fd70](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0d7fd70eea16a3fcd78716c33be07ad13f420663))
+- Extract CachedAsyncNotifier base class from 4 providers ([2bf2fef](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2bf2feff474c4ce868ec0ea095f0a6adaa387b1b))
+- Extract _apiCall wrapper in podcast_repository ([e8a689f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e8a689f820bc694fc3290c542b0affa82ee9dfaa))
+- Extract sub-widgets from conversation_chat_widget ([b96719d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b96719d3e3dccc7877c546d4983f317ce93625c4))
+- Extract BaseEpisodeCard from episode card variants ([8575c2c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8575c2cfe2ee2da54d8b11e675b02902f1a48d90))
+- Unify empty/error state widgets ([2f24e87](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2f24e873491e981c3dbe55bcda4d69e30fd7593a))
+
+
+
 ## [0.31.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.30.0...v0.31.0) - 2026-03-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.31.0))
 
 ### ⚙️ Miscellaneous Tasks
