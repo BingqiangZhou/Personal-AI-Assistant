@@ -54,7 +54,7 @@ void main() {
     await tester.pumpWidget(
       _buildTestApp(
         repository,
-        summaryOverride: getSummaryProvider(
+        summaryOverride: summaryProvider(
           2001,
         ).overrideWith(() => _SummaryWithContentNotifier()),
       ),

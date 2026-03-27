@@ -19,7 +19,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final provider = getTranscriptionProvider(2001);
+      final provider = transcriptionProvider(2001);
       container.read(provider.notifier).loadTranscription();
       async.flushMicrotasks();
 
@@ -44,7 +44,7 @@ void main() {
         ],
       );
 
-      final provider = getTranscriptionProvider(2002);
+      final provider = transcriptionProvider(2002);
       container.read(provider.notifier).loadTranscription();
       async.flushMicrotasks();
       expect(repository.getTranscriptionCalls, 1);
@@ -58,15 +58,6 @@ void main() {
     });
   });
 
-  test('releaseTranscriptionProvider removes cached provider key', () {
-    final provider = getTranscriptionProvider(2003);
-    expect(transcriptionStateProviders.containsKey(2003), isTrue);
-
-    releaseTranscriptionProvider(2003);
-
-    expect(transcriptionStateProviders.containsKey(2003), isFalse);
-    expect(provider, isNotNull);
-  });
 }
 
 class _FakeTranscriptionRepository extends PodcastRepository {

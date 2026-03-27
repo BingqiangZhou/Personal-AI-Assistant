@@ -21,7 +21,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final provider = getSummaryProvider(1001);
+      final provider = summaryProvider(1001);
       container.read(provider.notifier).generateSummary();
       async.flushMicrotasks();
 
@@ -54,7 +54,7 @@ void main() {
         );
         addTearDown(container.dispose);
 
-        final provider = getSummaryProvider(1002);
+        final provider = summaryProvider(1002);
 
         container.read(provider.notifier).generateSummary();
         async.flushMicrotasks();
@@ -87,7 +87,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final provider = getSummaryProvider(1003);
+      final provider = summaryProvider(1003);
 
       container.read(provider.notifier).generateSummary(model: 'model-a');
       async.flushMicrotasks();
@@ -115,7 +115,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final provider = getSummaryProvider(1004);
+      final provider = summaryProvider(1004);
 
       container.read(provider.notifier).generateSummary();
       async.flushMicrotasks();
@@ -140,7 +140,7 @@ void main() {
         );
         addTearDown(container.dispose);
 
-        final provider = getSummaryProvider(1005);
+        final provider = summaryProvider(1005);
         container
             .read(provider.notifier)
             .updateSummary('Existing summary', modelUsed: 'model-a');
@@ -157,15 +157,6 @@ void main() {
     },
   );
 
-  test('releaseSummaryProvider removes cached provider key', () {
-    final provider = getSummaryProvider(1006);
-    expect(summaryStateProviders.containsKey(1006), isTrue);
-
-    releaseSummaryProvider(1006);
-
-    expect(summaryStateProviders.containsKey(1006), isFalse);
-    expect(provider, isNotNull);
-  });
 }
 
 class _FakeSummaryRepository extends PodcastRepository {

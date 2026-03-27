@@ -32,7 +32,7 @@ void main() {
       final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
       final feedNotifier = TestPodcastFeedNotifier();
 
-      await _pumpHomePage(
+      await _pumpHomeShellWidget(
         tester,
         audioNotifier: audioNotifier,
         feedNotifier: feedNotifier,
@@ -47,7 +47,7 @@ void main() {
     testWidgets('home defaults to library tab when initialTab is omitted', (
       tester,
     ) async {
-      await _pumpHomePage(
+      await _pumpHomeShellWidget(
         tester,
         audioNotifier: TestAudioPlayerNotifier(const AudioPlayerState()),
         route: '/home',
@@ -69,7 +69,7 @@ void main() {
       );
       final uiNotifier = TestPodcastPlayerUiNotifier();
 
-      await _pumpHomePage(
+      await _pumpHomeShellWidget(
         tester,
         audioNotifier: audioNotifier,
         initialTab: 2,
@@ -102,7 +102,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await _pumpHomePage(
+      await _pumpHomeShellWidget(
         tester,
         audioNotifier: TestAudioPlayerNotifier(
           AudioPlayerState(currentEpisode: _episode()),
@@ -125,7 +125,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await _pumpHomePage(
+        await _pumpHomeShellWidget(
           tester,
           audioNotifier: TestAudioPlayerNotifier(
             AudioPlayerState(currentEpisode: _episode()),
@@ -189,7 +189,7 @@ void main() {
   });
 }
 
-Future<void> _pumpHomePage(
+Future<void> _pumpHomeShellWidget(
   WidgetTester tester, {
   required TestAudioPlayerNotifier audioNotifier,
   TestPodcastFeedNotifier? feedNotifier,
@@ -236,7 +236,7 @@ Future<void> _pumpHomePage(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         navigatorObservers: [appRouteObserver],
-        home: HomePage(initialTab: initialTab),
+        home: HomeShellWidget(initialTab: initialTab),
       ),
     ),
   );
@@ -258,7 +258,7 @@ Future<GoRouter> _pumpHomePageRouterFlow(
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const HomePage(initialTab: 2),
+        builder: (context, state) => const HomeShellWidget(initialTab: 2),
       ),
       GoRoute(
         path: '/podcast/episodes/:subscriptionId/:episodeId',

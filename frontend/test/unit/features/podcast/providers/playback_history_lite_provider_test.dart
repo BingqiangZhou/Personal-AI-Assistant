@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
@@ -45,30 +47,38 @@ void main() {
       expect(container.read(playbackHistoryLiteProvider).value?.total, 20);
     });
 
-    test('reloads after TTL expires', () async {
-      final repository = _FakePodcastRepository(
-        history: <PlaybackHistoryLiteResponse>[
-          _historyResponse(10),
-          _historyResponse(30),
-        ],
-      );
-      final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          playbackHistoryLiteCacheDurationProvider.overrideWithValue(
-            const Duration(milliseconds: 20),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+    test('reloads after TTL expires', () {
+      fakeAsync((async) {
+        final repository = _FakePodcastRepository(
+          history: <PlaybackHistoryLiteResponse>[
+            _historyResponse(10),
+            _historyResponse(30),
+          ],
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final notifier = container.read(playbackHistoryLiteProvider.notifier);
-      await notifier.load(forceRefresh: false);
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-      await notifier.load(forceRefresh: false);
+        final notifier = container.read(playbackHistoryLiteProvider.notifier);
+        async.run((_) {
+          notifier.load(forceRefresh: false);
+        });
+        async.flushMicrotasks();
 
-      expect(repository.getPlaybackHistoryLiteCalls, 2);
-      expect(container.read(playbackHistoryLiteProvider).value?.total, 30);
+        // Advance past the cache TTL
+        async.elapse(CacheConstants.defaultListCacheDuration + const Duration(seconds: 1));
+
+        async.run((_) {
+          notifier.load(forceRefresh: false);
+        });
+        async.flushMicrotasks();
+
+        expect(repository.getPlaybackHistoryLiteCalls, 2);
+        expect(container.read(playbackHistoryLiteProvider).value?.total, 30);
+      });
     });
   });
 }

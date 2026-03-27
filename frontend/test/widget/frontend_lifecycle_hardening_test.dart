@@ -131,7 +131,7 @@ void main() {
           ),
         ),
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ReadyConversationNotifier()),
           availableModelsProvider.overrideWith(

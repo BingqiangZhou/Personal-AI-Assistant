@@ -18,13 +18,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithMessagesNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -57,13 +57,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithMixedMessagesNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -100,13 +100,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            getConversationProvider(
+            conversationProvider(
               1,
             ).overrideWith(() => _ConversationWithMessagesNotifier()),
-            getSessionListProvider(
+            sessionListProvider(
               1,
             ).overrideWith(() => _EmptySessionListNotifier()),
-            getCurrentSessionIdProvider(
+            currentSessionIdProvider(
               1,
             ).overrideWith(() => _NullSessionIdNotifier()),
             availableModelsProvider.overrideWith(
@@ -156,13 +156,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithMessagesNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -205,13 +205,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithMessagesNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -263,13 +263,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            getConversationProvider(
+            conversationProvider(
               1,
             ).overrideWith(() => _ConversationWithMessagesNotifier()),
-            getSessionListProvider(
+            sessionListProvider(
               1,
             ).overrideWith(() => _EmptySessionListNotifier()),
-            getCurrentSessionIdProvider(
+            currentSessionIdProvider(
               1,
             ).overrideWith(() => _NullSessionIdNotifier()),
             availableModelsProvider.overrideWith(
@@ -305,13 +305,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithMessagesNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -357,13 +357,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getConversationProvider(
+          conversationProvider(
             1,
           ).overrideWith(() => _ConversationWithUserMessageNotifier()),
-          getSessionListProvider(
+          sessionListProvider(
             1,
           ).overrideWith(() => _EmptySessionListNotifier()),
-          getCurrentSessionIdProvider(
+          currentSessionIdProvider(
             1,
           ).overrideWith(() => _NullSessionIdNotifier()),
           availableModelsProvider.overrideWith(
@@ -526,6 +526,8 @@ class _EmptySessionListNotifier extends SessionListNotifier {
 }
 
 class _NullSessionIdNotifier extends SessionIdNotifier {
+  _NullSessionIdNotifier() : super(1);
+
   @override
   int? build() => null;
 }

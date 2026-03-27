@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
@@ -42,27 +44,35 @@ void main() {
       expect(container.read(profileStatsProvider).value?.totalEpisodes, 20);
     });
 
-    test('reloads after TTL expires', () async {
-      final repository = _FakePodcastRepository(
-        stats: <ProfileStatsModel>[_stats(10), _stats(30)],
-      );
-      final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          profileStatsCacheDurationProvider.overrideWithValue(
-            const Duration(milliseconds: 20),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+    test('reloads after TTL expires', () {
+      fakeAsync((async) {
+        final repository = _FakePodcastRepository(
+          stats: <ProfileStatsModel>[_stats(10), _stats(30)],
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final notifier = container.read(profileStatsProvider.notifier);
-      await notifier.load(forceRefresh: false);
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-      await notifier.load(forceRefresh: false);
+        final notifier = container.read(profileStatsProvider.notifier);
+        async.run((_) {
+          notifier.load(forceRefresh: false);
+        });
+        async.flushMicrotasks();
 
-      expect(repository.getProfileStatsCalls, 2);
-      expect(container.read(profileStatsProvider).value?.totalEpisodes, 30);
+        // Advance past the cache TTL
+        async.elapse(CacheConstants.defaultListCacheDuration + const Duration(seconds: 1));
+
+        async.run((_) {
+          notifier.load(forceRefresh: false);
+        });
+        async.flushMicrotasks();
+
+        expect(repository.getProfileStatsCalls, 2);
+        expect(container.read(profileStatsProvider).value?.totalEpisodes, 30);
+      });
     });
   });
 }

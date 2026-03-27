@@ -286,15 +286,15 @@ Widget _createWidget({required PodcastEpisodeDetailResponse? episode}) {
     overrides: [
       audioPlayerProvider.overrideWith(_MockAudioPlayerNotifier.new),
       episodeDetailProvider.overrideWith((ref, episodeId) async => episode),
-      getSummaryProvider(1).overrideWith(() => _SummaryWithContentNotifier()),
-      getTranscriptionProvider(
+      summaryProvider(1).overrideWith(() => _SummaryWithContentNotifier()),
+      transcriptionProvider(
         1,
       ).overrideWith(() => _NoopTranscriptionNotifier(1)),
-      getConversationProvider(
+      conversationProvider(
         1,
       ).overrideWith(() => _ConversationWithoutMessagesNotifier()),
-      getSessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
-      getCurrentSessionIdProvider(
+      sessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
+      currentSessionIdProvider(
         1,
       ).overrideWith(() => _NullSessionIdNotifier()),
       availableModelsProvider.overrideWith((ref) async => <SummaryModelInfo>[]),
@@ -315,15 +315,15 @@ Widget _createWidgetWithEpisodeLoader(
     overrides: [
       audioPlayerProvider.overrideWith(_MockAudioPlayerNotifier.new),
       episodeDetailProvider.overrideWith((ref, episodeId) => loader()),
-      getSummaryProvider(1).overrideWith(() => _SummaryWithContentNotifier()),
-      getTranscriptionProvider(
+      summaryProvider(1).overrideWith(() => _SummaryWithContentNotifier()),
+      transcriptionProvider(
         1,
       ).overrideWith(() => _NoopTranscriptionNotifier(1)),
-      getConversationProvider(
+      conversationProvider(
         1,
       ).overrideWith(() => _ConversationWithoutMessagesNotifier()),
-      getSessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
-      getCurrentSessionIdProvider(
+      sessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
+      currentSessionIdProvider(
         1,
       ).overrideWith(() => _NullSessionIdNotifier()),
       availableModelsProvider.overrideWith((ref) async => <SummaryModelInfo>[]),
@@ -428,6 +428,8 @@ class _EmptySessionListNotifier extends SessionListNotifier {
 }
 
 class _NullSessionIdNotifier extends SessionIdNotifier {
+  _NullSessionIdNotifier() : super(1);
+
   @override
   int? build() => null;
 }
