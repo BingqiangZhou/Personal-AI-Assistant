@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app/app.dart';
 import 'core/app/config/app_config.dart';
-import 'core/constants/app_constants.dart' as core_constants;
 import 'core/storage/local_storage_service.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/utils/app_logger.dart' as logger;
@@ -110,7 +109,7 @@ void main() {
 
       final initialThemeModeCode =
           await storageService.getString(
-            core_constants.AppConstants.themeKey,
+            AppConstants.themeKey,
           ) ??
           kThemeModeSystem;
 

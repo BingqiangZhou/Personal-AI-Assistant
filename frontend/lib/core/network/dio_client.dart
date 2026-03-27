@@ -219,7 +219,8 @@ class DioClient {
   // In-memory token cache to avoid secure storage I/O on every request
   String? _cachedAccessToken;
 
-  // Retry tracking for in-flight requests
+  // Retry tracking for in-flight requests (LRU-bounded to prevent unbounded growth)
+  static const int _maxRetryKeys = 50;
   final Map<String, int> _retryAttempts = {};
 
   // Request deduplication: maps GET request keys to their in-flight futures (NW-M3)
@@ -500,6 +501,7 @@ class DioClient {
     if (_shouldRetry(error, currentAttempt)) {
       final nextAttempt = currentAttempt + 1;
       _retryAttempts[retryKey] = nextAttempt;
+      _evictRetryKeysIfNeeded();
 
       // Respect Retry-After header for 429 responses (NW-M4)
       Duration delay = _retryOptions.getDelay(currentAttempt);
@@ -921,6 +923,18 @@ class DioClient {
     logger.AppLogger.debug('[DioClient] In-memory token cache cleared');
   }
 
+  /// Update the in-memory token cache with a new access token.
+  ///
+  /// Call this after login or when a token is saved externally so that the
+  /// next request uses the cached token instead of hitting SecureStorage
+  /// (which requires a platform-channel round-trip).
+  void setToken(String? token) {
+    _cachedAccessToken = token;
+    logger.AppLogger.debug(
+      '[DioClient] In-memory token cache ${token != null ? "updated" : "cleared"}',
+    );
+  }
+
   // Request cancellation support
 
   /// Create a CancelToken for a tagged request
@@ -967,6 +981,13 @@ class DioClient {
   /// Generate a unique key for tracking retry attempts.
   String _getRetryKey(RequestOptions options) {
     return '${options.method}:${options.path}:${options.queryParameters.toString()}';
+  }
+
+  /// Evict oldest retry tracking entries when the map exceeds [_maxRetryKeys].
+  void _evictRetryKeysIfNeeded() {
+    while (_retryAttempts.length > _maxRetryKeys) {
+      _retryAttempts.remove(_retryAttempts.keys.first);
+    }
   }
 
   /// Determine if an error should trigger a retry.
