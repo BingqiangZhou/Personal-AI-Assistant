@@ -462,8 +462,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenHeight = MediaQuery.of(context).size.height;
-        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.sizeOf(context).height;
+        final screenWidth = MediaQuery.sizeOf(context).width;
         final useCompactShell =
             constraints.maxHeight < 540 || screenHeight < 720;
         final headerSpacing = screenWidth < 600 ? 20.0 : 12.0;

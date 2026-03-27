@@ -115,7 +115,7 @@ class _PodcastDailyReportPageState
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = context.l10n;
     final isMobile =
-        MediaQuery.of(context).size.width < AppBreakpoints.medium;
+        MediaQuery.sizeOf(context).width < AppBreakpoints.medium;
     return CompactHeaderPanel(
       title: l10n.podcast_daily_report_title,
       trailing: isMobile

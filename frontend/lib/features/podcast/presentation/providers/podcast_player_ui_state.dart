@@ -1,8 +1,9 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum PodcastPlayerPresentation { collapsed, expanded }
 
-class PodcastPlayerUiState {
+class PodcastPlayerUiState extends Equatable {
   const PodcastPlayerUiState({
     this.presentation = PodcastPlayerPresentation.collapsed,
     this.utilityMenuOpen = false,
@@ -14,6 +15,9 @@ class PodcastPlayerUiState {
   final bool queueSheetOpen;
 
   bool get isExpanded => presentation == PodcastPlayerPresentation.expanded;
+
+  @override
+  List<Object?> get props => [presentation, utilityMenuOpen, queueSheetOpen];
 
   PodcastPlayerUiState copyWith({
     PodcastPlayerPresentation? presentation,

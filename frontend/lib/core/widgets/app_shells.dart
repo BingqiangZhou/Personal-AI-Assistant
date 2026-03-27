@@ -734,7 +734,7 @@ class AuthShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extension = appThemeOf(context);
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
 
     return Material(
       color: Theme.of(context).scaffoldBackgroundColor,

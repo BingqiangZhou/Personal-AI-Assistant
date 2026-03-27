@@ -18,7 +18,7 @@ import '../../../../core/utils/app_logger.dart' as logger;
 
 // Token refresh constants
 const int _tokenRefreshBufferMinutes = 5; // Refresh 5 minutes before expiry
-const int _tokenCheckIntervalSeconds = 60; // Check every minute
+const int _tokenCheckIntervalSeconds = 180; // Check every 3 minutes
 const String _lastPlaybackSnapshotStorageKeyPrefix =
     'podcast_last_playback_snapshot_v1';
 
@@ -38,14 +38,14 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 
 // Remote datasource provider - use shared DioClient
 final authRemoteDatasourceProvider = Provider<AuthRemoteDatasource>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
+  final dioClient = ref.read(dioClientProvider);
   return AuthRemoteDatasourceImpl(dioClient);
 });
 
 // Repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final remoteDatasource = ref.watch(authRemoteDatasourceProvider);
-  final secureStorage = ref.watch(secureStorageProvider);
+  final remoteDatasource = ref.read(authRemoteDatasourceProvider);
+  final secureStorage = ref.read(secureStorageProvider);
   return AuthRepositoryImpl(remoteDatasource, secureStorage);
 });
 

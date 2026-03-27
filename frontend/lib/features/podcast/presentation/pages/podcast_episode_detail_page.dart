@@ -391,7 +391,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   Widget _buildScrollToTopButton() {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery.sizeOf(context);
     final isMobile = screenSize.width < 600;
 
     final rightMargin = isMobile ? 32.0 : (screenSize.width * 0.1);

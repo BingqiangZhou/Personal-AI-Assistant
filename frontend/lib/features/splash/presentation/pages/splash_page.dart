@@ -36,7 +36,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      context.go('/home');
+      context.go('/feed');
     } else {
       context.go('/login');
     }

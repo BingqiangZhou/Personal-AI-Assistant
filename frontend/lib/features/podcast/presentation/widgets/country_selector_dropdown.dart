@@ -83,7 +83,7 @@ class _CountrySelectorDropdownState
           ),
           // 所有地区列表（可滚动）
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
+            height: MediaQuery.sizeOf(context).height * 0.5,
             child: ListView.separated(
               itemCount: PodcastCountry.values.length,
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),

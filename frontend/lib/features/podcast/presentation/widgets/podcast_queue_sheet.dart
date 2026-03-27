@@ -64,7 +64,7 @@ class PodcastQueueSheet extends ConsumerWidget {
     final queueOperation = ref.watch(podcastQueueOperationProvider);
     final queueSyncing = ref.watch(audioQueueSyncingProvider);
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final sheetHeightFactor = screenWidth >= 600 ? 0.80 : 0.82;
     final queue = queueAsync.asData?.value;
     final isOpeningLoad =
@@ -125,7 +125,7 @@ class PodcastQueueSheet extends ConsumerWidget {
     }
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height * sheetHeightFactor,
+      height: MediaQuery.sizeOf(context).height * sheetHeightFactor,
       child: ClipRRect(
         key: const Key('podcast_queue_sheet_surface'),
         borderRadius: _sheetBorderRadius,
@@ -340,7 +340,7 @@ class _QueueLoadingState extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
       children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+        SizedBox(height: MediaQuery.sizeOf(context).height * 0.08),
         Center(
           child: LoadingStatusContent(
             key: const Key('queue_loading_content'),
@@ -375,7 +375,7 @@ class _QueueStateList extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
       children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+        SizedBox(height: MediaQuery.sizeOf(context).height * 0.08),
         Container(
           key: const Key('queue_state_card'),
           padding: const EdgeInsets.all(24),

@@ -25,7 +25,7 @@ void main() {
 
       test('should update route when setRoute is called', () {
         // Arrange
-        const newRoute = '/podcast/1/player';
+        const newRoute = '/podcast/episodes/1/42';
 
         // Act
         container.read(currentRouteProvider.notifier).setRoute(newRoute);
@@ -36,21 +36,21 @@ void main() {
 
       test('should handle multiple route updates', () {
         // Act & Assert - First update
-        container.read(currentRouteProvider.notifier).setRoute('/home');
-        expect(container.read(currentRouteProvider), '/home');
+        container.read(currentRouteProvider.notifier).setRoute('/feed');
+        expect(container.read(currentRouteProvider), '/feed');
 
         // Act & Assert - Second update
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/feed');
-        expect(container.read(currentRouteProvider), '/podcast/feed');
+        container.read(currentRouteProvider.notifier).setRoute('/discover');
+        expect(container.read(currentRouteProvider), '/discover');
 
         // Act & Assert - Third update
-        container.read(currentRouteProvider.notifier).setRoute('/settings');
-        expect(container.read(currentRouteProvider), '/settings');
+        container.read(currentRouteProvider.notifier).setRoute('/profile');
+        expect(container.read(currentRouteProvider), '/profile');
       });
 
       test('should handle routes with query parameters', () {
         // Arrange
-        const routeWithQuery = '/podcast/feed?page=2&sort=newest';
+        const routeWithQuery = '/feed?page=2&sort=newest';
 
         // Act
         container.read(currentRouteProvider.notifier).setRoute(routeWithQuery);
@@ -61,7 +61,7 @@ void main() {
 
       test('should handle deep link routes', () {
         // Arrange
-        const deepLinkRoute = '/podcast/123/episode/456/player?position=120';
+        const deepLinkRoute = '/podcast/episodes/123/456?position=120';
 
         // Act
         container.read(currentRouteProvider.notifier).setRoute(deepLinkRoute);
@@ -71,113 +71,114 @@ void main() {
       });
     });
 
-    group('isOnPlayerPageProvider', () {
-      test('should return false when on home route', () {
+    group('isOnEpisodeDetailPageProvider', () {
+      test('should return false when on root route', () {
         // Arrange
         container.read(currentRouteProvider.notifier).setRoute('/');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, false);
+        expect(isOnDetail, false);
       });
 
-      test('should return true when on podcast player page route', () {
+      test('should return true when on podcast episode detail page', () {
         // Arrange
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/1/player');
+        container.read(currentRouteProvider.notifier).setRoute('/podcast/episodes/1/42');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, true);
+        expect(isOnDetail, true);
       });
 
-      test('should return true for different subscription IDs', () {
-        // Test with subscription ID 1
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/1/player');
-        expect(container.read(isOnPlayerPageProvider), true);
-
-        // Test with subscription ID 999
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/999/player');
-        expect(container.read(isOnPlayerPageProvider), true);
-      });
-
-      test('should return false when on podcast feed page', () {
+      test('should return true for direct episode detail route', () {
         // Arrange
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/feed');
+        container.read(currentRouteProvider.notifier).setRoute('/podcast/episode/detail/42');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, false);
+        expect(isOnDetail, true);
       });
 
-      test('should return false when on podcast subscriptions page', () {
+      test('should return false when on feed page', () {
         // Arrange
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/subscriptions');
+        container.read(currentRouteProvider.notifier).setRoute('/feed');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, false);
+        expect(isOnDetail, false);
       });
 
-      test('should return false when on podcast episode detail page', () {
+      test('should return false when on discover page', () {
         // Arrange
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/episode/123');
+        container.read(currentRouteProvider.notifier).setRoute('/discover');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, false);
+        expect(isOnDetail, false);
       });
 
-      test('should return true for player page with additional path segments', () {
+      test('should return false when on profile page', () {
         // Arrange
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/5/player?autoplay=true');
+        container.read(currentRouteProvider.notifier).setRoute('/profile');
 
         // Act
-        final isOnPlayerPage = container.read(isOnPlayerPageProvider);
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
 
         // Assert
-        expect(isOnPlayerPage, true);
+        expect(isOnDetail, false);
+      });
+
+      test('should return true for episode detail with query params', () {
+        // Arrange
+        container.read(currentRouteProvider.notifier).setRoute('/podcast/episodes/5/10?autoplay=true');
+
+        // Act
+        final isOnDetail = container.read(isOnEpisodeDetailPageProvider);
+
+        // Assert
+        expect(isOnDetail, true);
       });
 
       test('should reactively update when route changes', () {
         // Start on home page
         container.read(currentRouteProvider.notifier).setRoute('/');
-        expect(container.read(isOnPlayerPageProvider), false);
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
-        // Navigate to player page
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/42/player');
-        expect(container.read(isOnPlayerPageProvider), true);
+        // Navigate to episode detail
+        container.read(currentRouteProvider.notifier).setRoute('/podcast/episodes/42/100');
+        expect(container.read(isOnEpisodeDetailPageProvider), true);
 
         // Navigate back to feed
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/feed');
-        expect(container.read(isOnPlayerPageProvider), false);
+        container.read(currentRouteProvider.notifier).setRoute('/feed');
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
-        // Navigate to different player page
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/100/player');
-        expect(container.read(isOnPlayerPageProvider), true);
+        // Navigate to direct detail route
+        container.read(currentRouteProvider.notifier).setRoute('/podcast/episode/detail/100');
+        expect(container.read(isOnEpisodeDetailPageProvider), true);
       });
 
       test('should handle edge case routes correctly', () {
-        // Edge case: route contains player but not in the right pattern
-        container.read(currentRouteProvider.notifier).setRoute('/player/podcast');
-        expect(container.read(isOnPlayerPageProvider), false);
-
-        // Edge case: route contains podcast but not player
-        container.read(currentRouteProvider.notifier).setRoute('/podcast/settings/player');
-        expect(container.read(isOnPlayerPageProvider), true);
+        // Edge case: route contains 'episodes' but not in path context
+        container.read(currentRouteProvider.notifier).setRoute('/episodes/podcast');
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
         // Edge case: empty route
         container.read(currentRouteProvider.notifier).setRoute('');
-        expect(container.read(isOnPlayerPageProvider), false);
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
+
+        // Edge case: just /podcast prefix
+        container.read(currentRouteProvider.notifier).setRoute('/podcast');
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
       });
     });
 
@@ -186,30 +187,30 @@ void main() {
         // Simulate navigation flow
         final notifier = container.read(currentRouteProvider.notifier);
 
-        // 1. Start at home
+        // 1. Start at root
         notifier.setRoute('/');
         expect(container.read(currentRouteProvider), '/');
-        expect(container.read(isOnPlayerPageProvider), false);
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
         // 2. Navigate to feed
-        notifier.setRoute('/podcast/feed');
-        expect(container.read(currentRouteProvider), '/podcast/feed');
-        expect(container.read(isOnPlayerPageProvider), false);
+        notifier.setRoute('/feed');
+        expect(container.read(currentRouteProvider), '/feed');
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
-        // 3. Navigate to player
-        notifier.setRoute('/podcast/10/player');
-        expect(container.read(currentRouteProvider), '/podcast/10/player');
-        expect(container.read(isOnPlayerPageProvider), true);
+        // 3. Navigate to episode detail
+        notifier.setRoute('/podcast/episodes/10/20');
+        expect(container.read(currentRouteProvider), '/podcast/episodes/10/20');
+        expect(container.read(isOnEpisodeDetailPageProvider), true);
 
-        // 4. Navigate to episode detail
-        notifier.setRoute('/podcast/episode/20');
-        expect(container.read(currentRouteProvider), '/podcast/episode/20');
-        expect(container.read(isOnPlayerPageProvider), false);
+        // 4. Navigate to discover
+        notifier.setRoute('/discover');
+        expect(container.read(currentRouteProvider), '/discover');
+        expect(container.read(isOnEpisodeDetailPageProvider), false);
 
-        // 5. Navigate back to player
-        notifier.setRoute('/podcast/10/player');
-        expect(container.read(currentRouteProvider), '/podcast/10/player');
-        expect(container.read(isOnPlayerPageProvider), true);
+        // 5. Navigate to direct episode detail
+        notifier.setRoute('/podcast/episode/detail/20');
+        expect(container.read(currentRouteProvider), '/podcast/episode/detail/20');
+        expect(container.read(isOnEpisodeDetailPageProvider), true);
       });
 
       test('should handle rapid route changes', () {

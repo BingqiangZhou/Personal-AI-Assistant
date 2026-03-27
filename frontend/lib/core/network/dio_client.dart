@@ -222,6 +222,9 @@ class DioClient {
   // Retry tracking for in-flight requests
   final Map<String, int> _retryAttempts = {};
 
+  // Request deduplication: maps GET request keys to their in-flight futures (NW-M3)
+  final Map<String, Completer<Response>> _inFlightRequests = {};
+
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
   static const String _etagInvalidateAfterWriteKey =
@@ -498,7 +501,18 @@ class DioClient {
       final nextAttempt = currentAttempt + 1;
       _retryAttempts[retryKey] = nextAttempt;
 
-      final delay = _retryOptions.getDelay(currentAttempt);
+      // Respect Retry-After header for 429 responses (NW-M4)
+      Duration delay = _retryOptions.getDelay(currentAttempt);
+      final statusCode = error.response?.statusCode;
+      if (statusCode == 429) {
+        final retryAfterHeader = error.response?.headers.value('retry-after');
+        if (retryAfterHeader != null) {
+          final retryAfterSeconds = int.tryParse(retryAfterHeader) ?? 0;
+          if (retryAfterSeconds > 0) {
+            delay = Duration(seconds: retryAfterSeconds);
+          }
+        }
+      }
       logger.AppLogger.debug(
         '[RETRY] Attempt $nextAttempt/${_retryOptions.maxRetries} '
         'after ${delay.inMilliseconds}ms',
@@ -776,6 +790,41 @@ class DioClient {
   }
 
   // HTTP methods
+
+  /// GET request with automatic deduplication of concurrent identical requests.
+  ///
+  /// If an identical GET request is already in-flight, this method will wait
+  /// for its response instead of sending a duplicate request. (NW-M3)
+  Future<Response> getDeduplicated(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    final dedupKey = 'GET:$path:$queryParameters';
+
+    // If an identical request is already in-flight, reuse its result
+    if (_inFlightRequests.containsKey(dedupKey)) {
+      return _inFlightRequests[dedupKey]!.future;
+    }
+
+    final completer = Completer<Response>();
+    _inFlightRequests[dedupKey] = completer;
+
+    try {
+      final response = await _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      completer.complete(response);
+      return response;
+    } catch (e) {
+      completer.completeError(e);
+      rethrow;
+    } finally {
+      _inFlightRequests.remove(dedupKey);
+    }
+  }
 
   Future<Response> get(
     String path, {

@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../providers/core_providers.dart';
 import '../utils/app_logger.dart' as logger;
+import 'connectivity_provider.dart';
 
 part 'offline_queue_service.g.dart';
 
@@ -102,9 +105,37 @@ class OfflineQueueConfig {
 /// Service for managing offline request queue
 @riverpod
 OfflineQueueService offlineQueueService(Ref ref) {
-  return OfflineQueueService(
+  final service = OfflineQueueService(
     config: const OfflineQueueConfig(),
   );
+
+  // Load persisted queue on startup (NW-M6)
+  service.loadPersistedQueue();
+
+  // Wire offline queue to connectivity changes (NW-H5)
+  ref.listen(connectivityProvider, (prev, next) {
+    if (prev != null && !prev.isOnline && next.isOnline && service.queueLength > 0) {
+      logger.AppLogger.info(
+        'Back online with ${service.queueLength} queued requests - processing',
+        tag: 'OfflineQueue',
+      );
+      final dioClient = ref.read(dioClientProvider);
+      service.processQueue((request) async {
+        await dioClient.dio.request(
+          request.endpoint,
+          data: request.body,
+          options: Options(
+            method: request.method,
+            headers: request.headers,
+          ),
+        );
+      });
+    }
+  });
+
+  ref.onDispose(service.dispose);
+
+  return service;
 }
 
 class OfflineQueueService {

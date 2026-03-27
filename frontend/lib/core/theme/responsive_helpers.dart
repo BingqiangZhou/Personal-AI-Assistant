@@ -10,7 +10,7 @@ class ResponsiveHelpers {
 
   /// 响应式边距助手
   static EdgeInsetsGeometry getResponsivePadding(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < AppBreakpoints.medium) {
       return const EdgeInsets.all(AppSpacing.lg); // 移动端
@@ -25,7 +25,7 @@ class ResponsiveHelpers {
   static EdgeInsetsGeometry getResponsiveHorizontalPadding(
     BuildContext context,
   ) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < AppBreakpoints.medium) {
       return const EdgeInsets.symmetric(horizontal: AppSpacing.lg); // 移动端
@@ -38,7 +38,7 @@ class ResponsiveHelpers {
 
   /// 响应式垂直边距助手
   static EdgeInsetsGeometry getResponsiveVerticalPadding(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < AppBreakpoints.medium) {
       return const EdgeInsets.symmetric(vertical: AppSpacing.sm); // 移动端
@@ -51,7 +51,7 @@ class ResponsiveHelpers {
 
   /// 获取响应式最大宽度
   static double getResponsiveMaxWidth(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < AppBreakpoints.medium) {
       return screenWidth; // 移动端全宽

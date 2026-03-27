@@ -191,7 +191,7 @@ class PodcastNavigation {
   static void popToList(BuildContext context) {
     final routingContext = _resolveRoutingContext(context);
     if (routingContext != null) {
-      GoRouter.of(routingContext).go('/podcast');
+      GoRouter.of(routingContext).go('/discover');
     }
   }
 }

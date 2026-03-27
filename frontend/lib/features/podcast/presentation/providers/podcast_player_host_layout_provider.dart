@@ -179,11 +179,7 @@ PodcastPlayerHostPageOverride? _appliedOverrideForRoute(
     case PodcastPlayerHostRouteOwner.any:
       return override;
     case PodcastPlayerHostRouteOwner.homeShell:
-      if (route == '/' ||
-          route == '/home' ||
-          route.startsWith('/home?') ||
-          route == '/profile' ||
-          route.startsWith('/profile?')) {
+      if (isHomeShellRoute(route)) {
         return override;
       }
       return null;
@@ -197,8 +193,10 @@ PodcastPlayerHostPageOverride? _appliedOverrideForRoute(
 
 bool isHomeShellRoute(String route) {
   return route == '/' ||
-      route == '/home' ||
-      route.startsWith('/home?') ||
+      route == '/discover' ||
+      route.startsWith('/discover?') ||
+      route == '/feed' ||
+      route.startsWith('/feed?') ||
       route == '/profile' ||
       route.startsWith('/profile?');
 }

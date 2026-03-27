@@ -125,7 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final isAuthenticated = next.isAuthenticated;
 
       if (isAuthenticated && !wasAuthenticated) {
-        context.go('/home');
+        context.go('/feed');
       } else if (next.error != null && next.error != previous?.error) {
         // Only show snackbar for new errors
         if (mounted) {

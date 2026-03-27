@@ -86,7 +86,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final theme = Theme.of(context);
-    final compactProfileLayout = MediaQuery.of(context).size.height < 700;
+    final compactProfileLayout = MediaQuery.sizeOf(context).height < 700;
 
     return ProfileShell(
       title: l10n.profile,

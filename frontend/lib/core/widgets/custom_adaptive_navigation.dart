@@ -561,7 +561,7 @@ class ResponsiveContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
     final tokens =
         Theme.of(context).extension<AppThemeExtension>() ??
         (Theme.of(context).brightness == Brightness.dark

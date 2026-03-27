@@ -93,7 +93,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       final isAuthenticated = next.isAuthenticated;
 
       if (isAuthenticated && !wasAuthenticated) {
-        context.go('/home');
+        context.go('/feed');
       } else if (next.error != null &&
           next.error != previous?.error &&
           next.fieldErrors == null) {

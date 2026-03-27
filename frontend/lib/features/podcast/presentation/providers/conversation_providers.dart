@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_conversation_model.dart';
@@ -64,11 +66,14 @@ class ConversationState {
   bool get isEmpty => messages.isEmpty;
   bool get isReady => !isLoading && !isSending;
 
+  // Sentinel to distinguish "not provided" from explicit null
+  static const _unsetErrorMessage = Object();
+
   ConversationState copyWith({
     List<PodcastConversationMessage>? messages,
     bool? isLoading,
     bool? isSending,
-    String? errorMessage,
+    Object? errorMessage = _unsetErrorMessage,
     int? currentSendingTurn,
     int? sessionId,
   }) {
@@ -76,7 +81,9 @@ class ConversationState {
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       isSending: isSending ?? this.isSending,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _unsetErrorMessage)
+          ? this.errorMessage
+          : errorMessage as String?,
       currentSendingTurn: currentSendingTurn ?? this.currentSendingTurn,
       sessionId: sessionId ?? this.sessionId,
     );
@@ -167,6 +174,7 @@ class SessionListNotifier extends AsyncNotifier<List<ConversationSession>> {
 /// Notifier for managing conversation state (messages)
 class ConversationNotifier extends Notifier<ConversationState> {
   final int episodeId;
+  Completer<void>? _loadCompleter;
 
   ConversationNotifier(this.episodeId);
 
@@ -186,6 +194,12 @@ class ConversationNotifier extends Notifier<ConversationState> {
 
   /// Load conversation history from backend
   Future<void> _loadHistory(int? sessionId) async {
+    // Skip if a load is already in flight for this session
+    if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+      return;
+    }
+    _loadCompleter = Completer<void>();
+
     try {
       final repository = ref.read(podcastRepositoryProvider);
       final response = await repository.getConversationHistory(
@@ -205,6 +219,8 @@ class ConversationNotifier extends Notifier<ConversationState> {
         errorMessage: e.toString(),
         sessionId: sessionId,
       );
+    } finally {
+      _loadCompleter?.complete();
     }
   }
 

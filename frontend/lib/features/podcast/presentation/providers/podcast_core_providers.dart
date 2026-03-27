@@ -5,11 +5,11 @@ import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
 
 final podcastApiServiceProvider = Provider<PodcastApiService>((ref) {
-  final dio = ref.watch(dioClientProvider).dio;
+  final dio = ref.read(dioClientProvider).dio;
   return PodcastApiService(dio);
 });
 
 final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
-  final apiService = ref.watch(podcastApiServiceProvider);
+  final apiService = ref.read(podcastApiServiceProvider);
   return PodcastRepository(apiService);
 });

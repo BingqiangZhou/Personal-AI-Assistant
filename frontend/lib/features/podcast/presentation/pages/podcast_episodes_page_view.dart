@@ -40,7 +40,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
               onPressed: _isReparsing ? null : _reparseSubscription,
               tooltip: l10n.podcast_reparse_tooltip,
             ),
-            if (MediaQuery.of(context).size.width < 700) ...[
+            if (MediaQuery.sizeOf(context).width < 700) ...[
               IconButton(
                 icon: const Icon(Icons.filter_list),
                 onPressed: _showFilterDialog,

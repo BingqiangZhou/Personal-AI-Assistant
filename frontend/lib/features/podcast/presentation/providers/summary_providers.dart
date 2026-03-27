@@ -19,7 +19,7 @@ final summaryProvider = NotifierProvider.autoDispose
 final availableModelsProvider = FutureProvider<List<SummaryModelInfo>>((
   ref,
 ) async {
-  final repository = ref.watch(podcastRepositoryProvider);
+  final repository = ref.read(podcastRepositoryProvider);
   try {
     return await repository.getSummaryModels();
   } catch (e) {

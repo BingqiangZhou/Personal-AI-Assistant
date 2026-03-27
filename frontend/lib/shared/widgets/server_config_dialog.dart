@@ -101,7 +101,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < AppBreakpoints.medium;
     final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
     return AlertDialog(

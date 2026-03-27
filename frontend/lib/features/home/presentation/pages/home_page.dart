@@ -2,37 +2,34 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/providers/route_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../podcast/presentation/pages/podcast_feed_page.dart';
-import '../../../podcast/presentation/pages/podcast_list_page.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
 
-class HomePage extends ConsumerStatefulWidget {
-  final Widget? child;
-  final int? initialTab;
+/// Shell widget for the main tab navigation using StatefulShellRoute.
+///
+/// Replaces the old `HomePage` which used local `IndexedStack` + `setState`.
+/// GoRouter's `StatefulNavigationShell` now manages branch state persistence.
+class HomeShellWidget extends ConsumerStatefulWidget {
+  final StatefulNavigationShell navigationShell;
 
-  const HomePage({super.key, this.child, this.initialTab});
+  const HomeShellWidget({super.key, required this.navigationShell});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
+  ConsumerState<HomeShellWidget> createState() => _HomeShellWidgetState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> with RouteAware {
-  static const int _tabCount = 3;
-
-  late int _currentIndex;
+class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
+    with RouteAware {
   bool _hasAttemptedPlaybackRestore = false;
   bool _desktopNavExpanded = true;
   bool _hasPrefetchedLibraryFeed = false;
-  final Set<int> _visitedTabs = <int>{};
   PodcastPlayerHostPageOverride? _lastPlayerHostOverride;
   late final PodcastPlayerHostPageOverrideNotifier _playerHostOverrideNotifier;
   ModalRoute<dynamic>? _subscribedRoute;
@@ -84,8 +81,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     _playerHostOverrideNotifier = ref.read(
       podcastPlayerHostPageOverrideProvider.notifier,
     );
-    _currentIndex = (widget.initialTab ?? 1).clamp(0, _tabCount - 1);
-    _visitedTabs.add(_currentIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -101,7 +96,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
     _hasAttemptedPlaybackRestore = true;
     unawaited(
-      ref.read(audioPlayerProvider.notifier).restoreLastPlayedEpisodeIfNeeded(),
+      ref
+          .read(audioPlayerProvider.notifier)
+          .restoreLastPlayedEpisodeIfNeeded(),
     );
   }
 
@@ -172,11 +169,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    final child = widget.child;
-    if (child != null) {
-      return Scaffold(body: child);
-    }
-
     final currentRoute = ref.watch(currentRouteProvider);
     final isHomeShellPlayerRoute =
         currentRoute.isNotEmpty && isHomeShellRoute(currentRoute);
@@ -188,7 +180,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     return CustomAdaptiveNavigation(
       key: const ValueKey('home_custom_adaptive_navigation'),
       destinations: _buildDestinations(context),
-      selectedIndex: _currentIndex,
+      selectedIndex: widget.navigationShell.currentIndex,
       onDestinationSelected: _handleNavigation,
       appBar: null,
       floatingActionButton: _buildFloatingActionButton(),
@@ -201,7 +193,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       body: PodcastPlayerLayoutFrame(
         includeMiniPlayer: true,
         applyMiniPlayerSafeArea: false,
-        child: _buildTabContent(),
+        child: widget.navigationShell,
       ),
     );
   }
@@ -211,72 +203,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   }
 
   void _handleNavigation(int index) {
-    if (_currentIndex != index) {
-      _visitedTabs.add(index);
-    }
-
-    if (_currentIndex != index) {
-      setState(() {
-        _currentIndex = index;
-      });
-    }
-  }
-
-  Widget _buildTabContent() {
-    return _buildIndexedTabContent();
-  }
-
-  Widget _buildIndexedTabContent() {
-    return IndexedStack(
-      index: _currentIndex,
-      children: List<Widget>.generate(_tabCount, (index) {
-        if (!_visitedTabs.contains(index)) {
-          return const SizedBox.shrink();
-        }
-        return _buildPageContent(index);
-      }),
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
-  }
-
-  Widget _buildPageContent(int index) {
-    switch (index) {
-      case 0:
-        return const PodcastListPage();
-      case 1:
-        return const PodcastFeedPage();
-      case 2:
-        return const ProfilePage();
-      default:
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                context.l10n.page_not_found,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                context.l10n.page_not_found_subtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-    }
   }
 }

@@ -11,11 +11,13 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/podcast/presentation/pages/podcast_list_page.dart';
+import '../../features/podcast/presentation/pages/podcast_feed_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/pages/podcast_daily_report_page.dart';
 import '../../features/podcast/presentation/pages/podcast_highlights_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
 import '../../features/profile/presentation/pages/profile_cache_management_page.dart';
 import '../../features/profile/presentation/pages/profile_subscriptions_page.dart';
@@ -133,14 +135,12 @@ CustomTransitionPage<T> _buildModalPage<T>({
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: appNavigatorKey,
-    initialLocation: '/splash', // Will be redirected by redirect logic
+    initialLocation: '/splash',
     debugLogDiagnostics: kDebugMode,
     observers: [appRouteObserver],
-    refreshListenable: AuthStateListenable(
-      ref,
-    ), // Trigger refresh on auth state change
+    refreshListenable: AuthStateListenable(ref),
     routes: [
-      // Splash (minimal, will auto-redirect via redirect logic)
+      // Splash
       GoRoute(
         path: '/splash',
         name: 'splash',
@@ -196,17 +196,93 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Main app with bottom navigation
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        pageBuilder: (context, state) => _buildPageWithTransition(
-          state: state,
-          child: const HomePage(),
-        ),
+      // Main app shell with persistent tab navigation
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return HomeShellWidget(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Discover (Podcast list)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/discover',
+                name: 'discover',
+                pageBuilder: (context, state) => _buildPageWithTransition(
+                  state: state,
+                  child: const PodcastListPage(),
+                ),
+              ),
+            ],
+          ),
+          // Branch 1: Feed (default)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/feed',
+                name: 'feed',
+                pageBuilder: (context, state) => _buildPageWithTransition(
+                  state: state,
+                  child: const PodcastFeedPage(),
+                ),
+              ),
+            ],
+          ),
+          // Branch 2: Profile
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                name: 'profile',
+                pageBuilder: (context, state) => _buildPageWithTransition(
+                  state: state,
+                  child: const ProfilePage(),
+                ),
+                routes: [
+                  // Profile sub-routes push over the shell
+                  GoRoute(
+                    path: 'cache',
+                    name: 'profile-cache',
+                    parentNavigatorKey: appNavigatorKey,
+                    pageBuilder: (context, state) => _buildModalPage(
+                      state: state,
+                      child: const _PlayerAwareRouteFrame(
+                        child: ProfileCacheManagementPage(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'history',
+                    name: 'profile-history',
+                    parentNavigatorKey: appNavigatorKey,
+                    pageBuilder: (context, state) => _buildModalPage(
+                      state: state,
+                      child: const _PlayerAwareRouteFrame(
+                        child: ProfileHistoryPage(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'subscriptions',
+                    name: 'profile-subscriptions',
+                    parentNavigatorKey: appNavigatorKey,
+                    pageBuilder: (context, state) => _buildModalPage(
+                      state: state,
+                      child: const _PlayerAwareRouteFrame(
+                        child: ProfileSubscriptionsPage(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
 
-      // Daily report route (no bottom nav)
+      // Pushed routes (cover the shell, no bottom nav)
+
+      // Daily report
       GoRoute(
         path: '/reports/daily',
         name: 'dailyReport',
@@ -225,7 +301,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Highlights route (no bottom nav)
+      // Highlights
       GoRoute(
         path: '/highlights',
         name: 'highlights',
@@ -244,135 +320,88 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Podcast routes (no bottom nav)
+      // Podcast routes (cover the shell)
       GoRoute(
         path: '/podcast',
         name: 'podcast',
-        pageBuilder: (context, state) => _buildPageWithTransition(
-          state: state,
-          child: const _PlayerAwareRouteFrame(child: PodcastListPage()),
-        ),
-        routes: [
-          // 1. 订阅的单集列表: /podcast/episodes/1
-          GoRoute(
-            path: 'episodes/:subscriptionId',
-            name: 'podcastEpisodes',
-            pageBuilder: (context, state) {
-              final args = PodcastEpisodesPageArgs.extractFromState(state);
-              if (args == null) {
-                final l10n = context.l10n;
-                return _buildPageWithTransition(
-                  state: state,
-                  child: Scaffold(
-                    body: Center(child: Text(l10n.invalid_navigation_arguments)),
-                  ),
-                );
-              }
-              return _buildPageWithTransition(
-                state: state,
-                child: _PlayerAwareRouteFrame(
-                  child: PodcastEpisodesPage(
-                    subscriptionId: args.subscriptionId,
-                    podcastTitle: args.podcastTitle,
-                    subscription: args.subscription,
-                  ),
-                ),
-              );
-            },
-          ),
-          // 2. 单集详情: /podcast/episodes/1/2
-          GoRoute(
-            path: 'episodes/:subscriptionId/:episodeId',
-            name: 'episodeDetail',
-            pageBuilder: (context, state) {
-              final args = PodcastEpisodeDetailPageArgs.extractFromState(state);
-              if (args == null) {
-                final l10n = context.l10n;
-                return _buildPageWithTransition(
-                  state: state,
-                  child: Scaffold(
-                    body: Center(child: Text(l10n.invalid_navigation_arguments)),
-                  ),
-                );
-              }
-              return _buildPageWithTransition(
-                state: state,
-                child: _PlayerAwareRouteFrame(
-                  child: PodcastEpisodeDetailPage(episodeId: args.episodeId),
-                ),
-              );
-            },
-          ),
-          // Direct episode detail route (for backward compatibility)
-          GoRoute(
-            path: 'episode/detail/:episodeId',
-            name: 'episodeDetailDirect',
-            pageBuilder: (context, state) {
-              final episodeId = int.tryParse(
-                state.pathParameters['episodeId'] ?? '',
-              );
-              if (episodeId == null) {
-                final l10n = context.l10n;
-                return _buildPageWithTransition(
-                  state: state,
-                  child: Scaffold(
-                    body: Center(child: Text(l10n.invalid_episode_id)),
-                  ),
-                );
-              }
-              return _buildPageWithTransition(
-                state: state,
-                child: _PlayerAwareRouteFrame(
-                  child: PodcastEpisodeDetailPage(episodeId: episodeId),
-                ),
-              );
-            },
-          ),
-        ],
+        redirect: (context, state) => '/discover',
       ),
-
-      // Profile routes
       GoRoute(
-        path: '/profile',
-        name: 'profile',
-        pageBuilder: (context, state) => _buildPageWithTransition(
-          state: state,
-          child: const HomePage(initialTab: 2),
-        ),
-        routes: [
-          GoRoute(
-            path: 'cache',
-            name: 'profile-cache',
-            pageBuilder: (context, state) => _buildModalPage(
+        path: '/podcast/episodes/:subscriptionId',
+        name: 'podcastEpisodes',
+        pageBuilder: (context, state) {
+          final args = PodcastEpisodesPageArgs.extractFromState(state);
+          if (args == null) {
+            final l10n = context.l10n;
+            return _buildPageWithTransition(
               state: state,
-              child: const _PlayerAwareRouteFrame(
-                child: ProfileCacheManagementPage(),
+              child: Scaffold(
+                body: Center(child: Text(l10n.invalid_navigation_arguments)),
+              ),
+            );
+          }
+          return _buildPageWithTransition(
+            state: state,
+            child: _PlayerAwareRouteFrame(
+              child: PodcastEpisodesPage(
+                subscriptionId: args.subscriptionId,
+                podcastTitle: args.podcastTitle,
+                subscription: args.subscription,
               ),
             ),
-          ),
-          GoRoute(
-            path: 'history',
-            name: 'profile-history',
-            pageBuilder: (context, state) => _buildModalPage(
+          );
+        },
+      ),
+      GoRoute(
+        path: '/podcast/episodes/:subscriptionId/:episodeId',
+        name: 'episodeDetail',
+        pageBuilder: (context, state) {
+          final args = PodcastEpisodeDetailPageArgs.extractFromState(state);
+          if (args == null) {
+            final l10n = context.l10n;
+            return _buildPageWithTransition(
               state: state,
-              child: const _PlayerAwareRouteFrame(child: ProfileHistoryPage()),
+              child: Scaffold(
+                body: Center(child: Text(l10n.invalid_navigation_arguments)),
+              ),
+            );
+          }
+          return _buildPageWithTransition(
+            state: state,
+            child: _PlayerAwareRouteFrame(
+              child: PodcastEpisodeDetailPage(episodeId: args.episodeId),
             ),
-          ),
-          GoRoute(
-            path: 'subscriptions',
-            name: 'profile-subscriptions',
-            pageBuilder: (context, state) => _buildModalPage(
+          );
+        },
+      ),
+      GoRoute(
+        path: '/podcast/episode/detail/:episodeId',
+        name: 'episodeDetailDirect',
+        pageBuilder: (context, state) {
+          final episodeId = int.tryParse(
+            state.pathParameters['episodeId'] ?? '',
+          );
+          if (episodeId == null) {
+            final l10n = context.l10n;
+            return _buildPageWithTransition(
               state: state,
-              child: const _PlayerAwareRouteFrame(child: ProfileSubscriptionsPage()),
+              child: Scaffold(
+                body: Center(child: Text(l10n.invalid_episode_id)),
+              ),
+            );
+          }
+          return _buildPageWithTransition(
+            state: state,
+            child: _PlayerAwareRouteFrame(
+              child: PodcastEpisodeDetailPage(episodeId: episodeId),
             ),
-          ),
-        ],
+          );
+        },
       ),
     ],
 
     // Redirect logic
     redirect: (context, state) {
-      // Read latest auth state every time
       final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isLoggingIn = state.matchedLocation == '/login';
@@ -385,6 +414,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         '/reset-password',
       );
 
+      // Redirect legacy /home to /feed
+      if (state.matchedLocation == '/home') {
+        return '/feed';
+      }
+
       // Allow Splash
       if (isSplash) return null;
 
@@ -392,20 +426,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isForgotPassword || isResetPassword) return null;
 
       if (!isAuthenticated) {
-        // Not authenticated
         if (isLoggingIn || isRegistering) {
-          // Allowed to be on login/register pages
           return null;
         }
-        // Redirect to login
         return '/login';
       } else {
-        // Authenticated
         if (isLoggingIn || isRegistering) {
-          // If trying to login/register while authenticated, go home
-          return '/home';
+          return '/feed';
         }
-        // Allowed to proceed
         return null;
       }
     },
@@ -440,7 +468,7 @@ class ErrorPage extends StatelessWidget {
             title: l10n.unknown_error,
             subtitle: error?.toString() ?? l10n.unknown_error,
             action: FilledButton(
-              onPressed: () => context.go('/home'),
+              onPressed: () => context.go('/feed'),
               child: Text(l10n.home),
             ),
           ),

@@ -96,6 +96,9 @@ base class DetailedProviderObserver extends ProviderObserver {
   /// Map of provider names to their rebuild history.
   final Map<String, List<DateTime>> _rebuildHistory = {};
 
+  /// Maximum number of provider keys to track before evicting stale entries.
+  static const int _maxProviderKeys = 256;
+
   /// Time window for tracking rebuild frequency.
   final Duration trackingWindow;
 
@@ -125,7 +128,11 @@ base class DetailedProviderObserver extends ProviderObserver {
     final providerName = context.provider.name ?? 'unknown';
     final now = DateTime.now();
 
-    // Add to rebuild history
+    // Add to rebuild history; evict stale keys if map is too large
+    if (!_rebuildHistory.containsKey(providerName) &&
+        _rebuildHistory.length >= _maxProviderKeys) {
+      _evictStaleEntries(now);
+    }
     _rebuildHistory.putIfAbsent(providerName, () => []).add(now);
 
     // Get history list (guaranteed to exist after putIfAbsent)
@@ -154,6 +161,25 @@ base class DetailedProviderObserver extends ProviderObserver {
     if (!enabled) return;
     final providerName = context.provider.name ?? 'unknown';
     _rebuildHistory.remove(providerName);
+  }
+
+  /// Evict stale entries when the map exceeds the maximum key count.
+  void _evictStaleEntries(DateTime now) {
+    // Remove entries whose history is entirely outside the tracking window
+    _rebuildHistory.removeWhere((name, history) {
+      history.removeWhere((time) => now.difference(time) > trackingWindow);
+      return history.isEmpty;
+    });
+    // If still over limit, remove entries with the fewest rebuilds
+    if (_rebuildHistory.length >= _maxProviderKeys) {
+      final sorted = _rebuildHistory.keys.toList()
+        ..sort((a, b) =>
+            (_rebuildHistory[a]?.length ?? 0).compareTo(
+              _rebuildHistory[b]?.length ?? 0));
+      while (_rebuildHistory.length >= _maxProviderKeys && sorted.isNotEmpty) {
+        _rebuildHistory.remove(sorted.removeAt(0));
+      }
+    }
   }
 
   /// Get the rebuild history for a specific provider.

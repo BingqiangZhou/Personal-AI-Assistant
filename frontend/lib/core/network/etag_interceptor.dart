@@ -5,15 +5,39 @@ import 'package:dio/dio.dart';
 
 import '../utils/app_logger.dart' as logger;
 
-/// Cache entry for ETag and response data
+/// Cache entry for ETag and response data.
+/// Stores only the response data and headers (not the full Response object)
+/// to reduce memory footprint.
 class _ETagCacheEntry {
   final String etag;
-  final Response response;
+  final dynamic data;
+  final Headers headers;
+  final int? statusCode;
+  final String? statusMessage;
+  final RequestOptions requestOptions;
   final DateTime timestamp;
   final Duration? maxAge;
 
-  _ETagCacheEntry(this.etag, this.response, {this.maxAge})
-    : timestamp = DateTime.now();
+  _ETagCacheEntry({
+    required this.etag,
+    required this.data,
+    required this.headers,
+    required this.requestOptions,
+    this.statusCode,
+    this.statusMessage,
+    this.maxAge,
+  }) : timestamp = DateTime.now();
+
+  /// Reconstruct a Response from cached data.
+  Response toResponse() {
+    return Response(
+      data: data,
+      headers: headers,
+      requestOptions: requestOptions,
+      statusCode: statusCode,
+      statusMessage: statusMessage,
+    );
+  }
 }
 
 /// ETag Interceptor with integrated cache for Dio.
@@ -225,7 +249,7 @@ class ETagInterceptor extends Interceptor {
 
   String? _getETag(String key) => _getValidEntry(key)?.etag;
 
-  Response? _getCachedResponse(String key) => _getValidEntry(key)?.response;
+  Response? _getCachedResponse(String key) => _getValidEntry(key)?.toResponse();
 
   Response? _getFreshCachedResponse(String key) {
     final entry = _getValidEntry(key);
@@ -244,7 +268,7 @@ class ETagInterceptor extends Interceptor {
       return null;
     }
 
-    return entry.response;
+    return entry.toResponse();
   }
 
   void _setETag(
@@ -255,7 +279,15 @@ class ETagInterceptor extends Interceptor {
   }) {
     _evictExpired();
     _cache.remove(key);
-    _cache[key] = _ETagCacheEntry(etag, response, maxAge: maxAge);
+    _cache[key] = _ETagCacheEntry(
+      etag: etag,
+      data: response.data,
+      headers: response.headers,
+      requestOptions: response.requestOptions,
+      statusCode: response.statusCode,
+      statusMessage: response.statusMessage,
+      maxAge: maxAge,
+    );
     while (_cache.length > _maxEntries) {
       _cache.remove(_cache.keys.first);
     }

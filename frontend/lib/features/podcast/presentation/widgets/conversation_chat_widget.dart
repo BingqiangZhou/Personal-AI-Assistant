@@ -412,7 +412,7 @@ class ConversationChatWidgetState
     );
 
     return Drawer(
-      width: MediaQuery.of(context).size.width * 0.75,
+      width: MediaQuery.sizeOf(context).width * 0.75,
       child: Column(
         children: [
           DrawerHeader(
@@ -969,7 +969,7 @@ class ConversationChatWidgetState
             : null,
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75,
+            maxWidth: MediaQuery.sizeOf(context).width * 0.75,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(

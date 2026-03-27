@@ -72,10 +72,16 @@ class AppMediaCacheManager extends CacheManager {
 }
 
 class AppCacheServiceImpl implements AppCacheService {
+  static bool _initialized = false;
+
   /// Initialize the cache service with optimized memory settings.
   ///
-  /// Should be called once at app startup.
+  /// Should be called once at app startup. Safe to call multiple times;
+  /// subsequent calls are no-ops.
   static void initialize() {
+    if (_initialized) return;
+    _initialized = true;
+
     final imageCache = PaintingBinding.instance.imageCache;
 
     // Configure memory cache size

@@ -148,7 +148,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
 
   Widget _buildHeaderPanel(BuildContext context) {
     final isMobile =
-        MediaQuery.of(context).size.width < AppBreakpoints.medium;
+        MediaQuery.sizeOf(context).width < AppBreakpoints.medium;
     final l10n = context.l10n;
 
     return CompactHeaderPanel(
