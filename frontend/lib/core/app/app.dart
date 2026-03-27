@@ -19,7 +19,7 @@ import '../../features/settings/presentation/providers/app_update_provider.dart'
 import '../../features/settings/presentation/widgets/update_dialog.dart';
 
 import '../../main.dart' as main_app;
-import '../auth/auth_event.dart';
+import '../../features/auth/data/events/auth_event.dart';
 
 /// Splash screen widget that matches the Mindriver brand style
 class _SplashScreenWidget extends StatelessWidget {

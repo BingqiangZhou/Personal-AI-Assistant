@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/app/config/app_config.dart' as config;
-import '../../core/auth/auth_event.dart';
+import '../../features/auth/data/events/auth_event.dart';
 import '../utils/app_logger.dart' as logger;
 
 /// Reason why token refresh failed

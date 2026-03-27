@@ -8,7 +8,7 @@ import '../../domain/models/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
-import '../../../../core/auth/auth_event.dart';
+import '../../data/events/auth_event.dart';
 import '../../../../core/network/token_refresh_service.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/local_storage_service.dart';
