@@ -118,6 +118,18 @@ class TimeFormatter {
     return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
+  /// Compares two nullable DateTimes by their calendar date (year, month, day).
+  ///
+  /// Returns `true` if both are `null`, `false` if exactly one is `null`,
+  /// and `true` if both represent the same calendar date.
+  static bool sameDate(DateTime? left, DateTime? right) {
+    if (left == null && right == null) return true;
+    if (left == null || right == null) return false;
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
+  }
+
   /// 格式化时长为 mm:ss 或 hh:mm:ss。
   static String formatDuration(
     Duration duration, {

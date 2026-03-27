@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
+import '../../../../core/utils/time_formatter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_daily_report_model.dart';
 import '../../data/repositories/podcast_repository.dart';
@@ -53,18 +54,6 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
     return null;
   }
 
-  bool _sameDate(DateTime? left, DateTime? right) {
-    if (left == null && right == null) {
-      return true;
-    }
-    if (left == null || right == null) {
-      return false;
-    }
-    return left.year == right.year &&
-        left.month == right.month &&
-        left.day == right.day;
-  }
-
   bool _isFresh() {
     final loadedAt = _lastLoadedAt;
     if (loadedAt == null) {
@@ -81,13 +70,13 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
     final previousData = state.value;
     if (!forceRefresh &&
         previousData != null &&
-        _sameDate(_lastDate, date) &&
+        TimeFormatter.sameDate(_lastDate, date) &&
         _isFresh()) {
       return previousData;
     }
 
     final inFlight = _inFlightRequest;
-    if (inFlight != null && _sameDate(_lastDate, date)) {
+    if (inFlight != null && TimeFormatter.sameDate(_lastDate, date)) {
       return inFlight;
     }
 
@@ -125,7 +114,7 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
   }) async {
     final previousData = state.value;
     final inFlight = _inFlightGenerateRequest;
-    if (inFlight != null && _sameDate(_lastDate, date)) {
+    if (inFlight != null && TimeFormatter.sameDate(_lastDate, date)) {
       return inFlight;
     }
 
