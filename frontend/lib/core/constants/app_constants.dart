@@ -2,6 +2,12 @@ class AppConstants {
   // Storage keys
   static const String themeKey = 'theme_mode';
   static const String localeKey = 'locale';
+  static const String accessTokenKey = 'access_token';
+  static const String refreshTokenKey = 'refresh_token';
+  static const String tokenExpiryKey = 'token_expiry';
+  static const String userProfileKey = 'user_profile';
+  static const String savedUsernameKey = 'saved_username';
+  static const String savedPasswordKey = 'saved_password';
 }
 
 // App Update Constants / 应用更新常量
