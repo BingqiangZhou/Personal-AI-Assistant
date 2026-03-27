@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations_extension.dart';
+import '../../../../core/utils/debounce.dart';
 import '../../../../core/utils/text_processing_cache.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_highlight_model.dart';
@@ -49,6 +50,7 @@ class TranscriptDisplayWidgetState
   bool _isSearching = false;
   String _lastSelectedTranscriptText = '';
   final Map<String, String> _selectedTranscriptSegments = <String, String>{};
+  DebounceTimer? _searchDebounce;
 
   // View mode state - always default to highlights view
   TranscriptViewMode _viewMode = TranscriptViewMode.highlights;
@@ -75,6 +77,7 @@ class TranscriptDisplayWidgetState
 
   @override
   void dispose() {
+    _searchDebounce?.dispose();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _highlightsScrollController.dispose();
@@ -89,8 +92,13 @@ class TranscriptDisplayWidgetState
       setState(() {
         _isSearching = true;
       });
-      _performSearch(query);
+      _searchDebounce?.cancel();
+      _searchDebounce = DebounceTimer(
+        const Duration(milliseconds: 300),
+        () => _performSearch(query),
+      );
     } else {
+      _searchDebounce?.cancel();
       setState(() {
         _isSearching = false;
         _searchResults.clear();

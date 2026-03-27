@@ -25,7 +25,7 @@ dependencies:
 
   # HTTP Client
   dio: ^5.9.2
-  dio_cache_interceptor: ^4.0.5
+
   retrofit: ^4.9.2
   json_annotation: ^4.11.0
 

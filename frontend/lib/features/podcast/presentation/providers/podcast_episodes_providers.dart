@@ -9,7 +9,7 @@ import 'podcast_core_providers.dart';
 
 // === Episode Detail Provider ===
 final episodeDetailProvider =
-    FutureProvider.family<PodcastEpisodeDetailResponse?, int>((
+    FutureProvider.autoDispose.family<PodcastEpisodeDetailResponse?, int>((
       ref,
       episodeId,
     ) async {

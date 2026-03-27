@@ -68,18 +68,7 @@ class AuthEventNotifier {
   int _listenerCount = 0;
 
   /// Stream of authentication events
-  async.Stream<AuthEvent> get authEventStream {
-    final stream = _controller.stream;
-    // Track listener count for debugging
-    stream.listen(
-      (_) {},
-      onDone: () {
-        _listenerCount = _listenerCount > 0 ? _listenerCount - 1 : 0;
-      },
-      onError: (_) {},
-    );
-    return stream;
-  }
+  async.Stream<AuthEvent> get authEventStream => _controller.stream;
 
   /// Debug information about active listeners
   ///

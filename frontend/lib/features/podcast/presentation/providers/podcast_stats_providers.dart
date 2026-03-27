@@ -11,7 +11,7 @@ import '../../data/repositories/podcast_repository.dart';
 import 'podcast_core_providers.dart';
 
 // === Stats Provider ===
-final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
+final podcastStatsProvider = FutureProvider.autoDispose<PodcastStatsResponse?>((ref) async {
   final repository = ref.read(podcastRepositoryProvider);
   try {
     return await repository.getStats();
@@ -96,7 +96,7 @@ class ProfileStatsNotifier extends AsyncNotifier<ProfileStatsModel?> {
   }
 }
 
-final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
+final playbackHistoryProvider = FutureProvider.autoDispose<PodcastEpisodeListResponse?>((
   ref,
 ) async {
   final repository = ref.read(podcastRepositoryProvider);

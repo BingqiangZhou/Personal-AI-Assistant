@@ -37,7 +37,7 @@ final episodeHighlightsCacheDurationProvider = Provider<Duration>(
 
 /// 单集高光 Provider (用于转录页面集成)
 final episodeHighlightsProvider =
-    FutureProvider.family<HighlightsListResponse?, int>((ref, episodeId) async {
+    FutureProvider.autoDispose.family<HighlightsListResponse?, int>((ref, episodeId) async {
   final repository = ref.read(podcastRepositoryProvider);
   try {
     return repository.getHighlights(

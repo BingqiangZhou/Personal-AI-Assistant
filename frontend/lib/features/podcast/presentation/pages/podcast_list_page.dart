@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/app_localizations_extension.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
+import '../../../../core/utils/debounce.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
@@ -37,6 +38,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final FocusNode _searchFocusNode = FocusNode();
   final Set<int> _subscribingShowIds = <int>{};
   final Set<int> _subscribedShowIds = <int>{};
+  DebounceTimer? _searchDebounce;
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.dispose();
     _discoverListScrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -78,14 +81,21 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   // Search handling
   void _onSearchChanged(String query) {
     if (query.trim().isEmpty) {
+      _searchDebounce?.cancel();
       ref.read(search.podcastSearchProvider.notifier).clearSearch();
       return;
     }
-    final notifier = ref.read(search.podcastSearchProvider.notifier);
-    final mode = ref.read(search.podcastSearchProvider).searchMode;
-    mode == search.PodcastSearchMode.episodes
-        ? notifier.searchEpisodes(query)
-        : notifier.searchPodcasts(query);
+    _searchDebounce?.cancel();
+    _searchDebounce = DebounceTimer(
+      const Duration(milliseconds: 400),
+      () {
+        final notifier = ref.read(search.podcastSearchProvider.notifier);
+        final mode = ref.read(search.podcastSearchProvider).searchMode;
+        mode == search.PodcastSearchMode.episodes
+            ? notifier.searchEpisodes(query)
+            : notifier.searchPodcasts(query);
+      },
+    );
   }
 
   void _clearSearch() {
