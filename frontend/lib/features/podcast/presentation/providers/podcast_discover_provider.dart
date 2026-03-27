@@ -99,8 +99,9 @@ class PodcastDiscoverState extends Equatable {
   bool isDataFresh({
     Duration cacheDuration = CacheConstants.discoverCacheDuration,
   }) {
-    if (lastRefreshTime == null) return false;
-    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
+    final refreshTime = lastRefreshTime;
+    if (refreshTime == null) return false;
+    return DateTime.now().difference(refreshTime) < cacheDuration;
   }
 
   List<PodcastDiscoverItem> get activeItems =>

@@ -195,7 +195,8 @@ class ConversationNotifier extends Notifier<ConversationState> {
   /// Load conversation history from backend
   Future<void> _loadHistory(int? sessionId) async {
     // Skip if a load is already in flight for this session
-    if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+    final completer = _loadCompleter;
+    if (completer != null && !completer.isCompleted) {
       return;
     }
     _loadCompleter = Completer<void>();

@@ -94,10 +94,9 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
   }
 
   bool _isFresh() {
-    if (_lastLoadedAt == null) {
-      return false;
-    }
-    return DateTime.now().difference(_lastLoadedAt!) < CacheConstants.defaultListCacheDuration;
+    final lastLoaded = _lastLoadedAt;
+    if (lastLoaded == null) return false;
+    return DateTime.now().difference(lastLoaded) < CacheConstants.defaultListCacheDuration;
   }
 
   Future<HighlightsListResponse?> load({

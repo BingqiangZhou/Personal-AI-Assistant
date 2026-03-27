@@ -12,14 +12,40 @@ import 'base/cached_async_notifier.dart';
 import 'podcast_core_providers.dart';
 
 // === Stats Provider ===
-final podcastStatsProvider = FutureProvider.autoDispose<PodcastStatsResponse?>((ref) async {
-  final repository = ref.read(podcastRepositoryProvider);
-  try {
-    return await repository.getStats();
-  } catch (error) {
-    return null;
+final podcastStatsProvider =
+    AsyncNotifierProvider<PodcastStatsNotifier, PodcastStatsResponse?>(
+      PodcastStatsNotifier.new,
+    );
+
+class PodcastStatsNotifier extends CachedAsyncNotifier<PodcastStatsResponse?> {
+  late final PodcastRepository _repository;
+
+  @override
+  FutureOr<PodcastStatsResponse?> build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    return load(forceRefresh: false);
   }
-});
+
+  Future<PodcastStatsResponse?> load({bool forceRefresh = false}) async {
+    final hasError = state.hasError;
+    final isLoading = state.isLoading;
+
+    final effectiveForce = forceRefresh || hasError || isLoading;
+    return runWithCache(
+      forceRefresh: effectiveForce,
+      fetcher: () => _repository.getStats(),
+      onError: (error, _) {
+        logger.AppLogger.debug('Failed to load podcast stats: $error');
+      },
+    );
+  }
+
+  /// Reset the notifier state completely.
+  void reset() {
+    resetCache();
+    state = const AsyncValue.data(null);
+  }
+}
 
 final profileStatsProvider =
     AsyncNotifierProvider<ProfileStatsNotifier, ProfileStatsModel?>(
@@ -57,17 +83,41 @@ class ProfileStatsNotifier extends CachedAsyncNotifier<ProfileStatsModel?> {
   }
 }
 
-final playbackHistoryProvider = FutureProvider.autoDispose<PodcastEpisodeListResponse?>((
-  ref,
-) async {
-  final repository = ref.read(podcastRepositoryProvider);
-  try {
-    return await repository.getPlaybackHistory(page: 1, size: 100);
-  } catch (error) {
-    logger.AppLogger.debug('Failed to load playback history: $error');
-    return null;
+final playbackHistoryProvider =
+    AsyncNotifierProvider<PlaybackHistoryNotifier, PodcastEpisodeListResponse?>(
+      PlaybackHistoryNotifier.new,
+    );
+
+class PlaybackHistoryNotifier
+    extends CachedAsyncNotifier<PodcastEpisodeListResponse?> {
+  late final PodcastRepository _repository;
+
+  @override
+  FutureOr<PodcastEpisodeListResponse?> build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    return load(forceRefresh: false);
   }
-});
+
+  Future<PodcastEpisodeListResponse?> load({bool forceRefresh = false}) async {
+    final hasError = state.hasError;
+    final isLoading = state.isLoading;
+
+    final effectiveForce = forceRefresh || hasError || isLoading;
+    return runWithCache(
+      forceRefresh: effectiveForce,
+      fetcher: () => _repository.getPlaybackHistory(page: 1, size: 100),
+      onError: (error, _) {
+        logger.AppLogger.debug('Failed to load playback history: $error');
+      },
+    );
+  }
+
+  /// Reset the notifier state completely.
+  void reset() {
+    resetCache();
+    state = const AsyncValue.data(null);
+  }
+}
 
 final playbackHistoryLiteProvider =
     AsyncNotifierProvider<

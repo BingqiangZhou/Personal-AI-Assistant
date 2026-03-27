@@ -29,14 +29,13 @@ class CountrySelectorState {
 /// 国家选择器 Notifier
 @riverpod
 class CountrySelectorNotifier extends _$CountrySelectorNotifier {
-  @override
+   @override
   CountrySelectorState build() {
     final localStorage = ref.read(localStorageServiceProvider);
 
-    // 加载保存的国家偏好
+    // Load saved country preference asynchronously
     _loadSavedCountry(localStorage);
 
-    // 如果没有保存的偏好，使用系统语言作为默认值
     return CountrySelectorState(
       selectedCountry: _getDefaultCountry(),
     );
