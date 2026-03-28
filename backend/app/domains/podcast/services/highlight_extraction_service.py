@@ -21,6 +21,7 @@ from app.domains.podcast.models import (
     HighlightExtractionTask,
     PodcastEpisode,
     PodcastEpisodeTranscript,
+    TranscriptionTask,
 )
 
 
@@ -358,7 +359,36 @@ class HighlightExtractionService:
         if not episode:
             raise ValueError(f"Episode {episode_id} not found")
 
-        if not episode.transcript or not episode.transcript.transcript_content or not episode.transcript.transcript_content.strip():
+        # Resolve transcript content: prefer PodcastEpisodeTranscript, fallback to TranscriptionTask
+        transcript_content = None
+        if episode.transcript and episode.transcript.transcript_content and episode.transcript.transcript_content.strip():
+            transcript_content = episode.transcript.transcript_content
+        else:
+            # Fallback: check TranscriptionTask for completed transcript
+            task_stmt = select(TranscriptionTask.transcript_content).where(
+                and_(
+                    TranscriptionTask.episode_id == episode_id,
+                    TranscriptionTask.transcript_content.is_not(None),
+                    TranscriptionTask.transcript_content != "",
+                ),
+            ).order_by(TranscriptionTask.id.desc()).limit(1)
+            task_result = await self.db.execute(task_stmt)
+            fallback_content = task_result.scalar_one_or_none()
+            if fallback_content and fallback_content.strip():
+                transcript_content = fallback_content
+                # Repair: backfill PodcastEpisodeTranscript so future queries work
+                if not episode.transcript:
+                    self.db.add(PodcastEpisodeTranscript(
+                        episode_id=episode_id,
+                        transcript_content=fallback_content,
+                        transcript_word_count=len(fallback_content.split()),
+                    ))
+                else:
+                    episode.transcript.transcript_content = fallback_content
+                    episode.transcript.transcript_word_count = len(fallback_content.split())
+                logger.info("Repaired missing PodcastEpisodeTranscript for episode %s", episode_id)
+
+        if not transcript_content:
             raise ValidationError(
                 f"No transcript content available for episode {episode_id}"
             )
@@ -417,7 +447,7 @@ class HighlightExtractionService:
                 "description": episode.description or "",
             }
             highlights = await self.extract_highlights(
-                transcript=episode.transcript.transcript_content,
+                transcript=transcript_content,
                 episode_info=episode_info,
                 model_name=model_name,
             )
