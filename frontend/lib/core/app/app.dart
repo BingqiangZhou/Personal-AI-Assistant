@@ -12,6 +12,7 @@ import 'package:personal_ai_assistant/core/providers/route_provider.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
@@ -167,6 +168,9 @@ class _PersonalAIAssistantAppState
 
       // Load saved theme mode from storage
       await ref.read(themeModeProvider.notifier).loadSavedThemeMode();
+
+      // Load saved font combination from storage
+      await ref.read(fontCombinationProvider.notifier).loadSavedFontCombination();
 
       // Check authentication status with timeout to prevent infinite loading
       // If backend is down, we still want the app to load
@@ -348,14 +352,17 @@ class _PersonalAIAssistantAppState
     }
 
     // Show main app after initialization
+    final fontCombination = ref.watch(fontCombinationProvider);
+    AppTheme.updateFontCombination(fontCombination);
+
     return MaterialApp.router(
       key: const ValueKey('app_router_shell'),
       title: 'Stella',
       debugShowCheckedModeBanner: false,
 
       // Theme configuration
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.buildTheme(Brightness.light, fontCombination),
+      darkTheme: AppTheme.buildTheme(Brightness.dark, fontCombination),
       themeMode: ref.watch(themeModeProvider),
 
       // Router configuration

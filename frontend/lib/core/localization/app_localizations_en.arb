@@ -2399,5 +2399,33 @@
     "downloads_completed_title":  "Downloaded",
     "@downloads_completed_title":  {
                                            "description":  "Section title for completed downloads"
-                                       }
+                                       },
+    "appearance_title":  "Appearance",
+    "@appearance_title":  {
+                                    "description":  "Title for the Appearance settings page"
+                                },
+    "appearance_theme_section":  "Theme Mode",
+    "@appearance_theme_section":  {
+                                            "description":  "Section title for theme mode in appearance page"
+                                        },
+    "appearance_font_section":  "Font",
+    "@appearance_font_section":  {
+                                          "description":  "Section title for font selection in appearance page"
+                                      },
+    "appearance_font_section_subtitle":  "Choose a font combination for the app",
+    "@appearance_font_section_subtitle":  {
+                                                    "description":  "Subtitle explaining font selection"
+                                                },
+    "appearance_changed":  "Appearance updated",
+    "@appearance_changed":  {
+                                      "description":  "Notice shown when appearance settings change"
+                                  },
+    "appearance_subtitle":  "{theme} · {font}",
+    "@appearance_subtitle":  {
+                                       "description":  "Subtitle for appearance settings tile showing current theme and font",
+                                       "placeholders":  {
+                                                             "theme":  { "type":  "String" },
+                                                             "font":  { "type":  "String" }
+                                                         }
+                                   }
 }

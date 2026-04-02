@@ -1761,4 +1761,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get downloads_completed_title => '已下载';
+
+  @override
+  String get appearance_title => '外观';
+
+  @override
+  String get appearance_theme_section => '主题模式';
+
+  @override
+  String get appearance_font_section => '字体';
+
+  @override
+  String get appearance_font_section_subtitle => '为应用选择字体组合';
+
+  @override
+  String get appearance_changed => '外观已更新';
+
+  @override
+  String appearance_subtitle(String theme, String font) {
+    return '$theme · $font';
+  }
 }

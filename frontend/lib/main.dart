@@ -13,6 +13,7 @@ import 'package:personal_ai_assistant/core/app/app.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/audio_handler.dart';
 
@@ -113,6 +114,12 @@ void main() {
           ) ??
           kThemeModeSystem;
 
+      final initialFontCombinationId =
+          await storageService.getString(
+            AppConstants.fontCombinationKey,
+          ) ??
+          kFontCombinationDefault;
+
       final customServerUrl = await storageService.getServerBaseUrl();
       if (customServerUrl != null && customServerUrl.isNotEmpty) {
         AppConfig.setServerBaseUrl(customServerUrl);
@@ -134,6 +141,9 @@ void main() {
             localStorageServiceProvider.overrideWithValue(storageService),
             initialThemeModeCodeProvider.overrideWithValue(
               initialThemeModeCode,
+            ),
+            initialFontCombinationIdProvider.overrideWithValue(
+              initialFontCombinationId,
             ),
           ],
           child: const _AppWithSplashScreen(),

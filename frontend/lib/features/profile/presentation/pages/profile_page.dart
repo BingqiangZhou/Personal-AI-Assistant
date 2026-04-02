@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart';
@@ -279,17 +280,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       cardShape: _profileCardShape(context),
       children: [
         _buildLanguageSettingsItem(context),
-        _buildThemeSettingsItem(context),
-        // TEMP: Font preview for typography selection (remove after choosing)
-        _buildSettingsItem(
-          context,
-          icon: Icons.font_download_outlined,
-          title: 'Font Preview',
-          subtitle: 'Compare and select font combinations',
-          trailing: const Icon(Icons.chevron_right),
-          tileKey: const Key('font_preview_item'),
-          onTap: () => context.push('/settings/font-preview'),
-        ),
+        _buildAppearanceSettingsItem(context),
       ],
     );
 
@@ -394,10 +385,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildThemeSettingsItem(BuildContext context) {
+  Widget _buildAppearanceSettingsItem(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
         final currentCode = ref.watch(themeModeCodeProvider);
+        final fontCombo = ref.watch(fontCombinationProvider);
         final l10n = context.l10n;
         final themeModeName = switch (currentCode) {
           kThemeModeSystem => l10n.theme_mode_follow_system,
@@ -407,10 +399,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
         return _buildSettingsItem(
           context,
-          icon: Icons.dark_mode,
-          title: l10n.theme_mode,
-          subtitle: themeModeName,
-          onTap: () => _showThemeModeDialog(context),
+          icon: Icons.palette_outlined,
+          title: l10n.appearance_title,
+          subtitle: l10n.appearance_subtitle(
+            themeModeName,
+            fontCombo.displayName,
+          ),
+          onTap: () => context.push('/settings/appearance'),
         );
       },
     );
@@ -614,96 +609,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.languageFollowSystem,
-                    style: Theme.of(
-                      dialogContext,
-                    ).textTheme.bodySmall?.copyWith(color: iconColor),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  style: ResponsiveDialogHelper.actionButtonStyle(dialogContext),
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(l10n.close),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showThemeModeDialog(BuildContext pageContext) {
-    _showConstrainedDialog<void>(
-      pageContext,
-      builder: (dialogContext) {
-        return Consumer(
-          builder: (dialogContext, ref, _) {
-            final currentCode = ref.watch(themeModeCodeProvider);
-            final l10n = dialogContext.l10n;
-            final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
-
-            return AlertDialog(
-              insetPadding: ResponsiveDialogHelper.insetPadding(),
-              title: Text(l10n.theme_mode_select_title),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SegmentedButton<String>(
-                    key: const Key('profile_theme_segmented_button'),
-                    style: ResponsiveDialogHelper.segmentedButtonStyle(
-                      dialogContext,
-                    ),
-                    segments: [
-                      ButtonSegment(
-                        value: kThemeModeSystem,
-                        label: Text(l10n.theme_mode_follow_system),
-                        icon: const Icon(Icons.brightness_auto),
-                      ),
-                      ButtonSegment(
-                        value: kThemeModeLight,
-                        label: Text(l10n.theme_mode_light),
-                        icon: const Icon(Icons.light_mode),
-                      ),
-                      ButtonSegment(
-                        value: kThemeModeDark,
-                        label: Text(l10n.theme_mode_dark),
-                        icon: const Icon(Icons.dark_mode),
-                      ),
-                    ],
-                    selected: {currentCode},
-                    onSelectionChanged: (Set<String> selection) async {
-                      final value = selection.first;
-                      final modeName = switch (value) {
-                        kThemeModeSystem => l10n.theme_mode_follow_system,
-                        kThemeModeLight => l10n.theme_mode_light,
-                        _ => l10n.theme_mode_dark,
-                      };
-                      await ref
-                          .read(themeModeProvider.notifier)
-                          .setThemeModeCode(value);
-                      if (!dialogContext.mounted) {
-                        return;
-                      }
-                      final noticeMessage = l10n.theme_mode_changed(modeName);
-                      Navigator.of(dialogContext).pop();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        Future<void>.delayed(kThemeAnimationDuration, () {
-                          if (!pageContext.mounted) {
-                            return;
-                          }
-                          showTopFloatingNotice(
-                            pageContext,
-                            message: noticeMessage,
-                          );
-                        });
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.theme_mode_subtitle,
                     style: Theme.of(
                       dialogContext,
                     ).textTheme.bodySmall?.copyWith(color: iconColor),

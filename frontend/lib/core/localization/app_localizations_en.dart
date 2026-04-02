@@ -1835,4 +1835,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloads_completed_title => 'Downloaded';
+
+  @override
+  String get appearance_title => 'Appearance';
+
+  @override
+  String get appearance_theme_section => 'Theme Mode';
+
+  @override
+  String get appearance_font_section => 'Font';
+
+  @override
+  String get appearance_font_section_subtitle =>
+      'Choose a font combination for the app';
+
+  @override
+  String get appearance_changed => 'Appearance updated';
+
+  @override
+  String appearance_subtitle(String theme, String font) {
+    return '$theme · $font';
+  }
 }

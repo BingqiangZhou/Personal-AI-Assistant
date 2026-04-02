@@ -27,7 +27,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/page_transitions.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
-import 'package:personal_ai_assistant/features/settings/presentation/pages/font_preview_page.dart';
+import 'package:personal_ai_assistant/features/settings/presentation/pages/appearance_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
@@ -295,13 +295,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Pushed routes (cover the shell, no bottom nav)
 
-      // TEMP: Font preview for typography selection (remove after choosing)
       GoRoute(
-        path: '/settings/font-preview',
-        name: 'font-preview',
+        path: '/settings/appearance',
+        name: 'appearance',
         pageBuilder: (context, state) => _buildPageWithTransition(
           state: state,
-          child: const FontPreviewPage(),
+          child: const AppearancePage(),
         ),
       ),
 

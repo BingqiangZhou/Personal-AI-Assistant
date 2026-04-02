@@ -1,6 +1,7 @@
 class AppConstants {
   // Storage keys
   static const String themeKey = 'theme_mode';
+  static const String fontCombinationKey = 'font_combination';
   static const String localeKey = 'locale';
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';

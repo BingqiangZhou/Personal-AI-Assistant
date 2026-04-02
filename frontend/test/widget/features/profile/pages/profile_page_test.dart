@@ -974,31 +974,10 @@ void main() {
     await tester.tap(find.text(l10n.close));
     await tester.pumpAndSettle();
 
-    final themeModeTile = find.widgetWithText(ListTile, l10n.theme_mode);
-    await tester.ensureVisible(themeModeTile);
-    await tester.tap(themeModeTile);
-    await tester.pumpAndSettle();
-    final themeDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
-    final dynamic themeSegmented = tester.widget(
-      find.byKey(const Key('profile_theme_segmented_button')),
-    );
-    final themeStyle = themeSegmented.style as ButtonStyle?;
-    final themeSelectedColor = themeStyle?.foregroundColor?.resolve(
-      <WidgetState>{WidgetState.selected},
-    );
-    expect(themeSelectedColor, expectedDialogActionColor);
-    final themeCloseButton = tester.widget<TextButton>(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.widgetWithText(TextButton, l10n.close),
-      ),
-    );
-    final themeCloseColor = themeCloseButton.style?.foregroundColor?.resolve(
-      <WidgetState>{},
-    );
-    expect(themeCloseColor, expectedDialogActionColor);
-    await tester.tap(find.text(l10n.close));
-    await tester.pumpAndSettle();
+    // Appearance tile replaces the old Theme Mode dialog;
+    // it navigates to /settings/appearance instead of opening a dialog.
+    final appearanceTile = find.widgetWithText(ListTile, l10n.appearance_title);
+    expect(appearanceTile, findsOneWidget);
 
     final securityTileFinder = find.widgetWithText(
       ListTile,
@@ -1063,7 +1042,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(editDialogWidth, closeTo(languageDialogWidth, 0.01));
-    expect(themeDialogWidth, closeTo(languageDialogWidth, 0.01));
     expect(securityDialogWidth, closeTo(languageDialogWidth, 0.01));
     expect(aboutDialogWidth, closeTo(languageDialogWidth, 0.01));
   });

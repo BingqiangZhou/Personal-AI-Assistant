@@ -3409,6 +3409,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Downloaded'**
   String get downloads_completed_title;
+
+  /// Title for the Appearance settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance_title;
+
+  /// Section title for theme mode in appearance page
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Mode'**
+  String get appearance_theme_section;
+
+  /// Section title for font selection in appearance page
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get appearance_font_section;
+
+  /// Subtitle explaining font selection
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a font combination for the app'**
+  String get appearance_font_section_subtitle;
+
+  /// Notice shown when appearance settings change
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance updated'**
+  String get appearance_changed;
+
+  /// Subtitle for appearance settings tile showing current theme and font
+  ///
+  /// In en, this message translates to:
+  /// **'{theme} · {font}'**
+  String appearance_subtitle(String theme, String font);
 }
 
 class _AppLocalizationsDelegate

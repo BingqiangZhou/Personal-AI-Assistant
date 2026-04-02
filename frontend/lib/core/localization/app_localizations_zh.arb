@@ -2354,5 +2354,33 @@
     "downloads_completed_title":  "已下载",
     "@downloads_completed_title":  {
                                            "description":  "已下载区域标题"
-                                       }
+                                       },
+    "appearance_title":  "外观",
+    "@appearance_title":  {
+                                    "description":  "外观设置页面标题"
+                                },
+    "appearance_theme_section":  "主题模式",
+    "@appearance_theme_section":  {
+                                            "description":  "外观页面中的主题模式区域标题"
+                                        },
+    "appearance_font_section":  "字体",
+    "@appearance_font_section":  {
+                                          "description":  "外观页面中的字体选择区域标题"
+                                      },
+    "appearance_font_section_subtitle":  "为应用选择字体组合",
+    "@appearance_font_section_subtitle":  {
+                                                    "description":  "字体选择说明文字"
+                                                },
+    "appearance_changed":  "外观已更新",
+    "@appearance_changed":  {
+                                      "description":  "外观设置变更通知"
+                                  },
+    "appearance_subtitle":  "{theme} · {font}",
+    "@appearance_subtitle":  {
+                                       "description":  "外观设置项副标题，显示当前主题和字体",
+                                       "placeholders":  {
+                                                             "theme":  { "type":  "String" },
+                                                             "font":  { "type":  "String" }
+                                                         }
+                                   }
 }
