@@ -4,7 +4,31 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.36.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.35.0...v0.36.0) - 2026-04-02 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.36.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(frontend)* Regenerate l10n and code-generated files after adding offline downloads feature ([eb232ea](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eb232eaaa5c6e58752964cb8460955d939355f2e))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Show episode title, podcast name and cover in downloads page ([f6da2c7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f6da2c75682f3cb29ee4d7f88264fcb2a66f2ab8))
+- *(podcast)* Populate episode metadata in downloads page via cache ([23a4ed5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/23a4ed54e43c3177484de1aa163defe5ed564f90))
+- *(podcast)* Add primary key to EpisodesCache and fix downloads page metadata display ([45af44f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/45af44f9dff1bafb386d0b44812eee51a343d8c3))
+
+### 🚀 Features
+
+- *(frontend)* Add local database with offline downloads, download UI, and offline playback ([e06a649](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e06a6494d5ab7ade772698aa88d0583715d18e93))
+- *(frontend)* Add local database with offline downloads, download UI, and offline playback ([3512ba4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3512ba451a07706c4b6696100ea731ac916b6ef2))
+- *(podcast)* Integrate download buttons into episode UI with queue-based auto-download ([6e645dd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6e645ddda0bfb78b97acf283cc272ce7ba321d2c))
+
+
+
 ## [0.35.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.34.1...v0.35.0) - 2026-04-02 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.35.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Regenerate changelog for v0.35.0 ([6908c59](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6908c5924886043289b0539e96123616dd152ae7))
 
 ### 🐛 Bug Fixes
 
@@ -13,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - *(frontend)* Replace late fields in Riverpod notifiers with getters and add l10n coverage ([e21086d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e21086d7ad9539161d2de933f06343d915f3a4e1))
 - *(frontend)* Email validation, nav feedback, password security, and Hero transitions ([81ab97f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/81ab97fdcd24bd3a777d74b6b047a18f8e0eabf8))
 - *(frontend)* Use double literal for skeleton cover border radius ([f7f0889](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f7f0889cc4b830bf9b62caddd8ed18749ba34d58))
+- *(frontend)* Pin connectivity_plus to <7.1.0 to avoid iOS build error ([a160284](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a160284f4bef98d4998f6f839a207c81f036ef47))
 
 ### 🚀 Features
 
