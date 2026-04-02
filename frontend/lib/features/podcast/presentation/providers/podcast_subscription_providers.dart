@@ -131,11 +131,10 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         categoryIds: categoryIds,
       );
 
-      // Refresh the list
-      await refreshSubscriptions();
-
-      // Remove from subscribing set (refreshSubscriptions resets state, so we need to add it back)
+      // Optimistic update: add new subscription to local list
       state = state.copyWith(
+        subscriptions: [subscription, ...state.subscriptions],
+        total: state.total + 1,
         subscribingFeedUrls: state.subscribingFeedUrls
             .where((url) => url != feedUrl)
             .toSet(),
@@ -154,12 +153,21 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   }
 
   Future<void> deleteSubscription(int subscriptionId) async {
+    // Optimistic update: remove from local list immediately
+    final updatedSubscriptions = state.subscriptions
+        .where((s) => s.id != subscriptionId)
+        .toList();
+
     try {
       await _repository.deleteSubscription(subscriptionId);
 
-      // Refresh the list
-      await refreshSubscriptions();
+      state = state.copyWith(
+        subscriptions: updatedSubscriptions,
+        total: state.total > 0 ? state.total - 1 : 0,
+      );
     } catch (error) {
+      // Revert: reload from server on failure
+      await refreshSubscriptions();
       rethrow;
     }
   }
@@ -167,13 +175,15 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions({
     required List<int> subscriptionIds,
   }) async {
+    // Optimistic update: remove from local list immediately
+    final idSet = subscriptionIds.toSet();
+    final updatedSubscriptions = state.subscriptions
+        .where((s) => !idSet.contains(s.id))
+        .toList();
+
     try {
-      // Debug log
       logger.AppLogger.debug(
         '[Playback] Bulk delete request: subscriptionIds=$subscriptionIds',
-      );
-      logger.AppLogger.debug(
-        '[Playback] Subscription IDs type: ${subscriptionIds.runtimeType}',
       );
 
       final response = await _repository.bulkDeleteSubscriptions(
@@ -184,12 +194,18 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         '[OK] Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed',
       );
 
-      // Refresh the list
-      await refreshSubscriptions();
+      state = state.copyWith(
+        subscriptions: updatedSubscriptions,
+        total: state.total > response.successCount
+            ? state.total - response.successCount
+            : 0,
+      );
 
       return response;
     } catch (error) {
       logger.AppLogger.debug('[Error] Bulk delete failed: $error');
+      // Revert: reload from server on failure
+      await refreshSubscriptions();
       rethrow;
     }
   }

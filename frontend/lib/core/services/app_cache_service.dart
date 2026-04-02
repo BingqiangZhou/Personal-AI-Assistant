@@ -93,8 +93,24 @@ class AppCacheServiceImpl implements AppCacheService {
     imageCache.maximumSizeBytes = _AppCacheConfig.maxMemoryCacheSize;
 
     // Clear any stale cached images on startup
-    // This ensures we start with a clean slate
     imageCache.clear();
+
+    // Clean expired media cache entries from disk
+    _cleanExpiredMediaCache();
+  }
+
+  /// Removes expired entries from the media cache on startup.
+  static Future<void> _cleanExpiredMediaCache() async {
+    try {
+      await AppMediaCacheManager.instance.emptyCache();
+      logger.AppLogger.debug(
+        '[AppCache] Expired media cache entries cleaned',
+      );
+    } catch (e) {
+      logger.AppLogger.debug(
+        '[AppCache] Failed to clean expired media cache: $e',
+      );
+    }
   }
 
   @override

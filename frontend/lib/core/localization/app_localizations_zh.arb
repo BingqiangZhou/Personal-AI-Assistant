@@ -2242,5 +2242,49 @@
                                                                         "type":  "String"
                                                                     }
                                                         }
-                                 }
+                                 },
+    "error_occurred":  "出了点问题",
+    "@error_occurred":  {
+                            "description":  "AsyncValueWidget 中显示的通用错误标题"
+                        },
+    "error_network_timeout":  "连接超时，请重试。",
+    "@error_network_timeout":  {
+                                   "description":  "网络超时错误消息"
+                               },
+    "error_network_no_connection":  "无网络连接，请检查网络后重试。",
+    "@error_network_no_connection":  {
+                                         "description":  "无网络连接错误消息"
+                                     },
+    "error_network_generic":  "网络异常，请重试。",
+    "@error_network_generic":  {
+                                   "description":  "通用网络错误消息"
+                               },
+    "error_server":  "服务器错误，请稍后重试。",
+    "@error_server":  {
+                          "description":  "服务器错误消息"
+                      },
+    "error_auth":  "会话已过期，请重新登录。",
+    "@error_auth":  {
+                        "description":  "认证错误消息"
+                    },
+    "error_forbidden":  "无权访问此内容。",
+    "@error_forbidden":  {
+                             "description":  "权限错误消息"
+                         },
+    "error_not_found":  "未找到请求的内容。",
+    "@error_not_found":  {
+                             "description":  "未找到错误消息"
+                         },
+    "error_validation":  "输入无效，请检查后重试。",
+    "@error_validation":  {
+                              "description":  "验证错误消息"
+                          },
+    "session_create_failed":  "创建新对话失败",
+    "@session_create_failed":  {
+                                   "description":  "创建聊天会话失败时的错误"
+                               },
+    "session_delete_failed":  "删除对话失败",
+    "@session_delete_failed":  {
+                                   "description":  "删除聊天会话失败时的错误"
+                               }
 }

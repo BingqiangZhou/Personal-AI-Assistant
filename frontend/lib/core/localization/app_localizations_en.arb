@@ -2287,5 +2287,49 @@
                                                                         "type":  "String"
                                                                     }
                                                         }
-                                 }
+                                 },
+    "error_occurred":  "Something went wrong",
+    "@error_occurred":  {
+                            "description":  "Generic error title shown in AsyncValueWidget"
+                        },
+    "error_network_timeout":  "Connection timed out. Please try again.",
+    "@error_network_timeout":  {
+                                   "description":  "Network timeout error message"
+                               },
+    "error_network_no_connection":  "No internet connection. Check your network and retry.",
+    "@error_network_no_connection":  {
+                                         "description":  "No internet connection error message"
+                                     },
+    "error_network_generic":  "A network error occurred. Please try again.",
+    "@error_network_generic":  {
+                                   "description":  "Generic network error message"
+                               },
+    "error_server":  "Server error. Please try again later.",
+    "@error_server":  {
+                          "description":  "Server error message"
+                      },
+    "error_auth":  "Session expired. Please sign in again.",
+    "@error_auth":  {
+                        "description":  "Authentication error message"
+                    },
+    "error_forbidden":  "You don't have permission to access this.",
+    "@error_forbidden":  {
+                             "description":  "Authorization error message"
+                         },
+    "error_not_found":  "The requested content was not found.",
+    "@error_not_found":  {
+                             "description":  "Not found error message"
+                         },
+    "error_validation":  "Invalid input. Please check and try again.",
+    "@error_validation":  {
+                              "description":  "Validation error message"
+                          },
+    "session_create_failed":  "Failed to create new conversation",
+    "@session_create_failed":  {
+                                   "description":  "Error when creating a new chat session fails"
+                               },
+    "session_delete_failed":  "Failed to delete conversation",
+    "@session_delete_failed":  {
+                                   "description":  "Error when deleting a chat session fails"
+                               }
 }

@@ -1,6 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -1748,4 +1748,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String connection_error_prefix(String error) {
     return 'Connection error: $error';
   }
+
+  @override
+  String get error_occurred => 'Something went wrong';
+
+  @override
+  String get error_network_timeout => 'Connection timed out. Please try again.';
+
+  @override
+  String get error_network_no_connection =>
+      'No internet connection. Check your network and retry.';
+
+  @override
+  String get error_network_generic =>
+      'A network error occurred. Please try again.';
+
+  @override
+  String get error_server => 'Server error. Please try again later.';
+
+  @override
+  String get error_auth => 'Session expired. Please sign in again.';
+
+  @override
+  String get error_forbidden => 'You don\'t have permission to access this.';
+
+  @override
+  String get error_not_found => 'The requested content was not found.';
+
+  @override
+  String get error_validation => 'Invalid input. Please check and try again.';
+
+  @override
+  String get session_create_failed => 'Failed to create new conversation';
+
+  @override
+  String get session_delete_failed => 'Failed to delete conversation';
 }

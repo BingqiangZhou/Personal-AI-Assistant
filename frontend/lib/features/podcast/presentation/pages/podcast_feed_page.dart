@@ -13,6 +13,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state
 import 'package:personal_ai_assistant/features/podcast/presentation/navigation/podcast_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_feed_episode_card.dart';
+import 'package:personal_ai_assistant/shared/widgets/skeleton_widgets.dart';
 
 class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});
@@ -282,10 +283,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
     if (showInitialLoading ||
         (feedState.isLoading && feedState.episodes.isEmpty)) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+      // Show skeleton cards matching the eventual layout
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final isMobile = screenWidth < Breakpoints.medium;
+          if (isMobile) {
+            return const SkeletonCardList(itemCount: 5, compact: true);
+          }
+          final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
+          return SkeletonCardGrid(
+            crossAxisCount: crossAxisCount,
+            itemCount: crossAxisCount * 2,
+          );
+        },
       );
     }
 

@@ -14,6 +14,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/simplified_episode_card.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/shared/widgets/skeleton_widgets.dart';
 
 part 'podcast_episodes_page_view.dart';
 part 'podcast_episodes_page_actions.dart';
@@ -148,7 +149,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
           Expanded(
             child: episodesState.isLoading && episodesState.episodes.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonCardList(itemCount: 6, compact: true, showDescription: false)
                 : episodesState.error != null
                 ? _buildErrorState(episodesState.error!)
                 : episodesState.episodes.isEmpty

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/shared/widgets/async_value_widget.dart';
 
 void main() {
@@ -105,6 +106,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('en'),
               home: AsyncValueWidget<String>(
                 value: AsyncValue.error(testError, StackTrace.empty),
                 builder: (data) => Text('Data: $data'),
@@ -114,7 +118,7 @@ void main() {
         );
 
         expect(find.byIcon(Icons.error_outline), findsOneWidget);
-        expect(find.text('An error occurred'), findsOneWidget);
+        expect(find.text('Something went wrong'), findsOneWidget);
         expect(find.text(testError), findsOneWidget);
       });
 
@@ -247,6 +251,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('en'),
               home: AsyncValueNullableWidget<String>(
                 value: AsyncValue.error(testError, StackTrace.empty),
                 builder: (data) => Text('Data: $data'),
@@ -256,7 +263,7 @@ void main() {
         );
 
         expect(find.byIcon(Icons.error_outline), findsOneWidget);
-        expect(find.text('An error occurred'), findsOneWidget);
+        expect(find.text('Something went wrong'), findsOneWidget);
       });
 
       testWidgets('renders custom error builder when provided', (tester) async {

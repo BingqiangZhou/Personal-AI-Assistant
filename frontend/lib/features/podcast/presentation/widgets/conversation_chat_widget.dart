@@ -340,9 +340,20 @@ class ConversationChatWidgetState
     );
 
     if (confirmed == true && mounted) {
-      await ref
-          .read(conversationProvider(widget.episodeId).notifier)
-          .startNewChat();
+      try {
+        await ref
+            .read(conversationProvider(widget.episodeId).notifier)
+            .startNewChat();
+      } catch (e) {
+        if (mounted) {
+          showTopFloatingNotice(
+            context,
+            message: context.l10n.session_create_failed,
+            isError: true,
+          );
+        }
+        return;
+      }
       if (!mounted) {
         return;
       }

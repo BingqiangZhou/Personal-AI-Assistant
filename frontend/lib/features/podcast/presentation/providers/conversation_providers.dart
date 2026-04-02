@@ -135,7 +135,8 @@ class SessionListNotifier extends AsyncNotifier<List<ConversationSession>> {
     state = await AsyncValue.guard(() => _loadSessions());
   }
 
-  /// Create a new session and switch to it
+  /// Create a new session and switch to it.
+  /// Throws on failure so callers can show error feedback.
   Future<ConversationSession?> createSession({String? title}) async {
     try {
       final repository = ref.read(podcastRepositoryProvider);
@@ -152,11 +153,12 @@ class SessionListNotifier extends AsyncNotifier<List<ConversationSession>> {
 
       return session;
     } catch (e) {
-      // Handle error (maybe show toast via a provider or throw)
-      return null;
+      rethrow;
     }
   }
 
+  /// Delete a session by ID.
+  /// Throws on failure so callers can show error feedback.
   Future<void> deleteSession(int sessionId) async {
     try {
       final repository = ref.read(podcastRepositoryProvider);
@@ -177,7 +179,7 @@ class SessionListNotifier extends AsyncNotifier<List<ConversationSession>> {
         }
       }
     } catch (e) {
-      // Handle error
+      rethrow;
     }
   }
 }

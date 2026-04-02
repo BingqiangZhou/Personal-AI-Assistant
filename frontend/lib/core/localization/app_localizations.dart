@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
-import 'package:personal_ai_assistant/core/localization/app_localizations_zh.dart';
+import 'app_localizations_en.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -18,7 +18,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_zh.dar
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'package:personal_ai_assistant/core/localization/localization/app_localizations.dart';
+/// import 'localization/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -3241,6 +3241,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection error: {error}'**
   String connection_error_prefix(String error);
+
+  /// Generic error title shown in AsyncValueWidget
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get error_occurred;
+
+  /// Network timeout error message
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out. Please try again.'**
+  String get error_network_timeout;
+
+  /// No internet connection error message
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your network and retry.'**
+  String get error_network_no_connection;
+
+  /// Generic network error message
+  ///
+  /// In en, this message translates to:
+  /// **'A network error occurred. Please try again.'**
+  String get error_network_generic;
+
+  /// Server error message
+  ///
+  /// In en, this message translates to:
+  /// **'Server error. Please try again later.'**
+  String get error_server;
+
+  /// Authentication error message
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Please sign in again.'**
+  String get error_auth;
+
+  /// Authorization error message
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to access this.'**
+  String get error_forbidden;
+
+  /// Not found error message
+  ///
+  /// In en, this message translates to:
+  /// **'The requested content was not found.'**
+  String get error_not_found;
+
+  /// Validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid input. Please check and try again.'**
+  String get error_validation;
+
+  /// Error when creating a new chat session fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create new conversation'**
+  String get session_create_failed;
+
+  /// Error when deleting a chat session fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete conversation'**
+  String get session_delete_failed;
 }
 
 class _AppLocalizationsDelegate

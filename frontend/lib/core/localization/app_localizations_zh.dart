@@ -1,6 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -1677,4 +1677,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String connection_error_prefix(String error) {
     return '连接错误: $error';
   }
+
+  @override
+  String get error_occurred => '出了点问题';
+
+  @override
+  String get error_network_timeout => '连接超时，请重试。';
+
+  @override
+  String get error_network_no_connection => '无网络连接，请检查网络后重试。';
+
+  @override
+  String get error_network_generic => '网络异常，请重试。';
+
+  @override
+  String get error_server => '服务器错误，请稍后重试。';
+
+  @override
+  String get error_auth => '会话已过期，请重新登录。';
+
+  @override
+  String get error_forbidden => '无权访问此内容。';
+
+  @override
+  String get error_not_found => '未找到请求的内容。';
+
+  @override
+  String get error_validation => '输入无效，请检查后重试。';
+
+  @override
+  String get session_create_failed => '创建新对话失败';
+
+  @override
+  String get session_delete_failed => '删除对话失败';
 }

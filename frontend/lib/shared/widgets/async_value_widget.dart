@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
+
 /// A reusable widget for handling AsyncValue states from Riverpod providers.
 ///
 /// This widget provides a consistent way to handle loading, error, and data
@@ -11,8 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// AsyncValueWidget(
 ///   value: highlightsProvider,
 ///   builder: (data) => ListView.builder(...),
-///   loadingWidget: CircularProgressIndicator(),
-///   errorBuilder: (error, stack) => Text('Error: $error'),
+///   onRetry: () => ref.invalidate(highlightsProvider),
 /// )
 /// ```
 class AsyncValueWidget<T> extends StatelessWidget {
@@ -34,6 +36,11 @@ class AsyncValueWidget<T> extends StatelessWidget {
   /// Useful for refresh scenarios where you want to keep showing old data.
   final bool skipLoadingWhenData;
 
+  /// Callback invoked when the user taps the retry button in error state.
+  ///
+  /// When provided, a retry button is shown in the default error widget.
+  final VoidCallback? onRetry;
+
   const AsyncValueWidget({
     super.key,
     required this.value,
@@ -41,6 +48,7 @@ class AsyncValueWidget<T> extends StatelessWidget {
     this.loadingWidget,
     this.errorBuilder,
     this.skipLoadingWhenData = false,
+    this.onRetry,
   });
 
   @override
@@ -70,9 +78,12 @@ class AsyncValueWidget<T> extends StatelessWidget {
 
   Widget _defaultErrorWidget(BuildContext context, Object error, StackTrace stack) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final userMessage = _friendlyErrorMessage(context, error);
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -83,21 +94,53 @@ class AsyncValueWidget<T> extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'An error occurred',
+              l10n.error_occurred,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              error.toString(),
+              userMessage,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 20),
+              FilledButton.tonal(
+                onPressed: onRetry,
+                child: Text(l10n.retry),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// Maps exception types to user-friendly localized messages.
+  /// Falls back to a generic message for unknown error types.
+  static String _friendlyErrorMessage(BuildContext context, Object error) {
+    final l10n = context.l10n;
+
+    if (error is NetworkException) {
+      final msg = error.message.toLowerCase();
+      if (msg.contains('timeout')) return l10n.error_network_timeout;
+      if (msg.contains('no internet') || msg.contains('connection')) {
+        return l10n.error_network_no_connection;
+      }
+      return l10n.error_network_generic;
+    }
+    if (error is ServerException) return l10n.error_server;
+    if (error is AuthenticationException) return l10n.error_auth;
+    if (error is AuthorizationException) return l10n.error_forbidden;
+    if (error is NotFoundException) return l10n.error_not_found;
+    if (error is ValidationException) return l10n.error_validation;
+
+    // For other errors, show the message but truncate if too long
+    final message = error.toString();
+    if (message.length > 120) return '${message.substring(0, 120)}...';
+    return message;
   }
 }
 
@@ -112,6 +155,7 @@ class AsyncValueNullableWidget<T> extends StatelessWidget {
   final Widget Function(Object error, StackTrace stack)? errorBuilder;
   final Widget Function()? emptyBuilder;
   final bool skipLoadingWhenData;
+  final VoidCallback? onRetry;
 
   const AsyncValueNullableWidget({
     super.key,
@@ -121,6 +165,7 @@ class AsyncValueNullableWidget<T> extends StatelessWidget {
     this.errorBuilder,
     this.emptyBuilder,
     this.skipLoadingWhenData = false,
+    this.onRetry,
   });
 
   @override
@@ -130,6 +175,7 @@ class AsyncValueNullableWidget<T> extends StatelessWidget {
       loadingWidget: loadingWidget,
       errorBuilder: errorBuilder,
       skipLoadingWhenData: skipLoadingWhenData,
+      onRetry: onRetry,
       builder: (data) {
         if (data == null) {
           return emptyBuilder?.call() ?? _defaultEmptyWidget(context);

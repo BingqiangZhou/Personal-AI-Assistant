@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 
@@ -168,9 +169,21 @@ class _SessionListTile extends ConsumerWidget {
             ),
           );
           if (confirm == true) {
-            ref
-                .read(sessionListProvider(episodeId).notifier)
-                .deleteSession(session.id);
+            try {
+              await ref
+                  .read(sessionListProvider(episodeId).notifier)
+                  .deleteSession(session.id);
+            } catch (e) {
+              if (context.mounted) {
+                showTopFloatingNotice(
+                  context,
+                  message: AppLocalizations.of(context)!
+                          ?.session_delete_failed ??
+                      'Failed to delete conversation',
+                  isError: true,
+                );
+              }
+            }
           }
         },
       ),
