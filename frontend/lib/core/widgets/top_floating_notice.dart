@@ -94,10 +94,8 @@ void showTopFloatingNotice(
                         key: const Key('top_floating_notice_message'),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        style: theme.textTheme.labelLarge?.copyWith(
                           color: foregroundColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

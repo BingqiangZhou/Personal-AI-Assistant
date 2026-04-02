@@ -8,6 +8,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
+
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -153,8 +154,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
               // Description note (below input, above history)
               Text(
                 l10n.backend_api_description,
-                style: TextStyle(
-                  fontSize: 11,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -164,9 +164,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
               if (_serverHistory.isNotEmpty) ...[
                 Text(
                   l10n.server_history_title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -176,12 +174,12 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                   runSpacing: 6,
                   children: _serverHistory.map((url) {
                     return InputChip(
-                      label: Text(url, style: const TextStyle(fontSize: 11)),
+                      label: Text(url, style: Theme.of(context).textTheme.labelSmall),
                       onPressed: () {
                         _serverUrlController.text = url;
                         _onServerUrlChanged(url);
                       },
-                      labelStyle: TextStyle(
+                      labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       backgroundColor: Theme.of(
@@ -286,10 +284,9 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
           const SizedBox(width: 8),
           Text(
             statusText,
-            style: TextStyle(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: statusColor,
               fontWeight: FontWeight.w500,
-              fontSize: 14,
             ),
           ),
           if (_connectionMessage != null &&
@@ -298,8 +295,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
             Flexible(
               child: Text(
                 _connectionMessage!,
-                style: TextStyle(
-                  fontSize: 12,
+                style: theme.textTheme.labelMedium?.copyWith(
                   color: statusColor.withValues(alpha: 0.8),
                 ),
                 overflow: TextOverflow.ellipsis,

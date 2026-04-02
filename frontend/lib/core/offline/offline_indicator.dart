@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/offline/connectivity_provider.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// Offline indicator widget showing network status with smooth animations.
 class OfflineIndicator extends ConsumerStatefulWidget {
@@ -104,9 +105,7 @@ class _OfflineIndicatorState extends ConsumerState<OfflineIndicator> {
               const SizedBox(width: 8),
               Text(
                 message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
+                style: AppTheme.caption(Colors.white).copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),

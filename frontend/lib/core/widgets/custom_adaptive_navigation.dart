@@ -4,6 +4,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/constants/po
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 220);
 
@@ -453,7 +454,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                       color: isSelected
                           ? scheme.onSurface
                           : scheme.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected ? FontWeight.w700 : null,
                     ),
                   ),
                 ),
@@ -503,7 +504,6 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final scheme = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
     return Semantics(
       button: true,
       selected: isSelected,
@@ -540,13 +540,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   destination.label,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 10,
-                    height: 1,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? scheme.onSurface
-                        : scheme.onSurfaceVariant,
+                  style: AppTheme.navLabel(
+                    isSelected ? scheme.onSurface : scheme.onSurfaceVariant,
+                    weight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
