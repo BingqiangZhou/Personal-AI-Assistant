@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/scroll_constants.dart';
-import '../../../../../core/localization/app_localizations_extension.dart';
-import '../../../data/models/podcast_discover_chart_model.dart';
-import '../../providers/podcast_discover_provider.dart';
-import 'discover_chart_row.dart';
+import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_chart_row.dart';
 
 /// Charts list widget for displaying discover items with pagination
 class DiscoverChartsList extends ConsumerWidget {

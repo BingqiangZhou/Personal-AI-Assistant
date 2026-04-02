@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/app/config/app_config.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 
 /// Authentication Verification Page - Direct API Testing
 /// This page bypasses complex build issues and tests backend connectivity directly

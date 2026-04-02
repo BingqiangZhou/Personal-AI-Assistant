@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
-import 'responsive_helpers.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/responsive_helpers.dart';
 
 /// ============================================================
 /// Refined Minimal Design System - 简约现代设计系统

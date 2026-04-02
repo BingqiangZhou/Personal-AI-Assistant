@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'connectivity_provider.dart';
+import 'package:personal_ai_assistant/core/offline/connectivity_provider.dart';
 
 /// Offline indicator widget showing network status
 class OfflineIndicator extends ConsumerWidget {

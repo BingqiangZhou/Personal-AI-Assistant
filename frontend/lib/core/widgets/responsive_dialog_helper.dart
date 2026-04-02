@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
 class ResponsiveDialogHelper {
   const ResponsiveDialogHelper._();

@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/services/app_cache_service.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Podcast image widget with retry/fallback handling.
 class PodcastImageWidget extends StatefulWidget {

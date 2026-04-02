@@ -1,6 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 // ignore_for_file: type=lint
 

@@ -7,19 +7,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
-import '../localization/locale_provider.dart';
-import '../providers/route_provider.dart';
-import '../router/app_router.dart';
-import '../theme/app_theme.dart';
-import '../theme/theme_provider.dart';
-import '../utils/app_logger.dart' as logger;
-import '../../shared/widgets/loading_widget.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart';
-import '../../features/settings/presentation/providers/app_update_provider.dart';
-import '../../features/settings/presentation/widgets/update_dialog.dart';
+import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/core/providers/route_provider.dart';
+import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
+import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
+import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
-import '../../main.dart' as main_app;
-import '../../features/auth/data/events/auth_event.dart';
+import 'package:personal_ai_assistant/main.dart' as main_app;
+import 'package:personal_ai_assistant/features/auth/data/events/auth_event.dart';
 
 /// Splash screen widget that matches the Mindriver brand style
 class _SplashScreenWidget extends StatelessWidget {

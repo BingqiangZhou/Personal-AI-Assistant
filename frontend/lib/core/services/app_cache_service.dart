@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
-import '../utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Cache configuration constants.
 ///

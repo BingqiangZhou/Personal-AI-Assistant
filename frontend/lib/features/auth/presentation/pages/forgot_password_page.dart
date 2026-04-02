@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../../../../shared/widgets/custom_text_field.dart';
-import '../providers/auth_provider.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});

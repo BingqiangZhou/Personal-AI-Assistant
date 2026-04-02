@@ -9,12 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/app/app.dart';
-import 'core/app/config/app_config.dart';
-import 'core/storage/local_storage_service.dart';
-import 'core/theme/theme_provider.dart';
-import 'core/utils/app_logger.dart' as logger;
-import 'features/podcast/presentation/providers/audio_handler.dart';
+import 'package:personal_ai_assistant/core/app/app.dart';
+import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/audio_handler.dart';
 
 PodcastAudioHandler? _audioHandler;
 

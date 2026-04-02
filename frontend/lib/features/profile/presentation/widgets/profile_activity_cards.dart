@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/breakpoints.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/widgets/app_shells.dart';
-import '../../../podcast/presentation/navigation/podcast_navigation.dart';
-import '../../../podcast/presentation/providers/podcast_providers.dart';
-import '../../../podcast/presentation/widgets/shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/navigation/podcast_navigation.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 class ProfileActivityCards extends ConsumerWidget {
   const ProfileActivityCards({super.key});

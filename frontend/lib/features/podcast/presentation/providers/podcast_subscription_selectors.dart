@@ -2,8 +2,8 @@ import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/utils/podcast_url_utils.dart';
-import 'podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/utils/podcast_url_utils.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 final subscribedNormalizedFeedUrlsProvider = Provider<Set<String>>((ref) {
   final subscriptions = ref.watch(

@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Cache entry for ETag and response data.
 /// Stores only the response data and headers (not the full Response object)

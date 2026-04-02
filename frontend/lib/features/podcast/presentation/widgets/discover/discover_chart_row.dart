@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/podcast_discover_chart_model.dart';
-import '../podcast_image_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 /// Chart row widget for displaying a single discover item with rank and actions
 class DiscoverChartRow extends StatelessWidget {

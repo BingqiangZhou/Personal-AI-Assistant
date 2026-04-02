@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../providers/auth_provider.dart';
-import '../widgets/password_text_field.dart';
-import '../widgets/password_requirement_item.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_text_field.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_requirement_item.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   final String? token;

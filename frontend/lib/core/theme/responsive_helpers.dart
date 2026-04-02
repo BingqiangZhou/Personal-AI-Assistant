@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../constants/app_spacing.dart';
-import '../constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
 /// ResponsiveHelpers - Utility methods for responsive layouts
 /// ResponsiveHelpers - 响应式布局工具方法

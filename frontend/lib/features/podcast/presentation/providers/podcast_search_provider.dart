@@ -2,11 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/utils/debounce.dart' as utils;
-import '../../data/models/itunes_episode_lookup_model.dart';
-import '../../data/models/podcast_search_model.dart';
-import '../../data/services/itunes_search_service.dart';
-import '../providers/country_selector_provider.dart';
+import 'package:personal_ai_assistant/core/utils/debounce.dart' as utils;
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/itunes_search_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 
 part 'podcast_search_provider.g.dart';
 

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/audio_player_state_model.dart';
-import '../../data/models/podcast_episode_model.dart';
-import 'podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 typedef AudioTransportState = ({
   bool isPlaying,

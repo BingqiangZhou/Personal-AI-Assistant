@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/cache_constants.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
 
 /// A base class for [AsyncNotifier] subclasses that need time-based
 /// cache freshness checks and in-flight request deduplication.

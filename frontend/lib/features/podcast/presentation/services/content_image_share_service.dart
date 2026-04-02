@@ -11,11 +11,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../data/models/podcast_conversation_model.dart';
-import 'content_image_share_text_selection.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_text_selection.dart';
 
 export 'content_image_share_text_selection.dart'
     show

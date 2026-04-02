@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/router/app_router.dart';
-import '../constants/playback_speed_options.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/playback_speed_options.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 typedef PlaybackSpeedSheetInitialSelection = ({
   double speed,

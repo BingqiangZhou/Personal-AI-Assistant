@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/utils/debounce.dart';
-import '../../../../core/widgets/app_shells.dart';
-import '../../../../core/widgets/adaptive_sheet_helper.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../data/models/podcast_discover_chart_model.dart';
-import '../../data/models/itunes_episode_lookup_model.dart';
-import '../../data/models/podcast_episode_model.dart';
-import '../../data/models/podcast_search_model.dart';
-import '../providers/country_selector_provider.dart';
-import '../providers/podcast_discover_provider.dart';
-import '../providers/podcast_providers.dart';
-import '../providers/podcast_search_provider.dart' as search;
-import '../widgets/country_selector_dropdown.dart';
-import '../widgets/discover/discover_search_input.dart';
-import '../widgets/discover/discover_top_charts_section.dart';
-import '../widgets/discover/discover_charts_list.dart';
-import '../widgets/discover_episode_detail_sheet.dart';
-import '../widgets/discover_show_episodes_sheet.dart';
-import '../widgets/search/podcast_search_results_list.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/debounce.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/country_selector_dropdown.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_search_input.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_top_charts_section.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_charts_list.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover_episode_detail_sheet.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover_show_episodes_sheet.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/search/podcast_search_results_list.dart';
 
 /// Podcast list/discover page with search and top charts
 class PodcastListPage extends ConsumerStatefulWidget {

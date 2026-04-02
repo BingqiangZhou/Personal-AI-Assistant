@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/app/config/app_config.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../../../../shared/widgets/custom_text_field.dart';
-import '../providers/auth_provider.dart';
-import '../widgets/password_text_field.dart';
-import '../widgets/password_requirement_item.dart';
+import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_text_field.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_requirement_item.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});

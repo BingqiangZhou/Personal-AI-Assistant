@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
-import '../app/config/app_config.dart';
-import '../network/dio_client.dart';
-import '../network/server_health_service.dart';
-import '../services/app_cache_service.dart';
-import '../storage/local_storage_service.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart';
-import '../../features/podcast/presentation/providers/podcast_discover_provider.dart';
-import '../../features/podcast/presentation/providers/podcast_providers.dart';
-import '../../features/podcast/presentation/providers/podcast_search_provider.dart' as search;
+import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/network/dio_client.dart';
+import 'package:personal_ai_assistant/core/network/server_health_service.dart';
+import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {

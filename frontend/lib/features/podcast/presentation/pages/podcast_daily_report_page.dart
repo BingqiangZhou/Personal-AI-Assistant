@@ -5,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../../../core/constants/breakpoints.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/time_formatter.dart';
-import '../../../../core/widgets/app_shells.dart';
-import '../../../../core/widgets/custom_adaptive_navigation.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/models/podcast_daily_report_model.dart';
-import '../providers/podcast_providers.dart';
-import '../widgets/shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 class PodcastDailyReportPage extends ConsumerStatefulWidget {
   const PodcastDailyReportPage({super.key, this.initialDate, this.source});

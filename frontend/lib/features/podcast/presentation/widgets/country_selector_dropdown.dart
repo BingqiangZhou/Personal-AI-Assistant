@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../data/models/podcast_search_model.dart';
-import '../providers/country_selector_provider.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 
 /// 国家/地区选择器下拉菜单
 ///

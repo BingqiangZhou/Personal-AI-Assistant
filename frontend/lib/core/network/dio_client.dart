@@ -6,13 +6,13 @@ import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Import ETag interceptor (now with integrated cache)
-import 'etag_interceptor.dart';
-import 'token_refresh_service.dart';
+import 'package:personal_ai_assistant/core/network/etag_interceptor.dart';
+import 'package:personal_ai_assistant/core/network/token_refresh_service.dart';
 
 // Import AppConfig and ApiConstants from the canonical config file
-import '../../core/app/config/app_config.dart' as config;
-import 'exceptions/network_exceptions.dart';
-import '../utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/app/config/app_config.dart' as config;
+import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Normalizes API responses to handle inconsistent response shapes.
 ///

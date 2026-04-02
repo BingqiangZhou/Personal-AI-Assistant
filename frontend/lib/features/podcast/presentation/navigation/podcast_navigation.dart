@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_router.dart';
-import '../../data/models/podcast_subscription_model.dart';
-import '../widgets/shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 /// Navigation arguments for podcast episodes page
 class PodcastEpisodesPageArgs {

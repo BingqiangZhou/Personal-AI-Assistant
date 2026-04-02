@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/localization/app_localizations_extension.dart';
-import '../../../../../core/localization/app_localizations.dart';
-import '../../../data/models/itunes_episode_lookup_model.dart';
-import '../../../data/models/podcast_search_model.dart';
-import '../../../data/utils/podcast_url_utils.dart';
-import '../../providers/podcast_subscription_selectors.dart';
-import '../podcast_search_result_card.dart';
-import '../podcast_episode_search_result_card.dart';
-import '../../providers/podcast_search_provider.dart' as search;
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/utils/podcast_url_utils.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_subscription_selectors.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_search_result_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_episode_search_result_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
 
 /// Search results list widget for displaying podcast/episode search results
 class PodcastSearchResultsList extends ConsumerWidget {

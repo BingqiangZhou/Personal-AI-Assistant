@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/network/exceptions/network_exceptions.dart';
-import '../../../../core/constants/cache_constants.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/utils/time_formatter.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/models/podcast_daily_report_model.dart';
-import '../../data/repositories/podcast_repository.dart';
-import 'podcast_core_providers.dart';
+import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
 
 final selectedDailyReportDateProvider =
     NotifierProvider<SelectedDailyReportDateNotifier, DateTime?>(

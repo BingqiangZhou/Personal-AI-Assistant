@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/breakpoints.dart';
-import '../../data/models/podcast_episode_model.dart';
-import '../../core/utils/episode_description_helper.dart';
-import 'shared/base_episode_card.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart';
 
 /// Simplified episode card without podcast image and name (for episodes list page)
 class SimplifiedEpisodeCard extends ConsumerWidget {

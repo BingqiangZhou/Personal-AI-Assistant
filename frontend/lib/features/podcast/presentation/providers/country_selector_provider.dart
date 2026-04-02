@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/storage/local_storage_service.dart';
-import '../../data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 
 part 'country_selector_provider.g.dart';
 

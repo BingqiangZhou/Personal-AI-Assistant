@@ -3,16 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/scroll_constants.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/time_formatter.dart';
-import '../../../../core/widgets/adaptive_sheet_helper.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../../data/models/podcast_queue_model.dart';
-import '../constants/podcast_ui_constants.dart';
-import '../providers/podcast_providers.dart';
-import 'podcast_image_widget.dart';
+import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 class PodcastQueueSheet extends ConsumerWidget {
   const PodcastQueueSheet({super.key});

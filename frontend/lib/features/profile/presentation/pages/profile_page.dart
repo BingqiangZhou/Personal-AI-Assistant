@@ -11,12 +11,12 @@ import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
-import '../widgets/profile_activity_cards.dart';
-import '../../../../shared/widgets/server_config_dialog.dart';
-import '../../../../shared/widgets/settings_section_card.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../podcast/presentation/providers/podcast_providers.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/profile/presentation/widgets/profile_activity_cards.dart';
+import 'package:personal_ai_assistant/shared/widgets/server_config_dialog.dart';
+import 'package:personal_ai_assistant/shared/widgets/settings_section_card.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Material Design 3 adaptive profile page
 class ProfilePage extends ConsumerStatefulWidget {

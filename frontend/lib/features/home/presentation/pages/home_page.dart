@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/providers/route_provider.dart';
-import '../../../../core/router/app_router.dart';
-import '../../../../core/widgets/custom_adaptive_navigation.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../podcast/presentation/providers/podcast_providers.dart';
-import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/providers/route_provider.dart';
+import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 
 /// Shell widget for the main tab navigation using StatefulShellRoute.
 ///

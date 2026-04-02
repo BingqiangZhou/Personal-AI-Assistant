@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../router/app_router.dart';
+import 'package:personal_ai_assistant/core/router/app_router.dart';
 
 /// On desktop/tablet (width ≥ 600), shows a centered [Dialog] within the
 /// current navigator's content area.  On mobile shows a standard

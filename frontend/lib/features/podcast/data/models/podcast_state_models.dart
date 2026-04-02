@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../../core/constants/cache_constants.dart';
-import 'podcast_episode_model.dart';
-import 'podcast_subscription_model.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 
 const Object _stateNoChange = Object();
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 /// Widget for displaying the three-dimensional score of a highlight.
 ///

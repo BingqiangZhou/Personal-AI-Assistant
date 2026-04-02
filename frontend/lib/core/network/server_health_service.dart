@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 
-import '../utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Connection status enum for server health check
 enum ConnectionStatus {

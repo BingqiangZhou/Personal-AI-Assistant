@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/time_formatter.dart';
-import '../../data/models/itunes_episode_lookup_model.dart';
-import 'podcast_image_widget.dart';
-import 'shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 class DiscoverEpisodeDetailSheet extends StatelessWidget {
   const DiscoverEpisodeDetailSheet({

@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/breakpoints.dart';
-import '../../../../core/constants/scroll_constants.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/text_processing_cache.dart';
-import '../../../../core/widgets/app_shells.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../data/models/podcast_episode_model.dart';
-import '../../data/models/podcast_state_models.dart';
-import '../navigation/podcast_navigation.dart';
-import '../providers/podcast_providers.dart';
-import '../widgets/podcast_feed_episode_card.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/text_processing_cache.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/navigation/podcast_navigation.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_feed_episode_card.dart';
 
 class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});

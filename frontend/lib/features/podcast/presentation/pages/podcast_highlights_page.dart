@@ -5,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../../../core/constants/breakpoints.dart';
-import '../../../../core/constants/scroll_constants.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/widgets/app_shells.dart';
-import '../../../../core/widgets/custom_adaptive_navigation.dart';
-import '../../../../shared/widgets/loading_widget.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/models/podcast_highlight_model.dart';
-import '../providers/podcast_providers.dart';
-import '../widgets/highlight_card.dart';
-import '../widgets/shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 /// Page for displaying podcast highlights.
 ///

@@ -7,13 +7,13 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/localization/app_localizations_en.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../../shared/widgets/empty_state_widget.dart';
-import '../../core/utils/html_sanitizer.dart';
-import '../../data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/shared/widgets/empty_state_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/core/utils/html_sanitizer.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 
 @immutable
 class ShownotesAnchor {

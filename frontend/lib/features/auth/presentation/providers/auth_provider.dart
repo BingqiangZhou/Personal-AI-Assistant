@@ -4,18 +4,18 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../domain/models/auth_request.dart';
-import '../../domain/models/user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../data/repositories/auth_repository_impl.dart';
-import '../../data/datasources/auth_remote_datasource.dart';
-import '../../data/events/auth_event.dart';
-import '../../../../core/network/token_refresh_service.dart';
-import '../../../../core/network/exceptions/network_exceptions.dart';
-import '../../../../core/storage/local_storage_service.dart';
-import '../../../../core/storage/secure_storage_service.dart';
-import '../../../../core/providers/core_providers.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/auth/domain/models/auth_request.dart';
+import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
+import 'package:personal_ai_assistant/features/auth/domain/repositories/auth_repository.dart';
+import 'package:personal_ai_assistant/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:personal_ai_assistant/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:personal_ai_assistant/features/auth/data/events/auth_event.dart';
+import 'package:personal_ai_assistant/core/network/token_refresh_service.dart';
+import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/storage/secure_storage_service.dart';
+import 'package:personal_ai_assistant/core/providers/core_providers.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 // Token refresh constants
 const int _tokenRefreshBufferMinutes = 5; // Refresh 5 minutes before expiry

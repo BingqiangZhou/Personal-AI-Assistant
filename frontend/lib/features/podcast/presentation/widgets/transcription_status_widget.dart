@@ -5,11 +5,11 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
-import '../providers/transcription_providers.dart';
-import '../../data/models/podcast_transcription_model.dart';
-import '../../data/models/podcast_transcription_model_extensions.dart';
-import 'transcription/transcription_step_indicators.dart';
-import 'transcription/transcription_step_mapper.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model_extensions.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_indicators.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_mapper.dart';
 
 class TranscriptionStatusWidget extends ConsumerWidget {
   final int episodeId;

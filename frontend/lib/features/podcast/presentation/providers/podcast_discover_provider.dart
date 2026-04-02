@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/cache_constants.dart';
-import '../../data/models/podcast_discover_chart_model.dart';
-import '../../data/models/podcast_search_model.dart';
-import '../../data/services/apple_podcast_rss_service.dart';
-import 'country_selector_provider.dart';
+import 'package:personal_ai_assistant/core/constants/cache_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 
 enum PodcastDiscoverTab { podcasts, episodes }
 

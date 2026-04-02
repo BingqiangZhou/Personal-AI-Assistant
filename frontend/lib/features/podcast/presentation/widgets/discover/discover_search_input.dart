@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/localization/app_localizations_extension.dart';
-import '../../constants/podcast_ui_constants.dart';
-import '../../providers/podcast_search_provider.dart' as search;
-import '../../providers/country_selector_provider.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 
 /// Search input widget for discover page with country selector
 class DiscoverSearchInput extends ConsumerWidget {

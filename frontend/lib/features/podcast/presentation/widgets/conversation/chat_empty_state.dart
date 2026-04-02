@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 
 /// Empty state for the conversation chat when no messages exist yet.
 ///

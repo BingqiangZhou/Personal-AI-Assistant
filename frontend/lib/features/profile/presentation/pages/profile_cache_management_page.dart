@@ -4,18 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/providers/core_providers.dart';
-import '../../../../core/widgets/app_shells.dart';
-import '../../../../core/widgets/custom_adaptive_navigation.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../podcast/presentation/constants/podcast_ui_constants.dart';
-import '../../../podcast/presentation/providers/podcast_discover_provider.dart';
-import '../../../podcast/presentation/providers/podcast_providers.dart';
-import '../../../podcast/presentation/providers/podcast_search_provider.dart'
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/providers/core_providers.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
 
 enum _CacheCategory { images, audio, other }

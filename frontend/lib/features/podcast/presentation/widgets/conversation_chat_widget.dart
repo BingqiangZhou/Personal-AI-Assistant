@@ -3,19 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/resource_cleanup_mixin.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../data/models/podcast_conversation_model.dart';
-import '../../data/models/podcast_playback_model.dart';
-import '../providers/conversation_providers.dart';
-import '../providers/summary_providers.dart';
-import '../services/content_image_share_service.dart';
-import 'conversation/chat_empty_state.dart';
-import 'conversation/chat_header.dart';
-import 'conversation/chat_input_area.dart';
-import 'conversation/chat_messages_list.dart';
-import 'conversation/chat_sessions_drawer.dart';
+import 'package:personal_ai_assistant/core/utils/resource_cleanup_mixin.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/summary_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation/chat_empty_state.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation/chat_header.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation/chat_input_area.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation/chat_messages_list.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/conversation/chat_sessions_drawer.dart';
 
 /// AI conversation chat interface component
 class ConversationChatWidget extends ConsumerStatefulWidget {

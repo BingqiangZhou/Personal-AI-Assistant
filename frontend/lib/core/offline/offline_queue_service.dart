@@ -5,9 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../providers/core_providers.dart';
-import '../utils/app_logger.dart' as logger;
-import 'connectivity_provider.dart';
+import 'package:personal_ai_assistant/core/providers/core_providers.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/offline/connectivity_provider.dart';
 
 part 'offline_queue_service.g.dart';
 

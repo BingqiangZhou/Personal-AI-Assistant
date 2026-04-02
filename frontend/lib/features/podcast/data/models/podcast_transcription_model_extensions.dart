@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/localization/app_localizations_extension.dart';
-import 'podcast_transcription_model.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
 
 /// Extension on [TranscriptionStatus] to provide localized status descriptions
 extension TranscriptionStatusLocalization on TranscriptionStatus {

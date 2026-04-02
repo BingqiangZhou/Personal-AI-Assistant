@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/app_localizations.dart';
-import '../../data/models/podcast_search_model.dart';
-import '../constants/podcast_ui_constants.dart';
-import 'shared/base_episode_card.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart';
 
 class PodcastSearchResultCard extends StatelessWidget {
   const PodcastSearchResultCard({

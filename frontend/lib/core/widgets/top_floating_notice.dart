@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/top_floating_notice_provider.dart';
+import 'package:personal_ai_assistant/core/providers/top_floating_notice_provider.dart';
 
 const double _topFloatingNoticeGap = 0;
 

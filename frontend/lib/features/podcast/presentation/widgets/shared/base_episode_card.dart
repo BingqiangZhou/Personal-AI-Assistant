@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/localization/app_localizations_extension.dart';
-import '../podcast_image_widget.dart';
-import 'episode_card_utils.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 /// Configuration for what to display in a [BaseEpisodeCard].
 class EpisodeCardConfig {

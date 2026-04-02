@@ -3,18 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/utils/debounce.dart';
-import '../../../../core/utils/text_processing_cache.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
-import '../../data/models/podcast_highlight_model.dart';
-import '../providers/podcast_highlights_providers.dart';
-import 'highlight_card.dart';
-import 'highlight_detail_sheet.dart';
-import '../../../../shared/widgets/empty_state_widget.dart';
-import '../providers/transcription_providers.dart';
-import '../../data/models/podcast_transcription_model.dart';
-import '../services/content_image_share_service.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/utils/debounce.dart';
+import 'package:personal_ai_assistant/core/utils/text_processing_cache.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_highlights_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_detail_sheet.dart';
+import 'package:personal_ai_assistant/shared/widgets/empty_state_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_service.dart';
 
 /// View mode for transcript display
 enum TranscriptViewMode { highlights, fullTranscript }

@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../app/config/app_config.dart' as config;
+import 'package:personal_ai_assistant/core/app/config/app_config.dart' as config;
 
 abstract class SecureStorageService {
   Future<void> saveAccessToken(String token);

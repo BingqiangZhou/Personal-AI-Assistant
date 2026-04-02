@@ -6,20 +6,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 
-import '../../../../main.dart' as main_app;
-import 'audio_handler.dart';
+import 'package:personal_ai_assistant/main.dart' as main_app;
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/audio_handler.dart';
 
-import '../../../../core/storage/local_storage_service.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/models/podcast_episode_model.dart';
-import '../../data/models/podcast_queue_model.dart';
-import '../../data/models/audio_player_state_model.dart';
-import '../../data/models/podcast_playback_model.dart';
-import '../../data/repositories/podcast_repository.dart';
-import 'podcast_core_providers.dart';
-import 'playback_progress_policy.dart';
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../../../core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/playback_progress_policy.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 
 part 'podcast_playback_helpers.dart';
 part 'podcast_playback_queue_controller.dart';

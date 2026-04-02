@@ -1,8 +1,8 @@
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../domain/models/auth_request.dart';
-import '../../domain/models/auth_response.dart';
-import '../../domain/models/user.dart';
-import '../../../../core/network/dio_client.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/auth/domain/models/auth_request.dart';
+import 'package:personal_ai_assistant/features/auth/domain/models/auth_response.dart';
+import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
+import 'package:personal_ai_assistant/core/network/dio_client.dart';
 
 abstract class AuthRemoteDatasource {
   Future<AuthResponse> login(LoginRequest request);

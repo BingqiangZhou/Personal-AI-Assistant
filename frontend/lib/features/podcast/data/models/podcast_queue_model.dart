@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 
 class PodcastQueueItemModel extends Equatable {
   final int episodeId;

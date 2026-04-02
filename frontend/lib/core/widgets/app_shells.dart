@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../constants/breakpoints.dart';
-import '../theme/app_colors.dart';
-import 'custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 
 /// StatusBadge - 状态徽章
 class StatusBadge extends StatelessWidget {

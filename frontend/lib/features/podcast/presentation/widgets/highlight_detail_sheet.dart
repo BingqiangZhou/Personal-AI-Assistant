@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/app_localizations_extension.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/adaptive_sheet_helper.dart';
-import '../../data/models/podcast_highlight_model.dart';
-import 'highlight_score_indicator.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_score_indicator.dart';
 
 /// Shows highlight details in an adaptive bottom sheet/dialog
 Future<void> showHighlightDetailSheet({

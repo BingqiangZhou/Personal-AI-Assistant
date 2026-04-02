@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 part 'connectivity_provider.g.dart';
 

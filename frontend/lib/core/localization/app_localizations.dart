@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'app_localizations_en.dart';
-import 'app_localizations_zh.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -18,7 +18,7 @@ import 'app_localizations_zh.dart';
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'localization/app_localizations.dart';
+/// import 'package:personal_ai_assistant/core/localization/localization/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: AppLocalizations.localizationsDelegates,

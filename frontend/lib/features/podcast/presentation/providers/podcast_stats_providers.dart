@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/app_logger.dart' as logger;
-import '../../data/models/playback_history_lite_model.dart';
-import '../../data/models/podcast_episode_model.dart';
-import '../../data/models/podcast_playback_model.dart';
-import '../../data/models/profile_stats_model.dart';
-import '../../data/repositories/podcast_repository.dart';
-import 'base/cached_async_notifier.dart';
-import 'podcast_core_providers.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/base/cached_async_notifier.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
 
 // === Stats Provider ===
 final podcastStatsProvider =

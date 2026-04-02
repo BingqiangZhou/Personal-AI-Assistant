@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models/itunes_episode_lookup_model.dart';
-import '../../../../core/utils/time_formatter.dart';
-import '../constants/podcast_ui_constants.dart';
-import 'shared/base_episode_card.dart';
-import 'shared/episode_card_utils.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
+import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 
 class PodcastEpisodeSearchResultCard extends StatelessWidget {
   const PodcastEpisodeSearchResultCard({

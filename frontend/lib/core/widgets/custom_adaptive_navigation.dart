@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 
-import '../constants/breakpoints.dart';
-import '../localization/app_localizations_extension.dart';
-import '../theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 220);
 

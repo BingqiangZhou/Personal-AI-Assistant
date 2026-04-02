@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'transcription_step_mapper.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_mapper.dart';
 
 class TranscriptionStepDescriptor {
   const TranscriptionStepDescriptor({required this.icon, required this.label});

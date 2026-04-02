@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/localization/app_localizations_extension.dart';
-import '../../providers/podcast_discover_provider.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 
 /// Horizontal scrollable category chips for discover page
 class DiscoverCategoryChips extends StatelessWidget {
