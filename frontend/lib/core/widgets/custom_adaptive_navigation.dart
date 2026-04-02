@@ -377,9 +377,10 @@ class CustomAdaptiveNavigation extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(extension.navItemRadius),
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          hoverColor: Colors.transparent,
+          splashColor: scheme.primary.withValues(alpha: 0.12),
+          splashColor: scheme.primary.withValues(alpha: 0.12),
+          highlightColor: scheme.primary.withValues(alpha: 0.08),
+          hoverColor: scheme.primary.withValues(alpha: 0.05),),
           child: Container(
             width: 52,
             height: 52,
@@ -415,9 +416,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(extension.navItemRadius),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
+        splashColor: scheme.primary.withValues(alpha: 0.12),
+        highlightColor: scheme.primary.withValues(alpha: 0.08),
+        hoverColor: scheme.primary.withValues(alpha: 0.05),
         child: Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -499,9 +500,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
+        splashColor: scheme.primary.withValues(alpha: 0.12),
+        highlightColor: scheme.primary.withValues(alpha: 0.08),
+        hoverColor: scheme.primary.withValues(alpha: 0.05),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(

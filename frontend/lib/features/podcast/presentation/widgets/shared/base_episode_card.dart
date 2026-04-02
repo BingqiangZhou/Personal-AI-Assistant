@@ -34,6 +34,7 @@ class EpisodeCardConfig {
     this.showSubscribeAction = false,
     this.isSubscribed = false,
     this.isSubscribing = false,
+    this.heroTag,
   });
 
   final bool showImage;
@@ -63,6 +64,10 @@ class EpisodeCardConfig {
   final bool showSubscribeAction;
   final bool isSubscribed;
   final bool isSubscribing;
+
+  /// Optional Hero tag for shared element transitions to detail pages.
+  /// When provided, the image will be wrapped in a Hero widget.
+  final String? heroTag;
 }
 
 /// A reusable base episode card with configurable layout.
@@ -211,7 +216,7 @@ class BaseEpisodeCard extends StatelessWidget {
 
   Widget _buildImage(BuildContext context, ThemeData theme) {
     final size = config.imageSize;
-    return Container(
+    final image = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
@@ -231,6 +236,11 @@ class BaseEpisodeCard extends StatelessWidget {
         ),
       ),
     );
+
+    if (config.heroTag != null) {
+      return Hero(tag: config.heroTag!, child: image);
+    }
+    return image;
   }
 
   Widget _buildPlayButton(BuildContext context, ThemeData theme) {

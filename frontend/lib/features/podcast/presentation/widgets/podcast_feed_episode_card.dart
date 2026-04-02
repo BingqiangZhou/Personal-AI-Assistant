@@ -60,6 +60,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         showPlayButton: true,
         showQueueButton: true,
         isAddingToQueue: isAddingToQueue,
+        heroTag: 'episode_cover_${episode.id}',
       ),
       title: episode.title,
       onTap: onOpenDetail,

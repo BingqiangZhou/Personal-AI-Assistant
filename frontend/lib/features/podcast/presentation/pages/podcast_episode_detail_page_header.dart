@@ -185,8 +185,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     required bool isWide,
   }) {
     final size = isWide ? 76.0 : 56.0;
-
-    return Container(
+    final artwork = Container(
       key: Key(
         isWide
             ? 'podcast_episode_detail_wide_hero_artwork'
@@ -212,6 +211,11 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
           iconSize: size * 0.32,
         ),
       ),
+    );
+
+    return Hero(
+      tag: 'episode_cover_${episode.id}',
+      child: artwork,
     );
   }
 

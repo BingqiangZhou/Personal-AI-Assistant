@@ -46,18 +46,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final savedUsername = await _secureStorage.read(
       key: AppConstants.savedUsernameKey,
     );
-    final savedPassword = await _secureStorage.read(
-      key: AppConstants.savedPasswordKey,
-    );
 
     if (!mounted) {
       return;
     }
 
-    if (savedUsername != null && savedPassword != null) {
+    if (savedUsername != null) {
       setState(() {
         _emailController.text = savedUsername;
-        _passwordController.text = savedPassword;
         _rememberMe = true;
       });
     }
@@ -72,13 +68,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         key: AppConstants.savedUsernameKey,
         value: _emailController.text.trim(),
       );
-      await _secureStorage.write(
-        key: AppConstants.savedPasswordKey,
-        value: _passwordController.text,
-      );
+      // Note: password is NOT stored. The auth system's refresh token
+      // handles session persistence securely.
     } else {
       await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-      await _secureStorage.delete(key: AppConstants.savedPasswordKey);
     }
 
     if (!mounted) {
@@ -175,7 +168,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     if (value == null || value.isEmpty) {
                       return l10n.auth_enter_email;
                     }
-                    if (!value.contains('@')) {
+                    // Basic email format: something@something.something
+                    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                    if (!emailRegex.hasMatch(value.trim())) {
                       return l10n.auth_enter_valid_email;
                     }
                     return null;
@@ -230,9 +225,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           if (!_rememberMe) {
                             await _secureStorage.delete(
                               key: AppConstants.savedUsernameKey,
-                            );
-                            await _secureStorage.delete(
-                              key: AppConstants.savedPasswordKey,
                             );
                           }
                         },

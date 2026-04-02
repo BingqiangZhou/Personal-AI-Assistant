@@ -63,13 +63,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         key: AppConstants.savedUsernameKey,
         value: _emailController.text.trim(),
       );
-      await _secureStorage.write(
-        key: AppConstants.savedPasswordKey,
-        value: _passwordController.text,
-      );
+      // Note: password is NOT stored. The auth system's refresh token
+      // handles session persistence securely.
     } else {
       await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-      await _secureStorage.delete(key: AppConstants.savedPasswordKey);
     }
 
     ref.read(authProvider.notifier).register(
@@ -200,7 +197,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       if (value == null || value.isEmpty) {
                         return l10n.auth_enter_email;
                       }
-                      if (!value.contains('@')) {
+                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                      if (!emailRegex.hasMatch(value.trim())) {
                         return l10n.auth_enter_valid_email;
                       }
                       return null;
@@ -338,9 +336,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           if (!_rememberMe) {
                             await _secureStorage.delete(
                               key: AppConstants.savedUsernameKey,
-                            );
-                            await _secureStorage.delete(
-                              key: AppConstants.savedPasswordKey,
                             );
                           }
                         },
