@@ -3434,6 +3434,12 @@ abstract class AppLocalizations {
   /// **'Choose a font combination for the app'**
   String get appearance_font_section_subtitle;
 
+  /// Button label to reset font to default
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Default'**
+  String get appearance_font_reset;
+
   /// Notice shown when appearance settings change
   ///
   /// In en, this message translates to:

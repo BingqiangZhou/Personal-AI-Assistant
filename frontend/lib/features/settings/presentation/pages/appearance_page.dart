@@ -115,69 +115,150 @@ class _ThemeModeSection extends ConsumerWidget {
   }
 }
 
-/// Dropdown selector for font combinations.
-class _FontDropdown extends ConsumerWidget {
+/// Dropdown selector for font combinations with a reset button.
+///
+/// Uses a [TextEditingController] to keep the displayed text in sync
+/// when the font combination changes externally (e.g. reset, persistence load).
+class _FontDropdown extends ConsumerStatefulWidget {
   const _FontDropdown();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedCombo = ref.watch(fontCombinationProvider);
-    final scheme = Theme.of(context).colorScheme;
+  ConsumerState<_FontDropdown> createState() => _FontDropdownState();
+}
 
-    return DropdownMenu<String>(
-      key: const Key('appearance_font_dropdown'),
-      initialSelection: selectedCombo.id,
-      width: double.infinity,
-      menuHeight: 360,
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      ),
-      onSelected: (value) async {
-        if (value == null || value == selectedCombo.id) return;
-        await ref
-            .read(fontCombinationProvider.notifier)
-            .setFontCombination(value);
-        if (context.mounted) {
-          showTopFloatingNotice(
-            context,
-            message: context.l10n.appearance_changed,
-          );
-        }
-      },
-      dropdownMenuEntries: FontCombination.all
-          .map(
-            (combo) => DropdownMenuEntry<String>(
-              value: combo.id,
-              label: combo.displayName,
-              style: ButtonStyle(
-                textStyle: WidgetStatePropertyAll(
-                  tryGetFont(
-                    combo.bodyFontFamily,
-                    TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: scheme.onSurface,
+class _FontDropdownState extends ConsumerState<_FontDropdown> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final combo = ref.read(fontCombinationProvider);
+    _controller = TextEditingController(text: combo.displayName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedCombo = ref.watch(fontCombinationProvider);
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final isDefault =
+        selectedCombo.id == FontCombination.defaultCombination.id;
+
+    // Keep controller in sync when the provider value changes externally.
+    if (_controller.text != selectedCombo.displayName) {
+      _controller.text = selectedCombo.displayName;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: DropdownMenu<String>(
+              key: const Key('appearance_font_dropdown'),
+              controller: _controller,
+              initialSelection: selectedCombo.id,
+              width: double.infinity,
+              menuHeight: 360,
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor:
+                    scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: scheme.outlineVariant),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: scheme.outlineVariant),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: scheme.primary, width: 2),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              ),
+              onSelected: (value) async {
+                if (value == null) return;
+                await ref
+                    .read(fontCombinationProvider.notifier)
+                    .setFontCombination(value);
+                if (context.mounted) {
+                  showTopFloatingNotice(
+                    context,
+                    message: l10n.appearance_changed,
+                  );
+                }
+              },
+              dropdownMenuEntries: FontCombination.all
+                  .map(
+                    (combo) => DropdownMenuEntry<String>(
+                      value: combo.id,
+                      label: combo.displayName,
+                      style: ButtonStyle(
+                        textStyle: WidgetStatePropertyAll(
+                          tryGetFont(
+                            combo.bodyFontFamily,
+                            TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Reset to default button
+          Tooltip(
+            message: l10n.appearance_font_reset,
+            child: OutlinedButton(
+              onPressed: isDefault
+                  ? null
+                  : () async {
+                      await ref
+                          .read(fontCombinationProvider.notifier)
+                          .resetToDefault();
+                      if (context.mounted) {
+                        showTopFloatingNotice(
+                          context,
+                          message: l10n.appearance_changed,
+                        );
+                      }
+                    },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(
+                  color: isDefault
+                      ? scheme.outlineVariant
+                      : scheme.outline,
                 ),
               ),
+              child: Icon(
+                Icons.refresh,
+                size: 20,
+                color: isDefault
+                    ? scheme.outlineVariant
+                    : scheme.onSurfaceVariant,
+              ),
             ),
-          )
-          .toList(),
+          ),
+        ],
+      ),
     );
   }
 }

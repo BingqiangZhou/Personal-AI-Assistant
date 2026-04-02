@@ -2416,6 +2416,10 @@
     "@appearance_font_section_subtitle":  {
                                                     "description":  "Subtitle explaining font selection"
                                                 },
+    "appearance_font_reset":  "Reset to Default",
+    "@appearance_font_reset":  {
+                                        "description":  "Button label to reset font to default"
+                                    },
     "appearance_changed":  "Appearance updated",
     "@appearance_changed":  {
                                       "description":  "Notice shown when appearance settings change"

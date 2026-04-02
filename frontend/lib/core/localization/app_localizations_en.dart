@@ -1850,6 +1850,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a font combination for the app';
 
   @override
+  String get appearance_font_reset => 'Reset to Default';
+
+  @override
   String get appearance_changed => 'Appearance updated';
 
   @override

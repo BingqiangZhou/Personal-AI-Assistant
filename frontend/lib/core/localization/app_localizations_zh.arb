@@ -2371,6 +2371,10 @@
     "@appearance_font_section_subtitle":  {
                                                     "description":  "字体选择说明文字"
                                                 },
+    "appearance_font_reset":  "恢复默认",
+    "@appearance_font_reset":  {
+                                        "description":  "重置字体为默认字体的按钮"
+                                    },
     "appearance_changed":  "外观已更新",
     "@appearance_changed":  {
                                       "description":  "外观设置变更通知"

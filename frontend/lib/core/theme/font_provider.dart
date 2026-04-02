@@ -14,8 +14,7 @@ final fontCombinationProvider =
 
 /// Derived provider exposing the current font combination ID string.
 final fontCombinationIdProvider = Provider<String>((ref) {
-  ref.watch(fontCombinationProvider);
-  return ref.read(fontCombinationProvider.notifier).fontCombinationId;
+  return ref.watch(fontCombinationProvider).id;
 });
 
 /// Initial font combination ID, overridden at app startup from storage.
@@ -27,28 +26,34 @@ final initialFontCombinationIdProvider = Provider<String>(
 class FontCombinationNotifier extends Notifier<FontCombination> {
   LocalStorageService get _storage => ref.read(localStorageServiceProvider);
 
-  String _fontCombinationId = kFontCombinationDefault;
-
   @override
   FontCombination build() {
-    _fontCombinationId = ref.read(initialFontCombinationIdProvider);
-    return FontCombination.fromId(_fontCombinationId);
+    final initialId = ref.read(initialFontCombinationIdProvider);
+    return FontCombination.fromId(initialId);
   }
 
   /// The current font combination ID string.
-  String get fontCombinationId => _fontCombinationId;
+  String get fontCombinationId => state.id;
 
   /// Set the font combination by ID and persist to storage.
   Future<void> setFontCombination(String id) async {
-    _fontCombinationId = id;
     state = FontCombination.fromId(id);
     await _storage.saveString(AppConstants.fontCombinationKey, id);
+  }
+
+  /// Reset to the default font combination and persist.
+  Future<void> resetToDefault() async {
+    state = FontCombination.defaultCombination;
+    await _storage.saveString(
+      AppConstants.fontCombinationKey,
+      FontCombination.defaultCombination.id,
+    );
   }
 
   /// Load the saved font combination from storage (called during app init).
   Future<void> loadSavedFontCombination() async {
     final saved = await _storage.getString(AppConstants.fontCombinationKey);
-    _fontCombinationId = saved ?? kFontCombinationDefault;
-    state = FontCombination.fromId(_fontCombinationId);
+    final id = saved ?? kFontCombinationDefault;
+    state = FontCombination.fromId(id);
   }
 }

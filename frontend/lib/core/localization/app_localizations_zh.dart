@@ -1775,6 +1775,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appearance_font_section_subtitle => '为应用选择字体组合';
 
   @override
+  String get appearance_font_reset => '恢复默认';
+
+  @override
   String get appearance_changed => '外观已更新';
 
   @override
