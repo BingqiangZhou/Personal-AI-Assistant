@@ -989,7 +989,7 @@ class $EpisodesCacheTable extends EpisodesCache
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _subscriptionIdMeta = const VerificationMeta(
     'subscriptionId',
@@ -1116,8 +1116,6 @@ class $EpisodesCacheTable extends EpisodesCache
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('subscription_id')) {
       context.handle(
@@ -1202,7 +1200,7 @@ class $EpisodesCacheTable extends EpisodesCache
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => const {};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   EpisodesCacheData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -1477,7 +1475,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
   final Value<String?> subscriptionImageUrl;
   final Value<DateTime> publishedAt;
   final Value<DateTime> updatedAt;
-  final Value<int> rowid;
   const EpisodesCacheCompanion({
     this.id = const Value.absent(),
     this.subscriptionId = const Value.absent(),
@@ -1489,10 +1486,9 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
     this.subscriptionImageUrl = const Value.absent(),
     this.publishedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
   });
   EpisodesCacheCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required int subscriptionId,
     required String title,
     required String audioUrl,
@@ -1502,9 +1498,7 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
     this.subscriptionImageUrl = const Value.absent(),
     required DateTime publishedAt,
     required DateTime updatedAt,
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       subscriptionId = Value(subscriptionId),
+  }) : subscriptionId = Value(subscriptionId),
        title = Value(title),
        audioUrl = Value(audioUrl),
        publishedAt = Value(publishedAt),
@@ -1520,7 +1514,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
     Expression<String>? subscriptionImageUrl,
     Expression<DateTime>? publishedAt,
     Expression<DateTime>? updatedAt,
-    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1534,7 +1527,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
         'subscription_image_url': subscriptionImageUrl,
       if (publishedAt != null) 'published_at': publishedAt,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -1549,7 +1541,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
     Value<String?>? subscriptionImageUrl,
     Value<DateTime>? publishedAt,
     Value<DateTime>? updatedAt,
-    Value<int>? rowid,
   }) {
     return EpisodesCacheCompanion(
       id: id ?? this.id,
@@ -1562,7 +1553,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
       subscriptionImageUrl: subscriptionImageUrl ?? this.subscriptionImageUrl,
       publishedAt: publishedAt ?? this.publishedAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1601,9 +1591,6 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
     return map;
   }
 
@@ -1619,8 +1606,7 @@ class EpisodesCacheCompanion extends UpdateCompanion<EpisodesCacheData> {
           ..write('subscriptionTitle: $subscriptionTitle, ')
           ..write('subscriptionImageUrl: $subscriptionImageUrl, ')
           ..write('publishedAt: $publishedAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2145,7 +2131,7 @@ typedef $$PlaybackStatesTableProcessedTableManager =
     >;
 typedef $$EpisodesCacheTableCreateCompanionBuilder =
     EpisodesCacheCompanion Function({
-      required int id,
+      Value<int> id,
       required int subscriptionId,
       required String title,
       required String audioUrl,
@@ -2155,7 +2141,6 @@ typedef $$EpisodesCacheTableCreateCompanionBuilder =
       Value<String?> subscriptionImageUrl,
       required DateTime publishedAt,
       required DateTime updatedAt,
-      Value<int> rowid,
     });
 typedef $$EpisodesCacheTableUpdateCompanionBuilder =
     EpisodesCacheCompanion Function({
@@ -2169,7 +2154,6 @@ typedef $$EpisodesCacheTableUpdateCompanionBuilder =
       Value<String?> subscriptionImageUrl,
       Value<DateTime> publishedAt,
       Value<DateTime> updatedAt,
-      Value<int> rowid,
     });
 
 class $$EpisodesCacheTableFilterComposer
@@ -2387,7 +2371,6 @@ class $$EpisodesCacheTableTableManager
                 Value<String?> subscriptionImageUrl = const Value.absent(),
                 Value<DateTime> publishedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
               }) => EpisodesCacheCompanion(
                 id: id,
                 subscriptionId: subscriptionId,
@@ -2399,11 +2382,10 @@ class $$EpisodesCacheTableTableManager
                 subscriptionImageUrl: subscriptionImageUrl,
                 publishedAt: publishedAt,
                 updatedAt: updatedAt,
-                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required int id,
+                Value<int> id = const Value.absent(),
                 required int subscriptionId,
                 required String title,
                 required String audioUrl,
@@ -2413,7 +2395,6 @@ class $$EpisodesCacheTableTableManager
                 Value<String?> subscriptionImageUrl = const Value.absent(),
                 required DateTime publishedAt,
                 required DateTime updatedAt,
-                Value<int> rowid = const Value.absent(),
               }) => EpisodesCacheCompanion.insert(
                 id: id,
                 subscriptionId: subscriptionId,
@@ -2425,7 +2406,6 @@ class $$EpisodesCacheTableTableManager
                 subscriptionImageUrl: subscriptionImageUrl,
                 publishedAt: publishedAt,
                 updatedAt: updatedAt,
-                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

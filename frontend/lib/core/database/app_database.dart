@@ -14,7 +14,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        // Recreate episodes_cache with primary key on id
+        await migrator.deleteTable('episodes_cache');
+        await migrator.createTable(episodesCache);
+      }
+    },
+  );
 }
 
 // === Download Tasks Table ===
@@ -71,4 +82,7 @@ class EpisodesCache extends Table {
   TextColumn get subscriptionImageUrl => text().nullable()();
   DateTimeColumn get publishedAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

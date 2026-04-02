@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/audio_download_service.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
 import 'package:personal_ai_assistant/core/database/app_database.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_episodes_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 /// Page for managing downloaded podcast episodes.
@@ -139,10 +140,19 @@ class _DownloadTaskTile extends ConsumerWidget {
     final service = ref.read(downloadManagerProvider);
     final episodeAsync = ref.watch(episodeCacheMetaProvider(task.episodeId));
 
-    final episodeTitle = episodeAsync.asData?.value?.title;
-    final podcastTitle = episodeAsync.asData?.value?.subscriptionTitle;
-    final imageUrl = episodeAsync.asData?.value?.subscriptionImageUrl ??
-        episodeAsync.asData?.value?.imageUrl;
+    // When local cache is empty, watch API provider as fallback display
+    final cached = episodeAsync.asData?.value;
+    final apiAsync = cached == null
+        ? ref.watch(episodeDetailProvider(task.episodeId))
+        : null;
+
+    final episodeTitle = cached?.title ?? apiAsync?.asData?.value?.title;
+    final podcastTitle = cached?.subscriptionTitle ??
+        apiAsync?.asData?.value?.subscription?['title'] as String?;
+    final imageUrl = cached?.subscriptionImageUrl ??
+        cached?.imageUrl ??
+        apiAsync?.asData?.value?.subscriptionImageUrl ??
+        apiAsync?.asData?.value?.imageUrl;
 
     return Dismissible(
       key: ValueKey(task.id),

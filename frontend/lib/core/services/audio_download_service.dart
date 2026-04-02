@@ -53,7 +53,7 @@ class AudioDownloadService {
     if (title != null) {
       await _db.episodeCacheDao.upsertEpisode(
         EpisodesCacheCompanion.insert(
-          id: episodeId,
+          id: Value(episodeId),
           subscriptionId: subscriptionId ?? 0,
           title: title,
           audioUrl: audioUrl,
