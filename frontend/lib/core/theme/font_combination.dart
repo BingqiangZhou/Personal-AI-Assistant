@@ -89,6 +89,42 @@ class FontCombination {
       headingFontFamily: 'Poppins',
       bodyFontFamily: 'Lato',
     ),
+    FontCombination(
+      id: 'montserrat_merriweather',
+      displayName: 'Montserrat + Merriweather',
+      headingFontFamily: 'Montserrat',
+      bodyFontFamily: 'Merriweather',
+    ),
+    FontCombination(
+      id: 'playfair_display_source_sans_3',
+      displayName: 'Playfair Display + Source Sans 3',
+      headingFontFamily: 'PlayfairDisplay',
+      bodyFontFamily: 'SourceSans3',
+    ),
+    FontCombination(
+      id: 'raleway_roboto',
+      displayName: 'Raleway + Roboto',
+      headingFontFamily: 'Raleway',
+      bodyFontFamily: 'Roboto',
+    ),
+    FontCombination(
+      id: 'lexend_inter',
+      displayName: 'Lexend + Inter',
+      headingFontFamily: 'Lexend',
+      bodyFontFamily: 'Inter',
+    ),
+    FontCombination(
+      id: 'ibm_plex_sans_serif',
+      displayName: 'IBM Plex Sans + Serif',
+      headingFontFamily: 'IBMPlexSans',
+      bodyFontFamily: 'IBMPlexSerif',
+    ),
+    FontCombination(
+      id: 'fraunces_work_sans',
+      displayName: 'Fraunces + Work Sans',
+      headingFontFamily: 'Fraunces',
+      bodyFontFamily: 'WorkSans',
+    ),
   ];
 
   /// The default (current production) font combination.
