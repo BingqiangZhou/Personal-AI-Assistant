@@ -9,8 +9,9 @@ import 'package:personal_ai_assistant/core/theme/responsive_helpers.dart';
 /// Refined Minimal Design System - 简约现代设计系统
 ///
 /// Typography System:
-/// - Headings: Outfit (几何感、精致、现代)
-/// - Body: Plus Jakarta Sans (优雅、清晰、易读)
+/// - Headings: Space Grotesk (几何感、科技感、未来感)
+/// - Body: Inter (行业标准、极致清晰、屏幕优化)
+/// - Monospace: IBM Plex Mono (人文主义等宽、专业感)
 /// ============================================================
 
 class AppTheme {
@@ -21,17 +22,87 @@ class AppTheme {
   // These are resolved once and reused across all theme builds.
   // ============================================================
 
-  /// Cached font family name for Plus Jakarta Sans.
-  static final String _jakartaFontFamily =
-      GoogleFonts.plusJakartaSans().fontFamily!;
+  /// Cached font family name for Inter (app-wide default).
+  static final String _bodyFontFamily =
+      GoogleFonts.inter().fontFamily!;
 
-  /// A base TextStyle that only carries the Outfit font family.
-  /// Used with merge() to avoid repeated GoogleFonts.outfit() calls.
-  static final TextStyle _outfitBase = GoogleFonts.outfit();
+  /// A base TextStyle that only carries the Space Grotesk font family.
+  /// Used with merge() to avoid repeated GoogleFonts calls.
+  static final TextStyle _headingBase = GoogleFonts.spaceGrotesk();
 
-  /// A base TextStyle that only carries the Plus Jakarta Sans font family.
-  /// Used with merge() to avoid repeated GoogleFonts.plusJakartaSans() calls.
-  static final TextStyle _jakartaBase = GoogleFonts.plusJakartaSans();
+  /// A base TextStyle that only carries the Inter font family.
+  /// Used with merge() to avoid repeated GoogleFonts calls.
+  static final TextStyle _bodyBase = GoogleFonts.inter(
+    textStyle: const TextStyle(
+      fontFamilyFallback: ['Noto Sans SC', 'PingFang SC', 'Microsoft YaHei'],
+    ),
+  );
+
+  /// A base TextStyle that only carries the IBM Plex Mono font family.
+  static final TextStyle _monoBase = GoogleFonts.ibmPlexMono();
+
+  /// Returns a monospace TextStyle suitable for code, timestamps, and data.
+  /// Uses IBM Plex Mono for a refined, readable monospace accent.
+  static TextStyle monoStyle({
+    double fontSize = 13,
+    FontWeight fontWeight = FontWeight.w400,
+    double height = 1.5,
+    Color? color,
+  }) {
+    return _monoBase.copyWith(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: 0,
+      color: color,
+    );
+  }
+
+  // ============================================================
+  // NAMED STYLE HELPERS / 命名样式助手
+  // For sizes not covered by standard TextTheme slots.
+  // ============================================================
+
+  /// Transcript body text (fontSize: 15, height: 1.6).
+  /// Used across podcast transcript and show notes displays.
+  static TextStyle transcriptBody([Color? color]) => _bodyBase.copyWith(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 1.6,
+    letterSpacing: 0,
+    color: color,
+  );
+
+  /// Caption text (fontSize: 13, height: 1.4).
+  /// Fills the gap between bodySmall (12) and bodyMedium (14).
+  static TextStyle caption([Color? color]) => _bodyBase.copyWith(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+    letterSpacing: 0.1,
+    color: color,
+  );
+
+  /// Compact metadata text (fontSize: 11, height: 1.3).
+  /// For scores, tags, micro-labels.
+  static TextStyle metaSmall([Color? color]) => _bodyBase.copyWith(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    height: 1.3,
+    letterSpacing: 0.1,
+    color: color,
+  );
+
+  /// Navigation rail label (fontSize: 10, height: 1.0).
+  /// For extremely compact navigation labels.
+  static TextStyle navLabel(Color? color, {FontWeight weight = FontWeight.w500}) =>
+    _bodyBase.copyWith(
+      fontSize: 10,
+      fontWeight: weight,
+      height: 1.0,
+      letterSpacing: 0.2,
+      color: color,
+    );
 
   // ============================================================
   // RESPONSIVE HELPERS (re-exported from ResponsiveHelpers)
@@ -90,7 +161,7 @@ class AppTheme {
           ? AppColors.darkBackground
           : AppColors.lightBackground,
       textTheme: googleTextTheme,
-      fontFamily: _jakartaFontFamily,
+      fontFamily: _bodyFontFamily,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: scheme.onSurface,
@@ -108,7 +179,7 @@ class AppTheme {
               ? Brightness.light
               : Brightness.dark,
         ),
-        titleTextStyle: _withOutfit(
+        titleTextStyle: _withHeading(
           textTheme.titleLarge?.copyWith(
             color: scheme.onSurface,
             fontWeight: FontWeight.w600,
@@ -132,7 +203,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(extension.panelRadius),
           side: BorderSide(color: scheme.outlineVariant),
         ),
-        titleTextStyle: _withOutfit(textTheme.headlineSmall),
+        titleTextStyle: _withHeading(textTheme.headlineSmall),
       ),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant.withValues(alpha: 0.5),
@@ -145,12 +216,12 @@ class AppTheme {
         fillColor: isDark
             ? scheme.surfaceContainerHighest
             : scheme.surface,
-        hintStyle: _withJakarta(
+        hintStyle: _withBody(
           textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
           ),
         ),
-        labelStyle: _withJakarta(
+        labelStyle: _withBody(
           textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -183,10 +254,10 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        labelStyle: _withJakarta(
+        labelStyle: _withBody(
           textTheme.labelMedium?.copyWith(color: scheme.onSurface),
         ),
-        secondaryLabelStyle: _withJakarta(
+        secondaryLabelStyle: _withBody(
           textTheme.labelMedium?.copyWith(
             color: scheme.primary,
             fontWeight: FontWeight.w600,
@@ -195,7 +266,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: scheme.surface,
-        contentTextStyle: _withJakarta(
+        contentTextStyle: _withBody(
           textTheme.bodyMedium?.copyWith(
             color: scheme.onSurface,
           ),
@@ -227,7 +298,7 @@ class AppTheme {
         height: 72,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return _withJakarta(
+          return _withBody(
             textTheme.labelSmall?.copyWith(
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
@@ -250,13 +321,13 @@ class AppTheme {
         indicatorColor: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
         selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-        selectedLabelTextStyle: _withJakarta(
+        selectedLabelTextStyle: _withBody(
           textTheme.labelMedium?.copyWith(
             color: scheme.onSurface,
             fontWeight: FontWeight.w600,
           ),
         ),
-        unselectedLabelTextStyle: _withJakarta(
+        unselectedLabelTextStyle: _withBody(
           textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -269,7 +340,7 @@ class AppTheme {
           radius: extension.buttonRadius,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-          textStyle: _withJakarta(
+          textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -283,7 +354,7 @@ class AppTheme {
           radius: extension.buttonRadius,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-          textStyle: _withJakarta(
+          textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -299,7 +370,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          textStyle: _withJakarta(
+          textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -313,7 +384,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          textStyle: _withJakarta(
+          textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -447,22 +518,22 @@ class AppTheme {
     const base = TextTheme();
     return base.copyWith(
       displaySmall: TextStyle(
-        fontSize: 48,
-        height: 1.1,
-        fontWeight: FontWeight.w500,
+        fontSize: 44,
+        height: 1.05,
+        fontWeight: FontWeight.w600,
         letterSpacing: -1.5,
         color: primary,
       ),
       headlineLarge: TextStyle(
-        fontSize: 32,
-        height: 1.15,
-        fontWeight: FontWeight.w600,
+        fontSize: 30,
+        height: 1.1,
+        fontWeight: FontWeight.w700,
         letterSpacing: -1.0,
         color: primary,
       ),
       headlineMedium: TextStyle(
         fontSize: 24,
-        height: 1.2,
+        height: 1.15,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
         color: primary,
@@ -470,7 +541,7 @@ class AppTheme {
       headlineSmall: TextStyle(
         fontSize: 20,
         height: 1.25,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: -0.3,
         color: primary,
       ),
@@ -483,89 +554,92 @@ class AppTheme {
       ),
       titleMedium: TextStyle(
         fontSize: 16,
-        height: 1.3,
+        height: 1.35,
         fontWeight: FontWeight.w500,
+        letterSpacing: 0,
         color: primary,
       ),
       titleSmall: TextStyle(
         fontSize: 14,
-        height: 1.32,
+        height: 1.35,
         fontWeight: FontWeight.w500,
+        letterSpacing: 0,
         color: primary,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
-        height: 1.6,
+        height: 1.65,
         fontWeight: FontWeight.w400,
+        letterSpacing: 0,
         color: primary,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
-        height: 1.55,
+        height: 1.6,
         fontWeight: FontWeight.w400,
+        letterSpacing: 0,
         color: secondary,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
-        height: 1.45,
+        height: 1.5,
         fontWeight: FontWeight.w400,
+        letterSpacing: 0.1,
         color: tertiary,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
         height: 1.2,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
         color: primary,
       ),
       labelMedium: TextStyle(
         fontSize: 12,
-        height: 1.15,
+        height: 1.2,
         fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
+        letterSpacing: 0.2,
         color: secondary,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
-        height: 1.1,
+        height: 1.15,
         fontWeight: FontWeight.w500,
-        letterSpacing: 0.15,
+        letterSpacing: 0.3,
         color: tertiary,
       ),
     );
   }
 
-  /// Apply Outfit font family to a [TextStyle] using the cached base.
-  /// Avoids calling GoogleFonts.outfit() on every theme build.
-  static TextStyle _withOutfit(TextStyle? base) {
-    return _outfitBase.merge(base);
+  /// Apply heading font (Space Grotesk) to a [TextStyle] using the cached base.
+  static TextStyle _withHeading(TextStyle? base) {
+    return _headingBase.merge(base);
   }
 
-  /// Apply Plus Jakarta Sans font family to a [TextStyle] using the cached base.
-  /// Avoids calling GoogleFonts.plusJakartaSans() on every theme build.
-  static TextStyle _withJakarta(TextStyle? base) {
-    return _jakartaBase.merge(base);
+  /// Apply body font (Inter) to a [TextStyle] using the cached base.
+  static TextStyle _withBody(TextStyle? base) {
+    return _bodyBase.merge(base);
   }
 
-  /// Build typography with Outfit + Plus Jakarta Sans.
+  /// Build typography with Space Grotesk (headings) + Inter (body/UI).
   /// Uses cached font family references instead of repeated GoogleFonts calls.
   static TextTheme _buildGoogleTextTheme(TextTheme baseTheme) {
     return baseTheme.copyWith(
-      // Display & Headings - Outfit
-      displaySmall: _withOutfit(baseTheme.displaySmall),
-      headlineLarge: _withOutfit(baseTheme.headlineLarge),
-      headlineMedium: _withOutfit(baseTheme.headlineMedium),
-      headlineSmall: _withOutfit(baseTheme.headlineSmall),
-      titleLarge: _withOutfit(baseTheme.titleLarge),
-      // Body & Labels - Plus Jakarta Sans
-      titleMedium: _withJakarta(baseTheme.titleMedium),
-      titleSmall: _withJakarta(baseTheme.titleSmall),
-      bodyLarge: _withJakarta(baseTheme.bodyLarge),
-      bodyMedium: _withJakarta(baseTheme.bodyMedium),
-      bodySmall: _withJakarta(baseTheme.bodySmall),
-      labelLarge: _withJakarta(baseTheme.labelLarge),
-      labelMedium: _withJakarta(baseTheme.labelMedium),
-      labelSmall: _withJakarta(baseTheme.labelSmall),
+      // Display & Headings - Space Grotesk
+      displaySmall: _withHeading(baseTheme.displaySmall),
+      headlineLarge: _withHeading(baseTheme.headlineLarge),
+      headlineMedium: _withHeading(baseTheme.headlineMedium),
+      headlineSmall: _withHeading(baseTheme.headlineSmall),
+      titleLarge: _withHeading(baseTheme.titleLarge),
+      // Body & Labels - Inter
+      titleMedium: _withBody(baseTheme.titleMedium),
+      titleSmall: _withBody(baseTheme.titleSmall),
+      bodyLarge: _withBody(baseTheme.bodyLarge),
+      bodyMedium: _withBody(baseTheme.bodyMedium),
+      bodySmall: _withBody(baseTheme.bodySmall),
+      labelLarge: _withBody(baseTheme.labelLarge),
+      labelMedium: _withBody(baseTheme.labelMedium),
+      labelSmall: _withBody(baseTheme.labelSmall),
     );
   }
 }
