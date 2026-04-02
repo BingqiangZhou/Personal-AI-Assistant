@@ -518,7 +518,7 @@ class _ProfileCacheManagementPageState
                 Text(
                   _formatMB(stats.totalBytes).replaceAll(' MB', ''),
                   style: theme.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -650,7 +650,7 @@ class _ProfileCacheManagementPageState
             Text(
               _formatMB(stats.bytes),
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(width: 10),
@@ -698,7 +698,7 @@ class _ProfileCacheManagementPageState
                     l10n.profile_cache_manage_details,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
                     ),
                   ),
@@ -789,7 +789,7 @@ class _ProfileCacheManagementPageState
                         foregroundColor: palette.deepCleanForeground,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         textStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

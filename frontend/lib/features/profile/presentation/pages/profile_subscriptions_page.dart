@@ -477,9 +477,8 @@ class _ProfileSubscriptionsPageState
         child: Center(
           child: Text(
             '${l10n.profile_subscriptions}: $total',
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
             ),
           ),
         ),

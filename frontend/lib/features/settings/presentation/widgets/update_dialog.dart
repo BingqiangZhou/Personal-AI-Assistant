@@ -11,6 +11,7 @@ import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 class _UpdateDialogPalette {
@@ -264,7 +265,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     icon: const Icon(Icons.skip_next, size: 18),
                     label: Text(
                       l10n.update_skip_this_version,
-                      style: const TextStyle(fontSize: 13),
+                      style: AppTheme.caption(),
                     ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -319,7 +320,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 'v${widget.release.version}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: palette.accent,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -453,22 +454,22 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     ),
                     h1: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                     h2: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                     h3: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                     listBullet: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                     strong: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                     code: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,

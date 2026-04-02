@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// Authentication Verification Page - Direct API Testing
 /// This page bypasses complex build issues and tests backend connectivity directly
@@ -269,11 +270,10 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
               ),
               child: Text(
                 _status,
-                style: TextStyle(
+                style: AppTheme.monoStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: _statusColor,
-                  fontFamily: 'monospace',
                 ),
               ),
             ),
@@ -327,14 +327,14 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('📋 Test Flow:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 6),
-          Text('1. Must run Backend Docker first (port 8000)', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('2. Click "Check Health" to verify connection', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('3. Click "Register" to create test user', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('4. Click "Login" to get access/refresh tokens', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('5. Click "Get User Info" to verify tokens work', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('6. If all pass → Backend ✅ Ready!', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('1. Must run Backend Docker first (port 8000)', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('2. Click "Check Health" to verify connection', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('3. Click "Register" to create test user', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('4. Click "Login" to get access/refresh tokens', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('5. Click "Get User Info" to verify tokens work', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('6. If all pass → Backend ✅ Ready!', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -365,10 +365,9 @@ class _TestButton extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: AppTheme.monoStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          fontFamily: 'monospace',
         ),
       ),
     );

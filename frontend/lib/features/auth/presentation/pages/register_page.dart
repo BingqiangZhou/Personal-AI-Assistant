@@ -136,7 +136,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           l10n.auth_create_account,
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                         ),
@@ -370,12 +370,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   },
                                   child: Text(
                                     l10n.auth_terms_and_conditions,
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          decoration: TextDecoration.underline,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -387,12 +388,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   },
                                   child: Text(
                                     l10n.auth_privacy_policy,
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          decoration: TextDecoration.underline,
+                                        ),
                                   ),
                                 ),
                               ),

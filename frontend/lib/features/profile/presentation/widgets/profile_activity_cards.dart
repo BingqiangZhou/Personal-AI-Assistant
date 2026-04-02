@@ -237,7 +237,7 @@ class ProfileActivityCards extends ConsumerWidget {
                     Text(
                       value,
                       style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),

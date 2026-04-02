@@ -141,7 +141,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 _fallbackForgotPasswordTitle,
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
                           ),
@@ -231,7 +231,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 _fallbackResetEmailSent,
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: Colors.green,
                                 ),
                           ),
@@ -292,7 +292,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                       },
                       child: Text(
                         l10n?.auth_resend_email ?? _fallbackResendEmail,
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),

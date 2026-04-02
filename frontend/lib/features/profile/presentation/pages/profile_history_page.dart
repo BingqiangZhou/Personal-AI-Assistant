@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -327,10 +328,10 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                 'profile_history_title_${episode.id}',
                               ),
                               episode.title,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
+                              style: AppTheme.caption(
+                                    Theme.of(context).colorScheme.onSurface,
+                                  ).copyWith(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 13,
                                     height: 1.15,
                                   ),
                               strutStyle: const StrutStyle(
@@ -380,15 +381,11 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                             )!.podcast_default_podcast,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onPrimary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 10,
+                                        style: AppTheme.navLabel(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
+                                              weight: FontWeight.w700,
                                             ),
                                       ),
                                     ),
@@ -404,12 +401,10 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                   const SizedBox(width: 3),
                                   Text(
                                     _formatPlayedAt(episode.lastPlayedAt),
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(
+                                    style: AppTheme.metaSmall(
+                                          Theme.of(
                                             context,
                                           ).colorScheme.onSurfaceVariant,
-                                          fontSize: 11,
                                         ),
                                   ),
                                   const SizedBox(width: 8),
@@ -423,12 +418,10 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                   const SizedBox(width: 3),
                                   Text(
                                     _buildProgressText(context, episode),
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(
+                                    style: AppTheme.metaSmall(
+                                          Theme.of(
                                             context,
                                           ).colorScheme.onSurfaceVariant,
-                                          fontSize: 11,
                                         ),
                                   ),
                                 ],

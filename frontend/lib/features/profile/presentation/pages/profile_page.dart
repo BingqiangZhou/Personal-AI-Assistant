@@ -180,9 +180,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: Text(
             (user?.displayName ?? l10n.profile_guest_user).characters.first
                 .toUpperCase(),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
               color: theme.colorScheme.surface,
             ),
           ),
@@ -281,6 +280,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       children: [
         _buildLanguageSettingsItem(context),
         _buildThemeSettingsItem(context),
+        // TEMP: Font preview for typography selection (remove after choosing)
+        _buildSettingsItem(
+          context,
+          icon: Icons.font_download_outlined,
+          title: 'Font Preview',
+          subtitle: 'Compare and select font combinations',
+          trailing: const Icon(Icons.chevron_right),
+          tileKey: const Key('font_preview_item'),
+          onTap: () => context.push('/settings/font-preview'),
+        ),
       ],
     );
 

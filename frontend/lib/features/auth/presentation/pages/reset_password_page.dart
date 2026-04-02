@@ -138,7 +138,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   Text(
                     l10n.action_completed,
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: Colors.green,
                     ),
                     textAlign: TextAlign.center,
@@ -217,7 +217,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                           l10n.auth_set_new_password,
                           style: Theme.of(context).textTheme.headlineLarge
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                         ),
