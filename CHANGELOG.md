@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.38.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.37.0...v0.38.0) - 2026-04-03 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.38.0))
+
+### ⚡ Performance
+
+- *(frontend)* Optimize downloads page, unify storage keys, add queue error handling ([c9c85ff](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c9c85ff16f62f85c91d7115a5c87873ed457aac5))
+- *(frontend)* Auto-load highlight data on provider init, add RepaintBoundary ([d7c4bbd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d7c4bbdc5a5bbf41dd3b6d45c304292bc548e47a))
+
+### 🎨 Styling
+
+- *(ui)* Adopt Cosmic Editorial palette with indigo-violet theme and entrance animations ([53f297b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/53f297b203de71d78214ff605bad57e4a76dd00e))
+- *(ui)* Polish widgets with cosmic theme tokens, animations, and design refinements ([80f1d64](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/80f1d64ec0f42070bcd8ed2d134814d93a78e121))
+
+### 🐛 Bug Fixes
+
+- *(frontend)* I18n hardcoded strings, extract auth helpers, remove legacy typedef ([3dec88b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3dec88b9ec4e67205e0d53be0db92adc90713e52))
+- *(network)* Remove trailing slash from baseUrl to prevent double-slash 404 errors ([ec5fbab](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ec5fbab103c5d7967d9cbc70340241043e537f2a))
+
+### 🚀 Features
+
+- *(theme)* Add controlRadius, sheetRadius, pillRadius tokens ([9131849](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9131849d8cf6a66a3e0cbf74744a0b1265806a3c))
+
+### 🚜 Refactor
+
+- *(network)* Extract RetryInterceptor from DioClient ([6a9040e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6a9040e6dd188c934feba6600cb4297914579a12))
+
+### 🧪 Testing
+
+- *(network)* Add RetryInterceptor and request deduplication tests ([2923780](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/29237800ce935657d4a9dc45af7a86280b3782d0))
+
+
+
 ## [0.37.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.36.0...v0.37.0) - 2026-04-02 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.37.0))
 
 ### 🐛 Bug Fixes
