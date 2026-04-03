@@ -89,6 +89,12 @@ async def application_lifespan(app: FastAPI):
         for issue in config_issues:
             logger.warning("Configuration warning: %s", issue)
 
+    if settings.ENVIRONMENT == "development" and settings.DEBUG:
+        logger.warning(
+            "SECURITY: Mock authentication is ENABLED (ENVIRONMENT=development, DEBUG=true). "
+            "Never use in production!"
+        )
+
     # Initialize database
     await init_db()
 

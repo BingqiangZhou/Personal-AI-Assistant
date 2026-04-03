@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str | None = None
     ENVIRONMENT: str = "development"
+    DEBUG: bool = False
 
     # Database
     DATABASE_URL: str | None = None
@@ -155,6 +156,11 @@ class Settings(BaseSettings):
     AI_CLIENT_BASE_DELAY: int = 2
     AI_CLIENT_MAX_PROMPT_LENGTH: int = 1000000
 
+    _WEAK_PASSWORDS: frozenset[str] = frozenset({
+        "mysecurepass2024", "password", "admin", "root", "postgres",
+        "123456", "changeme", "default", "secret", "test",
+    })
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
@@ -236,6 +242,17 @@ class Settings(BaseSettings):
         self.SECRET_KEY = get_or_generate_secret_key()
         return self.SECRET_KEY
 
+    @staticmethod
+    def _extract_db_password(url: str) -> str | None:
+        """Extract password from a database URL like postgresql://user:password@host/db."""
+        try:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(url)
+            return parsed.password
+        except Exception:
+            return None
+
     def validate_production_config(self) -> list[str]:
         """Validate configuration for production environment."""
         issues = []
@@ -249,11 +266,13 @@ class Settings(BaseSettings):
                     "ALLOWED_HOSTS contains '*' which allows all origins. "
                     "Specify exact domains in production."
                 )
-            if self.DATABASE_URL and "MySecurePass2024" in self.DATABASE_URL:
-                issues.append(
-                    "Database password appears to be the default value. "
-                    "Change POSTGRES_PASSWORD in production."
-                )
+            if self.DATABASE_URL:
+                password = self._extract_db_password(self.DATABASE_URL)
+                if password and password.lower() in self._WEAK_PASSWORDS:
+                    issues.append(
+                        "Database password appears to be a weak/default value. "
+                        "Change POSTGRES_PASSWORD in production."
+                    )
         return issues
 
 

@@ -9,14 +9,14 @@
 - Next: EC256 support planned for v1.3.0
 """
 
+import hashlib
 import logging
+import os
 import secrets
 import time
 from datetime import UTC, datetime, timedelta
-
-
-logger = logging.getLogger(__name__)
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 from fastapi import Depends, Header, HTTPException, Query, status
@@ -24,6 +24,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.core.config import get_or_generate_secret_key, settings
+
+
+logger = logging.getLogger(__name__)
 
 
 # Password hashing context
@@ -259,8 +262,8 @@ def verify_token_optional(
     In production, raises an exception when no token is provided.
     """
     if token is None:
-        # Only return mock user in development mode
-        if settings.ENVIRONMENT == "development":
+        # Only return mock user in development mode with DEBUG enabled
+        if settings.ENVIRONMENT == "development" and settings.DEBUG:
             return {
                 "sub": "dev-mock-00000000-0000-0000-000000000001",
                 "email": "dev-mock@internal.local",
@@ -440,34 +443,10 @@ def encrypt_data(plaintext: str) -> str:
 
 
 def decrypt_data(ciphertext: str) -> str:
-    """Decrypt sensitive data that was encrypted using encrypt_data().
-
-    Args:
-        ciphertext: The encrypted string to decrypt
-
-    Returns:
-        Decrypted plaintext string
-
-    Raises:
-        ValueError: If decryption fails (invalid data, wrong key, etc.)
-
-    Example:
-        >>> decrypted = decrypt_data(encrypted_value_from_db)
-        >>> print(decrypted)  # "my-secret-api-key"
-
-    """
+    """Decrypt sensitive data that was encrypted using encrypt_data()."""
     if not ciphertext:
         return ""
 
-    # Validate ciphertext format (Fernet tokens start with 'gAAAA' and are base64-like)
-    if not ciphertext.startswith("gAAAA"):
-        raise ValueError(
-            f"Invalid encrypted data format: expected Fernet format (starts with 'gAAAA'), "
-            f"got: {ciphertext[:20] if len(ciphertext) >= 20 else ciphertext}... "
-            f"(length: {len(ciphertext)})",
-        )
-
-    # Import InvalidToken for better error handling
     from cryptography.fernet import InvalidToken
 
     fernet = _get_fernet()
@@ -475,28 +454,13 @@ def decrypt_data(ciphertext: str) -> str:
         decrypted_bytes = fernet.decrypt(ciphertext.encode("utf-8"))
         return decrypted_bytes.decode("utf-8")
     except InvalidToken as err:
-        # Fernet-specific error: typically means wrong key or corrupted data
         raise ValueError(
-            f"Decryption failed (InvalidToken): The encrypted data was likely encrypted "
+            f"Decryption failed: The encrypted data was likely encrypted "
             f"with a different SECRET_KEY. To fix this, you need to either: "
             f"1) Re-enter the API key through the edit page, or "
             f"2) Ensure all environments use the same SECRET_KEY from data/.secret_key. "
-            f"Data info: length={len(ciphertext)}, prefix={ciphertext[:10]}...",
+            f"Data info: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}...",
         ) from err
-    except ValueError as e:
-        # Base64 decoding error or other value errors
-        raise ValueError(
-            f"Decryption failed (ValueError): {str(e) or 'invalid data format'}. "
-            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}...",
-        ) from e
-    except Exception as e:
-        # Other unexpected errors
-        error_type = type(e).__name__
-        error_msg = str(e) if str(e) else "no error message"
-        raise ValueError(
-            f"Decryption failed ({error_type}): {error_msg}. "
-            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}...",
-        ) from e
 
 
 # === Password-based Encryption for Cross-Server API Key Export/Import ===
@@ -672,11 +636,28 @@ _RSA_PRIVATE_KEY = None
 _RSA_PUBLIC_KEY = None
 
 
+def _derive_rsa_key_password() -> bytes:
+    """Derive a password for RSA key encryption from the application SECRET_KEY.
+
+    Uses PBKDF2-HMAC-SHA256 with a fixed salt for deterministic key derivation.
+    This is NOT for hashing passwords -- the fixed salt ensures the same
+    SECRET_KEY always produces the same encryption password, allowing key
+    recovery across restarts.
+    """
+    secret = get_or_generate_secret_key().encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", secret, b"stella-rsa-key-salt", 100_000)
+
+
 def get_or_generate_rsa_keys():
     """Get or generate RSA key pair for asymmetric encryption.
 
-    The private key is stored in `data/.rsa_keys` file.
-    The public key is derived from the private key.
+    The private key is stored encrypted at rest in ``data/.rsa_keys`` using
+    :class:`~cryptography.hazmat.primitives.serialization.BestAvailableEncryption`.
+    The encryption password is derived from the application SECRET_KEY via
+    PBKDF2, so rotating SECRET_KEY requires regenerating the RSA key pair.
+
+    If an existing key file is found in the old unencrypted format it is
+    automatically migrated to the encrypted format (atomic write).
 
     Returns:
         Tuple of (private_key, public_key) from cryptography library
@@ -684,46 +665,87 @@ def get_or_generate_rsa_keys():
     Note:
         - RSA-2048 with OAEP padding provides strong security
         - Keys are cached in memory for performance
-        - Private key is stored on disk (protect this file in production)
+        - Private key is encrypted at rest on disk
 
     """
     global _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
-    if _RSA_PRIVATE_KEY is None or _RSA_PUBLIC_KEY is None:
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric import rsa
+    if _RSA_PRIVATE_KEY is not None and _RSA_PUBLIC_KEY is not None:
+        return _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
-        rsa_key_file = Path("data/.rsa_keys")
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
 
-        if rsa_key_file.exists():
-            # Load existing key pair
-            with open(rsa_key_file, "rb") as f:
-                pem_data = f.read()
-                from cryptography.hazmat.primitives.serialization import (
-                    load_pem_private_key,
+    rsa_key_file = Path("data/.rsa_keys")
+    encryption_password = _derive_rsa_key_password()
+
+    if rsa_key_file.exists():
+        pem_data = rsa_key_file.read_bytes()
+
+        # Try loading with encryption password first (new format)
+        private_key = None
+        try:
+            private_key = serialization.load_pem_private_key(
+                pem_data, password=encryption_password
+            )
+        except (ValueError, TypeError):
+            # Old unencrypted key -- migrate it
+            try:
+                private_key = serialization.load_pem_private_key(
+                    pem_data, password=None
                 )
+                # Re-encrypt and save with atomic write
+                encrypted_pem = private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.BestAvailableEncryption(
+                        encryption_password
+                    ),
+                )
+                with NamedTemporaryFile(
+                    dir=str(rsa_key_file.parent), delete=False, suffix=".tmp"
+                ) as tmp:
+                    tmp_path = tmp.name
+                    tmp.write(encrypted_pem)
+                try:
+                    os.replace(tmp_path, str(rsa_key_file))
+                    logger.info("Migrated RSA private key to encrypted format")
+                except Exception:
+                    os.unlink(tmp_path)
+                    raise
+            except Exception as e:
+                raise ValueError(f"Failed to load RSA private key: {e}") from e
 
-                _RSA_PRIVATE_KEY = load_pem_private_key(pem_data, password=None)
-                _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
-        else:
-            # Generate new key pair
-            _RSA_PRIVATE_KEY = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=2048,
-                backend=default_backend(),
-            )
-            _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
+        _RSA_PRIVATE_KEY = private_key
+        _RSA_PUBLIC_KEY = private_key.public_key()
+    else:
+        _RSA_PRIVATE_KEY = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend(),
+        )
+        _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
 
-            # Save private key to disk
-            rsa_key_file.parent.mkdir(parents=True, exist_ok=True)
-            pem_private = _RSA_PRIVATE_KEY.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            with open(rsa_key_file, "wb") as f:
-                f.write(pem_private)
+        rsa_key_file.parent.mkdir(parents=True, exist_ok=True)
+        encrypted_pem = _RSA_PRIVATE_KEY.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(
+                encryption_password
+            ),
+        )
+        # Atomic write for new key
+        with NamedTemporaryFile(
+            dir=str(rsa_key_file.parent), delete=False, suffix=".tmp"
+        ) as tmp:
+            tmp_path = tmp.name
+            tmp.write(encrypted_pem)
+        try:
+            os.replace(tmp_path, str(rsa_key_file))
+        except Exception:
+            os.unlink(tmp_path)
+            raise
 
     return _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
