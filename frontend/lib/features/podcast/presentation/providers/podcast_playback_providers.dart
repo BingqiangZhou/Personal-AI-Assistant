@@ -21,6 +21,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/pl
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
+import 'package:personal_ai_assistant/shared/constants/storage_keys.dart';
 
 part 'podcast_playback_helpers.dart';
 part 'podcast_playback_queue_controller.dart';
@@ -34,9 +35,6 @@ typedef PlaybackRateSelectionSnapshot = ({
   double speed,
   bool applyToSubscription,
 });
-
-const String kLastPlaybackSnapshotStorageKeyPrefix =
-    'podcast_last_playback_snapshot_v1';
 
 /// Manages Timer lifecycle with automatic cleanup.
 /// Ensures all timers are cancelled and nullified properly.

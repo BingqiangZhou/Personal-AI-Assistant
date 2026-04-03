@@ -38,3 +38,27 @@ final episodeCacheMetaProvider =
   final db = ref.watch(appDatabaseProvider);
   return db.episodeCacheDao.getById(episodeId);
 });
+
+/// Groups download tasks by status: [active, failed, completed].
+///
+/// Used by the downloads page to render sections without filtering in build().
+typedef GroupedDownloads = ({
+  List<DownloadTask> active,
+  List<DownloadTask> failed,
+  List<DownloadTask> completed,
+});
+
+final groupedDownloadsProvider = Provider<GroupedDownloads>((ref) {
+  final asyncValue = ref.watch(downloadsListProvider);
+  final tasks = asyncValue.whenOrNull(
+        data: (data) => data,
+      ) ??
+      [];
+  return (
+    active: tasks
+        .where((t) => t.status == 'pending' || t.status == 'downloading')
+        .toList(),
+    failed: tasks.where((t) => t.status == 'failed').toList(),
+    completed: tasks.where((t) => t.status == 'completed').toList(),
+  );
+});

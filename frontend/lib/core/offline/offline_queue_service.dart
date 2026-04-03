@@ -130,6 +130,12 @@ OfflineQueueService offlineQueueService(Ref ref) {
             headers: request.headers,
           ),
         );
+      }).catchError((error) {
+        logger.AppLogger.error(
+          'Offline queue processing failed',
+          error: error,
+          tag: 'OfflineQueue',
+        );
       });
     }
   });

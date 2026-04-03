@@ -16,18 +16,17 @@ import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/storage/secure_storage_service.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/shared/constants/storage_keys.dart';
 
 // Token refresh constants
 const int _tokenRefreshBufferMinutes = 5; // Refresh 5 minutes before expiry
 const int _tokenCheckIntervalSeconds = 180; // Check every 3 minutes
-const String _lastPlaybackSnapshotStorageKeyPrefix =
-    'podcast_last_playback_snapshot_v1';
 
 @visibleForTesting
 List<String> playbackSnapshotKeysToClearOnLogout(String? userId) {
-  final keys = <String>[_lastPlaybackSnapshotStorageKeyPrefix];
+  final keys = <String>[kLastPlaybackSnapshotStorageKeyPrefix];
   if (userId != null && userId.isNotEmpty) {
-    keys.add('${_lastPlaybackSnapshotStorageKeyPrefix}_$userId');
+    keys.add('${kLastPlaybackSnapshotStorageKeyPrefix}_$userId');
   }
   return keys;
 }

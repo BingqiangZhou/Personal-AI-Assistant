@@ -16,63 +16,63 @@ class PodcastDownloadsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
     final asyncDownloads = ref.watch(downloadsListProvider);
+    final grouped = ref.watch(groupedDownloadsProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.downloads_page_title),
         actions: [
-          asyncDownloads.maybeWhen(
-            data: (tasks) {
-              final completed = tasks
-                  .where((t) => t.status == 'completed')
-                  .toList();
-              if (completed.isEmpty) return const SizedBox.shrink();
-              return IconButton(
-                icon: const Icon(Icons.delete_sweep),
-                tooltip: l10n.downloads_delete_all,
-                onPressed: () => _confirmDeleteAll(context, ref, completed),
-              );
-            },
-            orElse: () => const SizedBox.shrink(),
-          ),
+          if (grouped.completed.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep),
+              tooltip: l10n.downloads_delete_all,
+              onPressed: () =>
+                  _confirmDeleteAll(context, ref, grouped.completed),
+            ),
         ],
       ),
       body: asyncDownloads.when(
         data: (tasks) {
           if (tasks.isEmpty) {
-            return _EmptyState();
+            return const _EmptyState();
           }
 
-          final active =
-              tasks.where((t) => t.status == 'pending' || t.status == 'downloading').toList();
-          final completed =
-              tasks.where((t) => t.status == 'completed').toList();
-          final failed = tasks.where((t) => t.status == 'failed').toList();
+          // Build flat list with section headers for lazy rendering
+          final items = _buildItems(grouped, l10n);
 
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.only(bottom: 100),
-            children: [
-              if (active.isNotEmpty) ...[
-                _SectionHeader(title: l10n.downloads_active_title),
-                ...active.map((t) => _DownloadTaskTile(task: t)),
-              ],
-              if (failed.isNotEmpty) ...[
-                _SectionHeader(title: l10n.download_button_failed),
-                ...failed.map((t) => _DownloadTaskTile(task: t)),
-              ],
-              if (completed.isNotEmpty) ...[
-                _SectionHeader(title: l10n.downloads_completed_title),
-                ...completed.map((t) => _DownloadTaskTile(task: t)),
-              ],
-            ],
+            itemCount: items.length,
+            itemBuilder: (context, index) => items[index],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, __) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(child: Text(e.toString())),
       ),
     );
+  }
+
+  /// Builds a flat list of [_ListItem]s mixing section headers and task tiles.
+  static List<Widget> _buildItems(
+    GroupedDownloads grouped,
+    AppLocalizations l10n,
+  ) {
+    final items = <Widget>[];
+    if (grouped.active.isNotEmpty) {
+      items.add(_SectionHeader(title: l10n.downloads_active_title));
+      items.addAll(grouped.active.map((t) => _DownloadTaskTile(task: t)));
+    }
+    if (grouped.failed.isNotEmpty) {
+      items.add(_SectionHeader(title: l10n.download_button_failed));
+      items.addAll(grouped.failed.map((t) => _DownloadTaskTile(task: t)));
+    }
+    if (grouped.completed.isNotEmpty) {
+      items.add(_SectionHeader(title: l10n.downloads_completed_title));
+      items.addAll(
+          grouped.completed.map((t) => _DownloadTaskTile(task: t)));
+    }
+    return items;
   }
 
   void _confirmDeleteAll(
@@ -315,6 +315,8 @@ class _StatusIcon extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
