@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+
 /// ============================================================
 /// Arctic Garden Design System - 页面转场动画
 ///
@@ -156,6 +158,9 @@ class ArcticPageRoute<T> extends PageRouteBuilder<T> {
 }
 
 /// AuroraTransition - 极光效果转场
+///
+/// Features a subtle cosmic aurora overlay that fades through the
+/// page content, using indigo-violet with a warm amber twinkle.
 class _AuroraTransition extends StatelessWidget {
   const _AuroraTransition({
     required this.animation,
@@ -167,9 +172,24 @@ class _AuroraTransition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Aurora overlay fades in early and fades out as content appears
+    final auroraOpacity = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 0.18)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.18, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 60,
+      ),
+    ]).animate(animation);
+
+    // Content animations with cosmic deceleration
     final fadeAnimation = CurvedAnimation(
       parent: animation,
-      curve: Curves.easeOutQuart,
+      curve: Curves.easeOutCubic,
     );
 
     final slideAnimation = Tween<Offset>(
@@ -177,25 +197,57 @@ class _AuroraTransition extends StatelessWidget {
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: animation,
-      curve: Curves.easeOutQuart,
+      curve: Curves.easeOutCubic,
     ));
 
     final scaleAnimation = Tween<double>(begin: 0.98, end: 1.0).animate(
       CurvedAnimation(
         parent: animation,
-        curve: Curves.easeOutQuart,
+        curve: Curves.easeOutCubic,
       ),
     );
 
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: SlideTransition(
-        position: slideAnimation,
-        child: ScaleTransition(
-          scale: scaleAnimation,
-          child: child,
+    return Stack(
+      children: [
+        // Content layer
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
+          ),
         ),
-      ),
+        // Aurora overlay layer — indigo-violet with warm amber twinkle
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: auroraOpacity,
+              builder: (context, _) {
+                final v = auroraOpacity.value;
+                return v > 0.0
+                    ? DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.primary.withValues(alpha: v * 0.6),
+                              AppColors.primaryLight.withValues(alpha: v * 0.4),
+                              AppColors.accentWarm.withValues(alpha: v * 0.15),
+                            ],
+                            stops: const [0.0, 0.6, 1.0],
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

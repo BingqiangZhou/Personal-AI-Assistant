@@ -481,16 +481,16 @@ class AppTheme {
     );
 
     return base.copyWith(
-      primary: isDark ? const Color(0xFF60A5FA) : AppColors.primary,
-      onPrimary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+      primary: isDark ? const Color(0xFFA5B4FC) : AppColors.primary,
+      onPrimary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       primaryContainer: isDark
           ? AppColors.primaryContainerDark
           : AppColors.primaryContainer,
       onPrimaryContainer: isDark
           ? AppColors.darkTextPrimary
-          : const Color(0xFF1E3A8A),
+          : const Color(0xFF312E81),
       secondary: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-      onSecondary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+      onSecondary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       secondaryContainer: isDark
           ? const Color(0xFF1E293B)
           : const Color(0xFFF1F5F9),
@@ -498,7 +498,7 @@ class AppTheme {
           ? AppColors.darkTextPrimary
           : const Color(0xFF334155),
       tertiary: isDark ? const Color(0xFF22C55E) : const Color(0xFF16A34A),
-      onTertiary: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+      onTertiary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       tertiaryContainer: isDark
           ? const Color(0xFF14532D)
           : const Color(0xFFDCFCE7),

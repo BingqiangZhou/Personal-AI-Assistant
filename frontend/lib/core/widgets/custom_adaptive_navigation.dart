@@ -387,19 +387,24 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             splashColor: scheme.primary.withValues(alpha: 0.12),
             highlightColor: scheme.primary.withValues(alpha: 0.08),
             hoverColor: scheme.primary.withValues(alpha: 0.05),
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.14)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(extension.navItemRadius),
-            ),
-            child: Center(
-              child: isSelected
-                  ? (destination.selectedIcon ?? destination.icon)
-                  : destination.icon,
+          child: AnimatedScale(
+            scale: isSelected ? 1.05 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? scheme.primary.withValues(alpha: 0.14)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(extension.navItemRadius),
+              ),
+              child: Center(
+                child: isSelected
+                    ? (destination.selectedIcon ?? destination.icon)
+                    : destination.icon,
+              ),
             ),
           ),
         ),
@@ -430,46 +435,51 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           splashColor: scheme.primary.withValues(alpha: 0.12),
           highlightColor: scheme.primary.withValues(alpha: 0.08),
           hoverColor: scheme.primary.withValues(alpha: 0.05),
-          child: Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.14)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(extension.navItemRadius),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: isSelected
-                      ? (destination.selectedIcon ?? destination.icon)
-                      : destination.icon,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    destination.label,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: isSelected
-                          ? scheme.onSurface
-                          : scheme.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w700 : null,
+          child: AnimatedScale(
+            scale: isSelected ? 1.02 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? scheme.primary.withValues(alpha: 0.14)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(extension.navItemRadius),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: isSelected
+                        ? (destination.selectedIcon ?? destination.icon)
+                        : destination.icon,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      destination.label,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: isSelected
+                            ? scheme.onSurface
+                            : scheme.onSurfaceVariant,
+                        fontWeight: isSelected ? FontWeight.w700 : null,
+                      ),
                     ),
                   ),
-                ),
-                if (isSelected)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
+                  if (isSelected)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentWarm,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -524,20 +534,25 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 3,
+                AnimatedScale(
+                  scale: isSelected ? 1.05 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? scheme.primary.withValues(alpha: 0.14)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: isSelected
+                        ? (destination.selectedIcon ?? destination.icon)
+                        : destination.icon,
                   ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? scheme.primary.withValues(alpha: 0.14)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: isSelected
-                      ? (destination.selectedIcon ?? destination.icon)
-                      : destination.icon,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -622,16 +637,22 @@ class _CleanSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Indigo-tinted surface for cosmic feel
+    final sidebarColor = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.9)
+        : const Color(0xFFF8F7FF);
 
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: sidebarColor,
         borderRadius: BorderRadius.circular(compact ? 16 : 20),
         border: Border.all(color: scheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.2)
+            color: isDark
+                ? const Color(0x1A6366F1)
                 : Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 4),
@@ -654,17 +675,23 @@ class _CleanDock extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Indigo-tinted dock background for dark mode
+    final dockColor = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.9)
+        : scheme.surface;
 
     return Container(
       width: width,
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: dockColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: scheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.25)
+            color: isDark
+                ? const Color(0x1A6366F1)
                 : Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),

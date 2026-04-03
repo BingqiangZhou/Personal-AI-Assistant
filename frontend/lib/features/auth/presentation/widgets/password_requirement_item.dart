@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+
 class PasswordRequirementItem extends StatelessWidget {
   final String text;
   final bool isValid;
@@ -12,6 +14,7 @@ class PasswordRequirementItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final validColor = AppColors.accentWarm;
     return Padding(
       padding: EdgeInsets.zero,
       child: Row(
@@ -20,7 +23,7 @@ class PasswordRequirementItem extends StatelessWidget {
             isValid ? Icons.check_circle : Icons.radio_button_unchecked,
             size: 16,
             color: isValid
-                ? Colors.green
+                ? validColor
                 : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
@@ -29,7 +32,7 @@ class PasswordRequirementItem extends StatelessWidget {
               text,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isValid
-                    ? Colors.green
+                    ? validColor
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isValid ? FontWeight.w500 : FontWeight.normal,
               ),

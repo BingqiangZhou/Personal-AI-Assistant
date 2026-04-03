@@ -129,10 +129,10 @@ class FontCombination {
 
   /// The default (current production) font combination.
   static const FontCombination defaultCombination = FontCombination(
-    id: 'space_grotesk_inter',
-    displayName: 'Space Grotesk + Inter',
-    headingFontFamily: 'SpaceGrotesk',
-    bodyFontFamily: 'Inter',
+    id: 'outfit_literata',
+    displayName: 'Outfit + Literata',
+    headingFontFamily: 'Outfit',
+    bodyFontFamily: 'Literata',
   );
 
   /// Look up a combination by [id], falling back to [defaultCombination].

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/widgets/stella_background.dart';
 
 /// StatusBadge - 状态徽章
 class StatusBadge extends StatelessWidget {
@@ -293,7 +294,8 @@ class HeaderCapsuleActionButton extends StatelessWidget {
 /// SurfacePanel - 实体面板组件
 ///
 /// 提供纯色背景 + 边框 + 阴影的容器
-class SurfacePanel extends StatelessWidget {
+/// 首次构建时有微妙的淡入上滑入场动画
+class SurfacePanel extends StatefulWidget {
   const SurfacePanel({
     super.key,
     required this.child,
@@ -316,21 +318,28 @@ class SurfacePanel extends StatelessWidget {
   final bool showHighlight; // Legacy parameter, ignored
 
   @override
+  State<SurfacePanel> createState() => _SurfacePanelState();
+}
+
+class _SurfacePanelState extends State<SurfacePanel> {
+  bool _hasAnimated = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
-    final radius = borderRadius ?? extension.cardRadius;
+    final radius = widget.borderRadius ?? extension.cardRadius;
 
-    return Container(
-      margin: margin,
+    final panel = Container(
+      margin: widget.margin,
       decoration: BoxDecoration(
-        color: backgroundColor ?? scheme.surface,
+        color: widget.backgroundColor ?? scheme.surface,
         borderRadius: BorderRadius.circular(radius),
-        border: showBorder
+        border: widget.showBorder
             ? Border.all(color: scheme.outlineVariant)
             : null,
-        boxShadow: showShadow
+        boxShadow: widget.showShadow
             ? [
                 BoxShadow(
                   color: theme.brightness == Brightness.dark
@@ -343,9 +352,31 @@ class SurfacePanel extends StatelessWidget {
             : null,
       ),
       child: Padding(
-        padding: padding,
-        child: child,
+        padding: widget.padding,
+        child: widget.child,
       ),
+    );
+
+    // Only play entrance animation once
+    if (_hasAnimated) return panel;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      onEnd: () => _hasAnimated = true,
+      builder: (context, value, child) {
+        final opacity = value.clamp(0.0, 1.0);
+        final offset = (1.0 - value) * 8.0;
+        return Opacity(
+          opacity: opacity,
+          child: Transform.translate(
+            offset: Offset(0, offset),
+            child: child,
+          ),
+        );
+      },
+      child: panel,
     );
   }
 }
@@ -401,7 +432,9 @@ class CompactHeaderPanel extends StatelessWidget {
 }
 
 /// HeroHeader - 英雄头部
-class HeroHeader extends StatelessWidget {
+///
+/// Staggered fade-in entrance for eyebrow (0ms), title (50ms), subtitle (100ms).
+class HeroHeader extends StatefulWidget {
   const HeroHeader({
     super.key,
     required this.title,
@@ -420,26 +453,33 @@ class HeroHeader extends StatelessWidget {
   final List<Widget> badges;
 
   @override
+  State<HeroHeader> createState() => _HeroHeaderState();
+}
+
+class _HeroHeaderState extends State<HeroHeader> {
+  bool _animated = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final eyebrowText = eyebrow;
+    final eyebrowText = widget.eyebrow;
     final hasEyebrow = eyebrowText != null && eyebrowText.trim().isNotEmpty;
-    final hasSubtitle = subtitle.trim().isNotEmpty;
-    final compactHeader = !hasEyebrow && !hasSubtitle && badges.isEmpty;
+    final hasSubtitle = widget.subtitle.trim().isNotEmpty;
+    final compactHeader = !hasEyebrow && !hasSubtitle && widget.badges.isEmpty;
 
     if (compactHeader) {
       return CompactHeaderPanel(
-        key: key,
-        title: title,
-        leading: leading,
-        trailing: trailing,
+        key: widget.key,
+        title: widget.title,
+        leading: widget.leading,
+        trailing: widget.trailing,
       );
     }
 
     final extension = appThemeOf(context);
 
     return SizedBox(
-      key: key,
+      key: widget.key,
       child: SurfacePanel(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         borderRadius: extension.panelRadius,
@@ -449,53 +489,131 @@ class HeroHeader extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (leading != null) ...[leading!, const SizedBox(width: 12)],
+                if (widget.leading != null) ...[
+                  widget.leading!,
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (hasEyebrow) ...[
-                        Text(
-                          eyebrowText,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w500,
+                        _StaggeredFadeIn(
+                          delay: Duration.zero,
+                          animated: _animated,
+                          onDone: () {},
+                          child: Text(
+                            eyebrowText,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 5),
                       ],
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.headlineSmall,
+                      _StaggeredFadeIn(
+                        delay: const Duration(milliseconds: 50),
+                        animated: _animated,
+                        onDone: () {},
+                        child: Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.headlineSmall,
+                        ),
                       ),
                       if (hasSubtitle) ...[
                         const SizedBox(height: 3),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        _StaggeredFadeIn(
+                          delay: const Duration(milliseconds: 100),
+                          animated: _animated,
+                          onDone: () {
+                            if (!_animated) _animated = true;
+                          },
+                          child: Text(
+                            widget.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
                     ],
                   ),
                 ),
-                if (trailing != null) ...[
+                if (widget.trailing != null) ...[
                   const SizedBox(width: 12),
-                  Align(alignment: Alignment.topCenter, child: trailing!),
+                  Align(alignment: Alignment.topCenter, child: widget.trailing!),
                 ],
               ],
             ),
-            if (badges.isNotEmpty) ...[
+            if (widget.badges.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Wrap(spacing: 6, runSpacing: 6, children: badges),
+              Wrap(spacing: 6, runSpacing: 6, children: widget.badges),
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Staggered fade-in helper for HeroHeader text elements.
+///
+/// Animates opacity 0 -> 1 with a vertical slide (8px -> 0) over 200ms
+/// after an optional [delay]. Only plays once; subsequent builds render
+/// the child directly when [animated] is true.
+class _StaggeredFadeIn extends StatefulWidget {
+  const _StaggeredFadeIn({
+    required this.delay,
+    required this.animated,
+    required this.onDone,
+    required this.child,
+  });
+
+  final Duration delay;
+  final bool animated;
+  final VoidCallback onDone;
+  final Widget child;
+
+  @override
+  State<_StaggeredFadeIn> createState() => _StaggeredFadeInState();
+}
+
+class _StaggeredFadeInState extends State<_StaggeredFadeIn> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.animated) {
+      Future.delayed(widget.delay, () {
+        if (mounted) setState(() => _visible = true);
+      });
+    } else {
+      _visible = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_visible && widget.animated) return widget.child;
+
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      onEnd: () {
+        if (_visible) widget.onDone();
+      },
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.02),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
       ),
     );
   }
@@ -593,28 +711,31 @@ class ContentShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final extension = appThemeOf(context);
 
-    return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: _ShellViewport(
-        enabled: roundedViewport,
-        clipKey: const Key('content_shell_viewport_clip'),
-        borderRadius: extension.panelRadius,
-        child: ResponsiveContainer(
-          maxWidth: maxWidth ?? extension.contentMaxWidth,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              HeroHeader(
-                eyebrow: eyebrow,
-                title: title,
-                subtitle: subtitle,
-                leading: leading,
-                trailing: trailing,
-                badges: badges,
-              ),
-              SizedBox(height: headerSpacing),
-              Expanded(child: child),
-            ],
+    return StellaBackground(
+      enableGlow: true,
+      child: Material(
+        color: Colors.transparent,
+        child: _ShellViewport(
+          enabled: roundedViewport,
+          clipKey: const Key('content_shell_viewport_clip'),
+          borderRadius: extension.panelRadius,
+          child: ResponsiveContainer(
+            maxWidth: maxWidth ?? extension.contentMaxWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HeroHeader(
+                  eyebrow: eyebrow,
+                  title: title,
+                  subtitle: subtitle,
+                  leading: leading,
+                  trailing: trailing,
+                  badges: badges,
+                ),
+                SizedBox(height: headerSpacing),
+                Expanded(child: child),
+              ],
+            ),
           ),
         ),
       ),
@@ -650,36 +771,39 @@ class ProfileShell extends StatelessWidget {
     final topSectionSpacing = isMobile ? 24.0 : 14.0;
     final extension = appThemeOf(context);
 
-    return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: _ShellViewport(
-        enabled: roundedViewport,
-        clipKey: const Key('profile_shell_viewport_clip'),
-        borderRadius: extension.panelRadius,
-        child: ResponsiveContainer(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              HeroHeader(
-                key: const Key('profile_hero_header'),
-                title: title,
-                subtitle: subtitle,
-                trailing: trailing,
-                badges: badges,
-              ),
-              if (showSummary) ...[
-                SizedBox(height: topSectionSpacing),
-                summary,
-                const SizedBox(height: 14),
-              ],
-              if (!showSummary) SizedBox(height: topSectionSpacing),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 28),
-                  child: child,
+    return StellaBackground(
+      enableGlow: false,
+      child: Material(
+        color: Colors.transparent,
+        child: _ShellViewport(
+          enabled: roundedViewport,
+          clipKey: const Key('profile_shell_viewport_clip'),
+          borderRadius: extension.panelRadius,
+          child: ResponsiveContainer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HeroHeader(
+                  key: const Key('profile_hero_header'),
+                  title: title,
+                  subtitle: subtitle,
+                  trailing: trailing,
+                  badges: badges,
                 ),
-              ),
-            ],
+                if (showSummary) ...[
+                  SizedBox(height: topSectionSpacing),
+                  summary,
+                  const SizedBox(height: 14),
+                ],
+                if (!showSummary) SizedBox(height: topSectionSpacing),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 28),
+                    child: child,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -736,50 +860,53 @@ class AuthShell extends StatelessWidget {
     final extension = appThemeOf(context);
     final width = MediaQuery.sizeOf(context).width;
 
-    return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: width < Breakpoints.medium ? 24 : 36,
-              vertical: 28,
-            ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                children: [
-                  if (header != null) ...[
-                    header!,
-                    const SizedBox(height: 20),
-                  ],
-                  SurfacePanel(
-                    padding: const EdgeInsets.fromLTRB(28, 28, 28, 28),
-                    borderRadius: extension.panelRadius,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        if (subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 12),
+    return StellaBackground(
+      enableGlow: true,
+      child: Material(
+        color: Colors.transparent,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: width < Breakpoints.medium ? 24 : 36,
+                vertical: 28,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  children: [
+                    if (header != null) ...[
+                      header!,
+                      const SizedBox(height: 20),
+                    ],
+                    SurfacePanel(
+                      padding: const EdgeInsets.fromLTRB(28, 28, 28, 28),
+                      borderRadius: extension.panelRadius,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           Text(
-                            subtitle,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            title,
+                            style: Theme.of(context).textTheme.headlineMedium,
                           ),
+                          if (subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              subtitle,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                          const SizedBox(height: 28),
+                          child,
                         ],
-                        const SizedBox(height: 28),
-                        child,
-                      ],
+                      ),
                     ),
-                  ),
-                  if (footer != null) ...[
-                    const SizedBox(height: 20),
-                    footer!,
+                    if (footer != null) ...[
+                      const SizedBox(height: 20),
+                      footer!,
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

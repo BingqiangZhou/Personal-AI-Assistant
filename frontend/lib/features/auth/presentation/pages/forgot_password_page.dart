@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
@@ -216,13 +217,13 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
+                              color: AppColors.accentWarm.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.check_circle_outline,
                               size: 40,
-                              color: Colors.green,
+                              color: AppColors.accentWarm,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -232,7 +233,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.green,
+                                  color: AppColors.accentWarm,
                                 ),
                           ),
                           const SizedBox(height: 8),

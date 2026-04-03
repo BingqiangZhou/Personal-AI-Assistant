@@ -12,28 +12,28 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 /// Design tokens for border radius throughout the app.
 ///
-/// These values align with [AppThemeExtension] and should be used
-/// consistently instead of hardcoded values.
+/// Values are aligned with [AppThemeExtension] as the single source of truth.
+/// Use the pre-built [BorderRadius] and [RoundedRectangleBorder] getters
+/// for convenience, or access [AppThemeExtension] directly for theme-aware values.
 class AppRadius {
   AppRadius._();
 
   // ============================================================
-  // CORE RADIUS VALUES - 核心圆角值（有机形态）
+  // CORE RADIUS VALUES — aligned with AppThemeExtension
   // ============================================================
 
-  // Primary shapes from AppThemeExtension
-  static const double cardValue = 20.0; // 卡片圆角（更精致）
-  static const double panelValue = 28.0; // 面板圆角（更精致）
-  static const double buttonValue = 18.0; // 按钮圆角（更精致）
+  static const double cardValue = 12.0;
+  static const double panelValue = 16.0;
+  static const double buttonValue = 10.0;
 
-  // Additional common radius values - 精致递增
-  static const double xs = 6.0; // 小元素
-  static const double sm = 10.0; // 小组件（更精致）
-  static const double md = 14.0; // 中等组件（更精致）
-  static const double lg = 18.0; // 大组件（更精致）
-  static const double xl = 24.0; // 超大组件（更精致）
-  static const double xxl = 32.0; // 巨大组件（更精致）
-  static const double pill = 999.0; // 胶囊形状
+  // Incremental scale
+  static const double xs = 6.0;
+  static const double sm = 8.0;
+  static const double md = 10.0;
+  static const double lg = 14.0;
+  static const double xl = 20.0;
+  static const double xxl = 28.0;
+  static const double pill = 999.0;
 
   // ============================================================
   // PRE-BUILT BORDER RADIUS INSTANCES - 预构建圆角实例

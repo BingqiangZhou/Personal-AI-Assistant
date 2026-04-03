@@ -36,10 +36,10 @@ class AppColors {
   // 纯黑背景 + 明亮的蓝色强调
   // ============================================================
 
-  // Background Colors - 背景色系
-  static const Color darkBackground = Color(0xFF0A0A0A);
-  static const Color darkSurface = Color(0xFF141414);
-  static const Color darkSurfaceVariant = Color(0xFF1F1F1F);
+  // Background Colors - 背景色系 (indigo-tinted for Cosmic Editorial palette)
+  static const Color darkBackground = Color(0xFF0C0A1A);
+  static const Color darkSurface = Color(0xFF16132B);
+  static const Color darkSurfaceVariant = Color(0xFF1E1B35);
 
   // Text Colors - 文字色系
   static const Color darkTextPrimary = Color(0xFFFAFAFA);
@@ -54,12 +54,31 @@ class AppColors {
   // BRAND COLORS - 品牌色
   // ============================================================
 
-  // Primary - 专业蓝色
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryDark = Color(0xFF1D4ED8);
-  static const Color primaryLight = Color(0xFF3B82F6);
-  static const Color primaryContainer = Color(0xFFEFF6FF);
-  static const Color primaryContainerDark = Color(0xFF1E3A5F);
+  // Primary - Indigo-violet (Cosmic Editorial palette)
+  static const Color primary = Color(0xFF6366F1);
+  static const Color primaryDark = Color(0xFF4F46E5);
+  static const Color primaryLight = Color(0xFF818CF8);
+  static const Color primaryContainer = Color(0xFFEEF2FF);
+  static const Color primaryContainerDark = Color(0xFF1E1B4B);
+
+  // Warm accents - star/constellation highlights
+  static const Color accentWarm = Color(0xFFF59E0B);
+  static const Color accentWarmLight = Color(0xFFFBBF24);
+  static const Color accentWarmDark = Color(0xFFD97706);
+  static const Color accentCoral = Color(0xFFF472B6);
+  static const Color accentCoralLight = Color(0xFFF9A8D4);
+
+  // AI-specific accent tokens - warm amber for AI highlights
+  static const Color aiBubbleUser = Color(0xFFFBBF24);       // Warm amber for user AI bubbles
+  static const Color aiBubbleUserDark = Color(0xFFD97706);    // Dark mode user AI bubble
+  static const Color aiBubbleAssistant = Color(0xFFF472B6);   // Coral for assistant AI bubbles
+  static const Color aiBubbleAssistantDark = Color(0xFFEC4899); // Dark mode assistant AI bubble
+  static const Color aiChipBackground = Color(0xFFFBBF24);    // Amber chip background (discover results)
+  static const Color aiChipBackgroundDark = Color(0xFF92400E); // Dark mode amber chip
+  static const Color aiHighlightSurface = Color(0xFFFFFBEB);  // Light amber surface for AI panels
+  static const Color aiHighlightSurfaceDark = Color(0xFF451A03); // Dark amber surface for AI panels
+  static const Color cosmicFilterActive = Color(0xFFF59E0B);  // Cosmic filter active state
+  static const Color cosmicFilterActiveDark = Color(0xFFD97706);
 
   // Tertiary - 绿色 (用于成功状态)
   static const Color tertiary = Color(0xFF22C55E);
@@ -73,7 +92,7 @@ class AppColors {
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF2563EB);
+  static const Color info = Color(0xFF6366F1);
 
   // ============================================================
   // LEGACY COLORS - 向后兼容
@@ -87,13 +106,13 @@ class AppColors {
 
   // Legacy gradients
   static const LinearGradient darkSubtleGradient = LinearGradient(
-    colors: [Color(0xFF0A0A0A), Color(0xFF141414)],
+    colors: [Color(0xFF0C0A1A), Color(0xFF16132B)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient softBackgroundGradient = LinearGradient(
-    colors: [Color(0xFFFAFAFA), Color(0xFFF5F5F5)],
+    colors: [Color(0xFFFAFAFA), Color(0xFFF5F3FF)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -102,8 +121,8 @@ class AppColors {
   // DATA VISUALIZATION - 数据可视化色彩
   // ============================================================
 
-  static const Color chart1 = Color(0xFF2563EB);
-  static const Color chart2 = Color(0xFF3B82F6);
+  static const Color chart1 = Color(0xFF6366F1);
+  static const Color chart2 = Color(0xFF818CF8);
   static const Color chart3 = Color(0xFF22C55E);
   static const Color chart4 = Color(0xFFF59E0B);
   static const Color chart5 = Color(0xFF8B5CF6);
@@ -156,6 +175,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     this.glassHighlight,
     this.auroraGlow,
     this.warmGlow,
+    // AI accent tokens
+    required this.aiBubbleUserColor,
+    required this.aiBubbleAssistantColor,
+    required this.aiChipColor,
+    required this.aiHighlightSurfaceColor,
+    required this.cosmicFilterActiveColor,
   });
 
   // Layout
@@ -190,6 +215,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final Color? auroraGlow;
   final Color? warmGlow;
 
+  // AI accent tokens - warm amber & coral for AI-related elements
+  final Color aiBubbleUserColor;
+  final Color aiBubbleAssistantColor;
+  final Color aiChipColor;
+  final Color aiHighlightSurfaceColor;
+  final Color cosmicFilterActiveColor;
+
   @override
   AppThemeExtension copyWith({
     double? contentMaxWidth,
@@ -216,6 +248,11 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     Color? glassHighlight,
     Color? auroraGlow,
     Color? warmGlow,
+    Color? aiBubbleUserColor,
+    Color? aiBubbleAssistantColor,
+    Color? aiChipColor,
+    Color? aiHighlightSurfaceColor,
+    Color? cosmicFilterActiveColor,
   }) {
     return AppThemeExtension(
       contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
@@ -242,6 +279,11 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       glassHighlight: glassHighlight ?? this.glassHighlight,
       auroraGlow: auroraGlow ?? this.auroraGlow,
       warmGlow: warmGlow ?? this.warmGlow,
+      aiBubbleUserColor: aiBubbleUserColor ?? this.aiBubbleUserColor,
+      aiBubbleAssistantColor: aiBubbleAssistantColor ?? this.aiBubbleAssistantColor,
+      aiChipColor: aiChipColor ?? this.aiChipColor,
+      aiHighlightSurfaceColor: aiHighlightSurfaceColor ?? this.aiHighlightSurfaceColor,
+      cosmicFilterActiveColor: cosmicFilterActiveColor ?? this.cosmicFilterActiveColor,
     );
   }
 
@@ -274,6 +316,11 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       glassSurfaceStrong: Color.lerp(glassSurfaceStrong, other.glassSurfaceStrong, t)!,
       glassShadow: Color.lerp(glassShadow, other.glassShadow, t)!,
       glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
+      aiBubbleUserColor: Color.lerp(aiBubbleUserColor, other.aiBubbleUserColor, t)!,
+      aiBubbleAssistantColor: Color.lerp(aiBubbleAssistantColor, other.aiBubbleAssistantColor, t)!,
+      aiChipColor: Color.lerp(aiChipColor, other.aiChipColor, t)!,
+      aiHighlightSurfaceColor: Color.lerp(aiHighlightSurfaceColor, other.aiHighlightSurfaceColor, t)!,
+      cosmicFilterActiveColor: Color.lerp(cosmicFilterActiveColor, other.cosmicFilterActiveColor, t)!,
     );
   }
 
@@ -311,10 +358,16 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     ),
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
-    aiPrimary: Color(0xFF2563EB),
+    aiPrimary: Color(0xFF6366F1),
     glassSurfaceStrong: Color(0xFFFFFFFF),
     glassShadow: Color(0xFF000000),
-    glassBorder: Color(0xFFE5E5E5),
+    glassBorder: Color(0xFFE0E0EF),
+    // AI accent tokens — light
+    aiBubbleUserColor: Color(0xFFE0E7FF),
+    aiBubbleAssistantColor: Color(0xFFF5F3FF),
+    aiChipColor: Color(0xFFEEF2FF),
+    aiHighlightSurfaceColor: Color(0xFFFFFBEB),
+    cosmicFilterActiveColor: Color(0xFFF59E0B),
   );
 
   /// Dark theme extension (const base)
@@ -351,16 +404,22 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     ),
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
-    aiPrimary: Color(0xFF60A5FA),
-    glassSurfaceStrong: Color(0xFF1F1F1F),
+    aiPrimary: Color(0xFFA5B4FC),
+    glassSurfaceStrong: Color(0xFF1E1B35),
     glassShadow: Color(0xFF000000),
-    glassBorder: Color(0xFF2A2A2A),
+    glassBorder: Color(0xFF2D2B55),
+    // AI accent tokens — dark
+    aiBubbleUserColor: Color(0xFF1E1B4B),
+    aiBubbleAssistantColor: Color(0xFF1E1B35),
+    aiChipColor: Color(0xFF312E81),
+    aiHighlightSurfaceColor: Color(0xFF2D2006),
+    cosmicFilterActiveColor: Color(0xFFF59E0B),
   );
 
   /// Light theme with gradient (non-const, for runtime use)
   static AppThemeExtension get lightWithGradient => light.copyWith(
     shellGradient: const LinearGradient(
-      colors: [Color(0xFFFAFAFA), Color(0xFFF5F5F5)],
+      colors: [Color(0xFFFAFAFA), Color(0xFFF5F3FF)],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     ),
@@ -369,7 +428,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   /// Dark theme with gradient (non-const, for runtime use)
   static AppThemeExtension get darkWithGradient => dark.copyWith(
     shellGradient: const LinearGradient(
-      colors: [Color(0xFF0A0A0A), Color(0xFF141414)],
+      colors: [Color(0xFF0C0A1A), Color(0xFF16132B)],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     ),
@@ -383,4 +442,3 @@ AppThemeExtension appThemeOf(BuildContext context) {
           ? AppThemeExtension.dark
           : AppThemeExtension.light);
 }
-

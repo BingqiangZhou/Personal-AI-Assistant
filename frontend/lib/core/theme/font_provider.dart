@@ -4,7 +4,7 @@ import 'package:personal_ai_assistant/core/constants/app_constants.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/font_combination.dart';
 
-const kFontCombinationDefault = 'space_grotesk_inter';
+const kFontCombinationDefault = 'outfit_literata';
 
 /// Provider for the currently selected font combination.
 final fontCombinationProvider =

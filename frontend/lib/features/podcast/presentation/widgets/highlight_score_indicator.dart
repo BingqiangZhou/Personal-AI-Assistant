@@ -34,11 +34,11 @@ class HighlightScoreIndicator extends StatelessWidget {
   }
 
   Color _getNoveltyColor(BuildContext context) {
-    return AppColors.leaf;
+    return AppColors.accentWarm;
   }
 
   Color _getActionabilityColor(BuildContext context) {
-    return AppColors.sunRay;
+    return AppColors.accentCoral;
   }
 
   @override
