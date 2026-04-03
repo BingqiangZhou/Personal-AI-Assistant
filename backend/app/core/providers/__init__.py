@@ -17,7 +17,10 @@ from app.core.providers.admin_providers import (
     get_admin_subscriptions_service,
     get_admin_users_audit_service,
 )
-from app.core.providers.ai_providers import get_ai_model_config_service
+from app.core.providers.ai_providers import (
+    get_ai_client_service,
+    get_ai_model_config_service,
+)
 from app.core.providers.auth_providers import (
     get_authentication_service,
     get_current_active_user,
@@ -95,6 +98,7 @@ __all__ = [
     "get_admin_subscriptions_service",
     "get_admin_users_audit_service",
     # AI providers
+    "get_ai_client_service",
     "get_ai_model_config_service",
     # Subscription providers
     "get_subscription_repository",

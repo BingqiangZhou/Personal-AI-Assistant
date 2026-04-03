@@ -3,6 +3,14 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.domains.podcast.services import task_orchestration_service as service_module
+from app.domains.podcast.services.orchestration import feed_sync as feed_sync_module
+from app.domains.podcast.services.orchestration import (
+    transcription as transcription_module,
+)
+from app.domains.podcast.services.orchestration.feed_sync import FeedSyncOrchestrator
+from app.domains.podcast.services.orchestration.transcription import (
+    TranscriptionOrchestrator,
+)
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
 )
@@ -40,9 +48,9 @@ async def test_refresh_all_podcast_feeds_skips_when_no_subscription_is_due(
         parser_created = True
         raise AssertionError("parser should not be instantiated when nothing is due")
 
-    monkeypatch.setattr(service_module, "SecureRSSParser", _fail_parser)
+    monkeypatch.setattr(feed_sync_module, "SecureRSSParser", _fail_parser)
     monkeypatch.setattr(
-        PodcastTaskOrchestrationService,
+        FeedSyncOrchestrator,
         "_load_due_refresh_candidates",
         AsyncMock(side_effect=[([], 100), ([], None)]),
     )
@@ -96,7 +104,7 @@ async def test_process_pending_transcriptions_dispatches_claimed_batch(monkeypat
             assert episode_ids == [11, 7]
             return dispatch_result
 
-    monkeypatch.setattr(service_module, "TranscriptionWorkflowService", _FakeWorkflow)
+    monkeypatch.setattr(transcription_module, "TranscriptionWorkflowService", _FakeWorkflow)
 
     service = PodcastTaskOrchestrationService(_FakeSession())
     result = await service.process_pending_transcriptions()

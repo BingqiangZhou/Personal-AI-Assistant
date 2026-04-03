@@ -6,8 +6,10 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.utils import filter_thinking_content, sanitize_html
+from app.core.ai_client import AIClientService
+from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.ai.services.model_security_service import AIModelSecurityService
 
 
 logger = logging.getLogger(__name__)
@@ -19,6 +21,7 @@ class TextGenerationService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = AIModelConfigRepository(db)
+        self.security_service = AIModelSecurityService(db)
 
     async def generate_podcast_summary(
         self,
@@ -27,16 +30,6 @@ class TextGenerationService:
         content_type: str = "transcript",
         max_tokens: int | None = None,
     ) -> str:
-        from openai import (
-            APIConnectionError,
-            APIError,
-            AsyncOpenAI,
-            AuthenticationError,
-            RateLimitError,
-        )
-
-        from app.core.security import decrypt_data
-        from app.domains.ai.models import ModelType
 
         model_configs = await self.repo.get_active_models_by_priority(
             ModelType.TEXT_GENERATION,
@@ -47,104 +40,35 @@ class TextGenerationService:
             )
             return self._rule_based_summary(episode_title, content)
 
-        last_error = None
-        for idx, model_config in enumerate(model_configs):
-            api_key = None
-            try:
-                if model_config.api_key:
-                    api_key = (
-                        decrypt_data(model_config.api_key)
-                        if model_config.api_key_encrypted
-                        else model_config.api_key
-                    )
+        messages = [
+            {"role": "system", "content": self._system_prompt()},
+            {
+                "role": "user",
+                "content": self._user_prompt(
+                    episode_title=episode_title,
+                    content=content,
+                    content_type=content_type,
+                ),
+            },
+        ]
 
-                if not api_key:
-                    logger.warning(
-                        "Model [%s] has empty API key, skipping",
-                        model_config.display_name or model_config.name,
-                    )
-                    continue
+        async def fallback() -> str:
+            return self._rule_based_summary(episode_title, content)
 
-                logger.info(
-                    "Trying model [%s] (priority=%s, attempt %s/%s)",
-                    model_config.display_name or model_config.name,
-                    model_config.priority,
-                    idx + 1,
-                    len(model_configs),
-                )
-
-                client = AsyncOpenAI(
-                    api_key=api_key,
-                    base_url=model_config.api_url or None,
-                )
-                api_params = {
-                    "model": model_config.model_id or "gpt-4o-mini",
-                    "messages": [
-                        {"role": "system", "content": self._system_prompt()},
-                        {
-                            "role": "user",
-                            "content": self._user_prompt(
-                                episode_title=episode_title,
-                                content=content,
-                                content_type=content_type,
-                            ),
-                        },
-                    ],
-                    "temperature": 0.7,
-                }
-                if max_tokens is not None:
-                    api_params["max_tokens"] = max_tokens
-
-                response = await client.chat.completions.create(**api_params)
-                raw_content = response.choices[0].message.content.strip()
-                cleaned_content = filter_thinking_content(raw_content)
-                safe_content = sanitize_html(cleaned_content)
-
-                logger.info(
-                    "Successfully generated summary using model [%s]",
-                    model_config.display_name or model_config.name,
-                )
-                return safe_content
-            except AuthenticationError as exc:
-                last_error = exc
-                logger.warning(
-                    "Authentication failed for model %s: %s",
-                    model_config.name,
-                    exc,
-                )
-            except RateLimitError as exc:
-                last_error = exc
-                logger.warning(
-                    "Rate limit exceeded for model %s: %s",
-                    model_config.name,
-                    exc,
-                )
-                continue
-            except APIConnectionError as exc:
-                last_error = exc
-                logger.warning(
-                    "Connection failed for model %s: %s",
-                    model_config.name,
-                    exc,
-                )
-            except APIError as exc:
-                last_error = exc
-                logger.warning(
-                    "API error for model %s: %s",
-                    model_config.name,
-                    exc,
-                )
-            except Exception as exc:
-                last_error = exc
-                logger.error(
-                    "Unexpected error with model %s: %s", model_config.name, exc
-                )
-
-        logger.error(
-            "All AI models failed for summary generation. Last error: %s",
-            last_error,
+        ai_client = AIClientService(
+            repo=self.repo,
+            security_service=self.security_service,
         )
-        return self._rule_based_summary(episode_title, content)
+
+        result, _model = await ai_client.call_with_fallback(
+            messages,
+            model_type=ModelType.TEXT_GENERATION,
+            max_tokens=max_tokens,
+            temperature=0.7,
+            operation_name="Podcast summary generation",
+            fallback_handler=fallback,
+        )
+        return result
 
     def _system_prompt(self) -> str:
         return """

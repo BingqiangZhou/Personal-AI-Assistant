@@ -2,21 +2,19 @@
 支持基于AI摘要的上下文保持对话
 """
 
-import asyncio
 import logging
-import random
 import time
 from datetime import UTC, datetime
 from typing import Any
 
-import aiohttp
 from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.ai_client import AIClientService
 from app.core.exceptions import ValidationError
-from app.core.http_client import get_shared_http_session
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.ai.services.model_security_service import AIModelSecurityService
 from app.domains.podcast.models import (
     ConversationSession,
     PodcastConversation,
@@ -27,20 +25,13 @@ from app.domains.podcast.models import (
 logger = logging.getLogger(__name__)
 
 
-class RetryableConversationError(Exception):
-    """Transient conversation model invocation error that can be retried."""
-
-
-def _is_retryable_http_status(status_code: int) -> bool:
-    return status_code >= 500 or status_code in {408, 409, 425, 429}
-
-
 class ConversationService:
     """播客对话服务"""
 
     def __init__(self, db: AsyncSession):
         self.db = db
         self.ai_model_repo = AIModelConfigRepository(db)
+        self._security_service = AIModelSecurityService(db)
 
     # === Session Management ===
 
@@ -281,7 +272,7 @@ class ConversationService:
             episode, conversation_history, user_message
         )
 
-        # 调用AI API
+        # 调用AI API via unified AIClientService
         start_time = time.time()
         ai_response_content = await self._call_ai_api(messages, model_name)
         processing_time = time.time() - start_time
@@ -370,226 +361,22 @@ class ConversationService:
         messages: list[dict[str, str]],
         model_name: str | None = None,
     ) -> str:
-        """调用AI API进行对话
-        按优先级获取模型配置，实现fallback机制
+        """调用AI API进行对话 (delegates to AIClientService).
+
+        按优先级获取模型配置，实现fallback机制。
         """
-        # 获取活跃的文本生成模型
-        if model_name:
-            model = await self.ai_model_repo.get_by_name(model_name)
-            if (
-                not model
-                or not model.is_active
-                or model.model_type != ModelType.TEXT_GENERATION
-            ):
-                raise ValidationError(
-                    f"Chat model '{model_name}' not found or not active"
-                )
-            models_to_try = [model]
-        else:
-            # 按优先级获取所有活跃的文本生成模型
-            models_to_try = await self.ai_model_repo.get_active_models_by_priority(
-                ModelType.TEXT_GENERATION
-            )
-            if not models_to_try:
-                raise ValidationError("No active chat model found")
+        ai_client = AIClientService(
+            repo=self.ai_model_repo,
+            security_service=self._security_service,
+        )
 
-        # 按 priority 依次尝试每个模型
-        last_error = None
-        for idx, model in enumerate(models_to_try):
-            try:
-                logger.info(
-                    "Conversation model attempt model=%s provider=%s priority=%s order=%s/%s",
-                    model.display_name or model.name,
-                    model.provider,
-                    model.priority,
-                    idx + 1,
-                    len(models_to_try),
-                )
-
-                # 解密API密钥
-                api_key = await self._get_api_key(model)
-                if not api_key:
-                    logger.warning(
-                        "Conversation model skipped for missing api key model=%s provider=%s priority=%s",
-                        model.display_name or model.name,
-                        model.provider,
-                        model.priority,
-                    )
-                    continue
-
-                # 构建请求数据
-                data = {
-                    "model": model.model_id,
-                    "messages": messages,
-                    "max_tokens": model.max_tokens or 1500,
-                    "temperature": model.get_temperature_float() or 0.7,
-                }
-
-                # 添加额外配置
-                if model.extra_config:
-                    data.update(model.extra_config)
-
-                timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
-
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                }
-
-                max_retries = 3
-                base_delay = 1.0
-                session = await get_shared_http_session()
-                for attempt in range(max_retries):
-                    try:
-                        async with session.post(
-                            f"{model.api_url}/chat/completions",
-                            headers=headers,
-                            json=data,
-                            timeout=timeout,
-                        ) as response:
-                            if response.status != 200:
-                                error_text = await response.text()
-                                last_error = f"HTTP {response.status}: {error_text}"
-                                if _is_retryable_http_status(response.status):
-                                    raise RetryableConversationError(last_error)
-                                logger.error(
-                                    "Conversation API non-retryable error model=%s provider=%s priority=%s status=%s retryable=false error=%s",
-                                    model.display_name or model.name,
-                                    model.provider,
-                                    model.priority,
-                                    response.status,
-                                    last_error,
-                                )
-                                break
-
-                            result = await response.json()
-
-                            if "choices" not in result or not result["choices"]:
-                                last_error = "Invalid response from AI API"
-                                logger.error(
-                                    "Conversation API invalid payload model=%s provider=%s priority=%s error=%s",
-                                    model.display_name or model.name,
-                                    model.provider,
-                                    model.priority,
-                                    last_error,
-                                )
-                                break
-
-                            content = result["choices"][0]["message"]["content"]
-
-                            # Filter out <thinking> tags and content
-                            # 过滤掉 <thinking> 标签及其内容
-                            from app.core.utils import filter_thinking_content
-
-                            original_length = len(content)
-                            cleaned_content = filter_thinking_content(content)
-
-                            if len(cleaned_content) != original_length:
-                                logger.info(
-                                    "Conversation response filtered model=%s provider=%s removed_chars=%s",
-                                    model.display_name or model.name,
-                                    model.provider,
-                                    original_length - len(cleaned_content),
-                                )
-
-                            logger.info(
-                                "Conversation request succeeded model=%s provider=%s priority=%s",
-                                model.display_name or model.name,
-                                model.provider,
-                                model.priority,
-                            )
-                            return cleaned_content.strip()
-                    except (
-                        TimeoutError,
-                        aiohttp.ClientError,
-                        RetryableConversationError,
-                    ) as e:
-                        if attempt >= max_retries - 1:
-                            last_error = e
-                            logger.error(
-                                "Conversation transient retries exhausted model=%s provider=%s priority=%s attempts=%s error=%s",
-                                model.display_name or model.name,
-                                model.provider,
-                                model.priority,
-                                max_retries,
-                                e,
-                            )
-                            break
-                        backoff = base_delay * (2**attempt)
-                        await asyncio.sleep(backoff + random.uniform(0, 0.5 * backoff))
-                        logger.warning(
-                            "Conversation transient error model=%s provider=%s priority=%s attempt=%s/%s retryable=true error=%s",
-                            model.display_name or model.name,
-                            model.provider,
-                            model.priority,
-                            attempt + 1,
-                            max_retries,
-                            e,
-                        )
-
-            except TimeoutError as e:
-                last_error = e
-                logger.error(
-                    "Conversation model timeout model=%s provider=%s priority=%s error=%s",
-                    model.display_name or model.name,
-                    model.provider,
-                    model.priority,
-                    e,
-                )
-            except aiohttp.ClientError as e:
-                last_error = e
-                logger.error(
-                    "Conversation model network error model=%s provider=%s priority=%s error=%s",
-                    model.display_name or model.name,
-                    model.provider,
-                    model.priority,
-                    e,
-                )
-            except Exception as e:
-                last_error = e
-                logger.error(
-                    "Conversation model unknown error model=%s provider=%s priority=%s error_type=%s error=%s",
-                    model.display_name or model.name,
-                    model.provider,
-                    model.priority,
-                    type(e).__name__,
-                    e,
-                )
-
-        # 所有模型都失败了
-        error_msg = f"所有 {len(models_to_try)} 个对话模型配置均访问失败，最后错误: {type(last_error).__name__}: {last_error}"
-        logger.error(error_msg)
-        raise ValidationError(error_msg)
-
-    async def _get_api_key(self, model_config) -> str:
-        """获取API密钥"""
-        # 如果未加密，直接返回
-        if not model_config.api_key_encrypted:
-            return model_config.api_key or ""
-
-        # 对于系统预设模型，从环境变量获取
-        if model_config.is_system:
-            from app.core.config import settings
-
-            if model_config.provider == "openai":
-                return getattr(settings, "OPENAI_API_KEY", "")
-            if model_config.provider == "siliconflow":
-                return getattr(settings, "TRANSCRIPTION_API_KEY", "")
-
-        # 对于用户自定义模型，使用Fernet解密
-        from app.core.security import decrypt_data
-
-        try:
-            decrypted = decrypt_data(model_config.api_key)
-            logger.info(f"Successfully decrypted API key for model {model_config.name}")
-            return decrypted
-        except Exception as e:
-            logger.error(
-                f"Failed to decrypt API key for model {model_config.name}: {e}"
-            )
-            raise ValidationError(
-                f"Failed to decrypt API key for model {model_config.name}"
-            ) from e
+        content, _model = await ai_client.call_with_fallback(
+            messages,
+            model_type=ModelType.TEXT_GENERATION,
+            model_name=model_name,
+            operation_name="Conversation",
+        )
+        return content
 
     async def clear_conversation_history(
         self,

@@ -8,6 +8,7 @@ from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.interfaces.settings_provider_impl import DatabaseSettingsProvider
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionCategory,
@@ -23,8 +24,13 @@ from app.shared.schemas import SubscriptionCreate, SubscriptionUpdate
 class SubscriptionRepository:
     """Subscription data access layer."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(
+        self,
+        db: AsyncSession,
+        settings_provider: DatabaseSettingsProvider | None = None,
+    ):
         self.db = db
+        self.settings_provider = settings_provider or DatabaseSettingsProvider()
 
     # ── Lookup helpers ─────────────────────────────────────────────────────
 
@@ -292,26 +298,22 @@ class SubscriptionRepository:
         user_id: int,
         sub_data: SubscriptionCreate,
     ) -> Subscription:
-        from app.admin.models import SystemSettings
         from app.domains.subscription.models import UpdateFrequency
 
         update_frequency = UpdateFrequency.HOURLY.value
         update_time = None
         update_day_of_week = None
 
-        settings_result = await self.db.execute(
-            select(SystemSettings).where(
-                SystemSettings.key == "rss.frequency_settings"
-            ),
+        setting = await self.settings_provider.get_setting(
+            self.db, "rss.frequency_settings"
         )
-        setting = settings_result.scalar_one_or_none()
-        if setting and setting.value:
-            update_frequency = setting.value.get(
+        if setting:
+            update_frequency = setting.get(
                 "update_frequency",
                 UpdateFrequency.HOURLY.value,
             )
-            update_time = setting.value.get("update_time")
-            update_day_of_week = setting.value.get("update_day_of_week")
+            update_time = setting.get("update_time")
+            update_day_of_week = setting.get("update_day_of_week")
 
         sub = Subscription(
             title=sub_data.title,

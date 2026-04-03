@@ -15,6 +15,21 @@ def get_ai_model_config_service(
     return AIModelConfigService(db)
 
 
+def get_ai_client_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+):
+    """Provide request-scoped unified AI client service."""
+    from app.core.ai_client import AIClientService
+    from app.domains.ai.repositories import AIModelConfigRepository
+    from app.domains.ai.services.model_security_service import AIModelSecurityService
+
+    return AIClientService(
+        repo=AIModelConfigRepository(db),
+        security_service=AIModelSecurityService(db),
+    )
+
+
 __all__ = [
+    "get_ai_client_service",
     "get_ai_model_config_service",
 ]

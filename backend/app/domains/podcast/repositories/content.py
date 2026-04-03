@@ -37,7 +37,6 @@ class PodcastContentRepositoryMixin:
 
         Uses lazy imports to maintain domain boundary separation.
         """
-        from app.admin.models import SystemSettings
         from app.domains.subscription.models import UpdateFrequency
 
         Subscription, UserSubscription = _get_subscription_models()
@@ -55,19 +54,16 @@ class PodcastContentRepositoryMixin:
         update_time = None
         update_day_of_week = None
 
-        settings_result = await self.db.execute(
-            select(SystemSettings).where(
-                SystemSettings.key == "rss.frequency_settings"
-            ),
+        setting = await self.settings_provider.get_setting(
+            self.db, "rss.frequency_settings"
         )
-        setting = settings_result.scalar_one_or_none()
-        if setting and setting.value:
-            update_frequency = setting.value.get(
+        if setting:
+            update_frequency = setting.get(
                 "update_frequency",
                 UpdateFrequency.HOURLY.value,
             )
-            update_time = setting.value.get("update_time")
-            update_day_of_week = setting.value.get("update_day_of_week")
+            update_time = setting.get("update_time")
+            update_day_of_week = setting.get("update_day_of_week")
 
         if subscription:
             user_sub_stmt = select(UserSubscription).where(

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.interfaces.settings_provider_impl import DatabaseSettingsProvider
 from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 
@@ -39,9 +40,15 @@ def _get_subscription_models():
 class BasePodcastRepository:
     """Small shared base for specialized podcast repositories."""
 
-    def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
+    def __init__(
+        self,
+        db: AsyncSession,
+        redis: PodcastRedis | None = None,
+        settings_provider: DatabaseSettingsProvider | None = None,
+    ):
         self.db = db
         self.redis = redis or get_shared_redis()
+        self.settings_provider = settings_provider or DatabaseSettingsProvider()
         self._queue_position_step = 1024
         self._queue_position_compaction_threshold = 1_000_000
 
