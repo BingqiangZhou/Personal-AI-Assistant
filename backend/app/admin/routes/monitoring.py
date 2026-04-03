@@ -10,7 +10,7 @@ from app.admin.monitoring import SystemMonitorService
 from app.admin.routes._shared import get_templates
 from app.core.database import check_db_readiness, get_db_pool_snapshot
 from app.core.observability import build_observability_snapshot
-from app.core.redis import get_redis_runtime_metrics, get_shared_redis
+from app.core.redis import get_null_redis_runtime_metrics, get_shared_redis
 from app.domains.user.models import User
 
 
@@ -21,7 +21,7 @@ monitor_service = SystemMonitorService()
 
 async def _runtime_observability_payload(request: Request) -> dict:
     db_pool = get_db_pool_snapshot()
-    redis_runtime = await get_redis_runtime_metrics()
+    redis_runtime = get_null_redis_runtime_metrics()
     readiness = {
         "db": await check_db_readiness(),
         "redis": await get_shared_redis().check_health(),

@@ -11,7 +11,7 @@ from app.core.database import check_db_readiness, get_db_pool_snapshot
 from app.core.exceptions import setup_exception_handlers
 from app.core.middleware import RequestObservabilityMiddleware
 from app.core.middleware.rate_limit import RateLimitConfig, setup_rate_limiting
-from app.core.redis import get_redis_runtime_metrics, get_shared_redis
+from app.core.redis import get_null_redis_runtime_metrics, get_shared_redis
 from app.http.errors import register_admin_http_exception_handler
 
 
@@ -88,7 +88,7 @@ def configure_exception_handlers(app: FastAPI) -> None:
 async def _build_metrics_payload() -> dict:
     """Build metrics payload from DB pool, Redis, and system info."""
     db_pool = get_db_pool_snapshot()
-    redis_runtime = await get_redis_runtime_metrics()
+    redis_runtime = get_null_redis_runtime_metrics()
     return {
         "db_pool": db_pool,
         "redis_runtime": redis_runtime,

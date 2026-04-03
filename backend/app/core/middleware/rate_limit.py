@@ -258,6 +258,10 @@ class RateLimitMiddleware:
     Avoids BaseHTTPMiddleware overhead by working directly with ASGI scope/send.
     """
 
+    # Class-level counters shared across all instances
+    _total_requests: int = 0
+    _rejected_requests: int = 0
+
     def __init__(
         self,
         app: ASGIApp,
@@ -341,6 +345,7 @@ class RateLimitMiddleware:
             await self.app(scope, receive, send)
             return
 
+        RateLimitMiddleware._total_requests += 1
         client_key = self._get_client_key(scope)
 
         # Check minute rate limit
@@ -351,6 +356,7 @@ class RateLimitMiddleware:
         )
 
         if not allowed:
+            RateLimitMiddleware._rejected_requests += 1
             logger.warning(
                 "Rate limit exceeded for %s (minute limit)",
                 client_key,
@@ -366,6 +372,7 @@ class RateLimitMiddleware:
         )
 
         if not allowed:
+            RateLimitMiddleware._rejected_requests += 1
             logger.warning(
                 "Rate limit exceeded for %s (hour limit)",
                 client_key,
@@ -432,3 +439,20 @@ def setup_rate_limiting(
         config: Rate limit configuration
     """
     app.add_middleware(RateLimitMiddleware, config=config, redis_client=redis_client)
+
+
+def get_rate_limit_stats() -> dict[str, Any]:
+    """Return aggregate rate-limiting counters from the middleware.
+
+    Returns a dict with ``total_requests``, ``rejected_requests`` and
+    ``rejection_rate`` (0.0-1.0).
+    """
+    total = RateLimitMiddleware._total_requests
+    rejected = RateLimitMiddleware._rejected_requests
+    rate = rejected / total if total > 0 else 0.0
+    return {
+        "enabled": True,
+        "total_requests": total,
+        "rejected_requests": rejected,
+        "rejection_rate": rate,
+    }

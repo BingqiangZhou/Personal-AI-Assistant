@@ -36,6 +36,62 @@ _NULL_CACHE_TTL = 60
 # Shared instance for process-level reuse
 _shared_redis: "AppCache | None" = None
 
+# ---------------------------------------------------------------------------
+# Delegation decorator: replaces boilerplate wrapper methods
+# ---------------------------------------------------------------------------
+
+# Each entry maps the public method name to the (mixin_class, mixin_method_name)
+# and optional extra keyword args injected into every call.
+_DELEGATE_SPECS: dict[str, tuple[type, str, dict[str, Any]]] = {
+    # --- CacheOperations (client passed as first positional arg) ---
+    "cache_get":          (CacheOperations, "cache_get", {}),
+    "cache_set":          (CacheOperations, "cache_set", {}),
+    "cache_delete":       (CacheOperations, "cache_delete", {}),
+    "cache_hget":         (CacheOperations, "cache_hget", {}),
+    "cache_hgetall":      (CacheOperations, "cache_hgetall", {}),
+    "cache_hset":         (CacheOperations, "cache_hset", {}),
+    # --- SortedSetOperations ---
+    "sorted_set_add":              (SortedSetOperations, "sorted_set_add", {}),
+    "sorted_set_remove":           (SortedSetOperations, "sorted_set_remove", {}),
+    "sorted_set_cardinality":      (SortedSetOperations, "sorted_set_cardinality", {}),
+    "sorted_set_range_by_score":   (SortedSetOperations, "sorted_set_range_by_score", {}),
+    "sorted_set_remove_by_score":  (SortedSetOperations, "sorted_set_remove_by_score", {}),
+}
+
+
+def _apply_delegates(cls: type) -> type:
+    """Class decorator that attaches auto-delegation methods to *cls*.
+
+    For every entry in ``_DELEGATE_SPECS`` a ``async def method(self, *args, **kwargs)``
+    is created on the class.  The generated method obtains a Redis client via
+    ``self._get_client()``, inserts it as the second positional argument (after
+    *self*), merges any fixed extra kwargs, and forwards to the mixin method.
+    """
+    for method_name, (mixin_cls, mixin_method_name, extra_kw) in _DELEGATE_SPECS.items():
+        _make_delegate(cls, method_name, mixin_cls, mixin_method_name, extra_kw)
+    return cls
+
+
+def _make_delegate(
+    cls: type,
+    method_name: str,
+    mixin_cls: type,
+    mixin_method_name: str,
+    extra_kw: dict[str, Any],
+) -> None:
+    """Create and attach a single delegation method to *cls*."""
+
+    mixin_fn = getattr(mixin_cls, mixin_method_name)
+
+    async def _delegate(self, *args: Any, **kwargs: Any) -> Any:
+        client = await self._get_client()
+        kwargs.update(extra_kw)
+        return await mixin_fn(self, client, *args, **kwargs)
+
+    _delegate.__qualname__ = f"{cls.__name__}.{method_name}"
+    _delegate.__name__ = method_name
+    setattr(cls, method_name, _delegate)
+
 
 class _DeferredScript:
     """Deferred Lua script that gets the client when executed."""
@@ -52,6 +108,7 @@ class _DeferredScript:
         return await self._cached_script(keys=keys, args=args)
 
 
+@_apply_delegates
 class AppCache(
     RedisClientManager,
     CacheOperations,
@@ -160,34 +217,7 @@ class AppCache(
             return _DeferredScript(self, script)
         return self._client.register_script(script)
 
-    # === Core Cache Operations (delegated to CacheOperations mixin) ===
-
-    async def cache_get(self, key: str) -> str | None:
-        client = await self._get_client()
-        return await CacheOperations.cache_get(self, client, key)
-
-    async def cache_set(self, key: str, value: str, ttl: int = CacheTTL.DEFAULT) -> bool:
-        client = await self._get_client()
-        return await CacheOperations.cache_set(self, client, key, value, ttl)
-
-    async def cache_delete(self, key: str) -> bool:
-        client = await self._get_client()
-        return await CacheOperations.cache_delete(self, client, key)
-
-    async def cache_hget(self, key: str, field: str) -> str | None:
-        client = await self._get_client()
-        return await CacheOperations.cache_hget(self, client, key, field)
-
-    async def cache_hgetall(self, key: str) -> dict[str, str]:
-        client = await self._get_client()
-        return await CacheOperations.cache_hgetall(self, client, key)
-
-    async def cache_hset(self, key: str, mapping: dict, ttl: int | None = None) -> int:
-        client = await self._get_client()
-        result = await CacheOperations.cache_hset(self, client, key, mapping, ttl)
-        if ttl:
-            await client.expire(key, ttl)
-        return result
+    # === Custom JSON cache overrides (inline client handling) ===
 
     async def cache_get_json(self, key: str, _client: Any = None, _record_lookup: Any = None) -> Any | None:
         client = await self._get_client()
@@ -208,7 +238,7 @@ class AppCache(
         except (TypeError, ValueError):
             return False
 
-    # === Anti-Stampede Cache ===
+    # === Anti-Stampede Cache (extra kwargs injected) ===
 
     async def cache_get_with_lock(
         self, key: str, loader: Any, ttl: int = CacheTTL.DEFAULT,
@@ -242,7 +272,7 @@ class AppCache(
         client = await self._get_client()
         await client.delete(f"podcast:stats:profile:{user_id}")
 
-    # === User Stats ===
+    # === User Stats (custom kwargs) ===
 
     async def get_user_stats(self, user_id: int) -> dict | None:
         client = await self._get_client()
@@ -268,7 +298,7 @@ class AppCache(
             self, client, user_id, stats, cache_set_json_func=self.cache_set_json
         )
 
-    # === Subscription List ===
+    # === Subscription List (custom kwargs) ===
 
     async def get_subscription_list(self, user_id: int, page: int, size: int, filters: dict[str, Any] | None = None) -> dict | None:
         client = await self._get_client()
@@ -289,7 +319,7 @@ class AppCache(
             self, client, user_id, scan_keys_func=self.scan_keys, delete_keys_func=self._delete_keys
         )
 
-    # === Episode List ===
+    # === Episode List (custom kwargs) ===
 
     async def get_episode_list(self, subscription_id: int, page: int, size: int) -> dict | None:
         client = await self._get_client()
@@ -321,7 +351,7 @@ class AppCache(
         progress = await client.get(f"podcast:progress:{user_id}:{episode_id}")
         return float(progress) if progress else None
 
-    # === Episode Metadata ===
+    # === Episode Metadata (direct) ===
 
     async def set_episode_metadata(self, episode_id: int, metadata: dict) -> None:
         client = await self._get_client()
@@ -329,29 +359,7 @@ class AppCache(
         await client.hset(key, mapping=metadata)
         await client.expire(key, CacheTTL.EPISODE_METADATA)
 
-    # === Sorted Set Operations ===
-
-    async def sorted_set_add(self, key: str, member: str, score: float) -> int:
-        client = await self._get_client()
-        return await SortedSetOperations.sorted_set_add(self, client, key, member, score)
-
-    async def sorted_set_remove(self, key: str, *members: str) -> int:
-        client = await self._get_client()
-        return await SortedSetOperations.sorted_set_remove(self, client, key, *members)
-
-    async def sorted_set_cardinality(self, key: str) -> int:
-        client = await self._get_client()
-        return await SortedSetOperations.sorted_set_cardinality(self, client, key)
-
-    async def sorted_set_range_by_score(self, key: str, min_score: float | str, max_score: float | str) -> list[str]:
-        client = await self._get_client()
-        return await SortedSetOperations.sorted_set_range_by_score(self, client, key, min_score, max_score)
-
-    async def sorted_set_remove_by_score(self, key: str, min_score: float | str, max_score: float | str) -> int:
-        client = await self._get_client()
-        return await SortedSetOperations.sorted_set_remove_by_score(self, client, key, min_score, max_score)
-
-    # === Distributed Lock ===
+    # === Distributed Lock (inline implementations) ===
 
     async def acquire_lock(self, lock_name: str, expire: int = CacheTTL.LOCK_TIMEOUT, value: str = "1") -> bool:
         client = await self._get_client()
@@ -379,21 +387,6 @@ class AppCache(
         )
         return bool(result)
 
-    # === Stub for removed metrics ===
-
-    async def get_runtime_metrics(self, client: Any = None) -> dict[str, Any]:
-        """Return empty metrics (batched metrics system removed)."""
-        return {
-            "commands": {"total": 0, "errors": 0, "avg_ms": 0.0, "max_ms": 0.0},
-            "cache": {"hits": 0, "misses": 0, "hit_rate": 0.0},
-        }
-
-    async def _record_command_timing(self, command: str, duration_ms: float) -> None:
-        """No-op stub (metrics recording removed)."""
-
-    async def _record_cache_lookup(self, key: str, hit: bool) -> None:
-        """No-op stub (metrics recording removed)."""
-
 
 # Backward-compatible alias
 PodcastRedis = AppCache
@@ -404,12 +397,6 @@ PodcastRedis = AppCache
 async def get_redis() -> AppCache:
     """Create a Redis helper."""
     return AppCache()
-
-
-async def get_redis_runtime_metrics() -> dict[str, Any]:
-    """Get Redis runtime metrics (stub - metrics system removed)."""
-    redis = get_shared_redis()
-    return await redis.get_runtime_metrics()
 
 
 def get_shared_redis() -> AppCache:
@@ -429,13 +416,25 @@ async def close_shared_redis() -> None:
     _shared_redis = None
 
 
+def get_null_redis_runtime_metrics() -> dict[str, Any]:
+    """Return a stable zero-value metrics dict for callers that need a placeholder.
+
+    This replaces the former ``get_redis_runtime_metrics`` module-level function
+    and the ``AppCache.get_runtime_metrics`` instance method (both removed).
+    """
+    return {
+        "commands": {"total": 0, "errors": 0, "avg_ms": 0.0, "max_ms": 0.0},
+        "cache": {"hits": 0, "misses": 0, "hit_rate": 0.0},
+    }
+
+
 __all__ = [
     "AppCache",
     "PodcastRedis",
     "get_redis",
     "get_shared_redis",
     "close_shared_redis",
-    "get_redis_runtime_metrics",
+    "get_null_redis_runtime_metrics",
     "_NULL_VALUE_MARKER",
     "_NULL_CACHE_TTL",
     "safe_cache_get",

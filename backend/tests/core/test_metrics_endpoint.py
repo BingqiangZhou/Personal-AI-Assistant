@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -12,8 +12,7 @@ def test_metrics_endpoint_includes_runtime_sections():
     }
 
     with patch(
-        "app.bootstrap.http.get_redis_runtime_metrics",
-        new_callable=AsyncMock,
+        "app.bootstrap.http.get_null_redis_runtime_metrics",
         return_value=mock_redis_runtime,
     ):
         client = TestClient(app)
@@ -34,8 +33,7 @@ def test_metrics_summary_endpoint_returns_compact_observability():
     }
 
     with patch(
-        "app.bootstrap.http.get_redis_runtime_metrics",
-        new_callable=AsyncMock,
+        "app.bootstrap.http.get_null_redis_runtime_metrics",
         return_value=mock_redis_runtime,
     ):
         client = TestClient(app)

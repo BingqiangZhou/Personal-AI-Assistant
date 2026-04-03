@@ -195,7 +195,7 @@ class TestVerifyTokenOptional:
     """verify_token_optional returns mock user in dev, raises in prod."""
 
     def test_returns_mock_user_in_dev_mode_when_no_token(self) -> None:
-        with patch("app.core.security.settings") as mock_settings:
+        with patch("app.core.security.jwt.settings") as mock_settings:
             mock_settings.ENVIRONMENT = "development"
             result = verify_token_optional(token=None, token_type="access")
 
@@ -205,7 +205,7 @@ class TestVerifyTokenOptional:
         assert result["exp"] > int(time.time())
 
     def test_raises_401_in_production_when_no_token(self) -> None:
-        with patch("app.core.security.settings") as mock_settings:
+        with patch("app.core.security.jwt.settings") as mock_settings:
             mock_settings.ENVIRONMENT = "production"
             with pytest.raises(HTTPException) as exc_info:
                 verify_token_optional(token=None, token_type="access")
@@ -226,7 +226,7 @@ class TestVerifyTokenOptional:
 
     def test_dev_mock_has_correct_token_type(self) -> None:
         """Mock user should reflect the requested token_type."""
-        with patch("app.core.security.settings") as mock_settings:
+        with patch("app.core.security.jwt.settings") as mock_settings:
             mock_settings.ENVIRONMENT = "development"
             result = verify_token_optional(token=None, token_type="refresh")
 
@@ -492,13 +492,13 @@ class TestRsaKeyGenerationEncrypted:
     @pytest.fixture(autouse=True)
     def _reset_global_keys(self) -> None:
         """Ensure global key cache is cleared before and after each test."""
-        import app.core.security as sec
+        import app.core.security.encryption as sec_enc
 
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
         yield
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
 
     def test_generates_encrypted_key_to_disk(self, tmp_path: Path) -> None:
         """When no key file exists, a new encrypted key is written to disk."""
@@ -506,7 +506,7 @@ class TestRsaKeyGenerationEncrypted:
 
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             private_key, public_key = get_or_generate_rsa_keys()
 
         # Key file must exist and be non-empty
@@ -531,7 +531,7 @@ class TestRsaKeyGenerationEncrypted:
 
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             private_key, public_key = get_or_generate_rsa_keys()
 
         assert isinstance(private_key, rsa_mod.RSAPrivateKey)
@@ -543,7 +543,7 @@ class TestRsaKeyGenerationEncrypted:
 
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             pk1, pub1 = get_or_generate_rsa_keys()
             pk2, pub2 = get_or_generate_rsa_keys()
 
@@ -556,13 +556,13 @@ class TestRsaKeyLoadEncrypted:
 
     @pytest.fixture(autouse=True)
     def _reset_global_keys(self) -> None:
-        import app.core.security as sec
+        import app.core.security.encryption as sec_enc
 
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
         yield
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
 
     def test_loads_existing_encrypted_key(self, tmp_path: Path) -> None:
         """An existing encrypted key file is loaded correctly."""
@@ -582,7 +582,7 @@ class TestRsaKeyLoadEncrypted:
         key_file = tmp_path / ".rsa_keys"
         key_file.write_bytes(encrypted_pem)
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             private_key, public_key = get_or_generate_rsa_keys()
 
         assert isinstance(private_key, rsa_mod.RSAPrivateKey)
@@ -601,13 +601,13 @@ class TestRsaKeyMigration:
 
     @pytest.fixture(autouse=True)
     def _reset_global_keys(self) -> None:
-        import app.core.security as sec
+        import app.core.security.encryption as sec_enc
 
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
         yield
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
 
     def test_migrates_unencrypted_key_to_encrypted(self, tmp_path: Path) -> None:
         """An old unencrypted PEM key is re-encrypted on first load."""
@@ -628,7 +628,7 @@ class TestRsaKeyMigration:
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             private_key, public_key = get_or_generate_rsa_keys()
 
         # The key should still be usable
@@ -655,13 +655,13 @@ class TestRsaEncryptDecryptRoundTrip:
 
     @pytest.fixture(autouse=True)
     def _reset_global_keys(self) -> None:
-        import app.core.security as sec
+        import app.core.security.encryption as sec_enc
 
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
         yield
-        sec._RSA_PRIVATE_KEY = None  # noqa: SLF001
-        sec._RSA_PUBLIC_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PRIVATE_KEY = None  # noqa: SLF001
+        sec_enc._RSA_PUBLIC_KEY = None  # noqa: SLF001
 
     def test_public_key_pem_is_valid(self, tmp_path: Path) -> None:
         """get_rsa_public_key_pem returns a valid PEM string."""
@@ -669,7 +669,7 @@ class TestRsaEncryptDecryptRoundTrip:
 
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             pem_str = get_rsa_public_key_pem()
 
         assert "BEGIN PUBLIC KEY" in pem_str
@@ -686,7 +686,7 @@ class TestRsaEncryptDecryptRoundTrip:
 
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             # Get public key for encryption
             pem_str = get_rsa_public_key_pem()
             pub_key = serialization.load_pem_public_key(pem_str.encode("utf-8"))
@@ -711,10 +711,10 @@ class TestRsaEncryptDecryptRoundTrip:
         """decrypt_rsa_data raises ValueError on garbage input."""
         key_file = tmp_path / ".rsa_keys"
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             get_or_generate_rsa_keys()  # ensure keys are loaded
 
-        with patch("app.core.security.Path", return_value=key_file):
+        with patch("app.core.security.encryption.Path", return_value=key_file):
             from app.core.security import decrypt_rsa_data
 
             with pytest.raises(ValueError, match="Failed to decrypt RSA data"):
