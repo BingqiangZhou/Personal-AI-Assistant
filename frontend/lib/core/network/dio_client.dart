@@ -289,10 +289,11 @@ class DioClient {
       }
     }
 
-    // Add trailing slash to prevent double slash when Retrofit paths start with '/'
+    // No trailing slash — Retrofit paths start with '/', so trailing slash
+    // would produce double slashes when Dio concatenates baseUrl + path.
     final apiBaseUrl = savedBaseUrl.isNotEmpty
-        ? '$savedBaseUrl/api/v1/'
-        : '${config.AppConfig.serverBaseUrl}/api/v1/';
+        ? '$savedBaseUrl/api/v1'
+        : '${config.AppConfig.serverBaseUrl}/api/v1';
 
     _dio.options.baseUrl = apiBaseUrl;
     logger.AppLogger.debug(
@@ -332,8 +333,9 @@ class DioClient {
         } else if (normalizedUrl.contains('/api/v1/')) {
           normalizedUrl = normalizedUrl.replaceFirst('/api/v1/', '/');
         }
-        // Add trailing slash to prevent double slash when Retrofit paths start with '/'
-        updateBaseUrl('$normalizedUrl/api/v1/');
+        // No trailing slash — Retrofit paths start with '/', concatenation
+        // produces the correct URL without double slashes.
+        updateBaseUrl('$normalizedUrl/api/v1');
         logger.AppLogger.debug(
           ' [DioClient] Applied saved backend API baseUrl: $savedUrl',
         );
@@ -363,7 +365,7 @@ class DioClient {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final fullUrl = '${_dio.options.baseUrl}/${options.path}';
+    final fullUrl = '${_dio.options.baseUrl}${options.path}';
     logger.AppLogger.debug(' [API REQUEST] ${options.method} $fullUrl');
     if (options.data != null) {
       logger.AppLogger.debug('   Data: ${options.data}');
@@ -487,7 +489,7 @@ class DioClient {
 
   void _onError(DioException error, ErrorInterceptorHandler handler) async {
     final errorUrl =
-        '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
+        '${error.requestOptions.baseUrl}${error.requestOptions.path}';
     logger.AppLogger.debug(
       '[API ERROR] ${error.requestOptions.method} $errorUrl',
     );
