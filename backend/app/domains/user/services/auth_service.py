@@ -544,7 +544,7 @@ class AuthenticationService:
             select(PasswordReset).where(
                 and_(
                     PasswordReset.email == email,
-                    not PasswordReset.is_used,
+                    PasswordReset.is_used.is_(False),
                     PasswordReset.expires_at > datetime.now(UTC),
                 ),
             ),
@@ -563,7 +563,7 @@ class AuthenticationService:
             select(PasswordReset).where(
                 and_(
                     PasswordReset.token == token,
-                    not PasswordReset.is_used,
+                    PasswordReset.is_used.is_(False),
                     PasswordReset.expires_at > datetime.now(UTC),
                 ),
             ),
