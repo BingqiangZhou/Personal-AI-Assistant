@@ -16,7 +16,6 @@ import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/playback_progress_policy.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
