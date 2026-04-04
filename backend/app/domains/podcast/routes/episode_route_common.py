@@ -6,9 +6,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import status
-
-from app.http.errors import bilingual_http_exception
+from fastapi import HTTPException, status
 
 
 def encode_keyset_cursor(cursor_type: str, timestamp: datetime, episode_id: int) -> str:
@@ -33,10 +31,9 @@ def decode_cursor(cursor: str) -> dict[str, Any]:
     try:
         decoded = base64.urlsafe_b64decode(f"{cursor}{padding}").decode("utf-8")
     except (ValueError, binascii.Error) as exc:
-        raise bilingual_http_exception(
-            "Invalid cursor",
-            "游标参数无效",
-            status.HTTP_400_BAD_REQUEST,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid cursor",
         ) from exc
 
     try:
@@ -64,8 +61,7 @@ def decode_cursor(cursor: str) -> dict[str, Any]:
             "id": episode_id,
         }
     except (ValueError, TypeError, json.JSONDecodeError) as exc:
-        raise bilingual_http_exception(
-            "Invalid cursor",
-            "游标参数无效",
-            status.HTTP_400_BAD_REQUEST,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid cursor",
         ) from exc

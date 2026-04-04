@@ -1,6 +1,6 @@
 """Podcast queue routes."""
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.exceptions import (
     EpisodeNotFoundError,
@@ -19,7 +19,6 @@ from app.domains.podcast.schemas import (
     PodcastQueueSetCurrentRequest,
 )
 from app.domains.podcast.services.queue_service import PodcastQueueService
-from app.http.errors import bilingual_http_exception
 
 
 router = APIRouter(prefix="")
@@ -44,17 +43,15 @@ async def add_queue_item(
     try:
         return build_queue_response(await service.add_to_queue(request.episode_id))
     except EpisodeNotFoundError:
-        raise bilingual_http_exception(
-            "Episode not found",
-            "未找到该单集",
-            status.HTTP_404_NOT_FOUND,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Episode not found",
+        ) from None
     except QueueLimitExceededError:
-        raise bilingual_http_exception(
-            "Queue has reached its limit",
-            "播放队列已达到上限",
-            status.HTTP_400_BAD_REQUEST,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Queue has reached its limit",
+        ) from None
 
 
 @router.delete(
@@ -81,11 +78,10 @@ async def reorder_queue_items(
     try:
         return build_queue_response(await service.reorder_queue(request.episode_ids))
     except InvalidReorderPayloadError:
-        raise bilingual_http_exception(
-            "Invalid reorder payload",
-            "重排参数无效",
-            status.HTTP_400_BAD_REQUEST,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reorder payload",
+        ) from None
 
 
 @router.post(
@@ -100,11 +96,10 @@ async def set_queue_current(
     try:
         return build_queue_response(await service.set_current(request.episode_id))
     except EpisodeNotInQueueError:
-        raise bilingual_http_exception(
-            "Episode not in queue",
-            "该单集不在队列中",
-            status.HTTP_400_BAD_REQUEST,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Episode not in queue",
+        ) from None
 
 
 @router.post(
@@ -119,17 +114,15 @@ async def activate_queue_episode(
     try:
         return build_queue_response(await service.activate_episode(request.episode_id))
     except EpisodeNotFoundError:
-        raise bilingual_http_exception(
-            "Episode not found",
-            "未找到该单集",
-            status.HTTP_404_NOT_FOUND,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Episode not found",
+        ) from None
     except QueueLimitExceededError:
-        raise bilingual_http_exception(
-            "Queue has reached its limit",
-            "播放队列已达到上限",
-            status.HTTP_400_BAD_REQUEST,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Queue has reached its limit",
+        ) from None
 
 
 @router.post(

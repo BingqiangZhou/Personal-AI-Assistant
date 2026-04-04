@@ -11,8 +11,6 @@ from typing import TypeVar
 
 from fastapi import HTTPException, status
 
-from app.http.errors import bilingual_http_exception
-
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +20,7 @@ F = TypeVar("F", bound=Callable)
 def handle_api_errors(
     operation: str,
     *,
-    error_message_en: str | None = None,
-    error_message_zh: str | None = None,
+    error_message: str | None = None,
 ) -> Callable[[F], F]:
     """Decorator for consistent error handling in API routes.
 
@@ -34,15 +31,14 @@ def handle_api_errors(
 
     Args:
         operation: Description of the operation (for logging)
-        error_message_en: Custom English error message (optional)
-        error_message_zh: Custom Chinese error message (optional)
+        error_message: Custom error message (optional)
 
     Returns:
         Decorated function
 
     Example:
         @router.get("/users/{user_id}")
-        @handle_api_errors("get user", error_message_en="Failed to get user")
+        @handle_api_errors("get user", error_message="Failed to get user")
         async def get_user(user_id: int, service: UserService = Depends()):
             return await service.get_user(user_id)
     """
@@ -56,12 +52,10 @@ def handle_api_errors(
                 raise
             except Exception as exc:
                 logger.error("%s error: %s", operation, exc)
-                msg_en = error_message_en or f"Failed to {operation}"
-                msg_zh = error_message_zh or f"{operation}失败"
-                raise bilingual_http_exception(
-                    message_en=msg_en,
-                    message_zh=msg_zh,
+                detail = error_message or f"Failed to {operation}"
+                raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=detail,
                 ) from exc
 
         @wraps(func)
@@ -72,12 +66,10 @@ def handle_api_errors(
                 raise
             except Exception as exc:
                 logger.error("%s error: %s", operation, exc)
-                msg_en = error_message_en or f"Failed to {operation}"
-                msg_zh = error_message_zh or f"{operation}失败"
-                raise bilingual_http_exception(
-                    message_en=msg_en,
-                    message_zh=msg_zh,
+                detail = error_message or f"Failed to {operation}"
+                raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=detail,
                 ) from exc
 
         if hasattr(func, "__code__") and func.__code__.co_flags & 0x80:

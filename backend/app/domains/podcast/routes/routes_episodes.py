@@ -56,7 +56,6 @@ from app.domains.podcast.services.summary_service import SummaryWorkflowService
 from app.domains.podcast.tasks.tasks_summary import (
     generate_episode_summary as generate_episode_summary_task,
 )
-from app.http.errors import bilingual_http_exception
 
 
 router = APIRouter(prefix="")
@@ -107,10 +106,9 @@ async def get_podcast_feed(
         )
     elif decoded_cursor:
         if decoded_cursor["type"] != "feed":
-            raise bilingual_http_exception(
-                "Cursor is not valid for this endpoint",
-                "该游标不适用于当前接口",
-                status.HTTP_400_BAD_REQUEST,
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cursor is not valid for this endpoint",
             )
 
         (
@@ -188,10 +186,9 @@ async def list_playback_history(
 
     if decoded_cursor:
         if decoded_cursor["type"] != "history":
-            raise bilingual_http_exception(
-                "Cursor is not valid for this endpoint",
-                "该游标不适用于当前接口",
-                status.HTTP_400_BAD_REQUEST,
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cursor is not valid for this endpoint",
             )
 
         (
@@ -283,10 +280,9 @@ async def generate_summary(
     try:
         episode = await service.get_episode_by_id(episode_id)
         if not episode:
-            raise bilingual_http_exception(
-                "Episode not found",
-                "鏈壘鍒拌鍗曢泦",
-                status.HTTP_404_NOT_FOUND,
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Episode not found",
             )
 
         accepted = await summary_workflow.accept_episode_summary_generation(
@@ -304,35 +300,27 @@ async def generate_summary(
             episode_id=episode_id,
             summary_status=accepted["summary_status"],
             accepted_at=accepted.get("accepted_at", datetime.now(UTC)),
-            message_en=(
+            message=(
                 "Summary generation already in progress"
                 if accepted["already_queued"]
                 else "Summary generation accepted"
             ),
-            message_zh=(
-                "鎬荤粨鐢熸垚姝ｅ湪杩涜涓?"
-                if accepted["already_queued"]
-                else "宸叉帴鏀舵€荤粨鐢熸垚璇锋眰"
-            ),
         )
     except ValidationError as exc:
-        raise bilingual_http_exception(
-            "Transcript is required before generating summary",
-            "鐢熸垚鎬荤粨鍓嶉渶瑕佸厛瀹屾垚杞綍",
-            status.HTTP_400_BAD_REQUEST,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Transcript is required before generating summary",
         ) from exc
     except EpisodeNotFoundError:
-        raise bilingual_http_exception(
-            "Episode not found",
-            "鏈壘鍒拌鍗曢泦",
-            status.HTTP_404_NOT_FOUND,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Episode not found",
+        ) from None
     except Exception as exc:
         logger.error("Failed to queue summary for episode %s: %s", episode_id, exc)
-        raise bilingual_http_exception(
-            "Failed to queue summary generation",
-            "鎻愪氦鎬荤粨鐢熸垚浠诲姟澶辫触",
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to queue summary generation",
         ) from exc
 
 
@@ -357,11 +345,10 @@ async def update_playback_progress(
             payload=result,
         )
     except EpisodeNotFoundError:
-        raise bilingual_http_exception(
-            "Episode not found",
-            "未找到该单集",
-            status.HTTP_404_NOT_FOUND,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Episode not found",
+        ) from None
     except Exception as exc:
         logger.error(
             "Failed to update playback progress for episode %s: %s",
@@ -369,10 +356,9 @@ async def update_playback_progress(
             exc,
             exc_info=True,
         )
-        raise bilingual_http_exception(
-            "Failed to update playback progress",
-            "更新播放进度失败",
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update playback progress",
         ) from exc
 
 
@@ -391,7 +377,7 @@ async def get_playback_state(
             raise HTTPException(status_code=404, detail="Playback record not found")
         return build_existing_playback_state_response(playback)
     except EpisodeNotFoundError:
-        raise HTTPException(status_code=404, detail="Episode not found")
+        raise HTTPException(status_code=404, detail="Episode not found") from None
 
 
 @router.get(
@@ -428,23 +414,20 @@ async def apply_playback_rate_preference(
         )
         return build_effective_playback_rate_response(result)
     except SubscriptionNotFoundError:
-        raise bilingual_http_exception(
-            "Subscription not found",
-            "未找到订阅",
-            status.HTTP_404_NOT_FOUND,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subscription not found",
+        ) from None
     except ValueError:
-        raise bilingual_http_exception(
-            "Failed to apply playback preference",
-            "应用播放偏好失败",
-            status.HTTP_400_BAD_REQUEST,
-        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to apply playback preference",
+        ) from None
     except Exception as exc:
         logger.error("Failed to apply playback rate preference: %s", exc)
-        raise bilingual_http_exception(
-            "Failed to apply playback preference",
-            "应用播放偏好失败",
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to apply playback preference",
         ) from exc
 
 
@@ -497,10 +480,9 @@ async def search_podcasts(
 ):
     keyword = (q or "").strip()
     if not keyword:
-        raise bilingual_http_exception(
-            "q is required",
-            "必须提供 q 查询参数",
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="q is required",
         )
 
     episodes, total = await service.search_podcasts(

@@ -380,13 +380,12 @@ class PodcastSummaryRequest(PodcastBaseSchema):
 
 
 class PodcastSummaryStartResponse(PodcastBaseSchema):
-    """AI鎬荤粨浠诲姟鍙楃悊鍝嶅簲"""
+    """AI summary task acceptance response"""
 
     episode_id: int
     summary_status: str
     accepted_at: datetime
-    message_en: str
-    message_zh: str
+    message: str
 
 
 class PodcastSummaryResponse(PodcastBaseSchema):

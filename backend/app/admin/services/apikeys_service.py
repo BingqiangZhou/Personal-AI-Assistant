@@ -113,7 +113,7 @@ class AdminApiKeysService:
         except ValueError:
             return {
                 "success": False,
-                "message": f"鏃犳晥鐨勬ā鍨嬬被鍨? {model_type}",
+                "message": f"无效的模型类型: {model_type}",
             }, 400
 
         resolved_from_db = False
@@ -253,7 +253,7 @@ class AdminApiKeysService:
         )
         return {
             "success": True,
-            "message": f"妯″瀷閰嶇疆 '{display_name}' 宸叉垚鍔熷垱寤?",
+            "message": f"模型配置 '{display_name}' 已成功创建",
         }
 
     async def toggle_apikey(self, *, request, user, key_id: int) -> dict | None:

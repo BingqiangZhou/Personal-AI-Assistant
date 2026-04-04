@@ -226,16 +226,14 @@ def build_summary_start_response(
     episode_id: int,
     summary_status: str,
     accepted_at,
-    message_en: str,
-    message_zh: str,
+    message: str,
 ) -> PodcastSummaryStartResponse:
     """Build the async summary queue acknowledgement response."""
     return PodcastSummaryStartResponse(
         episode_id=episode_id,
         summary_status=summary_status,
         accepted_at=accepted_at,
-        message_en=message_en,
-        message_zh=message_zh,
+        message=message,
     )
 
 

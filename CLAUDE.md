@@ -131,7 +131,7 @@ lib/
 - Follow async/await patterns for all I/O (SQLAlchemy async, httpx, redis)
 - Exception convention:
   - Service/Repository layer: raise `BaseCustomError` subclasses
-  - Route layer: use `bilingual_http_exception()` from `app.http.errors`
+  - Route layer: use `HTTPException` from FastAPI or helpers from `app.http.errors`
   - NEVER use bare ValueError/string comparison for control flow
 - Dependency injection: FastAPI native `Depends()`
 - Migrations: Alembic in `backend/alembic/` (16 migration files)
@@ -172,7 +172,7 @@ lib/
 | Skip `build_runner` after model/provider changes | Must run `dart run build_runner build` |
 | Edit `.g.dart` files by hand | Generated files — edit source and re-run build_runner |
 | Skip widget tests | Required for all pages |
-| Bare ValueError for error handling | `BaseCustomError` (service) or `bilingual_http_exception` (route) |
+| Bare ValueError for error handling | `BaseCustomError` (service) or `HTTPException` (route) |
 
 ### Testing Clarification
 - **Unit/integration tests:** Run locally with `uv run pytest` (uses SQLite in-memory via aiosqlite)

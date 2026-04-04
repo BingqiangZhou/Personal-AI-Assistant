@@ -1,7 +1,7 @@
-"""Bilingual HTTP error helpers for route handlers.
+"""HTTP error helpers for route handlers.
 
 Convention:
-- Route layer uses these helpers for user-facing bilingual error messages.
+- Route layer uses these helpers for user-facing error messages.
 - Service layer should raise typed exceptions from app.core.exceptions instead.
 """
 
@@ -11,219 +11,76 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
 
 
-def bilingual_http_exception(
-    message_en: str,
-    message_zh: str,
-    status_code: int,
-) -> HTTPException:
-    """Create a bilingual HTTPException payload."""
-    return HTTPException(
-        status_code=status_code,
-        detail={"message_en": message_en, "message_zh": message_zh},
-    )
-
-
 def raise_not_found(
     entity_type: str,
     entity_id: int | str | None = None,
-    *,
-    message_en: str | None = None,
-    message_zh: str | None = None,
 ) -> None:
-    """Raise standardized 404 Not Found error.
-
-    Args:
-        entity_type: Type of entity (e.g., "User", "Subscription")
-        entity_id: ID of the entity that was not found (optional)
-        message_en: Custom English message (optional)
-        message_zh: Custom Chinese message (optional)
-
-    Raises:
-        HTTPException: 404 error with bilingual message
-    """
-    if message_en and message_zh:
-        raise bilingual_http_exception(
-            message_en=message_en,
-            message_zh=message_zh,
-            status_code=status.HTTP_404_NOT_FOUND,
-        )
-    raise bilingual_http_exception(
-        message_en=f"{entity_type} not found"
-        + (f" (id={entity_id})" if entity_id else ""),
-        message_zh=f"{entity_type}未找到" + (f" (id={entity_id})" if entity_id else ""),
-        status_code=status.HTTP_404_NOT_FOUND,
-    )
+    """Raise standardized 404 Not Found error."""
+    detail = f"{entity_type} not found"
+    if entity_id:
+        detail += f" (id={entity_id})"
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
 
 def raise_validation_error(
     field_name: str,
     reason: str,
-    *,
-    message_en: str | None = None,
-    message_zh: str | None = None,
 ) -> None:
-    """Raise standardized 400 Bad Request validation error.
-
-    Args:
-        field_name: Name of the invalid field
-        reason: Reason for validation failure
-        message_en: Custom English message (optional)
-        message_zh: Custom Chinese message (optional)
-
-    Raises:
-        HTTPException: 400 error with bilingual message
-    """
-    if message_en and message_zh:
-        raise bilingual_http_exception(
-            message_en=message_en,
-            message_zh=message_zh,
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
-    raise bilingual_http_exception(
-        message_en=f"Invalid {field_name}: {reason}",
-        message_zh=f"{field_name}无效：{reason}",
+    """Raise standardized 400 Bad Request validation error."""
+    raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Invalid {field_name}: {reason}",
     )
 
 
-def raise_unauthorized(
-    message_en: str = "Unauthorized", message_zh: str = "未授权"
-) -> None:
-    """Raise standardized 401 Unauthorized error.
-
-    Args:
-        message_en: English error message
-        message_zh: Chinese error message
-
-    Raises:
-        HTTPException: 401 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=message_en,
-        message_zh=message_zh,
-        status_code=status.HTTP_401_UNAUTHORIZED,
-    )
+def raise_unauthorized(message: str = "Unauthorized") -> None:
+    """Raise standardized 401 Unauthorized error."""
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)
 
 
-def raise_forbidden(
-    message_en: str = "Forbidden", message_zh: str = "禁止访问"
-) -> None:
-    """Raise standardized 403 Forbidden error.
-
-    Args:
-        message_en: English error message
-        message_zh: Chinese error message
-
-    Raises:
-        HTTPException: 403 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=message_en,
-        message_zh=message_zh,
-        status_code=status.HTTP_403_FORBIDDEN,
-    )
+def raise_forbidden(message: str = "Forbidden") -> None:
+    """Raise standardized 403 Forbidden error."""
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=message)
 
 
-def raise_conflict(
-    message_en: str,
-    message_zh: str,
-) -> None:
-    """Raise standardized 409 Conflict error.
-
-    Args:
-        message_en: English error message
-        message_zh: Chinese error message
-
-    Raises:
-        HTTPException: 409 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=message_en,
-        message_zh=message_zh,
-        status_code=status.HTTP_409_CONFLICT,
-    )
+def raise_conflict(message: str) -> None:
+    """Raise standardized 409 Conflict error."""
+    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message)
 
 
 def raise_internal_error(
     operation: str,
     exc: Exception | None = None,
 ) -> None:
-    """Raise standardized 500 Internal Server Error.
-
-    Args:
-        operation: Description of the failed operation
-        exc: The original exception (for chaining)
-
-    Raises:
-        HTTPException: 500 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=f"Internal error during {operation}",
-        message_zh=f"{operation}时发生内部错误",
+    """Raise standardized 500 Internal Server Error."""
+    raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"Internal error during {operation}",
     ) from exc
 
 
-def raise_bad_request(
-    message_en: str,
-    message_zh: str,
-) -> None:
-    """Raise standardized 400 Bad Request error with custom message.
-
-    Args:
-        message_en: English error message
-        message_zh: Chinese error message
-
-    Raises:
-        HTTPException: 400 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=message_en,
-        message_zh=message_zh,
-        status_code=status.HTTP_400_BAD_REQUEST,
-    )
+def raise_bad_request(message: str) -> None:
+    """Raise standardized 400 Bad Request error."""
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
 
-def raise_not_implemented(
-    feature: str,
-) -> None:
-    """Raise standardized 501 Not Implemented error.
-
-    Args:
-        feature: Description of the not implemented feature
-
-    Raises:
-        HTTPException: 501 error with bilingual message
-    """
-    raise bilingual_http_exception(
-        message_en=f"Feature not implemented: {feature}",
-        message_zh=f"功能未实现：{feature}",
+def raise_not_implemented(feature: str) -> None:
+    """Raise standardized 501 Not Implemented error."""
+    raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"Feature not implemented: {feature}",
     )
 
 
 def create_error_response(
-    message_en: str,
-    message_zh: str,
+    message: str,
     status_code: int = 500,
 ) -> dict[str, Any]:
-    """Create a standardized error response dict without raising.
-
-    Useful when you need to return an error as part of a larger response.
-
-    Args:
-        message_en: English error message
-        message_zh: Chinese error message
-        status_code: HTTP status code
-
-    Returns:
-        Dict with error details
-    """
+    """Create a standardized error response dict without raising."""
     return {
         "error": True,
         "status_code": status_code,
-        "message_en": message_en,
-        "message_zh": message_zh,
+        "message": message,
     }
 
 

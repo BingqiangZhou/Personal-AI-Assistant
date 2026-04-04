@@ -74,7 +74,7 @@ async def create_subscription(
         sub = await service.create_subscription(subscription_data)
         return assemble_subscription_response(sub)
     except ValueError as e:
-        raise_bad_request(str(e), f"请求参数错误：{e}")
+        raise_bad_request(str(e))
 
 
 @router.post("/batch", response_model=BatchSubscriptionResponse)
@@ -147,7 +147,7 @@ async def fetch_subscription_items(
         result = await service.fetch_subscription(subscription_id)
         return FetchResponse(**result)
     except ValueError as e:
-        raise_bad_request(str(e), f"请求参数错误：{e}")
+        raise_bad_request(str(e))
     except Exception as e:
         raise_internal_error("fetch subscription", exc=e)
 
