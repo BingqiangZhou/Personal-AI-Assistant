@@ -15,6 +15,7 @@ import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/features/auth/presentation/providers/onboarding_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/audio_handler.dart';
 
 PodcastAudioHandler? _audioHandler;
@@ -98,12 +99,25 @@ void main() {
         ),
       );
 
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      // Desktop platforms allow all orientations (landscape is natural for desktop).
+      // Mobile platforms lock to portrait for consistent mobile UX.
+      final isDesktop =
+          Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+      if (isDesktop) {
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+        // edgeToEdge system UI mode is only relevant for mobile.
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
 
       final prefs = await SharedPreferences.getInstance();
       final storageService = LocalStorageServiceImpl(prefs);
@@ -135,6 +149,12 @@ void main() {
         );
       }
 
+      final hasCompletedOnboarding =
+          await storageService.getBool(
+            AppConstants.hasCompletedOnboardingKey,
+          ) ??
+          false;
+
       runApp(
         ProviderScope(
           overrides: [
@@ -144,6 +164,9 @@ void main() {
             ),
             initialFontCombinationIdProvider.overrideWithValue(
               initialFontCombinationId,
+            ),
+            initialOnboardingCompletedProvider.overrideWithValue(
+              hasCompletedOnboarding,
             ),
           ],
           child: const _AppWithSplashScreen(),

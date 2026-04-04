@@ -8,6 +8,10 @@ import 'package:flutter/services.dart';
 /// - Left arrow: Seek back 10 seconds
 /// - Right arrow: Seek forward 30 seconds
 /// - J / K: Seek back / forward 10 seconds
+/// - Up arrow: Volume up
+/// - Down arrow: Volume down
+/// - N / MediaTrackNext: Next episode
+/// - P / MediaTrackPrevious: Previous episode
 ///
 /// Only active when [enabled] is true (typically when a text field is NOT focused).
 class PlaybackShortcuts extends StatelessWidget {
@@ -17,6 +21,10 @@ class PlaybackShortcuts extends StatelessWidget {
     required this.onTogglePlayPause,
     required this.onSeekBackward,
     required this.onSeekForward,
+    this.onVolumeUp,
+    this.onVolumeDown,
+    this.onNextEpisode,
+    this.onPreviousEpisode,
     this.enabled = true,
   });
 
@@ -24,6 +32,10 @@ class PlaybackShortcuts extends StatelessWidget {
   final VoidCallback onTogglePlayPause;
   final VoidCallback onSeekBackward;
   final VoidCallback onSeekForward;
+  final VoidCallback? onVolumeUp;
+  final VoidCallback? onVolumeDown;
+  final VoidCallback? onNextEpisode;
+  final VoidCallback? onPreviousEpisode;
   final bool enabled;
 
   @override
@@ -32,17 +44,38 @@ class PlaybackShortcuts extends StatelessWidget {
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.space): const _TogglePlayPauseIntent(),
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _SeekBackwardIntent(),
-        LogicalKeySet(LogicalKeyboardKey.arrowRight): const _SeekForwardIntent(),
-        LogicalKeySet(LogicalKeyboardKey.keyJ): const _SeekBackwardIntent(),
-        LogicalKeySet(LogicalKeyboardKey.keyK): const _SeekForwardIntent(),
+        LogicalKeySet(LogicalKeyboardKey.space):
+            const _TogglePlayPauseIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft):
+            const _SeekBackwardIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowRight):
+            const _SeekForwardIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyJ):
+            const _SeekBackwardIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyK):
+            const _SeekForwardIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowUp): const _VolumeUpIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowDown): const _VolumeDownIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyN): const _NextEpisodeIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyP): const _PreviousEpisodeIntent(),
+        LogicalKeySet(LogicalKeyboardKey.mediaTrackNext):
+            const _NextEpisodeIntent(),
+        LogicalKeySet(LogicalKeyboardKey.mediaTrackPrevious):
+            const _PreviousEpisodeIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
           _TogglePlayPauseIntent: _CallbackAction(onTogglePlayPause),
           _SeekBackwardIntent: _CallbackAction(onSeekBackward),
           _SeekForwardIntent: _CallbackAction(onSeekForward),
+          if (onVolumeUp != null)
+            _VolumeUpIntent: _CallbackAction(onVolumeUp!),
+          if (onVolumeDown != null)
+            _VolumeDownIntent: _CallbackAction(onVolumeDown!),
+          if (onNextEpisode != null)
+            _NextEpisodeIntent: _CallbackAction(onNextEpisode!),
+          if (onPreviousEpisode != null)
+            _PreviousEpisodeIntent: _CallbackAction(onPreviousEpisode!),
         },
         child: child,
       ),
@@ -60,6 +93,22 @@ class _SeekBackwardIntent extends Intent {
 
 class _SeekForwardIntent extends Intent {
   const _SeekForwardIntent();
+}
+
+class _VolumeUpIntent extends Intent {
+  const _VolumeUpIntent();
+}
+
+class _VolumeDownIntent extends Intent {
+  const _VolumeDownIntent();
+}
+
+class _NextEpisodeIntent extends Intent {
+  const _NextEpisodeIntent();
+}
+
+class _PreviousEpisodeIntent extends Intent {
+  const _PreviousEpisodeIntent();
 }
 
 class _CallbackAction extends Action<Intent> {

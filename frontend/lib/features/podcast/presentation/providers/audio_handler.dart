@@ -556,6 +556,30 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _broadcastPosition();
   }
 
+  // Volume control (desktop-oriented; mobile typically uses hardware keys).
+  double _volume = 1.0;
+
+  /// Get current volume level (0.0 to 1.0).
+  double get volume => _volume;
+
+  /// Set volume to [level] (clamped to 0.0-1.0).
+  Future<void> setVolume(double level) async {
+    if (_isDisposed) return;
+    final clamped = level.clamp(0.0, 1.0);
+    await _player.setVolume(clamped);
+    _volume = clamped;
+  }
+
+  /// Increase volume by [step] (default 0.1). Clamped at 1.0.
+  Future<void> volumeUp({double step = 0.1}) async {
+    await setVolume(_volume + step);
+  }
+
+  /// Decrease volume by [step] (default 0.1). Clamped at 0.0.
+  Future<void> volumeDown({double step = 0.1}) async {
+    await setVolume(_volume - step);
+  }
+
   /// Get current position
   Duration get position => _currentPosition;
 
