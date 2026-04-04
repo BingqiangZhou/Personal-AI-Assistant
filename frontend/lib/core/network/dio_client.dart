@@ -926,6 +926,31 @@ class DioClient {
     return _cancelTokens[tag]?.isCancelled ?? true;
   }
 
+  /// Release all resources held by this client.
+  ///
+  /// Cancels pending requests, clears caches, and releases in-flight
+  /// deduplicated request entries. Call from a Riverpod `ref.onDispose`
+  /// callback so that provider disposal does not leak resources.
+  void dispose() {
+    cancelAllRequests('DioClient disposed');
+    clearETagCache();
+    clearTokenCache();
+    for (final completer in _inFlightRequests.values) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.cancel,
+            error: 'Client disposed',
+          ),
+        );
+      }
+    }
+    _inFlightRequests.clear();
+    _dio.close(force: true);
+    logger.AppLogger.debug('[DioClient] Disposed — all resources released');
+  }
+
   // Static factory method for ServiceLocator
   static Dio createDio({
     DioClientInitOptions initOptions = const DioClientInitOptions(),

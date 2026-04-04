@@ -13,7 +13,11 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
-  return DioClient();
+  final client = DioClient();
+  ref.onDispose(() {
+    client.dispose();
+  });
+  return client;
 });
 
 final appCacheServiceProvider = Provider<AppCacheService>((ref) {
