@@ -166,20 +166,6 @@ class ExternalServiceError(BaseCustomError):
         super().__init__(message, 502, "EXTERNAL_SERVICE_ERROR", **kwargs)
 
 
-class FileProcessingError(BaseCustomError):
-    """File processing error exception.
-
-    文件处理错误异常
-    """
-
-    def __init__(
-        self,
-        message: str = "File processing error",
-        **kwargs,
-    ):
-        super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
-
-
 # ── Domain-specific exceptions ─────────────────────────────────────────────
 
 
@@ -215,24 +201,6 @@ class SubscriptionNotFoundError(NotFoundError):
 
 class TranscriptionTaskNotFoundError(NotFoundError):
     """Raised when a transcription task is not found."""
-
-    pass
-
-
-class ConversationNotFoundError(NotFoundError):
-    """Raised when a conversation session is not found."""
-
-    pass
-
-
-class TranscriptionAlreadyExistsError(ConflictError):
-    """Raised when transcription already exists for an episode."""
-
-    pass
-
-
-class TranscriptionInProgressError(ConflictError):
-    """Raised when transcription is already in progress."""
 
     pass
 
@@ -399,38 +367,6 @@ async def database_connection_exception_handler(
             "message_zh": "数据库连接错误，请稍后重试。",
         },
         headers={"Retry-After": "10"},
-    )
-
-
-async def redis_connection_exception_handler(
-    request: Request, exc: Exception
-) -> CustomJSONResponse:
-    """Handle Redis connection exceptions.
-
-    处理Redis连接异常 - 返回503服务不可用
-    """
-    logger.error(
-        "Redis connection error",
-        extra={
-            "event": "redis_connection_error",
-            "exception_type": exc.__class__.__name__,
-            "path": request.url.path,
-            "method": request.method,
-            "exc_message": str(exc),
-        },
-        exc_info=True,
-    )
-
-    return CustomJSONResponse(
-        status_code=503,
-        content={
-            "detail": "Cache service error. Please try again later.",
-            "type": "CACHE_CONNECTION_ERROR",
-            "status_code": 503,
-            "message_en": "Cache service error. Please try again later.",
-            "message_zh": "缓存服务错误，请稍后重试。",
-        },
-        headers={"Retry-After": "5"},
     )
 
 
