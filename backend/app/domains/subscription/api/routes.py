@@ -1,6 +1,6 @@
 """Subscription API routes."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.domains.subscription.api.dependencies import get_subscription_service
 from app.domains.subscription.api.response_assemblers import (
@@ -17,6 +17,7 @@ from app.domains.subscription.api.schemas import (
     FetchResponse,
 )
 from app.domains.subscription.services import SubscriptionService
+from app.http.errors import raise_bad_request, raise_internal_error, raise_not_found
 from app.shared.schemas import (
     PaginatedResponse,
     PaginationParams,
@@ -70,7 +71,7 @@ async def create_subscription(
         sub = await service.create_subscription(subscription_data)
         return assemble_subscription_response(sub)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise_bad_request(str(e), f"请求参数错误：{e}")
 
 
 @router.post("/batch", response_model=BatchSubscriptionResponse)
@@ -102,7 +103,7 @@ async def get_subscription(
     """Get subscription by ID."""
     result = await service.get_subscription(subscription_id)
     if not result:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+        raise_not_found("Subscription", subscription_id)
     sub, item_count = result
     return assemble_subscription_response(sub, item_count=item_count)
 
@@ -116,7 +117,7 @@ async def update_subscription(
     """Update subscription."""
     result = await service.update_subscription(subscription_id, subscription_data)
     if not result:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+        raise_not_found("Subscription", subscription_id)
     sub, item_count = result
     return assemble_subscription_response(sub, item_count=item_count)
 
@@ -129,7 +130,7 @@ async def delete_subscription(
     """Delete subscription."""
     success = await service.delete_subscription(subscription_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+        raise_not_found("Subscription", subscription_id)
     # TODO: Add a proper response model instead of raw dict
     return {"message": "Subscription deleted"}
 
@@ -144,9 +145,9 @@ async def fetch_subscription_items(
         result = await service.fetch_subscription(subscription_id)
         return FetchResponse(**result)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise_bad_request(str(e), f"请求参数错误：{e}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fetch failed: {e!s}") from e
+        raise_internal_error("fetch subscription", exc=e)
 
 
 @router.post("/fetch-all", response_model=list[FetchResponse])
@@ -214,7 +215,7 @@ async def mark_item_as_read(
     # TODO: Add a proper response model instead of returning service result directly
     result = await service.mark_item_as_read(item_id)
     if not result:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise_not_found("Item", item_id)
     return result
 
 
@@ -227,7 +228,7 @@ async def mark_item_as_unread(
     # TODO: Add a proper response model instead of returning service result directly
     result = await service.mark_item_as_unread(item_id)
     if not result:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise_not_found("Item", item_id)
     return result
 
 
@@ -240,7 +241,7 @@ async def toggle_bookmark(
     # TODO: Add a proper response model instead of returning service result directly
     result = await service.toggle_bookmark(item_id)
     if not result:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise_not_found("Item", item_id)
     return result
 
 
@@ -252,7 +253,7 @@ async def delete_item(
     """Delete an item."""
     success = await service.delete_item(item_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise_not_found("Item", item_id)
     # TODO: Add a proper response model instead of raw dict
     return {"message": "Item deleted"}
 
@@ -301,7 +302,7 @@ async def update_category(
     update_data = category_data.model_dump(exclude_unset=True)
     category = await service.update_category(category_id, **update_data)
     if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise_not_found("Category", category_id)
     return assemble_category_payload(category, include_created_at=False)
 
 
@@ -313,7 +314,7 @@ async def delete_category(
     """Delete category."""
     success = await service.delete_category(category_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise_not_found("Category", category_id)
     # TODO: Add a proper response model instead of raw dict
     return {"message": "Category deleted"}
 
@@ -327,9 +328,7 @@ async def add_subscription_to_category(
     """Add subscription to category."""
     success = await service.add_subscription_to_category(subscription_id, category_id)
     if not success:
-        raise HTTPException(
-            status_code=404, detail="Subscription or category not found"
-        )
+        raise_not_found("Subscription or category")
     # TODO: Add a proper response model instead of raw dict
     return {"message": "Subscription added to category"}
 
@@ -345,6 +344,6 @@ async def remove_subscription_from_category(
         subscription_id, category_id
     )
     if not success:
-        raise HTTPException(status_code=404, detail="Mapping not found")
+        raise_not_found("Category mapping")
     # TODO: Add a proper response model instead of raw dict
     return {"message": "Subscription removed from category"}
