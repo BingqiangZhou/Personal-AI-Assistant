@@ -2018,4 +2018,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_biometric_not_available => '暂不可用';
+
+  @override
+  String get nav_ai => 'AI';
+
+  @override
+  String get ai_tab_eyebrow => 'AI 助手';
+
+  @override
+  String get ai_tab_subtitle => '日报、 高光观点和更多';
+
+  @override
+  String get ai_tab_daily_report_subtitle => '查看你的个性化每日摘要';
+
+  @override
+  String get ai_tab_highlights_subtitle => '从收听历史中获取关键见解';
+
+  @override
+  String get ai_tab_chat_title => 'AI 助手';
+
+  @override
+  String get ai_tab_chat_subtitle => '与 AI 聊聊你的播客';
 }

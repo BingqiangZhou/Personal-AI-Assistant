@@ -2104,4 +2104,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_biometric_not_available => 'Not available';
+
+  @override
+  String get nav_ai => 'AI';
+
+  @override
+  String get ai_tab_eyebrow => 'AI Assistant';
+
+  @override
+  String get ai_tab_subtitle => 'Daily reports, highlights, and more';
+
+  @override
+  String get ai_tab_daily_report_subtitle =>
+      'Review your personalized daily digest';
+
+  @override
+  String get ai_tab_highlights_subtitle =>
+      'Key insights from your listening history';
+
+  @override
+  String get ai_tab_chat_title => 'AI Assistant';
+
+  @override
+  String get ai_tab_chat_subtitle => 'Chat with AI about your podcasts';
 }

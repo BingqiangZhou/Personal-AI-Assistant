@@ -3883,6 +3883,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not available'**
   String get profile_biometric_not_available;
+
+  /// Navigation item: AI
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get nav_ai;
+
+  /// AI tab eyebrow text
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get ai_tab_eyebrow;
+
+  /// AI tab subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reports, highlights, and more'**
+  String get ai_tab_subtitle;
+
+  /// AI tab daily report card subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Review your personalized daily digest'**
+  String get ai_tab_daily_report_subtitle;
+
+  /// AI tab highlights card subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Key insights from your listening history'**
+  String get ai_tab_highlights_subtitle;
+
+  /// AI tab chat assistant card title
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get ai_tab_chat_title;
+
+  /// AI tab chat assistant card subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with AI about your podcasts'**
+  String get ai_tab_chat_subtitle;
 }
 
 class _AppLocalizationsDelegate
