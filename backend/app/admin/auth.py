@@ -50,6 +50,21 @@ class AdminAuthRequired:
                     detail="Invalid session",
                 )
 
+            # Validate client IP matches session IP
+            session_ip = data.get("client_ip")
+            current_ip = request.client.host if request.client else None
+            if session_ip and current_ip and session_ip != current_ip:
+                logger.warning(
+                    "Admin session IP mismatch: session=%s current=%s user_id=%s",
+                    session_ip,
+                    current_ip,
+                    user_id,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session IP mismatch",
+                )
+
             user_repo = UserRepository(db)
             user = await user_repo.get_by_id(user_id)
             if not user or not user.is_active:
@@ -82,15 +97,20 @@ class AdminAuthRequired:
         except HTTPException:
             raise
         except Exception as err:
+            logger.error("Admin auth error: %s", err)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Authentication error: {err}",
+                detail="Authentication failed",
             ) from err
 
 
-def create_admin_session(user_id: int) -> str:
-    """Create a secure session token for admin user."""
-    data = {"user_id": user_id, "created_at": datetime.now(UTC).isoformat()}
+def create_admin_session(user_id: int, client_ip: str) -> str:
+    """Create a secure session token for admin user bound to client IP."""
+    data = {
+        "user_id": user_id,
+        "client_ip": client_ip,
+        "created_at": datetime.now(UTC).isoformat(),
+    }
     return _get_serializer().dumps(data)
 
 

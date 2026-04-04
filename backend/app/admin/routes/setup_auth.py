@@ -104,7 +104,7 @@ async def setup_admin(
             password=password,
             account_name=account_name,
         )
-        return service.build_setup_redirect(admin_user.id)
+        return service.build_setup_redirect(admin_user.id, client_ip=request.client.host)
 
     except Exception as e:
         logger.error(f"Setup error: {e}")
@@ -189,12 +189,12 @@ async def login(
         # 检查全局2FA是否开启但用户未设置2FA
         if admin_2fa_enabled and not user.is_2fa_enabled:
             # Create session first (user is authenticated)
-            response = service.build_setup_redirect(user.id)
+            response = service.build_setup_redirect(user.id, client_ip=request.client.host)
             logger.info(f"User {username} logged in but required to set up 2FA")
             return response
 
         # No 2FA required, create session directly
-        response = service.build_session_redirect(user.id, url="/api/v1/admin")
+        response = service.build_session_redirect(user.id, url="/api/v1/admin", client_ip=request.client.host)
 
         # Log login with 2FA status
         if user.is_2fa_enabled and not admin_2fa_enabled:
@@ -288,7 +288,7 @@ async def verify_2fa_login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
-        response = service.build_session_redirect(user.id, url="/api/v1/admin")
+        response = service.build_session_redirect(user.id, url="/api/v1/admin", client_ip=request.client.host)
         # Clear 2FA cookie
         response.delete_cookie(key="2fa_user_id")
 

@@ -102,14 +102,14 @@ class AdminSetupAuthService:
         user.is_2fa_enabled = True
         await self.db.commit()
 
-    def build_setup_redirect(self, user_id: int) -> RedirectResponse:
+    def build_setup_redirect(self, user_id: int, *, client_ip: str) -> RedirectResponse:
         response = RedirectResponse(
             url="/api/v1/admin/2fa/setup",
             status_code=status.HTTP_303_SEE_OTHER,
         )
         response.set_cookie(
             key="admin_session",
-            value=create_admin_session(user_id),
+            value=create_admin_session(user_id, client_ip),
             httponly=True,
             secure=True,
             samesite="lax",
@@ -117,11 +117,11 @@ class AdminSetupAuthService:
         )
         return response
 
-    def build_session_redirect(self, user_id: int, *, url: str) -> RedirectResponse:
+    def build_session_redirect(self, user_id: int, *, url: str, client_ip: str) -> RedirectResponse:
         response = RedirectResponse(url=url, status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie(
             key="admin_session",
-            value=create_admin_session(user_id),
+            value=create_admin_session(user_id, client_ip),
             httponly=True,
             secure=True,
             samesite="lax",
