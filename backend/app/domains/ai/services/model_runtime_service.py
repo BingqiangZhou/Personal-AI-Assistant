@@ -13,7 +13,6 @@ import logging
 import time
 from typing import Any
 
-from app.core.circuit_breaker import CircuitOpenError, get_circuit_breaker
 from app.core.exceptions import ValidationError
 from app.core.http_client import get_shared_http_session
 from app.domains.ai.model_testing import (
@@ -50,13 +49,6 @@ class AIModelRuntimeService:
     ):
         self.repo = repo
         self.security_service = security_service
-
-        # Circuit breaker for transcription API calls
-        self._transcription_breaker = get_circuit_breaker(
-            "ai_transcription_api",
-            failure_threshold=3,
-            recovery_timeout=60.0,
-        )
 
     async def test_model(
         self,
@@ -124,11 +116,9 @@ class AIModelRuntimeService:
                     model.provider,
                     model.priority,
                 )
-                # Use circuit breaker protection for external API calls
-                async with self._transcription_breaker:
-                    result = await self._call_transcription_model(
-                        model, audio_file_path, language,
-                    )
+                result = await self._call_transcription_model(
+                    model, audio_file_path, language,
+                )
                 await self.repo.increment_usage(model.id, success=True)
                 logger.info(
                     "Transcription request succeeded model=%s provider=%s priority=%s",
@@ -137,14 +127,6 @@ class AIModelRuntimeService:
                     model.priority,
                 )
                 return result, model
-            except CircuitOpenError:
-                # Circuit breaker is open - try next model
-                logger.warning(
-                    "Circuit breaker open for transcription API, skipping model %s",
-                    model.name,
-                )
-                await self.repo.increment_usage(model.id, success=False)
-                continue
             except Exception as exc:
                 last_error = exc
                 await self.repo.increment_usage(model.id, success=False)

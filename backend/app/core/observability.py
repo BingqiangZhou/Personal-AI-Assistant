@@ -18,10 +18,6 @@ class ObservabilityThresholds:
     redis_command_max_ms: float = 100.0
     redis_cache_hit_rate_min: float = 0.5
     redis_cache_lookups_min: int = 20
-    # Circuit breaker thresholds
-    circuit_breaker_failure_threshold: int = 3
-    circuit_breaker_open_count_max: int = 0  # Alert if any breakers are open
-    circuit_breaker_rejected_calls_max: int = 10  # Alert on too many rejections
     # Rate limiting thresholds
     rate_limit_rejection_rate_max: float = 0.1  # 10% rejection rate warning
 
@@ -117,42 +113,6 @@ def _overall_status(checks: list[dict[str, Any]]) -> str:
     if "warning" in statuses:
         return "warning"
     return "ok"
-
-
-def get_circuit_breaker_metrics() -> dict[str, Any]:
-    """Get aggregated circuit breaker statistics."""
-    from app.core.circuit_breaker import get_all_circuit_breaker_stats
-
-    stats = get_all_circuit_breaker_stats()
-    if not stats:
-        return {
-            "total_breakers": 0,
-            "open_count": 0,
-            "half_open_count": 0,
-            "closed_count": 0,
-            "total_calls": 0,
-            "total_failures": 0,
-            "total_rejected": 0,
-            "breakers": {},
-        }
-
-    open_count = sum(1 for s in stats.values() if s["state"] == "open")
-    half_open_count = sum(1 for s in stats.values() if s["state"] == "half_open")
-    closed_count = sum(1 for s in stats.values() if s["state"] == "closed")
-    total_calls = sum(s["total_calls"] for s in stats.values())
-    total_failures = sum(s["failed_calls"] for s in stats.values())
-    total_rejected = sum(s["rejected_calls"] for s in stats.values())
-
-    return {
-        "total_breakers": len(stats),
-        "open_count": open_count,
-        "half_open_count": half_open_count,
-        "closed_count": closed_count,
-        "total_calls": total_calls,
-        "total_failures": total_failures,
-        "total_rejected": total_rejected,
-        "breakers": stats,
-    }
 
 
 def get_rate_limit_metrics() -> dict[str, Any]:
@@ -266,23 +226,6 @@ def build_observability_snapshot(
         ),
     ]
 
-    # Add circuit breaker metrics
-    circuit_breaker_metrics = get_circuit_breaker_metrics()
-    circuit_open_count = circuit_breaker_metrics["open_count"]
-
-    checks.append(
-        _check_upper_bound(
-            name="circuit_breaker_open",
-            value=circuit_open_count,
-            threshold=effective_thresholds.circuit_breaker_open_count_max,
-            critical_multiplier=1.0,
-            unit="count",
-            message_ok="All circuit breakers are closed",
-            message_warn="Some circuit breakers are open",
-            message_critical="Circuit breakers are open - external services unavailable",
-        ),
-    )
-
     alerts = [check for check in checks if check["status"] != "ok"]
 
     return {
@@ -299,11 +242,8 @@ def build_observability_snapshot(
             "redis_total_commands": redis_total_commands,
             "redis_cache_hit_rate": redis_cache_hit_rate,
             "redis_cache_lookups": redis_cache_lookups,
-            "circuit_breaker_open_count": circuit_open_count,
-            "circuit_breaker_total": circuit_breaker_metrics["total_breakers"],
             "alerts_count": len(alerts),
         },
         "checks": checks,
         "alerts": alerts,
-        "circuit_breakers": circuit_breaker_metrics,
     }

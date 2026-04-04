@@ -147,18 +147,6 @@ celery_task_duration = Histogram(
     buckets=[0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0],
 )
 
-circuit_breaker_state = Gauge(
-    "circuit_breaker_state",
-    "Circuit breaker state (0=closed, 1=open, 2=half_open)",
-    ["service"],
-)
-
-circuit_breaker_failures = Counter(
-    "circuit_breaker_failures_total",
-    "Total circuit breaker failures",
-    ["service"],
-)
-
 
 # =============================================================================
 # Helper Functions
@@ -233,14 +221,6 @@ def record_celery_task(
         celery_task_duration.labels(task_name=task_name).observe(duration)
 
 
-def record_circuit_breaker_state(
-    service: str,
-    state: str,
-) -> None:
-    """Record circuit breaker state metrics."""
-    state_value = {"closed": 0, "open": 1, "half_open": 2}.get(state, 0)
-    circuit_breaker_state.labels(service=service).set(state_value)
-
 
 # =============================================================================
 # Metrics Endpoint
@@ -288,18 +268,6 @@ async def get_prometheus_metrics() -> Response:
         if "cache" in redis_metrics and "hit_rate" in redis_metrics["cache"]:
             cache_hit_rate.labels(cache_type="redis").set(
                 redis_metrics["cache"]["hit_rate"]
-            )
-    except Exception:
-        pass
-
-    # Update circuit breaker states
-    try:
-        from app.core.circuit_breaker import get_all_circuit_breaker_stats
-
-        for name, stats in get_all_circuit_breaker_stats().items():
-            record_circuit_breaker_state(
-                service=name,
-                state=stats.get("state", "closed"),
             )
     except Exception:
         pass

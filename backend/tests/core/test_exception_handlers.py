@@ -7,7 +7,6 @@ from httpx import ASGITransport, AsyncClient
 from pydantic import BaseModel, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.circuit_breaker import CircuitOpenError
 from app.core.exceptions import (
     BadRequestError,
     ConflictError,
@@ -163,19 +162,6 @@ def app_validation_error() -> FastAPI:
     @app.post("/validate")
     async def validate_endpoint(item: ItemPayload):  # noqa: ARG001
         return {"ok": True}
-
-    return app
-
-
-@pytest.fixture
-def app_circuit_open() -> FastAPI:
-    """App with a route that raises CircuitOpenError."""
-
-    app = _make_app()
-
-    @app.get("/circuit-open")
-    async def raise_circuit_open():
-        raise CircuitOpenError("service-x")
 
     return app
 
@@ -524,28 +510,6 @@ async def test_request_validation_success(app_validation_error: FastAPI):
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post("/validate", json={"name": "Alice", "age": 30})
     assert response.status_code == 200
-
-
-# ---------------------------------------------------------------------------
-# Tests: circuit_open_exception_handler  (CircuitOpenError)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_circuit_open_error(app_circuit_open: FastAPI):
-    transport = ASGITransport(app=app_circuit_open)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/circuit-open")
-    assert response.status_code == 503
-    data = response.json()
-    assert data["type"] == "SERVICE_UNAVAILABLE"
-    assert data["status_code"] == 503
-    assert "unavailable" in data["detail"].lower()
-    # Bilingual messages present
-    assert "message_en" in data
-    assert "message_zh" in data
-    # Retry-After header
-    assert response.headers.get("Retry-After") == "30"
 
 
 # ---------------------------------------------------------------------------

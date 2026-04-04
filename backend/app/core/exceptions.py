@@ -16,7 +16,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.circuit_breaker import CircuitOpenError
 from app.core.json_encoder import CustomJSONResponse
 
 
@@ -371,37 +370,6 @@ async def general_exception_handler(
     )
 
 
-async def circuit_open_exception_handler(
-    request: Request, exc: CircuitOpenError
-) -> CustomJSONResponse:
-    """Handle circuit breaker open exceptions.
-
-    处理熔断器打开异常 - 返回503服务不可用
-    """
-    logger.warning(
-        "Circuit breaker open",
-        extra={
-            "event": "circuit_open",
-            "exception_type": exc.__class__.__name__,
-            "path": request.url.path,
-            "method": request.method,
-            "exc_message": str(exc),
-        },
-    )
-
-    return CustomJSONResponse(
-        status_code=503,
-        content={
-            "detail": "Service temporarily unavailable. Please try again later.",
-            "type": "SERVICE_UNAVAILABLE",
-            "status_code": 503,
-            "message_en": "Service temporarily unavailable. Please try again later.",
-            "message_zh": "服务暂时不可用，请稍后重试。",
-        },
-        headers={"Retry-After": "30"},
-    )
-
-
 async def database_connection_exception_handler(
     request: Request, exc: Exception
 ) -> CustomJSONResponse:
@@ -507,7 +475,6 @@ def setup_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(CircuitOpenError, circuit_open_exception_handler)
 
     # Database connection errors
     from sqlalchemy.exc import (
@@ -523,10 +490,6 @@ def setup_exception_handlers(app: FastAPI) -> None:
     # Timeout errors
     app.add_exception_handler(asyncio.TimeoutError, timeout_exception_handler)
     app.add_exception_handler(TimeoutError, timeout_exception_handler)
-
-    # Redis connection errors (ConnectionError is a base class, so we handle it carefully)
-    # Note: We don't want to catch all ConnectionError as it may include network issues
-    # Instead, we'll let Redis-specific errors be caught by the rate limiter's circuit breaker
 
     # General exception handler (must be last)
     app.add_exception_handler(Exception, general_exception_handler)

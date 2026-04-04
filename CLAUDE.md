@@ -53,7 +53,6 @@ app/
     middleware/          # rate_limit, query_analysis (N+1), response_optimization (gzip)
     metrics.py          # Prometheus counters/gauges/histograms
     observability.py    # Alert thresholds, health snapshot
-    circuit_breaker.py  # Circuit breaker for external calls
     providers/          # Dependency injection (auth, podcast, ai, subscription, admin)
   domains/              # Business domains
     user/               # Auth, profile (api, repositories, services, tests)
