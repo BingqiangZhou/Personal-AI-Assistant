@@ -46,7 +46,6 @@ dependencies = [
 dev = [
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
-    "locust>=2.43.3",
     "ruff>=0.15.5",
     "aiosqlite>=0.22.1",
     "httpx>=0.28.1",
@@ -138,7 +137,4 @@ addopts = "--import-mode=importlib"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-markers = [
-    "performance: marks performance benchmark tests",
-    "load: marks load/concurrency tests",
-]
+markers = []
