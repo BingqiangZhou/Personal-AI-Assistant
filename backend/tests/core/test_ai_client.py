@@ -166,9 +166,8 @@ class TestCallAiApi:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with pytest.raises(RetryableAIModelError):
-                await call_ai_api(model_config, "test-key", "Say hello")
+        ), pytest.raises(RetryableAIModelError):
+            await call_ai_api(model_config, "test-key", "Say hello")
 
     async def test_401_raises_http_exception(self):
         model_config = _make_model_config()
@@ -178,9 +177,8 @@ class TestCallAiApi:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with pytest.raises(Exception, match="401"):
-                await call_ai_api(model_config, "test-key", "Say hello")
+        ), pytest.raises(Exception, match="401"):
+            await call_ai_api(model_config, "test-key", "Say hello")
 
     async def test_html_error_page(self):
         model_config = _make_model_config()
@@ -194,9 +192,8 @@ class TestCallAiApi:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with pytest.raises(Exception, match="HTML error page"):
-                await call_ai_api(model_config, "test-key", "Say hello")
+        ), pytest.raises(Exception, match="HTML error page"):
+            await call_ai_api(model_config, "test-key", "Say hello")
 
     async def test_prompt_truncation(self):
         model_config = _make_model_config()
@@ -269,19 +266,18 @@ class TestCallAiApiWithRetry:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with patch("app.core.ai_client.settings") as mock_settings:
-                mock_settings.AI_CLIENT_MAX_RETRIES = 3
-                mock_settings.AI_CLIENT_BASE_DELAY = 0
-                mock_settings.AI_CLIENT_MAX_PROMPT_LENGTH = 1000000
-                with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
-                    parsed, _, _ = await call_ai_api_with_retry(
-                        model_config,
-                        "test-key",
-                        "prompt",
-                        response_parser,
-                        ai_model_repo,
-                    )
+        ), patch("app.core.ai_client.settings") as mock_settings:
+            mock_settings.AI_CLIENT_MAX_RETRIES = 3
+            mock_settings.AI_CLIENT_BASE_DELAY = 0
+            mock_settings.AI_CLIENT_MAX_PROMPT_LENGTH = 1000000
+            with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
+                parsed, _, _ = await call_ai_api_with_retry(
+                    model_config,
+                    "test-key",
+                    "prompt",
+                    response_parser,
+                    ai_model_repo,
+                )
         assert parsed == "parsed"
 
     async def test_non_retryable_error_raises_immediately(self):
@@ -294,15 +290,14 @@ class TestCallAiApiWithRetry:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with pytest.raises(Exception, match="401"):
-                await call_ai_api_with_retry(
-                    model_config,
-                    "test-key",
-                    "prompt",
-                    response_parser,
-                    ai_model_repo,
-                )
+        ), pytest.raises(Exception, match="401"):
+            await call_ai_api_with_retry(
+                model_config,
+                "test-key",
+                "prompt",
+                response_parser,
+                ai_model_repo,
+            )
 
 
 # ── Unit: AIClientService ──────────────────────────────────────────────
@@ -398,16 +393,15 @@ class TestAIClientService:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
-                with patch("app.core.ai_client.settings") as mock_settings:
-                    mock_settings.AI_CLIENT_MAX_RETRIES = 1
-                    mock_settings.AI_CLIENT_BASE_DELAY = 0
-                    with pytest.raises(ValidationError, match="models failed"):
-                        await service.call_with_fallback(
-                            messages=[{"role": "user", "content": "hi"}],
-                            model_type=ModelType.TEXT_GENERATION,
-                        )
+        ), patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
+            with patch("app.core.ai_client.settings") as mock_settings:
+                mock_settings.AI_CLIENT_MAX_RETRIES = 1
+                mock_settings.AI_CLIENT_BASE_DELAY = 0
+                with pytest.raises(ValidationError, match="models failed"):
+                    await service.call_with_fallback(
+                        messages=[{"role": "user", "content": "hi"}],
+                        model_type=ModelType.TEXT_GENERATION,
+                    )
 
     async def test_call_with_fallback_uses_fallback_handler(self, ai_client_service):
         service, repo, security = ai_client_service
@@ -422,16 +416,15 @@ class TestAIClientService:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ):
-            with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
-                with patch("app.core.ai_client.settings") as mock_settings:
-                    mock_settings.AI_CLIENT_MAX_RETRIES = 1
-                    mock_settings.AI_CLIENT_BASE_DELAY = 0
-                    content, returned_model = await service.call_with_fallback(
-                        messages=[{"role": "user", "content": "hi"}],
-                        model_type=ModelType.TEXT_GENERATION,
-                        fallback_handler=fallback,
-                    )
+        ), patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
+            with patch("app.core.ai_client.settings") as mock_settings:
+                mock_settings.AI_CLIENT_MAX_RETRIES = 1
+                mock_settings.AI_CLIENT_BASE_DELAY = 0
+                content, returned_model = await service.call_with_fallback(
+                    messages=[{"role": "user", "content": "hi"}],
+                    model_type=ModelType.TEXT_GENERATION,
+                    fallback_handler=fallback,
+                )
         assert content == "fallback response"
         assert returned_model is None
 

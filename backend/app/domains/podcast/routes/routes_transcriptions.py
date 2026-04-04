@@ -86,7 +86,7 @@ async def start_transcription(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Episode not found",
-        )
+        ) from None
     except Exception as exc:
         logger.error(
             "Failed to start transcription for episode %s: %s", episode_id, exc
@@ -121,7 +121,7 @@ async def get_transcription(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Episode {episode_id} not found",
-            )
+            ) from None
 
         transcription_service = transcription_workflow.transcription_service_factory(
             transcription_workflow.db,
@@ -131,7 +131,7 @@ async def get_transcription(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No transcription task found for this episode",
-            )
+            ) from None
 
         response_data = {
             "id": task.id,
@@ -229,7 +229,7 @@ async def delete_transcription(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Transcription task not found",
-        )
+        ) from None
     except Exception as exc:
         logger.error(
             "Failed to delete transcription for episode %s: %s", episode_id, exc
@@ -264,7 +264,7 @@ async def get_transcription_status(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Transcription task not found",
-        )
+        ) from None
     except PermissionError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -306,7 +306,7 @@ async def schedule_episode_transcription_endpoint(
         )
         return build_transcription_schedule_response(result)
     except EpisodeNotFoundError:
-        raise HTTPException(status_code=404, detail="Episode not found")
+        raise HTTPException(status_code=404, detail="Episode not found") from None
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except HTTPException:
@@ -341,7 +341,7 @@ async def get_episode_transcript_endpoint(
         )
         return build_episode_transcript_response(result)
     except EpisodeNotFoundError:
-        raise HTTPException(status_code=404, detail="Episode not found")
+        raise HTTPException(status_code=404, detail="Episode not found") from None
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -380,7 +380,7 @@ async def batch_transcribe_subscription_endpoint(
         )
         return build_batch_transcription_response(result)
     except SubscriptionNotFoundError:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+        raise HTTPException(status_code=404, detail="Subscription not found") from None
     except Exception as exc:
         logger.error(
             "Failed to batch transcribe subscription %s: %s", subscription_id, exc
@@ -410,7 +410,7 @@ async def get_transcription_schedule_status(
         )
         return build_transcription_schedule_status_response(result)
     except EpisodeNotFoundError:
-        raise HTTPException(status_code=404, detail="Episode not found")
+        raise HTTPException(status_code=404, detail="Episode not found") from None
     except Exception as exc:
         logger.error(
             "Failed to get transcription status for episode %s: %s",
@@ -443,7 +443,7 @@ async def cancel_transcription_endpoint(
         )
         return build_transcription_cancel_response(result)
     except EpisodeNotFoundError:
-        raise HTTPException(status_code=404, detail="Episode not found")
+        raise HTTPException(status_code=404, detail="Episode not found") from None
     except Exception as exc:
         logger.error(
             "Failed to cancel transcription for episode %s: %s", episode_id, exc
@@ -477,7 +477,7 @@ async def check_and_transcribe_new_episodes(
         )
         return build_check_new_episodes_response(result)
     except SubscriptionNotFoundError:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+        raise HTTPException(status_code=404, detail="Subscription not found") from None
     except Exception as exc:
         logger.error(
             "Failed to check new episodes for subscription %s: %s", subscription_id, exc
