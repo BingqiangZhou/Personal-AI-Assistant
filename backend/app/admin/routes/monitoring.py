@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.admin.auth import admin_required
 from app.admin.monitoring import SystemMonitorService
 from app.admin.routes._shared import get_templates
-from app.core.database import check_db_readiness, get_db_pool_snapshot
+from app.core.database import check_db_readiness
 from app.core.redis import get_shared_redis
 from app.domains.user.models import User
 
@@ -19,13 +19,11 @@ monitor_service = SystemMonitorService()
 
 
 async def _runtime_payload() -> dict:
-    db_pool = get_db_pool_snapshot()
     readiness = {
         "db": await check_db_readiness(),
         "redis": await get_shared_redis().check_health(),
     }
     return {
-        "db_pool": db_pool,
         "readiness": readiness,
     }
 

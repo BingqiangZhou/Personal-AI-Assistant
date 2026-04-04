@@ -50,9 +50,7 @@ class Settings(BaseSettings):
     DATABASE_RECYCLE: int = 3600
     DATABASE_CONNECT_TIMEOUT: int = 5
     DATABASE_STATEMENT_TIMEOUT: int = 30000
-    DATABASE_POOL_WAKEUP_TIMEOUT: int = 60
     DATABASE_ECHO: bool = False
-    DATABASE_ECHO_POOL: bool = True
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"

@@ -46,23 +46,6 @@ _worker_runtimes: dict[
 ] = {}
 
 
-def _pool_metric(pool: Any, attr: str, default: int = 0) -> int:
-    """Safely read optional pool metrics across different SQLAlchemy pool types."""
-    metric = getattr(pool, attr, None)
-    if callable(metric):
-        try:
-            value = metric()
-            return int(value) if value is not None else default
-        except Exception:
-            return default
-    if metric is None:
-        return default
-    try:
-        return int(metric)
-    except Exception:
-        return default
-
-
 def _build_engine_kwargs(database_url: str) -> dict[str, Any]:
     settings = get_settings()
     common: dict[str, Any] = {
@@ -250,74 +233,10 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-async def warmup_connection_pool(
-    engine: AsyncEngine, target_size: int | None = None
-) -> None:
-    """Pre-populate connection pool on startup to reduce initial latency.
-
-    This creates and immediately releases connections to fill the pool,
-    preventing connection acquisition delays during the first requests.
-
-    Args:
-        engine: The async database engine to warm up.
-        target_size: Number of connections to create (defaults to pool_size).
-    """
-    if target_size is None:
-        settings = get_settings()
-        target_size = settings.DATABASE_POOL_SIZE
-
-    if target_size <= 0:
-        return
-
-    logger.info("Warming up connection pool with %d connections...", target_size)
-    start_time = asyncio.get_running_loop().time()
-
-    try:
-        # Create multiple connections in parallel
-        tasks = [engine.connect() for _ in range(target_size)]
-        connections = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Close all connections immediately (they stay in the pool)
-        close_tasks = []
-        for conn in connections:
-            if isinstance(conn, Exception):
-                logger.warning("Failed to create connection during warmup: %s", conn)
-            elif hasattr(conn, "close"):
-                close_tasks.append(conn.close())
-
-        if close_tasks:
-            await asyncio.gather(*close_tasks, return_exceptions=True)
-
-        duration = asyncio.get_running_loop().time() - start_time
-        logger.info(
-            "Connection pool warmed up successfully in %.2fs (%d/%d connections)",
-            duration,
-            len(close_tasks),
-            target_size,
-        )
-    except Exception as exc:
-        logger.warning("Connection pool warmup failed (non-critical): %s", exc)
-
-
 async def init_db(run_metadata_sync: bool = False) -> None:
     """Initialize database connectivity and optionally sync metadata."""
     register_orm_models()
     engine = get_engine()
-    settings = get_settings()
-
-    # Warm up connection pool to reduce initial request latency
-    try:
-        async with asyncio.timeout(settings.DATABASE_POOL_WAKEUP_TIMEOUT):
-            await warmup_connection_pool(engine, settings.DATABASE_POOL_SIZE)
-    except TimeoutError:
-        logger.warning(
-            "Connection pool warmup timed out after %ds (continuing with cold pool)",
-            settings.DATABASE_POOL_WAKEUP_TIMEOUT,
-        )
-    except Exception as exc:
-        logger.warning(
-            "Connection pool warmup failed (continuing with cold pool): %s", exc
-        )
 
     async with engine.begin() as conn:
         if not run_metadata_sync:
@@ -383,9 +302,6 @@ async def check_db_health() -> dict[str, Any]:
         return {
             "status": "not_configured",
             "connection_url": None,
-            "pool_size": 0,
-            "checked_out": 0,
-            "overflow": 0,
         }
 
     import time
@@ -395,12 +311,8 @@ async def check_db_health() -> dict[str, Any]:
     connection_url = str(engine.url)
     if password:
         connection_url = connection_url.replace(password, "***")
-    pool = engine.pool
 
-    health_info = {
-        "pool_size": _pool_metric(pool, "size"),
-        "checked_out": _pool_metric(pool, "checkedout"),
-        "overflow": _pool_metric(pool, "overflow"),
+    health_info: dict = {
         "connection_url": connection_url,
     }
 
@@ -436,51 +348,3 @@ async def check_db_readiness(timeout_seconds: float = 1.5) -> dict[str, Any]:
         return {"status": "unhealthy", "error": str(exc)}
 
     return {"status": "healthy"}
-
-
-def get_db_pool_snapshot() -> dict[str, Any]:
-    """Return lightweight DB pool metrics without forcing startup failure."""
-    if not is_database_configured():
-        return {
-            "pool_size": 0,
-            "checked_out": 0,
-            "overflow": 0,
-            "capacity": 0,
-            "occupancy_ratio": 0.0,
-            "status": "not_configured",
-        }
-
-    engine = get_engine()
-    pool = engine.pool
-    pool_size = _pool_metric(pool, "size")
-    checked_out = _pool_metric(pool, "checkedout")
-    overflow = _pool_metric(pool, "overflow")
-    max_overflow_limit = _pool_metric(pool, "_max_overflow")
-
-    # SQLAlchemy can report negative overflow before the pool reaches steady size.
-    # Use configured overflow limit (if available) to avoid inflating occupancy.
-    if max_overflow_limit > 0:
-        capacity = max(pool_size + max_overflow_limit, 1)
-    else:
-        capacity = max(pool_size + max(overflow, 0), pool_size, 1)
-
-    occupancy_ratio = checked_out / capacity if capacity > 0 else 0.0
-
-    # Log warning if pool occupancy is high (>90%)
-    if occupancy_ratio > 0.9:
-        logger.warning(
-            "DB pool occupancy high: %.2f%% (%d/%d connections)",
-            occupancy_ratio * 100,
-            checked_out,
-            capacity,
-        )
-
-    return {
-        "pool_size": pool_size,
-        "checked_out": checked_out,
-        "overflow": overflow,
-        "max_overflow_limit": max_overflow_limit,
-        "capacity": capacity,
-        "occupancy_ratio": occupancy_ratio,
-        "status": "configured",
-    }
