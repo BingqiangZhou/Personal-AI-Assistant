@@ -4,11 +4,64 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.40.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.39.0...v0.40.0) - 2026-04-04 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.40.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove unused backend dependencies (starlette, prometheus-client) ([72ee6e7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/72ee6e7a3f3e9db39b3c5c8c6f0a125b7643cabc))
+
+### 🎨 Styling
+
+- Apply ruff format to 58 files, remove stale api/ directory ([e928239](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e928239b77803d02636616f6dd547eb87df04d4e))
+
+### 🐛 Bug Fixes
+
+- Rename summary_generation_service to summary_service, fix stale imports ([6be954d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6be954dec52d729c4821d102d4c436dbc884fccd))
+- Stale imports in podcast tests after service rename ([d61e2eb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d61e2eb6aa6cd2a9ecd990c898aa332484526dbb))
+- Repair broken test imports after service rename and projection removal ([6822e12](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6822e12647aa75458508158a91c234222ccd67b9))
+- Update tests to use dict access after projection removal ([4d7eb70](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d7eb7079a97be77c9ae27dcf815e9ce87c54819))
+- Remove duplicate exception and fix stale 'from exc' in routes ([4ff728a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4ff728a3264aaef6b68f8f31e051028635912cf2))
+- Add `from None` to HTTPException raises in except blocks (B904) ([5444652](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/54446524b11911996b895b3305e2222b10c62391))
+
+### 📚 Documentation
+
+- Add codebase simplification design spec ([28fd23a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/28fd23a3e244cdefa4cebd7ebef75f7904a2a1f8))
+- Update CLAUDE.md to reflect simplified architecture ([a87e5ff](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a87e5ffa4fa1236128c5325017b9f850788d59f2))
+
+### 🚜 Refactor
+
+- Remove circuit_breaker module and all references ([49afa3d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/49afa3de6cabb8922c4d8bc3043251ec669b3696))
+- Remove prometheus metrics and observability modules ([7a34787](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7a34787ab87dbc574790f0dbd55240e4ff15e2f0))
+- Remove distributed rate limiting middleware ([0880273](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0880273d9cd70ad588b67808fd0c1c88862ca640))
+- Remove response optimization middleware, simplify request logging ([26efee0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/26efee0cdc89b9a4bd95138b354367da0b51ed24))
+- Remove email.py stub module and all references ([364f6a3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/364f6a3ec5eb56b800b1d17079c0bfc2b043707e))
+- Remove ETag module and simplify response helpers ([794ad96](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/794ad9690ee7dddb8c3291bcad01b8c92dabd393))
+- Remove performance test suite and locust dependency ([e315118](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e31511841563caa6dfa68b423fa6086954e15299))
+- Simplify redis module, remove unused metrics collector ([f9620c5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f9620c570ad33c67c24f2a03248c3ad0a6204018))
+- Simplify exceptions.py, remove unused exception classes ([84aa62d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/84aa62d34d7af00b60f5d34993ece3c49197bf1a))
+- Simplify database.py, remove pool warmup and monitoring ([8ea1cfa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8ea1cfaa1683cc2073925ca7c3ef4893a760745b))
+- Simplify Docker stack, merge celery workers, replace gunicorn with uvicorn ([5cbe796](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5cbe79619c8526f7720b2cd2730d4e9c613311d6))
+- Remove projection layer - replace with plain dicts in services ([e3d34ec](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e3d34ec5e429503fcafe4e09058284718c049e06))
+- Remove unused async_value_widget, lazy_indexed_stack, dartz dependency ([5e47328](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5e473283d2b1546733c625944b475d9a45005034))
+- Remove unused offline widgets and queue service ([55228da](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/55228da8a9e199059068e8b03e81a695ad02119c))
+- Consolidate duplicate episode models ([9c85c89](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9c85c894d84491b59949494fa53cd2e8b2b77fbb))
+- Consolidate podcast states using PaginatedState<T> ([69bb7ee](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/69bb7ee634be75481c092ab8cb10f898275665a1))
+- Remove provider/DI layer, use FastAPI native Depends() ([eb19dfe](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eb19dfe8f7b78d0a572f967a7c60d5a947b134ad))
+- Frontend playback cleanup and provider reduction ([e5b6319](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e5b6319de73371c07319520235bd67f8b64e805d))
+- Merge podcast task files (19→6) and simplify celery queues (4→2) ([21f5f7f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/21f5f7f21ae166fab9c5e0d5e143221bc20765a0))
+- Rename podcast/api to podcast/routes ([be18a1e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/be18a1ee8344453a9c6cca0e0cc33b3a58a32cca))
+- Merge podcast services ([c9e36e9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c9e36e91c1a72bc0134d5b61bcabdfe0e9f18e62))
+- Remove gunicorn from Docker, clean up dependencies ([e869dff](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e869dff4c20c2493d0ed10ed823c15b9d72eeef7))
+- Simplify Redis (5→2) and exceptions (444→150 lines) ([43ca4a1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/43ca4a189e850c44d749e1933ef03d2a8ca809bd))
+- Replace bilingual error helpers with plain HTTPException and resolve merge conflict ([8385a42](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8385a429ac034725aa4044ff5c8b9ff18f841eab))
+
+
+
 ## [0.39.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.38.0...v0.39.0) - 2026-04-04 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.39.0))
 
 ### Revert
 
-- Remove AI tab page, restore 3-tab navigation ([87076a5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/87076a56e703e7ed34c95b12f08c934efb505043))
+- Remove AI tab page, restore 3-tab navigation ([a1e3864](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a1e3864f98c611ac55614aaaf0f373f451970dc1))
 
 ### 🐛 Bug Fixes
 
@@ -16,39 +69,39 @@ All notable changes to this project will be documented in this file.
 - *(auth)* Correct SQLAlchemy boolean filter in password reset queries ([e6abacb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e6abacb14e9e64019a9277ab2d020fcb16b229c5))
 - *(security)* Environment-gate password reset token in production ([86f531a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/86f531a2a091befb6f5bea438c42ad87257a0fb2))
 - *(security)* Normalize subscription route error handling with bilingual helpers ([ba7948d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ba7948d21465d1e748e90b33bb891939bb870d1b))
-- *(security)* Bind admin session to client IP and fix error detail leak ([d93a7b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d93a7b5971e0ea1d6ed049f1683ec55da7606ad4))
-- *(core)* Add resource cleanup to DioClient provider ([cb11753](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cb11753a5fc346e76af23de65167ede29f74f03a))
-- *(tests)* Clean up unused imports in backend test files ([d4f10eb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d4f10eb68b26a42e0109cc4d063e52c83058946b))
-- *(ai)* Fix syntax errors and remove non-existent imports in AiTabPage ([a2e404d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a2e404d729d5caf135a72d2e4ec9ca4070c52a40))
-- *(frontend)* Resolve three compile errors in podcast listener and profile pages ([0000985](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0000985352a40989b6b27a235e900074bad67d2f))
-- Complete remaining P1-P4 optimization tasks ([53929e2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/53929e2c45df417691064aba8f4fe2a2a4d852fc))
-- *(nav)* Handle empty navigation stack in daily report back button ([b291287](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b29128735c9dc53307ea17b8c9381a538c0cf449))
-- *(nav)* Guard all context.pop() calls with canPop() check ([323d4d4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/323d4d422cf4f2ccdab8a6d00b5a76415c381092))
+- *(security)* Bind admin session to client IP and fix error detail leak ([10a4035](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/10a40358c0af5bc4753c921af273cb9a3f15f0c5))
+- *(core)* Add resource cleanup to DioClient provider ([ab6335a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ab6335aa63a6adb203e21effdcc81c51cb10895d))
+- *(tests)* Clean up unused imports in backend test files ([53faabe](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/53faabe7a83f768925ab80fd4369b35905ecb005))
+- *(ai)* Fix syntax errors and remove non-existent imports in AiTabPage ([7dc1893](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7dc1893b6a99f3a9774454743662cd2accf03c88))
+- *(frontend)* Resolve three compile errors in podcast listener and profile pages ([90f0b11](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/90f0b112b562c1fdfd383bbe37813c11560c926e))
+- Complete remaining P1-P4 optimization tasks ([77164de](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/77164de672edea6cbef69732381022cf73538892))
+- *(nav)* Handle empty navigation stack in daily report back button ([73856c7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/73856c797884ca477f83ba066f9d3c6a53852457))
+- *(nav)* Guard all context.pop() calls with canPop() check ([87a520f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/87a520fc6ea83ac5d92500e89d2167891f352d56))
 
 ### 🚀 Features
 
 - *(observability)* Restore runtime metrics with RuntimeMetricsCollector ([af6ba7e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/af6ba7e2e767f2764034c6b0155eba24fcec9070))
-- *(security)* Add JWT token revocation via Redis blacklist ([b4ab66e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b4ab66eb894d3b0bcf1519f640908f35896637ce))
-- *(user)* Complete UserRepository layer for user domain ([da5cf58](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/da5cf58a03d288d87a81078ff3f66a5b3ae43c9c))
-- *(subscription)* Add Pydantic response models to all endpoints ([2aeeab8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2aeeab8852322a22f0d63a242d2cd37cbfad187e))
-- *(desktop)* Add landscape orientation and keyboard shortcuts ([627097e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/627097e2e4089d176e2ce7fbc7c1b4fe5a5ca3ff))
-- *(ux)* Add onboarding, legal pages, PaginatedState, server config listener ([81c478d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/81c478d7e3a8d8a63d9de443cfc7c338a96116d3))
-- *(ux)* Profile persistence, navigation updates, i18n expansion ([b246ff8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b246ff8c72b7383914a97968f7e3d16f85273e65))
-- *(ai)* Add AI hub tab page with daily report, highlights, chat entry ([df90123](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/df90123ee663a7c594f37ba7e151e101acdacb09))
-- *(nav)* Expand to 4-tab navigation with AI tab ([cd71165](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cd71165e0922dcecfa7a15d6f1305d058588f986))
+- *(security)* Add JWT token revocation via Redis blacklist ([0c2f704](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0c2f7046d74efc89bb3dd8620b043236af484bf2))
+- *(user)* Complete UserRepository layer for user domain ([8c081e5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8c081e5ae03f817ad492bfdbd48dcc6e46d7e864))
+- *(subscription)* Add Pydantic response models to all endpoints ([596cd5d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/596cd5de23dfbac04a6c244943b7ea6b6f08a755))
+- *(desktop)* Add landscape orientation and keyboard shortcuts ([030e2be](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/030e2bec7812e929a9f38f8e883887139a954869))
+- *(ux)* Add onboarding, legal pages, PaginatedState, server config listener ([69a4426](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/69a4426938198262d1053985cdae438c4c082b20))
+- *(ux)* Profile persistence, navigation updates, i18n expansion ([718ae55](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/718ae5539345274de4a11ba29de9f9e3e4e07f02))
+- *(ai)* Add AI hub tab page with daily report, highlights, chat entry ([3cdeba2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3cdeba2b9d883992e635cb8223c727e58c073f85))
+- *(nav)* Expand to 4-tab navigation with AI tab ([cd5b53f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cd5b53f76f50fbd08210f376ec812348a9c793a1))
 
 ### 🚜 Refactor
 
 - *(core)* Split security.py into focused package + eliminate AppCache delegation boilerplate ([5938085](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/593808515b1c5392faafd5522ecf85676cbc9fea))
 - *(core)* Unify AI invocation, split orchestrator, extract SettingsProvider ([15c572b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/15c572b1d6b10b5208778996462d9e5f6ec33f5b))
-- *(api)* Unify list endpoint response format with PaginatedResponse ([5fcda5a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5fcda5afa970f9dfa51aa085bf60de3a982b9758))
-- Gate debug logs behind kDebugMode in production code ([db87e92](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/db87e9277611e4f84dbc763b59ddc533eb3d1c24))
-- *(frontend)* Eliminate core-to-feature dependency violation via event bus ([a080c4a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a080c4afe040e0cb80f65a353baea50a1497b942))
-- *(podcast)* Split AudioPlayerNotifier into focused part files ([42d441f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/42d441f3a3e6983881ec84bb3cc7f3d7ee2e16e2))
+- *(api)* Unify list endpoint response format with PaginatedResponse ([e0d229b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e0d229b08d72f7359b8ca2238c161feded3fb64f))
+- Gate debug logs behind kDebugMode in production code ([4d12f8c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d12f8c7fe94f5699fb445ddcf6a0dd67fb730f8))
+- *(frontend)* Eliminate core-to-feature dependency violation via event bus ([acc6cf7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/acc6cf76f529dd6557f579409da41c8aeed7bb6c))
+- *(podcast)* Split AudioPlayerNotifier into focused part files ([054ea81](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/054ea812023d29d3f580376c343c66ef3adf1f64))
 
 ### 🧪 Testing
 
-- *(user)* Add error-handling route tests for registration and login ([31386ad](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/31386adb1052ff7557ee056a48e5b0b94e9fa70d))
+- *(user)* Add error-handling route tests for registration and login ([ff1a3cb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ff1a3cbf9a1e842cd63e3a9da6e5c16326321cea))
 
 
 
