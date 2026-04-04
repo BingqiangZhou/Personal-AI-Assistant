@@ -18,11 +18,11 @@ from app.core.providers import (
     get_summary_workflow_service,
     get_token_user_id,
 )
-from app.domains.podcast.api.episode_route_common import (
+from app.domains.podcast.routes.episode_route_common import (
     decode_cursor,
     encode_keyset_cursor,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_effective_playback_rate_response,
     build_episode_detail_response,
     build_episode_list_response,

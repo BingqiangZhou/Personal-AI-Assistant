@@ -10,7 +10,7 @@ def test_service_files_exist() -> None:
     required_paths = [
         "app/domains/podcast/models.py",
         "app/domains/podcast/services/__init__.py",
-        "app/domains/podcast/api/routes.py",
+        "app/domains/podcast/routes/routes.py",
         "app/domains/ai/llm_privacy.py",
         "app/domains/podcast/integration/security.py",
     ]
@@ -26,7 +26,7 @@ def test_service_files_exist() -> None:
 
 
 def test_api_routes_shape() -> None:
-    from app.domains.podcast.api.routes import router
+    from app.domains.podcast.routes.routes import router
 
     assert isinstance(router, APIRouter)
     assert router.prefix == ""

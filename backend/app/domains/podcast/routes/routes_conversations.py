@@ -12,7 +12,7 @@ from app.core.providers import (
     get_podcast_episode_service,
     get_token_user_id,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_conversation_clear_response,
     build_conversation_history_response,
     build_conversation_send_response,

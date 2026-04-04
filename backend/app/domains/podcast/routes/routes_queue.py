@@ -9,7 +9,7 @@ from app.core.exceptions import (
     QueueLimitExceededError,
 )
 from app.core.providers import get_podcast_queue_service
-from app.domains.podcast.api.response_assemblers import build_queue_response
+from app.domains.podcast.routes.response_assemblers import build_queue_response
 from app.domains.podcast.schemas import (
     PodcastQueueActivateRequest,
     PodcastQueueCurrentCompleteRequest,

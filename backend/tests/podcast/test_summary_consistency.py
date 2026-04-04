@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from app.domains.ai.services import TextGenerationService
-from app.domains.podcast.api.routes_episodes import generate_summary
+from app.domains.podcast.routes.routes_episodes import generate_summary
 from app.domains.podcast.schemas import PodcastSummaryRequest
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.search_service import PodcastSearchService
@@ -78,7 +78,7 @@ async def test_generate_summary_response_uses_persisted_episode_summary() -> Non
         "accepted_at": accepted_at,
         "already_queued": False,
     }
-    import app.domains.podcast.api.routes_episodes as routes_module
+    import app.domains.podcast.routes.routes_episodes as routes_module
 
     delay_mock = Mock()
     original_delay = routes_module.generate_episode_summary_task.delay

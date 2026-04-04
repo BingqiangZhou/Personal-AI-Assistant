@@ -9,7 +9,7 @@ from app.core.providers import (
     get_podcast_episode_service,
     get_podcast_search_service,
 )
-from app.domains.podcast.api.episode_route_common import encode_keyset_cursor
+from app.domains.podcast.routes.episode_route_common import encode_keyset_cursor
 from app.main import app
 
 

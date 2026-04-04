@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request
 
 from app.core.etag import build_conditional_etag_response
 from app.core.providers import get_podcast_stats_service
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_podcast_profile_stats_response,
     build_podcast_stats_response,
 )

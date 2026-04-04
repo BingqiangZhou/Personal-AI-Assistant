@@ -1,4 +1,4 @@
-"""Podcast API Module"""
+"""Podcast Routes Module"""
 
 from .routes import router
 

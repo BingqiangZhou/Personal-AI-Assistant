@@ -13,7 +13,7 @@ from app.core.providers import (
     get_podcast_subscription_service,
     get_token_user_id,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_schedule_config_list_response,
     build_schedule_config_response,
 )

@@ -14,7 +14,7 @@ from app.core.providers import (
     get_podcast_subscription_service,
     get_transcription_workflow_service,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_batch_transcription_response,
     build_check_new_episodes_response,
     build_episode_transcript_response,
@@ -23,7 +23,7 @@ from app.domains.podcast.api.response_assemblers import (
     build_transcription_schedule_response,
     build_transcription_schedule_status_response,
 )
-from app.domains.podcast.api.transcription_route_common import (
+from app.domains.podcast.routes.transcription_route_common import (
     build_transcription_response,
     status_value,
 )
