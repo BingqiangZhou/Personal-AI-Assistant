@@ -50,3 +50,49 @@ class BatchSubscriptionResponse(BaseModel):
     success_count: int
     skipped_count: int
     error_count: int
+
+
+class MessageResponse(BaseModel):
+    """Generic message response for delete/association endpoints."""
+
+    message: str
+
+
+class ItemReadResponse(BaseModel):
+    """Response model for mark-as-read / mark-as-unread."""
+
+    id: int
+    read_at: str | None = None
+
+
+class ItemBookmarkResponse(BaseModel):
+    """Response model for bookmark toggle."""
+
+    id: int
+    bookmarked: bool
+
+
+class UnreadCountResponse(BaseModel):
+    """Response model for unread count."""
+
+    unread_count: int
+
+
+class SubscriptionItemResponse(BaseModel):
+    """Response model for a single subscription item."""
+
+    id: int
+    subscription_id: int
+    external_id: str | None = None
+    title: str
+    content: str | None = None
+    summary: str | None = None
+    author: str | None = None
+    source_url: str | None = None
+    image_url: str | None = None
+    tags: list[str] | None = None
+    metadata: dict[str, Any] | None = None
+    published_at: str | None = None
+    read_at: str | None = None
+    bookmarked: bool = False
+    created_at: str

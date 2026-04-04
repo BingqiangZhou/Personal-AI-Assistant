@@ -15,6 +15,11 @@ from app.domains.subscription.api.schemas import (
     CategoryResponse,
     CategoryUpdate,
     FetchResponse,
+    ItemBookmarkResponse,
+    ItemReadResponse,
+    MessageResponse,
+    SubscriptionItemResponse,
+    UnreadCountResponse,
 )
 from app.domains.subscription.services import SubscriptionService
 from app.http.errors import raise_bad_request, raise_internal_error, raise_not_found
@@ -34,7 +39,7 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse)
 async def list_subscriptions(
     pagination: PaginationParams = Depends(),
-    status: str | None = Query(None, description="Filter by status"),
+    status_query: str | None = Query(None, alias="status", description="Filter by status"),
     source_type: str | None = Query(None, description="Filter by source type"),
     service: SubscriptionService = Depends(get_subscription_service),
 ):
@@ -42,7 +47,7 @@ async def list_subscriptions(
     items, total, item_counts = await service.list_subscriptions(
         page=pagination.page,
         size=pagination.size,
-        status=status,
+        status=status_query,
         source_type=source_type,
     )
     return assemble_paginated_subscription_response(
@@ -63,10 +68,6 @@ async def create_subscription(
 
     If duplicate URL or title is found, returns the existing subscription with a message.
     """
-    # Check for duplicate before creation
-
-    # Duplicate detection is now handled at service layer with many-to-many support
-    # No duplicate found - create subscription
     try:
         sub = await service.create_subscription(subscription_data)
         return assemble_subscription_response(sub)
@@ -122,7 +123,7 @@ async def update_subscription(
     return assemble_subscription_response(sub, item_count=item_count)
 
 
-@router.delete("/{subscription_id}")
+@router.delete("/{subscription_id}", response_model=MessageResponse)
 async def delete_subscription(
     subscription_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
@@ -131,8 +132,7 @@ async def delete_subscription(
     success = await service.delete_subscription(subscription_id)
     if not success:
         raise_not_found("Subscription", subscription_id)
-    # TODO: Add a proper response model instead of raw dict
-    return {"message": "Subscription deleted"}
+    return MessageResponse(message="Subscription deleted")
 
 
 @router.post("/{subscription_id}/fetch", response_model=FetchResponse)
@@ -177,7 +177,7 @@ async def get_subscription_items(
         bookmarked_only=bookmarked_only,
     )
     return PaginatedResponse.create(
-        items=[assemble_item_payload(item) for item in items],
+        items=[SubscriptionItemResponse(**assemble_item_payload(item)) for item in items],
         total=total,
         page=pagination.page,
         size=pagination.size,
@@ -199,53 +199,50 @@ async def get_all_items(
         bookmarked_only=bookmarked_only,
     )
     return PaginatedResponse.create(
-        items=[assemble_item_payload(item) for item in items],
+        items=[SubscriptionItemResponse(**assemble_item_payload(item)) for item in items],
         total=total,
         page=pagination.page,
         size=pagination.size,
     )
 
 
-@router.post("/items/{item_id}/read")
+@router.post("/items/{item_id}/read", response_model=ItemReadResponse)
 async def mark_item_as_read(
     item_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Mark an item as read."""
-    # TODO: Add a proper response model instead of returning service result directly
     result = await service.mark_item_as_read(item_id)
     if not result:
         raise_not_found("Item", item_id)
-    return result
+    return ItemReadResponse(**result)
 
 
-@router.post("/items/{item_id}/unread")
+@router.post("/items/{item_id}/unread", response_model=ItemReadResponse)
 async def mark_item_as_unread(
     item_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Mark an item as unread."""
-    # TODO: Add a proper response model instead of returning service result directly
     result = await service.mark_item_as_unread(item_id)
     if not result:
         raise_not_found("Item", item_id)
-    return result
+    return ItemReadResponse(**result)
 
 
-@router.post("/items/{item_id}/bookmark")
+@router.post("/items/{item_id}/bookmark", response_model=ItemBookmarkResponse)
 async def toggle_bookmark(
     item_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Toggle item bookmark status."""
-    # TODO: Add a proper response model instead of returning service result directly
     result = await service.toggle_bookmark(item_id)
     if not result:
         raise_not_found("Item", item_id)
-    return result
+    return ItemBookmarkResponse(**result)
 
 
-@router.delete("/items/{item_id}")
+@router.delete("/items/{item_id}", response_model=MessageResponse)
 async def delete_item(
     item_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
@@ -254,18 +251,16 @@ async def delete_item(
     success = await service.delete_item(item_id)
     if not success:
         raise_not_found("Item", item_id)
-    # TODO: Add a proper response model instead of raw dict
-    return {"message": "Item deleted"}
+    return MessageResponse(message="Item deleted")
 
 
-@router.get("/items/unread-count")
+@router.get("/items/unread-count", response_model=UnreadCountResponse)
 async def get_unread_count(
     service: SubscriptionService = Depends(get_subscription_service),
 ):
     """Get total unread items count."""
-    # TODO: Add a proper response model (e.g. UnreadCountResponse) instead of raw dict
     count = await service.get_unread_count()
-    return {"unread_count": count}
+    return UnreadCountResponse(unread_count=count)
 
 
 # Category endpoints
@@ -306,7 +301,7 @@ async def update_category(
     return assemble_category_payload(category, include_created_at=False)
 
 
-@router.delete("/categories/{category_id}")
+@router.delete("/categories/{category_id}", response_model=MessageResponse)
 async def delete_category(
     category_id: int,
     service: SubscriptionService = Depends(get_subscription_service),
@@ -315,11 +310,13 @@ async def delete_category(
     success = await service.delete_category(category_id)
     if not success:
         raise_not_found("Category", category_id)
-    # TODO: Add a proper response model instead of raw dict
-    return {"message": "Category deleted"}
+    return MessageResponse(message="Category deleted")
 
 
-@router.post("/{subscription_id}/categories/{category_id}")
+@router.post(
+    "/{subscription_id}/categories/{category_id}",
+    response_model=MessageResponse,
+)
 async def add_subscription_to_category(
     subscription_id: int,
     category_id: int,
@@ -329,11 +326,13 @@ async def add_subscription_to_category(
     success = await service.add_subscription_to_category(subscription_id, category_id)
     if not success:
         raise_not_found("Subscription or category")
-    # TODO: Add a proper response model instead of raw dict
-    return {"message": "Subscription added to category"}
+    return MessageResponse(message="Subscription added to category")
 
 
-@router.delete("/{subscription_id}/categories/{category_id}")
+@router.delete(
+    "/{subscription_id}/categories/{category_id}",
+    response_model=MessageResponse,
+)
 async def remove_subscription_from_category(
     subscription_id: int,
     category_id: int,
@@ -345,5 +344,4 @@ async def remove_subscription_from_category(
     )
     if not success:
         raise_not_found("Category mapping")
-    # TODO: Add a proper response model instead of raw dict
-    return {"message": "Subscription removed from category"}
+    return MessageResponse(message="Subscription removed from category")

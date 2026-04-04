@@ -45,10 +45,33 @@ def mock_service_factory() -> Callable[[Callable], Generator[AsyncMock, None, No
 
 
 @pytest.fixture
+def mock_subscription_service(mock_service_factory):
+    """Provide a mocked SubscriptionService for route tests."""
+    from app.core.providers import get_subscription_service
+
+    yield from mock_service_factory(get_subscription_service)
+
+
+@pytest.fixture
 def mock_schedule_service(mock_service_factory):
     from app.core.providers import get_podcast_schedule_service
 
     yield from mock_service_factory(get_podcast_schedule_service)
+
+
+@pytest.fixture(autouse=True)
+def override_auth_dependencies():
+    """Override authentication for routes requiring auth."""
+    from app.core.providers import get_token_user_id
+    from app.core.security import get_token_from_request
+
+    app.dependency_overrides[get_token_from_request] = lambda: {"sub": "123"}
+    app.dependency_overrides[get_token_user_id] = lambda: 123
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(get_token_from_request, None)
+        app.dependency_overrides.pop(get_token_user_id, None)
 
 
 class TestBase:
