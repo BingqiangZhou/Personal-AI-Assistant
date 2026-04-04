@@ -1793,4 +1793,229 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sleep_timer_after_episode => '当前剧集结束后';
+
+  @override
+  String get onboarding_welcome_title => '欢迎使用 Stella';
+
+  @override
+  String get onboarding_welcome_subtitle => '你的 AI 智能播客助手';
+
+  @override
+  String get onboarding_welcome_body => '发现、订阅并收听你喜爱的播客——由智能 AI 驱动，让你随时掌握最新动态。';
+
+  @override
+  String get onboarding_summary_title => '每日 AI 摘要';
+
+  @override
+  String get onboarding_summary_body =>
+      '获取个性化的每日播客摘要和剧集要点。几分钟内了解最新动态，无需花数小时收听。';
+
+  @override
+  String get onboarding_chat_title => 'AI 对话';
+
+  @override
+  String get onboarding_chat_body =>
+      '与 AI 聊天讨论任何播客剧集。提出问题、深入探索话题，从你的收听库中获取即时洞察。';
+
+  @override
+  String get onboarding_skip => '跳过';
+
+  @override
+  String get onboarding_next => '下一步';
+
+  @override
+  String get onboarding_get_started => '开始使用';
+
+  @override
+  String get terms_of_service_title => '服务条款';
+
+  @override
+  String get terms_of_service_last_updated => '最后更新：2026年4月4日';
+
+  @override
+  String get terms_section_acceptance => '1. 接受条款';
+
+  @override
+  String get terms_section_acceptance_body =>
+      '访问和使用 Stella（\"本服务\"）即表示您同意受本服务条款的约束。如果您不同意这些条款，请勿使用本服务。';
+
+  @override
+  String get terms_section_use => '2. 服务使用';
+
+  @override
+  String get terms_section_use_body =>
+      '您可以将本服务用于个人非商业目的。您同意不滥用本服务，包括但不限于试图获取未经授权的访问、干扰其运行，或以任何违反适用法律的方式使用。';
+
+  @override
+  String get terms_section_ip => '3. 知识产权';
+
+  @override
+  String get terms_section_ip_body =>
+      '本服务的所有内容、功能和特性，包括但不限于文本、图形、标识和软件，均为 Stella 的财产，受版权、商标和其他知识产权法的保护。播客内容属于其各自的创作者。';
+
+  @override
+  String get terms_section_liability => '4. 责任限制';
+
+  @override
+  String get terms_section_liability_body =>
+      '本服务按\"原样\"提供，不附带任何形式的保证。我们不对因您使用本服务而产生的任何间接、附带、特殊、后果性或惩罚性损害承担责任。';
+
+  @override
+  String get terms_section_changes => '5. 条款变更';
+
+  @override
+  String get terms_section_changes_body =>
+      '我们保留随时修改这些条款的权利。我们将通知用户重大变更。您在变更后继续使用本服务即表示接受更新后的条款。';
+
+  @override
+  String get terms_section_governing_law => '6. 适用法律';
+
+  @override
+  String get terms_section_governing_law_body =>
+      '本条款应受本服务运营所在司法管辖区的法律管辖并据其解释，不考虑其法律冲突条款。';
+
+  @override
+  String get terms_section_contact => '7. 联系我们';
+
+  @override
+  String get terms_section_contact_body => '如果您对本服务条款有任何疑问，请通过应用的支持部分与我们联系。';
+
+  @override
+  String get privacy_policy_title => '隐私政策';
+
+  @override
+  String get privacy_policy_last_updated => '最后更新：2026年4月4日';
+
+  @override
+  String get privacy_section_intro => '1. 简介';
+
+  @override
+  String get privacy_section_intro_body =>
+      'Stella（\"我们\"）致力于保护您的隐私。本隐私政策说明了我们在您使用本服务时如何收集、使用和保护您的个人信息。';
+
+  @override
+  String get privacy_section_collection => '2. 我们收集的信息';
+
+  @override
+  String get privacy_section_collection_body =>
+      '我们收集您直接提供的信息，例如创建账户时的电子邮件地址和显示名称。我们还收集使用数据，包括播客订阅、播放历史和偏好设置，以改善您的使用体验。';
+
+  @override
+  String get privacy_section_usage => '3. 我们如何使用您的信息';
+
+  @override
+  String get privacy_section_usage_body =>
+      '我们使用您的信息来提供和改善服务、处理您的请求、发送有关订阅的通知，以及生成个性化内容，如 AI 摘要和每日报告。';
+
+  @override
+  String get privacy_section_storage => '4. 数据存储和安全';
+
+  @override
+  String get privacy_section_storage_body =>
+      '您的数据使用行业标准加密安全地存储在我们的服务器上。我们实施适当的技术和组织措施来保护您的个人信息免受未经授权的访问或披露。';
+
+  @override
+  String get privacy_section_sharing => '5. 信息共享';
+
+  @override
+  String get privacy_section_sharing_body =>
+      '未经您的同意，我们不会出售、交易或以其他方式将您的个人信息转移给第三方，法律要求或协助运营本服务的受信合作伙伴除外。';
+
+  @override
+  String get privacy_section_rights => '6. 您的权利';
+
+  @override
+  String get privacy_section_rights_body =>
+      '您有权随时通过应用的个人资料设置访问、更新或删除您的个人信息。您也可以请求数据副本或关闭您的账户。';
+
+  @override
+  String get privacy_section_children => '7. 儿童隐私';
+
+  @override
+  String get privacy_section_children_body =>
+      '本服务不面向13岁以下儿童。我们不会故意收集儿童的个人信息。如果您认为我们收集了儿童的信息，请立即与我们联系。';
+
+  @override
+  String get privacy_section_changes => '8. 政策变更';
+
+  @override
+  String get privacy_section_changes_body =>
+      '我们可能会不时更新本隐私政策。我们将通过在此页面上发布新政策并更新\"最后更新\"日期来通知您任何变更。';
+
+  @override
+  String get privacy_section_contact => '9. 联系我们';
+
+  @override
+  String get privacy_section_contact_body => '如果您对本隐私政策有任何疑问，请通过应用的支持部分与我们联系。';
+
+  @override
+  String get profile_history_subtitle => '继续收听并回顾最近播放的内容。';
+
+  @override
+  String profile_history_episode_count(int count) {
+    return '$count 条最近播放记录';
+  }
+
+  @override
+  String get profile_terms_of_service => '服务条款';
+
+  @override
+  String get profile_terms_subtitle => '查看我们的服务条款';
+
+  @override
+  String get profile_privacy_policy => '隐私政策';
+
+  @override
+  String get profile_privacy_subtitle => '查看我们的隐私政策';
+
+  @override
+  String get profile_coming_soon => '即将推出';
+
+  @override
+  String get profile_edit_coming_soon_subtitle => '个人资料编辑功能将在未来版本中提供。';
+
+  @override
+  String get profile_password_change_title => '修改密码';
+
+  @override
+  String get profile_current_password => '当前密码';
+
+  @override
+  String get profile_new_password => '新密码';
+
+  @override
+  String get profile_confirm_new_password => '确认新密码';
+
+  @override
+  String get profile_password_required => '请输入密码';
+
+  @override
+  String get profile_password_min_length => '密码至少需要8个字符';
+
+  @override
+  String get profile_password_mismatch => '两次输入的密码不一致';
+
+  @override
+  String get profile_password_same_as_old => '新密码不能与当前密码相同';
+
+  @override
+  String get profile_password_changing => '正在修改密码...';
+
+  @override
+  String get profile_password_reset_email_sent => '密码重置链接已发送到您的邮箱，请查收。';
+
+  @override
+  String get profile_password_change_failed => '修改密码失败，请重试。';
+
+  @override
+  String get profile_two_factor_coming_soon => '双因素认证将在未来版本中提供。';
+
+  @override
+  String get profile_biometric_coming_soon => '生物识别认证将在未来版本中提供。';
+
+  @override
+  String get profile_send_reset_link => '发送重置链接';
+
+  @override
+  String get profile_biometric_not_available => '暂不可用';
 }

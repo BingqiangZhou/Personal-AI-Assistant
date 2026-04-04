@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +12,9 @@ import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.da
 import 'package:personal_ai_assistant/core/widgets/keyboard_shortcuts.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
+import 'package:personal_ai_assistant/main.dart' as main_app;
 
 /// Shell widget for the main tab navigation using StatefulShellRoute.
 ///
@@ -182,6 +185,10 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
       onTogglePlayPause: _togglePlayPause,
       onSeekBackward: _seekBackward,
       onSeekForward: _seekForward,
+      onVolumeUp: _isDesktop ? _volumeUp : null,
+      onVolumeDown: _isDesktop ? _volumeDown : null,
+      onNextEpisode: _isDesktop ? _nextEpisode : null,
+      onPreviousEpisode: _isDesktop ? _previousEpisode : null,
       child: CustomAdaptiveNavigation(
         key: const ValueKey('home_custom_adaptive_navigation'),
         destinations: _buildDestinations(context),
@@ -243,5 +250,54 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
 
     final newPosition = (playerState.position + 30000).clamp(0, playerState.duration);
     notifier.seekTo(newPosition);
+  }
+
+  static bool get _isDesktop =>
+      Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+
+  void _volumeUp() {
+    main_app.audioHandler.volumeUp();
+  }
+
+  void _volumeDown() {
+    main_app.audioHandler.volumeDown();
+  }
+
+  void _nextEpisode() {
+    final queue = ref.read(podcastQueueControllerProvider).value;
+    if (queue == null || queue.items.isEmpty) return;
+
+    final currentIndex = queue.items.indexWhere(
+      (item) => item.episodeId == queue.currentEpisodeId,
+    );
+
+    // If current is the last item or not found, wrap to first item.
+    final nextIndex = currentIndex < queue.items.length - 1
+        ? currentIndex + 1
+        : 0;
+
+    final nextItem = queue.items[nextIndex];
+    ref.read(audioPlayerProvider.notifier).playManagedEpisode(
+      nextItem.toEpisodeModel(),
+    );
+  }
+
+  void _previousEpisode() {
+    final queue = ref.read(podcastQueueControllerProvider).value;
+    if (queue == null || queue.items.isEmpty) return;
+
+    final currentIndex = queue.items.indexWhere(
+      (item) => item.episodeId == queue.currentEpisodeId,
+    );
+
+    // If current is the first item or not found, wrap to last item.
+    final prevIndex = currentIndex > 0
+        ? currentIndex - 1
+        : queue.items.length - 1;
+
+    final prevItem = queue.items[prevIndex];
+    ref.read(audioPlayerProvider.notifier).playManagedEpisode(
+      prevItem.toEpisodeModel(),
+    );
   }
 }

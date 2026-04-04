@@ -1868,4 +1868,240 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleep_timer_after_episode => 'After current episode';
+
+  @override
+  String get onboarding_welcome_title => 'Welcome to Stella';
+
+  @override
+  String get onboarding_welcome_subtitle => 'Your AI-Powered Podcast Assistant';
+
+  @override
+  String get onboarding_welcome_body =>
+      'Discover, subscribe, and listen to your favorite podcasts — powered by intelligent AI that keeps you informed.';
+
+  @override
+  String get onboarding_summary_title => 'Daily AI Summaries';
+
+  @override
+  String get onboarding_summary_body =>
+      'Get personalized daily digests with episode highlights and key takeaways. Stay on top of your podcasts in minutes, not hours.';
+
+  @override
+  String get onboarding_chat_title => 'AI Conversations';
+
+  @override
+  String get onboarding_chat_body =>
+      'Chat with AI about any podcast episode. Ask questions, explore topics in depth, and get instant insights from your listening library.';
+
+  @override
+  String get onboarding_skip => 'Skip';
+
+  @override
+  String get onboarding_next => 'Next';
+
+  @override
+  String get onboarding_get_started => 'Get Started';
+
+  @override
+  String get terms_of_service_title => 'Terms of Service';
+
+  @override
+  String get terms_of_service_last_updated => 'Last updated: April 4, 2026';
+
+  @override
+  String get terms_section_acceptance => '1. Acceptance of Terms';
+
+  @override
+  String get terms_section_acceptance_body =>
+      'By accessing and using Stella (\"the Service\"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.';
+
+  @override
+  String get terms_section_use => '2. Use of the Service';
+
+  @override
+  String get terms_section_use_body =>
+      'You may use the Service for personal, non-commercial purposes. You agree not to misuse the Service, including but not limited to attempting to gain unauthorized access, interfering with its operation, or using it in any way that violates applicable laws.';
+
+  @override
+  String get terms_section_ip => '3. Intellectual Property';
+
+  @override
+  String get terms_section_ip_body =>
+      'All content, features, and functionality of the Service, including but not limited to text, graphics, logos, and software, are the property of Stella and are protected by copyright, trademark, and other intellectual property laws. Podcast content belongs to their respective creators.';
+
+  @override
+  String get terms_section_liability => '4. Limitation of Liability';
+
+  @override
+  String get terms_section_liability_body =>
+      'The Service is provided \"as is\" without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.';
+
+  @override
+  String get terms_section_changes => '5. Changes to Terms';
+
+  @override
+  String get terms_section_changes_body =>
+      'We reserve the right to modify these terms at any time. We will notify users of significant changes. Your continued use of the Service after changes constitutes acceptance of the updated terms.';
+
+  @override
+  String get terms_section_governing_law => '6. Governing Law';
+
+  @override
+  String get terms_section_governing_law_body =>
+      'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which the Service is operated, without regard to its conflict of law provisions.';
+
+  @override
+  String get terms_section_contact => '7. Contact Us';
+
+  @override
+  String get terms_section_contact_body =>
+      'If you have any questions about these Terms of Service, please contact us through the app\'s support section.';
+
+  @override
+  String get privacy_policy_title => 'Privacy Policy';
+
+  @override
+  String get privacy_policy_last_updated => 'Last updated: April 4, 2026';
+
+  @override
+  String get privacy_section_intro => '1. Introduction';
+
+  @override
+  String get privacy_section_intro_body =>
+      'Stella (\"we\", \"our\", \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information when you use our Service.';
+
+  @override
+  String get privacy_section_collection => '2. Information We Collect';
+
+  @override
+  String get privacy_section_collection_body =>
+      'We collect information you provide directly, such as your email address and display name when creating an account. We also collect usage data including podcast subscriptions, playback history, and preferences to improve your experience.';
+
+  @override
+  String get privacy_section_usage => '3. How We Use Your Information';
+
+  @override
+  String get privacy_section_usage_body =>
+      'We use your information to provide and improve the Service, process your requests, send notifications about your subscriptions, and generate personalized content such as AI summaries and daily reports.';
+
+  @override
+  String get privacy_section_storage => '4. Data Storage and Security';
+
+  @override
+  String get privacy_section_storage_body =>
+      'Your data is stored securely on our servers with industry-standard encryption. We implement appropriate technical and organizational measures to protect your personal information against unauthorized access or disclosure.';
+
+  @override
+  String get privacy_section_sharing => '5. Information Sharing';
+
+  @override
+  String get privacy_section_sharing_body =>
+      'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as required by law or to trusted partners who assist in operating the Service.';
+
+  @override
+  String get privacy_section_rights => '6. Your Rights';
+
+  @override
+  String get privacy_section_rights_body =>
+      'You have the right to access, update, or delete your personal information at any time through the app\'s profile settings. You may also request a copy of your data or close your account.';
+
+  @override
+  String get privacy_section_children => '7. Children\'s Privacy';
+
+  @override
+  String get privacy_section_children_body =>
+      'The Service is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.';
+
+  @override
+  String get privacy_section_changes => '8. Changes to This Policy';
+
+  @override
+  String get privacy_section_changes_body =>
+      'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the \"Last updated\" date.';
+
+  @override
+  String get privacy_section_contact => '9. Contact Us';
+
+  @override
+  String get privacy_section_contact_body =>
+      'If you have any questions about this Privacy Policy, please contact us through the app\'s support section.';
+
+  @override
+  String get profile_history_subtitle =>
+      'Resume episodes and review recently played content.';
+
+  @override
+  String profile_history_episode_count(int count) {
+    return '$count recently played episodes';
+  }
+
+  @override
+  String get profile_terms_of_service => 'Terms of Service';
+
+  @override
+  String get profile_terms_subtitle => 'View our terms of service';
+
+  @override
+  String get profile_privacy_policy => 'Privacy Policy';
+
+  @override
+  String get profile_privacy_subtitle => 'View our privacy policy';
+
+  @override
+  String get profile_coming_soon => 'Coming Soon';
+
+  @override
+  String get profile_edit_coming_soon_subtitle =>
+      'Profile editing will be available in a future update.';
+
+  @override
+  String get profile_password_change_title => 'Change Password';
+
+  @override
+  String get profile_current_password => 'Current Password';
+
+  @override
+  String get profile_new_password => 'New Password';
+
+  @override
+  String get profile_confirm_new_password => 'Confirm New Password';
+
+  @override
+  String get profile_password_required => 'Password is required';
+
+  @override
+  String get profile_password_min_length =>
+      'Password must be at least 8 characters';
+
+  @override
+  String get profile_password_mismatch => 'Passwords do not match';
+
+  @override
+  String get profile_password_same_as_old =>
+      'New password must be different from current password';
+
+  @override
+  String get profile_password_changing => 'Changing password...';
+
+  @override
+  String get profile_password_reset_email_sent =>
+      'A password reset link has been sent to your email. Please check your inbox.';
+
+  @override
+  String get profile_password_change_failed =>
+      'Failed to change password. Please try again.';
+
+  @override
+  String get profile_two_factor_coming_soon =>
+      'Two-factor authentication will be available in a future update.';
+
+  @override
+  String get profile_biometric_coming_soon =>
+      'Biometric authentication will be available in a future update.';
+
+  @override
+  String get profile_send_reset_link => 'Send Reset Link';
+
+  @override
+  String get profile_biometric_not_available => 'Not available';
 }

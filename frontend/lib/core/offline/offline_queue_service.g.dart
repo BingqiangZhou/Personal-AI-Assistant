@@ -59,4 +59,4 @@ final class OfflineQueueServiceProvider
 }
 
 String _$offlineQueueServiceHash() =>
-    r'a9b0107719aac86eec22970310820d19eef325ad';
+    r'cee98f02ef189e70fffb24a0ccb73f61b1c35d72';

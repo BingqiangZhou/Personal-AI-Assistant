@@ -3469,6 +3469,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'After current episode'**
   String get sleep_timer_after_episode;
+
+  /// Title of the first onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Stella'**
+  String get onboarding_welcome_title;
+
+  /// Subtitle of the first onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI-Powered Podcast Assistant'**
+  String get onboarding_welcome_subtitle;
+
+  /// Body text of the first onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Discover, subscribe, and listen to your favorite podcasts — powered by intelligent AI that keeps you informed.'**
+  String get onboarding_welcome_body;
+
+  /// Title of the AI summary onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Daily AI Summaries'**
+  String get onboarding_summary_title;
+
+  /// Body text of the AI summary onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized daily digests with episode highlights and key takeaways. Stay on top of your podcasts in minutes, not hours.'**
+  String get onboarding_summary_body;
+
+  /// Title of the AI chat onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'AI Conversations'**
+  String get onboarding_chat_title;
+
+  /// Body text of the AI chat onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with AI about any podcast episode. Ask questions, explore topics in depth, and get instant insights from your listening library.'**
+  String get onboarding_chat_body;
+
+  /// Skip button on onboarding screens
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboarding_skip;
+
+  /// Next button on onboarding screens
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboarding_next;
+
+  /// Get started button on the last onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboarding_get_started;
+
+  /// Title for the Terms of Service page
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get terms_of_service_title;
+
+  /// Last updated date for Terms of Service
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: April 4, 2026'**
+  String get terms_of_service_last_updated;
+
+  /// Terms section: acceptance heading
+  ///
+  /// In en, this message translates to:
+  /// **'1. Acceptance of Terms'**
+  String get terms_section_acceptance;
+
+  /// Terms section: acceptance body
+  ///
+  /// In en, this message translates to:
+  /// **'By accessing and using Stella (\"the Service\"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.'**
+  String get terms_section_acceptance_body;
+
+  /// Terms section: use heading
+  ///
+  /// In en, this message translates to:
+  /// **'2. Use of the Service'**
+  String get terms_section_use;
+
+  /// Terms section: use body
+  ///
+  /// In en, this message translates to:
+  /// **'You may use the Service for personal, non-commercial purposes. You agree not to misuse the Service, including but not limited to attempting to gain unauthorized access, interfering with its operation, or using it in any way that violates applicable laws.'**
+  String get terms_section_use_body;
+
+  /// Terms section: intellectual property heading
+  ///
+  /// In en, this message translates to:
+  /// **'3. Intellectual Property'**
+  String get terms_section_ip;
+
+  /// Terms section: intellectual property body
+  ///
+  /// In en, this message translates to:
+  /// **'All content, features, and functionality of the Service, including but not limited to text, graphics, logos, and software, are the property of Stella and are protected by copyright, trademark, and other intellectual property laws. Podcast content belongs to their respective creators.'**
+  String get terms_section_ip_body;
+
+  /// Terms section: limitation of liability heading
+  ///
+  /// In en, this message translates to:
+  /// **'4. Limitation of Liability'**
+  String get terms_section_liability;
+
+  /// Terms section: limitation of liability body
+  ///
+  /// In en, this message translates to:
+  /// **'The Service is provided \"as is\" without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.'**
+  String get terms_section_liability_body;
+
+  /// Terms section: changes heading
+  ///
+  /// In en, this message translates to:
+  /// **'5. Changes to Terms'**
+  String get terms_section_changes;
+
+  /// Terms section: changes body
+  ///
+  /// In en, this message translates to:
+  /// **'We reserve the right to modify these terms at any time. We will notify users of significant changes. Your continued use of the Service after changes constitutes acceptance of the updated terms.'**
+  String get terms_section_changes_body;
+
+  /// Terms section: governing law heading
+  ///
+  /// In en, this message translates to:
+  /// **'6. Governing Law'**
+  String get terms_section_governing_law;
+
+  /// Terms section: governing law body
+  ///
+  /// In en, this message translates to:
+  /// **'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which the Service is operated, without regard to its conflict of law provisions.'**
+  String get terms_section_governing_law_body;
+
+  /// Terms section: contact heading
+  ///
+  /// In en, this message translates to:
+  /// **'7. Contact Us'**
+  String get terms_section_contact;
+
+  /// Terms section: contact body
+  ///
+  /// In en, this message translates to:
+  /// **'If you have any questions about these Terms of Service, please contact us through the app\'s support section.'**
+  String get terms_section_contact_body;
+
+  /// Title for the Privacy Policy page
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacy_policy_title;
+
+  /// Last updated date for Privacy Policy
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: April 4, 2026'**
+  String get privacy_policy_last_updated;
+
+  /// Privacy section: introduction heading
+  ///
+  /// In en, this message translates to:
+  /// **'1. Introduction'**
+  String get privacy_section_intro;
+
+  /// Privacy section: introduction body
+  ///
+  /// In en, this message translates to:
+  /// **'Stella (\"we\", \"our\", \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information when you use our Service.'**
+  String get privacy_section_intro_body;
+
+  /// Privacy section: collection heading
+  ///
+  /// In en, this message translates to:
+  /// **'2. Information We Collect'**
+  String get privacy_section_collection;
+
+  /// Privacy section: collection body
+  ///
+  /// In en, this message translates to:
+  /// **'We collect information you provide directly, such as your email address and display name when creating an account. We also collect usage data including podcast subscriptions, playback history, and preferences to improve your experience.'**
+  String get privacy_section_collection_body;
+
+  /// Privacy section: usage heading
+  ///
+  /// In en, this message translates to:
+  /// **'3. How We Use Your Information'**
+  String get privacy_section_usage;
+
+  /// Privacy section: usage body
+  ///
+  /// In en, this message translates to:
+  /// **'We use your information to provide and improve the Service, process your requests, send notifications about your subscriptions, and generate personalized content such as AI summaries and daily reports.'**
+  String get privacy_section_usage_body;
+
+  /// Privacy section: storage heading
+  ///
+  /// In en, this message translates to:
+  /// **'4. Data Storage and Security'**
+  String get privacy_section_storage;
+
+  /// Privacy section: storage body
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is stored securely on our servers with industry-standard encryption. We implement appropriate technical and organizational measures to protect your personal information against unauthorized access or disclosure.'**
+  String get privacy_section_storage_body;
+
+  /// Privacy section: sharing heading
+  ///
+  /// In en, this message translates to:
+  /// **'5. Information Sharing'**
+  String get privacy_section_sharing;
+
+  /// Privacy section: sharing body
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as required by law or to trusted partners who assist in operating the Service.'**
+  String get privacy_section_sharing_body;
+
+  /// Privacy section: rights heading
+  ///
+  /// In en, this message translates to:
+  /// **'6. Your Rights'**
+  String get privacy_section_rights;
+
+  /// Privacy section: rights body
+  ///
+  /// In en, this message translates to:
+  /// **'You have the right to access, update, or delete your personal information at any time through the app\'s profile settings. You may also request a copy of your data or close your account.'**
+  String get privacy_section_rights_body;
+
+  /// Privacy section: children heading
+  ///
+  /// In en, this message translates to:
+  /// **'7. Children\'s Privacy'**
+  String get privacy_section_children;
+
+  /// Privacy section: children body
+  ///
+  /// In en, this message translates to:
+  /// **'The Service is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.'**
+  String get privacy_section_children_body;
+
+  /// Privacy section: changes heading
+  ///
+  /// In en, this message translates to:
+  /// **'8. Changes to This Policy'**
+  String get privacy_section_changes;
+
+  /// Privacy section: changes body
+  ///
+  /// In en, this message translates to:
+  /// **'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the \"Last updated\" date.'**
+  String get privacy_section_changes_body;
+
+  /// Privacy section: contact heading
+  ///
+  /// In en, this message translates to:
+  /// **'9. Contact Us'**
+  String get privacy_section_contact;
+
+  /// Privacy section: contact body
+  ///
+  /// In en, this message translates to:
+  /// **'If you have any questions about this Privacy Policy, please contact us through the app\'s support section.'**
+  String get privacy_section_contact_body;
+
+  /// Subtitle for playback history page
+  ///
+  /// In en, this message translates to:
+  /// **'Resume episodes and review recently played content.'**
+  String get profile_history_subtitle;
+
+  /// Count of recently played episodes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} recently played episodes'**
+  String profile_history_episode_count(int count);
+
+  /// Terms of Service menu item in profile
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get profile_terms_of_service;
+
+  /// Subtitle for Terms of Service menu item
+  ///
+  /// In en, this message translates to:
+  /// **'View our terms of service'**
+  String get profile_terms_subtitle;
+
+  /// Privacy Policy menu item in profile
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get profile_privacy_policy;
+
+  /// Subtitle for Privacy Policy menu item
+  ///
+  /// In en, this message translates to:
+  /// **'View our privacy policy'**
+  String get profile_privacy_subtitle;
+
+  /// Coming soon label for features not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get profile_coming_soon;
+
+  /// Subtitle explaining profile editing is not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Profile editing will be available in a future update.'**
+  String get profile_edit_coming_soon_subtitle;
+
+  /// Title for change password dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get profile_password_change_title;
+
+  /// Current password field label
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get profile_current_password;
+
+  /// New password field label
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get profile_new_password;
+
+  /// Confirm new password field label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get profile_confirm_new_password;
+
+  /// Validation error when password is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get profile_password_required;
+
+  /// Validation error for password minimum length
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get profile_password_min_length;
+
+  /// Validation error when passwords do not match
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get profile_password_mismatch;
+
+  /// Validation error when new password matches old
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be different from current password'**
+  String get profile_password_same_as_old;
+
+  /// Loading message while changing password
+  ///
+  /// In en, this message translates to:
+  /// **'Changing password...'**
+  String get profile_password_changing;
+
+  /// Success message after password reset email is sent
+  ///
+  /// In en, this message translates to:
+  /// **'A password reset link has been sent to your email. Please check your inbox.'**
+  String get profile_password_reset_email_sent;
+
+  /// Error message when password change fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to change password. Please try again.'**
+  String get profile_password_change_failed;
+
+  /// Subtitle explaining 2FA is not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication will be available in a future update.'**
+  String get profile_two_factor_coming_soon;
+
+  /// Subtitle explaining biometric auth is not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication will be available in a future update.'**
+  String get profile_biometric_coming_soon;
+
+  /// Button text to send password reset link
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get profile_send_reset_link;
+
+  /// Label shown when biometric auth is not available
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get profile_biometric_not_available;
 }
 
 class _AppLocalizationsDelegate

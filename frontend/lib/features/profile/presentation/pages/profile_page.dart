@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -31,10 +32,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
   String _appVersion = 'Loading...';
 
+  static const String _notificationsStorageKey =
+      'profile_notifications_enabled';
+
   @override
   void initState() {
     super.initState();
     _loadVersion();
+    _loadNotificationPreference();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = ref.read(authProvider);
       if (authState.isAuthenticated) {
@@ -42,6 +47,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ref.read(profileStatsProvider.notifier).load(forceRefresh: true);
       }
     });
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      final saved = await storage.getBool(_notificationsStorageKey);
+      if (mounted && saved != null) {
+        setState(() {
+          _notificationsEnabled = saved;
+        });
+      }
+    } catch (e) {
+      logger.AppLogger.debug('Error loading notification preference: $e');
+    }
+  }
+
+  Future<void> _setNotificationPreference(bool value) async {
+    setState(() {
+      _notificationsEnabled = value;
+    });
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      await storage.saveBool(_notificationsStorageKey, value);
+    } catch (e) {
+      logger.AppLogger.debug('Error saving notification preference: $e');
+    }
   }
 
   Future<void> _loadVersion() async {
@@ -226,9 +257,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             alpha: 0.30,
           ),
           onChanged: (value) {
-            setState(() {
-              _notificationsEnabled = value;
-            });
+            _setNotificationPreference(value);
           },
         ),
       ),
@@ -457,57 +486,79 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   void _showEditProfileDialog(BuildContext context) {
     final l10n = context.l10n;
-    showDialog<void>(
-      context: context,
+    final authState = ref.read(authProvider);
+    final user = authState.user;
+    _showConstrainedDialog<void>(
+      context,
       builder: (dialogContext) {
-        final dialogWidth = ResponsiveDialogHelper.maxWidth(dialogContext);
-        final isMobile = dialogContext.isMobile;
         return AlertDialog(
-          insetPadding: isMobile ? ResponsiveDialogHelper.insetPadding() : null,
-          title: Text(l10n.profile_edit_profile),
+          insetPadding: ResponsiveDialogHelper.insetPadding(),
+          title: Row(
+            children: [
+              const Icon(Icons.edit_note),
+              const SizedBox(width: 8),
+              Text(l10n.profile_edit_profile),
+            ],
+          ),
           content: SizedBox(
-            width: dialogWidth,
+            width: double.maxFinite,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
+                  controller: TextEditingController(text: user?.displayName ?? ''),
                   decoration: InputDecoration(
                     labelText: l10n.profile_name,
                     border: const OutlineInputBorder(),
                   ),
+                  enabled: false,
                 ),
                 const SizedBox(height: 16),
                 TextField(
+                  controller: TextEditingController(text: user?.email ?? ''),
                   decoration: InputDecoration(
                     labelText: l10n.profile_email_field,
                     border: const OutlineInputBorder(),
                   ),
+                  enabled: false,
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: l10n.profile_bio,
-                    border: const OutlineInputBorder(),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(dialogContext)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 3,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: Theme.of(dialogContext)
+                            .colorScheme
+                            .onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.profile_edit_coming_soon_subtitle,
+                          style: Theme.of(dialogContext).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           actions: [
             TextButton(
+              style: ResponsiveDialogHelper.actionButtonStyle(dialogContext),
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                showTopFloatingNotice(
-                  context,
-                  message: l10n.profile_updated_successfully,
-                );
-              },
-              child: Text(l10n.save),
+              child: Text(l10n.close),
             ),
           ],
         );
@@ -533,16 +584,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   leading: Icon(Icons.password, color: iconColor),
                   title: Text(l10n.profile_change_password),
                   trailing: Icon(Icons.chevron_right, color: iconColor),
+                  onTap: () {
+                    Navigator.of(dialogContext).pop();
+                    _showChangePasswordDialog(context);
+                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.fingerprint, color: iconColor),
                   title: Text(l10n.profile_biometric_auth),
-                  trailing: Switch(value: true, onChanged: null),
+                  subtitle: Text(
+                    l10n.profile_biometric_coming_soon,
+                    style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: false,
+                    onChanged: null,
+                  ),
                 ),
                 ListTile(
                   leading: Icon(Icons.phone_android, color: iconColor),
                   title: Text(l10n.profile_two_factor_auth),
-                  trailing: Icon(Icons.chevron_right, color: iconColor),
+                  subtitle: Text(
+                    l10n.profile_two_factor_coming_soon,
+                    style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.schedule, size: 20),
                 ),
               ],
             ),
@@ -554,6 +624,166 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: Text(l10n.close),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final l10n = context.l10n;
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isChanging = false;
+
+    _showConstrainedDialog<void>(
+      context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              insetPadding: ResponsiveDialogHelper.insetPadding(),
+              title: Text(l10n.profile_password_change_title),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: currentPasswordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.profile_current_password,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock_outline),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.profile_password_required;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: newPasswordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.profile_new_password,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.profile_password_required;
+                          }
+                          if (value.length < 8) {
+                            return l10n.profile_password_min_length;
+                          }
+                          if (value == currentPasswordController.text) {
+                            return l10n.profile_password_same_as_old;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: confirmPasswordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.profile_confirm_new_password,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.profile_password_required;
+                          }
+                          if (value != newPasswordController.text) {
+                            return l10n.profile_password_mismatch;
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  style: ResponsiveDialogHelper.actionButtonStyle(dialogContext),
+                  onPressed:
+                      isChanging ? null : () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: isChanging
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          setDialogState(() => isChanging = true);
+
+                          try {
+                            // Use the forgot-password flow since the backend
+                            // does not have a dedicated change-password endpoint.
+                            final authState = ref.read(authProvider);
+                            final userEmail = authState.user?.email;
+
+                            if (userEmail == null) {
+                              if (dialogContext.mounted) {
+                                setDialogState(() => isChanging = false);
+                                Navigator.of(dialogContext).pop();
+                                showTopFloatingNotice(
+                                  dialogContext,
+                                  message: l10n.profile_password_change_failed,
+                                );
+                              }
+                              return;
+                            }
+
+                            await ref
+                                .read(authProvider.notifier)
+                                .forgotPassword(userEmail);
+
+                            if (dialogContext.mounted) {
+                              setDialogState(() => isChanging = false);
+                              Navigator.of(dialogContext).pop();
+                              showTopFloatingNotice(
+                                dialogContext,
+                                message: l10n.profile_password_reset_email_sent,
+                              );
+                            }
+                          } catch (e) {
+                            if (dialogContext.mounted) {
+                              setDialogState(() => isChanging = false);
+                              Navigator.of(dialogContext).pop();
+                              showTopFloatingNotice(
+                                dialogContext,
+                                message: l10n.profile_password_change_failed,
+                              );
+                            }
+                          }
+                        },
+                  child: isChanging
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(dialogContext)
+                                .colorScheme
+                                .onPrimary,
+                          ),
+                        )
+                      : Text(l10n.profile_send_reset_link),
+                ),
+              ],
+            );
+          },
         );
       },
     );

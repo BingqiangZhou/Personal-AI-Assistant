@@ -2443,5 +2443,286 @@
     "sleep_timer_after_episode":  "After current episode",
     "@sleep_timer_after_episode":  {
                                               "description":  "Label for sleep timer option to stop after current episode"
-                                          }
+                                          },
+    "onboarding_welcome_title":  "Welcome to Stella",
+    "@onboarding_welcome_title":  {
+                                            "description":  "Title of the first onboarding screen"
+                                        },
+    "onboarding_welcome_subtitle":  "Your AI-Powered Podcast Assistant",
+    "@onboarding_welcome_subtitle":  {
+                                               "description":  "Subtitle of the first onboarding screen"
+                                           },
+    "onboarding_welcome_body":  "Discover, subscribe, and listen to your favorite podcasts — powered by intelligent AI that keeps you informed.",
+    "@onboarding_welcome_body":  {
+                                           "description":  "Body text of the first onboarding screen"
+                                       },
+    "onboarding_summary_title":  "Daily AI Summaries",
+    "@onboarding_summary_title":  {
+                                            "description":  "Title of the AI summary onboarding screen"
+                                        },
+    "onboarding_summary_body":  "Get personalized daily digests with episode highlights and key takeaways. Stay on top of your podcasts in minutes, not hours.",
+    "@onboarding_summary_body":  {
+                                           "description":  "Body text of the AI summary onboarding screen"
+                                       },
+    "onboarding_chat_title":  "AI Conversations",
+    "@onboarding_chat_title":  {
+                                          "description":  "Title of the AI chat onboarding screen"
+                                      },
+    "onboarding_chat_body":  "Chat with AI about any podcast episode. Ask questions, explore topics in depth, and get instant insights from your listening library.",
+    "@onboarding_chat_body":  {
+                                           "description":  "Body text of the AI chat onboarding screen"
+                                       },
+    "onboarding_skip":  "Skip",
+    "@onboarding_skip":  {
+                                       "description":  "Skip button on onboarding screens"
+                                   },
+    "onboarding_next":  "Next",
+    "@onboarding_next":  {
+                                       "description":  "Next button on onboarding screens"
+                                   },
+    "onboarding_get_started":  "Get Started",
+    "@onboarding_get_started":  {
+                                              "description":  "Get started button on the last onboarding screen"
+                                          },
+    "terms_of_service_title":  "Terms of Service",
+    "@terms_of_service_title":  {
+                                    "description":  "Title for the Terms of Service page"
+                                },
+    "terms_of_service_last_updated":  "Last updated: April 4, 2026",
+    "@terms_of_service_last_updated":  {
+                                           "description":  "Last updated date for Terms of Service"
+                                       },
+    "terms_section_acceptance":  "1. Acceptance of Terms",
+    "@terms_section_acceptance":  {
+                                      "description":  "Terms section: acceptance heading"
+                                  },
+    "terms_section_acceptance_body":  "By accessing and using Stella (\"the Service\"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.",
+    "@terms_section_acceptance_body":  {
+                                           "description":  "Terms section: acceptance body"
+                                       },
+    "terms_section_use":  "2. Use of the Service",
+    "@terms_section_use":  {
+                               "description":  "Terms section: use heading"
+                           },
+    "terms_section_use_body":  "You may use the Service for personal, non-commercial purposes. You agree not to misuse the Service, including but not limited to attempting to gain unauthorized access, interfering with its operation, or using it in any way that violates applicable laws.",
+    "@terms_section_use_body":  {
+                                    "description":  "Terms section: use body"
+                                },
+    "terms_section_ip":  "3. Intellectual Property",
+    "@terms_section_ip":  {
+                              "description":  "Terms section: intellectual property heading"
+                          },
+    "terms_section_ip_body":  "All content, features, and functionality of the Service, including but not limited to text, graphics, logos, and software, are the property of Stella and are protected by copyright, trademark, and other intellectual property laws. Podcast content belongs to their respective creators.",
+    "@terms_section_ip_body":  {
+                                   "description":  "Terms section: intellectual property body"
+                               },
+    "terms_section_liability":  "4. Limitation of Liability",
+    "@terms_section_liability":  {
+                                     "description":  "Terms section: limitation of liability heading"
+                                 },
+    "terms_section_liability_body":  "The Service is provided \"as is\" without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.",
+    "@terms_section_liability_body":  {
+                                          "description":  "Terms section: limitation of liability body"
+                                      },
+    "terms_section_changes":  "5. Changes to Terms",
+    "@terms_section_changes":  {
+                                  "description":  "Terms section: changes heading"
+                              },
+    "terms_section_changes_body":  "We reserve the right to modify these terms at any time. We will notify users of significant changes. Your continued use of the Service after changes constitutes acceptance of the updated terms.",
+    "@terms_section_changes_body":  {
+                                        "description":  "Terms section: changes body"
+                                    },
+    "terms_section_governing_law":  "6. Governing Law",
+    "@terms_section_governing_law":  {
+                                         "description":  "Terms section: governing law heading"
+                                     },
+    "terms_section_governing_law_body":  "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which the Service is operated, without regard to its conflict of law provisions.",
+    "@terms_section_governing_law_body":  {
+                                              "description":  "Terms section: governing law body"
+                                          },
+    "terms_section_contact":  "7. Contact Us",
+    "@terms_section_contact":  {
+                                   "description":  "Terms section: contact heading"
+                               },
+    "terms_section_contact_body":  "If you have any questions about these Terms of Service, please contact us through the app's support section.",
+    "@terms_section_contact_body":  {
+                                        "description":  "Terms section: contact body"
+                                    },
+    "privacy_policy_title":  "Privacy Policy",
+    "@privacy_policy_title":  {
+                                  "description":  "Title for the Privacy Policy page"
+                              },
+    "privacy_policy_last_updated":  "Last updated: April 4, 2026",
+    "@privacy_policy_last_updated":  {
+                                         "description":  "Last updated date for Privacy Policy"
+                                     },
+    "privacy_section_intro":  "1. Introduction",
+    "@privacy_section_intro":  {
+                                   "description":  "Privacy section: introduction heading"
+                               },
+    "privacy_section_intro_body":  "Stella (\"we\", \"our\", \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information when you use our Service.",
+    "@privacy_section_intro_body":  {
+                                        "description":  "Privacy section: introduction body"
+                                    },
+    "privacy_section_collection":  "2. Information We Collect",
+    "@privacy_section_collection":  {
+                                        "description":  "Privacy section: collection heading"
+                                    },
+    "privacy_section_collection_body":  "We collect information you provide directly, such as your email address and display name when creating an account. We also collect usage data including podcast subscriptions, playback history, and preferences to improve your experience.",
+    "@privacy_section_collection_body":  {
+                                              "description":  "Privacy section: collection body"
+                                          },
+    "privacy_section_usage":  "3. How We Use Your Information",
+    "@privacy_section_usage":  {
+                                   "description":  "Privacy section: usage heading"
+                               },
+    "privacy_section_usage_body":  "We use your information to provide and improve the Service, process your requests, send notifications about your subscriptions, and generate personalized content such as AI summaries and daily reports.",
+    "@privacy_section_usage_body":  {
+                                        "description":  "Privacy section: usage body"
+                                    },
+    "privacy_section_storage":  "4. Data Storage and Security",
+    "@privacy_section_storage":  {
+                                     "description":  "Privacy section: storage heading"
+                                 },
+    "privacy_section_storage_body":  "Your data is stored securely on our servers with industry-standard encryption. We implement appropriate technical and organizational measures to protect your personal information against unauthorized access or disclosure.",
+    "@privacy_section_storage_body":  {
+                                          "description":  "Privacy section: storage body"
+                                      },
+    "privacy_section_sharing":  "5. Information Sharing",
+    "@privacy_section_sharing":  {
+                                     "description":  "Privacy section: sharing heading"
+                                 },
+    "privacy_section_sharing_body":  "We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as required by law or to trusted partners who assist in operating the Service.",
+    "@privacy_section_sharing_body":  {
+                                          "description":  "Privacy section: sharing body"
+                                      },
+    "privacy_section_rights":  "6. Your Rights",
+    "@privacy_section_rights":  {
+                                    "description":  "Privacy section: rights heading"
+                                },
+    "privacy_section_rights_body":  "You have the right to access, update, or delete your personal information at any time through the app's profile settings. You may also request a copy of your data or close your account.",
+    "@privacy_section_rights_body":  {
+                                         "description":  "Privacy section: rights body"
+                                     },
+    "privacy_section_children":  "7. Children's Privacy",
+    "@privacy_section_children":  {
+                                      "description":  "Privacy section: children heading"
+                                  },
+    "privacy_section_children_body":  "The Service is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.",
+    "@privacy_section_children_body":  {
+                                           "description":  "Privacy section: children body"
+                                       },
+    "privacy_section_changes":  "8. Changes to This Policy",
+    "@privacy_section_changes":  {
+                                     "description":  "Privacy section: changes heading"
+                                 },
+    "privacy_section_changes_body":  "We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the \"Last updated\" date.",
+    "@privacy_section_changes_body":  {
+                                          "description":  "Privacy section: changes body"
+                                      },
+    "privacy_section_contact":  "9. Contact Us",
+    "@privacy_section_contact":  {
+                                     "description":  "Privacy section: contact heading"
+                                 },
+    "privacy_section_contact_body":  "If you have any questions about this Privacy Policy, please contact us through the app's support section.",
+    "@privacy_section_contact_body":  {
+                                          "description":  "Privacy section: contact body"
+                                      },
+    "profile_history_subtitle":  "Resume episodes and review recently played content.",
+    "@profile_history_subtitle":  {
+                                      "description":  "Subtitle for playback history page"
+                                  },
+    "profile_history_episode_count":  "{count} recently played episodes",
+    "@profile_history_episode_count":  {
+                                           "description":  "Count of recently played episodes",
+                                           "placeholders":  {
+                                                                "count":  {
+                                                                              "type":  "int"
+                                                                          }
+                                                            }
+                                       },
+    "profile_terms_of_service":  "Terms of Service",
+    "@profile_terms_of_service":  {
+                                      "description":  "Terms of Service menu item in profile"
+                                  },
+    "profile_terms_subtitle":  "View our terms of service",
+    "@profile_terms_subtitle":  {
+                                    "description":  "Subtitle for Terms of Service menu item"
+                                },
+    "profile_privacy_policy":  "Privacy Policy",
+    "@profile_privacy_policy":  {
+                                    "description":  "Privacy Policy menu item in profile"
+                                },
+    "profile_privacy_subtitle":  "View our privacy policy",
+    "@profile_privacy_subtitle":  {
+                                      "description":  "Subtitle for Privacy Policy menu item"
+                                  },
+    "profile_coming_soon":  "Coming Soon",
+    "@profile_coming_soon":  {
+                                       "description":  "Coming soon label for features not yet available"
+                                   },
+    "profile_edit_coming_soon_subtitle":  "Profile editing will be available in a future update.",
+    "@profile_edit_coming_soon_subtitle":  {
+                                                     "description":  "Subtitle explaining profile editing is not yet available"
+                                                 },
+    "profile_password_change_title":  "Change Password",
+    "@profile_password_change_title":  {
+                                                 "description":  "Title for change password dialog"
+                                             },
+    "profile_current_password":  "Current Password",
+    "@profile_current_password":  {
+                                               "description":  "Current password field label"
+                                           },
+    "profile_new_password":  "New Password",
+    "@profile_new_password":  {
+                                           "description":  "New password field label"
+                                       },
+    "profile_confirm_new_password":  "Confirm New Password",
+    "@profile_confirm_new_password":  {
+                                                       "description":  "Confirm new password field label"
+                                                   },
+    "profile_password_required":  "Password is required",
+    "@profile_password_required":  {
+                                                 "description":  "Validation error when password is empty"
+                                             },
+    "profile_password_min_length":  "Password must be at least 8 characters",
+    "@profile_password_min_length":  {
+                                                      "description":  "Validation error for password minimum length"
+                                                  },
+    "profile_password_mismatch":  "Passwords do not match",
+    "@profile_password_mismatch":  {
+                                                "description":  "Validation error when passwords do not match"
+                                            },
+    "profile_password_same_as_old":  "New password must be different from current password",
+    "@profile_password_same_as_old":  {
+                                                       "description":  "Validation error when new password matches old"
+                                                   },
+    "profile_password_changing":  "Changing password...",
+    "@profile_password_changing":  {
+                                                "description":  "Loading message while changing password"
+                                            },
+    "profile_password_reset_email_sent":  "A password reset link has been sent to your email. Please check your inbox.",
+    "@profile_password_reset_email_sent":  {
+                                                            "description":  "Success message after password reset email is sent"
+                                                        },
+    "profile_password_change_failed":  "Failed to change password. Please try again.",
+    "@profile_password_change_failed":  {
+                                                      "description":  "Error message when password change fails"
+                                                  },
+    "profile_two_factor_coming_soon":  "Two-factor authentication will be available in a future update.",
+    "@profile_two_factor_coming_soon":  {
+                                                      "description":  "Subtitle explaining 2FA is not yet available"
+                                                  },
+    "profile_biometric_coming_soon":  "Biometric authentication will be available in a future update.",
+    "@profile_biometric_coming_soon":  {
+                                                      "description":  "Subtitle explaining biometric auth is not yet available"
+                                                  },
+    "profile_send_reset_link":  "Send Reset Link",
+    "@profile_send_reset_link":  {
+                                               "description":  "Button text to send password reset link"
+                                           },
+    "profile_biometric_not_available":  "Not available",
+    "@profile_biometric_not_available":  {
+                                                       "description":  "Label shown when biometric auth is not available"
+                                                   }
 }
