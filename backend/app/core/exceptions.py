@@ -1,14 +1,12 @@
 """Custom exception hierarchy.
 
 Convention:
-- Service/Repository layer: Raise BaseCustomError subclasses for business errors.
-  These are caught by the global exception handler and return structured JSON responses.
-- Route layer: Use bilingual HTTPException helpers from app.http.errors for user-facing messages.
+- Service/Repository layer: raise BaseCustomError subclasses for business errors.
+- Route layer: use bilingual_http_exception() from app.http.errors for user-facing messages.
 - NEVER use bare ValueError/string comparison for control flow.
-
-自定义异常处理器
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -22,12 +20,10 @@ from app.core.json_encoder import CustomJSONResponse
 logger = logging.getLogger(__name__)
 
 
+# ── Base ─────────────────────────────────────────────────────────────────────
+
+
 class BaseCustomError(Exception):
-    """Base custom exception.
-
-    基础自定义异常
-    """
-
     def __init__(
         self,
         message: str,
@@ -42,95 +38,38 @@ class BaseCustomError(Exception):
         super().__init__(self.message)
 
 
+# ── HTTP-status exceptions ───────────────────────────────────────────────────
+
+
 class NotFoundError(BaseCustomError):
-    """Resource not found exception.
-
-    资源未找到异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Resource not found",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Resource not found", **kwargs):
         super().__init__(message, 404, **kwargs)
 
 
 class BadRequestError(BaseCustomError):
-    """Bad request exception.
-
-    错误请求异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Bad request",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Bad request", **kwargs):
         super().__init__(message, 400, **kwargs)
 
 
 class UnauthorizedError(BaseCustomError):
-    """Unauthorized exception.
-
-    未授权异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Unauthorized",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Unauthorized", **kwargs):
         super().__init__(message, 401, **kwargs)
 
 
 class ForbiddenError(BaseCustomError):
-    """Forbidden exception.
-
-    禁止访问异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Forbidden",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Forbidden", **kwargs):
         super().__init__(message, 403, **kwargs)
 
 
 class ConflictError(BaseCustomError):
-    """Conflict exception.
-
-    冲突异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Resource already exists",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Resource already exists", **kwargs):
         super().__init__(message, 409, "CONFLICT", **kwargs)
 
 
 class CustomValidationError(BaseCustomError):
-    """Custom validation exception for service-layer validation.
+    """Service-layer validation (named to avoid Pydantic's ValidationError)."""
 
-    Note: Named CustomValidationError to avoid conflict with Pydantic's ValidationError.
-    Use this for business logic validation in service layers.
-    For route-layer validation errors, use raise_validation_error from app.http.errors.
-
-    自定义验证异常，用于服务层验证。
-
-    注意：命名为 CustomValidationError 以避免与 Pydantic 的 ValidationError 冲突。
-    在服务层使用此异常进行业务逻辑验证。
-    对于路由层的验证错误，请使用 app.http.errors 中的 raise_validation_error。
-    """
-
-    def __init__(
-        self,
-        message: str = "Validation failed",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Validation failed", **kwargs):
         super().__init__(message, 400, "VALIDATION_ERROR", **kwargs)
 
 
@@ -139,79 +78,52 @@ ValidationError = CustomValidationError
 
 
 class DatabaseError(BaseCustomError):
-    """Database exception.
-
-    数据库异常
-    """
-
-    def __init__(
-        self,
-        message: str = "Database error",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "Database error", **kwargs):
         super().__init__(message, 500, "DATABASE_ERROR", **kwargs)
 
 
 class ExternalServiceError(BaseCustomError):
-    """External service error exception.
-
-    外部服务错误异常
-    """
-
-    def __init__(
-        self,
-        message: str = "External service error",
-        **kwargs,
-    ):
+    def __init__(self, message: str = "External service error", **kwargs):
         super().__init__(message, 502, "EXTERNAL_SERVICE_ERROR", **kwargs)
 
 
-# ── Domain-specific exceptions ─────────────────────────────────────────────
+# ── Domain-specific exceptions ───────────────────────────────────────────────
 
 
 class EpisodeNotFoundError(NotFoundError):
-    """Raised when a podcast episode is not found."""
-
-    pass
-
-
-class QueueLimitExceededError(BadRequestError):
-    """Raised when playback queue limit is exceeded."""
-
-    pass
-
-
-class EpisodeNotInQueueError(BadRequestError):
-    """Raised when episode is not in the playback queue."""
-
-    pass
-
-
-class InvalidReorderPayloadError(BadRequestError):
-    """Raised when queue reorder payload is invalid."""
-
     pass
 
 
 class SubscriptionNotFoundError(NotFoundError):
-    """Raised when a subscription is not found."""
-
     pass
 
 
 class TranscriptionTaskNotFoundError(NotFoundError):
-    """Raised when a transcription task is not found."""
-
     pass
+
+
+class QueueLimitExceededError(BadRequestError):
+    pass
+
+
+class EpisodeNotInQueueError(BadRequestError):
+    pass
+
+
+class InvalidReorderPayloadError(BadRequestError):
+    pass
+
+
+class TranscriptionTaskNotFoundError(NotFoundError):
+    pass
+
+
+# ── Exception handlers ───────────────────────────────────────────────────────
 
 
 async def custom_exception_handler(
     request: Request, exc: BaseCustomError
 ) -> CustomJSONResponse:
-    """Handle custom exceptions.
-
-    处理自定义异常
-    """
     logger.error(
         "Custom exception raised",
         extra={
@@ -223,28 +135,19 @@ async def custom_exception_handler(
             "status_code": exc.status_code,
         },
     )
-
-    # Build response content
-    content = {
+    content: dict[str, Any] = {
         "detail": exc.message,
         "type": exc.error_code,
         "status_code": exc.status_code,
     }
-
-    # Add details if present
     if exc.details:
         content["details"] = exc.details
-
     return CustomJSONResponse(status_code=exc.status_code, content=content)
 
 
 async def http_exception_handler(
     request: Request, exc: HTTPException | StarletteHTTPException
 ) -> CustomJSONResponse:
-    """Handle HTTP exceptions.
-
-    处理 HTTP 异常
-    """
     log_func = logger.warning if exc.status_code < 500 else logger.error
     log_func(
         "HTTP exception raised: %s %s -> %s [%s]",
@@ -274,20 +177,14 @@ async def http_exception_handler(
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> CustomJSONResponse:
-    """Handle validation exceptions.
-
-    处理验证异常
-    """
-    errors = []
-    for error in exc.errors():
-        errors.append(
-            {
-                "field": " -> ".join(str(x) for x in error["loc"]),
-                "message": error["msg"],
-                "type": error["type"],
-            }
-        )
-
+    errors = [
+        {
+            "field": " -> ".join(str(x) for x in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"],
+        }
+        for error in exc.errors()
+    ]
     logger.error(
         "Request validation failed",
         extra={
@@ -298,7 +195,6 @@ async def validation_exception_handler(
             "errors": errors,
         },
     )
-
     return CustomJSONResponse(
         status_code=422,
         content={
@@ -312,10 +208,6 @@ async def validation_exception_handler(
 async def general_exception_handler(
     request: Request, exc: Exception
 ) -> CustomJSONResponse:
-    """Handle general exceptions.
-
-    处理通用异常
-    """
     logger.error(
         "Unhandled exception raised",
         extra={
@@ -327,7 +219,6 @@ async def general_exception_handler(
         },
         exc_info=True,
     )
-
     return CustomJSONResponse(
         status_code=500,
         content={
@@ -341,10 +232,6 @@ async def general_exception_handler(
 async def database_connection_exception_handler(
     request: Request, exc: Exception
 ) -> CustomJSONResponse:
-    """Handle database connection exceptions.
-
-    处理数据库连接异常 - 返回503服务不可用
-    """
     logger.error(
         "Database connection error",
         extra={
@@ -356,7 +243,6 @@ async def database_connection_exception_handler(
         },
         exc_info=True,
     )
-
     return CustomJSONResponse(
         status_code=503,
         content={
@@ -373,10 +259,6 @@ async def database_connection_exception_handler(
 async def timeout_exception_handler(
     request: Request, exc: Exception
 ) -> CustomJSONResponse:
-    """Handle timeout exceptions.
-
-    处理超时异常 - 返回504网关超时
-    """
     logger.warning(
         "Request timeout",
         extra={
@@ -387,7 +269,6 @@ async def timeout_exception_handler(
             "exc_message": str(exc),
         },
     )
-
     return CustomJSONResponse(
         status_code=504,
         content={
@@ -400,45 +281,22 @@ async def timeout_exception_handler(
     )
 
 
+# ── Registration ─────────────────────────────────────────────────────────────
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
-    """Setup exception handlers for the FastAPI app.
-
-    为 FastAPI 应用设置异常处理器
-    """
-    import asyncio
-
     app.add_exception_handler(BaseCustomError, custom_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-    # Database connection errors
-    from sqlalchemy.exc import (
-        DBAPIError,
-        InterfaceError,
-        OperationalError,
-    )
+    from sqlalchemy.exc import DBAPIError, InterfaceError, OperationalError
 
     app.add_exception_handler(OperationalError, database_connection_exception_handler)
     app.add_exception_handler(InterfaceError, database_connection_exception_handler)
     app.add_exception_handler(DBAPIError, database_connection_exception_handler)
 
-    # Timeout errors
     app.add_exception_handler(asyncio.TimeoutError, timeout_exception_handler)
     app.add_exception_handler(TimeoutError, timeout_exception_handler)
 
-    # General exception handler (must be last)
     app.add_exception_handler(Exception, general_exception_handler)
-
-
-# NOTE: Convenience functions for raising HTTP exceptions have been moved to app.http.errors
-# For route-layer error responses, use:
-#   - raise_not_found() from app.http.errors
-#   - raise_validation_error() from app.http.errors
-#   - raise_unauthorized() from app.http.errors
-#   - raise_forbidden() from app.http.errors
-#
-# For service-layer business logic errors, raise custom exception classes directly:
-#   - raise NotFoundError("message")
-#   - raise CustomValidationError("message")
-#   - raise ConflictError("message")

@@ -73,7 +73,9 @@ class RedisClientManager:
             ),
         )
 
-    async def _ping_client(self, client: aioredis.Redis, *, timeout: float = 2.0) -> bool:
+    async def _ping_client(
+        self, client: aioredis.Redis, *, timeout: float = 2.0
+    ) -> bool:
         """Ping Redis client with timeout.
 
         Note: Do NOT record timing here to avoid circular call with _get_client()
@@ -150,7 +152,7 @@ class RedisClientManager:
 
             # Wait before retry (exponential backoff)
             if attempt < max_retries - 1:
-                await asyncio.sleep(0.5 * (2 ** attempt))
+                await asyncio.sleep(0.5 * (2**attempt))
 
         # All reconnection attempts failed
         raise ConnectionError(
