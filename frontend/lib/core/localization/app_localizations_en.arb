@@ -2724,5 +2724,33 @@
     "profile_biometric_not_available":  "Not available",
     "@profile_biometric_not_available":  {
                                                        "description":  "Label shown when biometric auth is not available"
-                                                   }
+                                                   },
+    "nav_ai": "AI",
+    "@nav_ai":  {
+                   "description":  "Navigation item: AI"
+               },
+    "ai_tab_eyebrow": "AI Assistant",
+    "@ai_tab_eyebrow":  {
+                         "description":  "AI tab eyebrow text"
+                     },
+    "ai_tab_subtitle": "Daily reports, highlights, and more",
+    "@ai_tab_subtitle":  {
+                          "description":  "AI tab subtitle"
+                        },
+    "ai_tab_daily_report_subtitle": "Review your personalized daily digest",
+    "@ai_tab_daily_report_subtitle":  {
+                                        "description":  "AI tab daily report card subtitle"
+                                      },
+    "ai_tab_highlights_subtitle": "Key insights from your listening history",
+    "@ai_tab_highlights_subtitle":  {
+                                        "description":  "AI tab highlights card subtitle"
+                                      },
+    "ai_tab_chat_title": "AI Assistant",
+    "@ai_tab_chat_title":  {
+                                "description":  "AI tab chat assistant card title"
+                                },
+    "ai_tab_chat_subtitle": "Chat with AI about your podcasts",
+    "@ai_tab_chat_subtitle":  {
+                                    "description":  "AI tab chat assistant card subtitle"
+                                }
 }

@@ -2679,5 +2679,33 @@
     "profile_biometric_not_available":  "暂不可用",
     "@profile_biometric_not_available":  {
                                                        "description":  "生物识别认证不可用时显示的标签"
-                                                   }
+                                                   },
+    "nav_ai": "AI",
+    "@nav_ai":  {
+                    "description":  "导航项： AI"
+                },
+    "ai_tab_eyebrow": "AI 助手",
+    "@ai_tab_eyebrow":  {
+                        "description":  "AI 标签页眉栏文本"
+                      },
+    "ai_tab_subtitle": "日报、 高光观点和更多",
+    "@ai_tab_subtitle":  {
+                          "description":  "AI 标签页副标题"
+                        },
+    "ai_tab_daily_report_subtitle": "查看你的个性化每日摘要",
+    "@ai_tab_daily_report_subtitle":  {
+                                        "description":  "AI 标签页日报卡片副标题"
+                                      },
+    "ai_tab_highlights_subtitle": "从收听历史中获取关键见解",
+    "@ai_tab_highlights_subtitle":  {
+                                        "description":  "AI 标签页高光观点卡片副标题"
+                                      },
+    "ai_tab_chat_title": "AI 助手",
+    "@ai_tab_chat_title":  {
+                                "description":  "AI 标签页聊天助手卡片标题"
+                                },
+    "ai_tab_chat_subtitle": "与 AI 聊聊你的播客",
+    "@ai_tab_chat_subtitle":  {
+                                    "description":  "AI 标签页聊天助手卡片副标题"
+                                }
 }
