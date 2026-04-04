@@ -442,10 +442,12 @@ class AuthenticationService:
         user = await self._get_user_by_email(email)
         if not user:
             # Don't reveal if email exists or not for security
-            return {
+            result = {
                 "message": "If an account with this email exists, a password reset link has been sent.",
-                "token": None,  # Don't return actual token in production
             }
+            if settings.ENVIRONMENT == "development":
+                result["token"] = None
+            return result
 
         # Invalidate any existing unused tokens for this email
         await self._invalidate_existing_tokens(email)
@@ -474,11 +476,13 @@ class AuthenticationService:
                 expires_at=expires_at,
             )
 
-            return {
+            result = {
                 "message": "If an account with this email exists, a password reset link has been sent.",
-                "token": reset_token,  # Only for development, remove in production
-                "expires_at": expires_at.isoformat(),
             }
+            if settings.ENVIRONMENT == "development":
+                result["token"] = reset_token
+                result["expires_at"] = expires_at.isoformat()
+            return result
 
         except IntegrityError as err:
             await self.db.rollback()

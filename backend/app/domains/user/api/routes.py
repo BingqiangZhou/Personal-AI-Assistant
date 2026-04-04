@@ -1,11 +1,12 @@
 """User authentication and management API routes."""
 
+import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.exceptions import BaseCustomError, UnauthorizedError
+from app.core.exceptions import UnauthorizedError
 from app.domains.user.api.dependencies import (
     get_authentication_service,
     get_current_user,
@@ -19,6 +20,8 @@ from app.shared.schemas import (
     UserResponse,
 )
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -76,43 +79,34 @@ async def register(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Register a new user - returns tokens on success."""
-    try:
-        # Extract device info from request
-        device_info = {
-            "user_agent": request.headers.get("user-agent"),
-            "ip_address": request.client.host,
-        }
+    # Extract device info from request
+    device_info = {
+        "user_agent": request.headers.get("user-agent"),
+        "ip_address": request.client.host,
+    }
 
-        # Create user
-        user = await auth_service.register_user(
-            email=register_data.email,
-            password=register_data.password,
-            username=register_data.username,
-        )
+    # Create user
+    user = await auth_service.register_user(
+        email=register_data.email,
+        password=register_data.password,
+        username=register_data.username,
+    )
 
-        # Create session with tokens (like login)
-        token_data = await auth_service.create_user_session(
-            user=user,
-            device_info=device_info,
-            ip_address=request.client.host,
-            user_agent=request.headers.get("user-agent"),
-            remember_me=register_data.remember_me,
-        )
+    # Create session with tokens (like login)
+    token_data = await auth_service.create_user_session(
+        user=user,
+        device_info=device_info,
+        ip_address=request.client.host,
+        user_agent=request.headers.get("user-agent"),
+        remember_me=register_data.remember_me,
+    )
 
-        return Token(
-            access_token=token_data["access_token"],
-            refresh_token=token_data["refresh_token"],
-            token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"],
-        )
-
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {e!s}",
-        ) from e
+    return Token(
+        access_token=token_data["access_token"],
+        refresh_token=token_data["refresh_token"],
+        token_type=token_data["token_type"],
+        expires_in=token_data["expires_in"],
+    )
 
 
 @router.post("/login", response_model=Token)
@@ -122,49 +116,40 @@ async def login(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Login with email/username and password."""
-    try:
-        # Determine which field to use (username takes priority if both provided)
-        identifier = login_data.username or login_data.email_or_username
+    # Determine which field to use (username takes priority if both provided)
+    identifier = login_data.username or login_data.email_or_username
 
-        # Authenticate user
-        user = await auth_service.authenticate_user(
-            email_or_username=identifier,
-            password=login_data.password,
-        )
+    # Authenticate user
+    user = await auth_service.authenticate_user(
+        email_or_username=identifier,
+        password=login_data.password,
+    )
 
-        if not user:
-            raise UnauthorizedError("Invalid credentials")
+    if not user:
+        raise UnauthorizedError("Invalid credentials")
 
-        # Extract device info
-        device_info = {
-            "user_agent": request.headers.get("user-agent"),
-            "ip_address": request.client.host,
-            "device_type": "web",  # Could be enhanced with device detection
-        }
+    # Extract device info
+    device_info = {
+        "user_agent": request.headers.get("user-agent"),
+        "ip_address": request.client.host,
+        "device_type": "web",  # Could be enhanced with device detection
+    }
 
-        # Create session with tokens
-        token_data = await auth_service.create_user_session(
-            user=user,
-            device_info=device_info,
-            ip_address=request.client.host,
-            user_agent=request.headers.get("user-agent"),
-            remember_me=login_data.remember_me,
-        )
+    # Create session with tokens
+    token_data = await auth_service.create_user_session(
+        user=user,
+        device_info=device_info,
+        ip_address=request.client.host,
+        user_agent=request.headers.get("user-agent"),
+        remember_me=login_data.remember_me,
+    )
 
-        return Token(
-            access_token=token_data["access_token"],
-            refresh_token=token_data["refresh_token"],
-            token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"],
-        )
-
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Login failed: {e!s}",
-        ) from e
+    return Token(
+        access_token=token_data["access_token"],
+        refresh_token=token_data["refresh_token"],
+        token_type=token_data["token_type"],
+        expires_in=token_data["expires_in"],
+    )
 
 
 @router.post("/refresh", response_model=Token)
@@ -173,26 +158,17 @@ async def refresh_token(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Refresh access token using refresh token with sliding session."""
-    try:
-        token_data = await auth_service.refresh_access_token(
-            refresh_token=refresh_data.refresh_token,
-        )
+    token_data = await auth_service.refresh_access_token(
+        refresh_token=refresh_data.refresh_token,
+    )
 
-        # Return new refresh token for sliding session
-        return Token(
-            access_token=token_data["access_token"],
-            refresh_token=token_data["refresh_token"],  # Return NEW refresh token
-            token_type=token_data["token_type"],
-            expires_in=token_data["expires_in"],
-        )
-
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token refresh failed: {e!s}",
-        ) from e
+    # Return new refresh token for sliding session
+    return Token(
+        access_token=token_data["access_token"],
+        refresh_token=token_data["refresh_token"],  # Return NEW refresh token
+        token_type=token_data["token_type"],
+        expires_in=token_data["expires_in"],
+    )
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
@@ -202,23 +178,14 @@ async def logout(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Logout current user."""
-    try:
-        if logout_data.refresh_token:
-            # Logout specific session
-            await auth_service.logout_user(logout_data.refresh_token)
-        else:
-            # Logout all sessions for user
-            await auth_service.logout_all_sessions(current_user.id)
+    if logout_data.refresh_token:
+        # Logout specific session
+        await auth_service.logout_user(logout_data.refresh_token)
+    else:
+        # Logout all sessions for user
+        await auth_service.logout_all_sessions(current_user.id)
 
-        return {"message": "Successfully logged out"}
-
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {e!s}",
-        ) from e
+    return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserResponse)
@@ -245,14 +212,8 @@ async def logout_all(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Logout from all devices."""
-    try:
-        await auth_service.logout_all_sessions(current_user.id)
-        return {"message": "Successfully logged out from all devices"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {e!s}",
-        ) from e
+    await auth_service.logout_all_sessions(current_user.id)
+    return {"message": "Successfully logged out from all devices"}
 
 
 @router.post("/forgot-password", response_model=PasswordResetResponse)
@@ -261,25 +222,16 @@ async def forgot_password(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Request a password reset link via email."""
-    try:
-        # Create password reset token
-        result = await auth_service.create_password_reset_token(
-            email=request_data.email,
-        )
+    # Create password reset token
+    result = await auth_service.create_password_reset_token(
+        email=request_data.email,
+    )
 
-        return PasswordResetResponse(
-            message=result["message"],
-            token=result.get("token"),  # Will be None in production
-            expires_at=result.get("expires_at"),
-        )
-
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process password reset request: {e!s}",
-        ) from e
+    return PasswordResetResponse(
+        message=result["message"],
+        token=result.get("token"),  # Note: token is only returned in development environment for testing
+        expires_at=result.get("expires_at"),
+    )
 
 
 @router.post("/reset-password", response_model=PasswordResetResponse)
@@ -288,21 +240,14 @@ async def reset_password(
     auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Reset password using a valid reset token."""
-    try:
-        # Reset password
-        result = await auth_service.reset_password(
-            token=request_data.token,
-            new_password=request_data.new_password,
-        )
+    # Reset password
+    result = await auth_service.reset_password(
+        token=request_data.token,
+        new_password=request_data.new_password,
+    )
 
-        return PasswordResetResponse(
-            message=result["message"],
-        )
+    return PasswordResetResponse(
+        message=result["message"],
+    )
 
-    except BaseCustomError:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset password: {e!s}",
-        ) from e
+
