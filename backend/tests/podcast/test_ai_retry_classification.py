@@ -8,10 +8,10 @@ from app.domains.ai.services.model_runtime_service import (
     _is_retryable_http_status as runtime_retryable,
 )
 from app.domains.podcast.services import summary_generation_service as summary_module
-from app.domains.podcast.services.summary_generation_service import (
+from app.domains.podcast.services.summary_service import (
     SummaryModelManager,
 )
-from app.domains.podcast.services.summary_generation_service import (
+from app.domains.podcast.services.summary_service import (
     _is_retryable_http_status as summary_retryable,
 )
 

@@ -56,7 +56,7 @@ def test_specialized_service_contracts() -> None:
     from app.domains.podcast.services.subscription_service import (
         PodcastSubscriptionService,
     )
-    from app.domains.podcast.services.summary_generation_service import (
+    from app.domains.podcast.services.summary_service import (
         PodcastSummaryGenerationService,
     )
 
