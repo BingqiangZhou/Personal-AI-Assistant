@@ -11,7 +11,7 @@ from app.domains.podcast.api.routes_episodes import generate_summary
 from app.domains.podcast.schemas import PodcastSummaryRequest
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.search_service import PodcastSearchService
-from app.domains.podcast.services.summary_generation_service import (
+from app.domains.podcast.services.summary_service import (
     PodcastSummaryGenerationService,
     _looks_like_html_error_page,
 )
