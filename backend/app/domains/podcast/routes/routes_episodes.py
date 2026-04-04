@@ -326,7 +326,7 @@ async def generate_summary(
             "Episode not found",
             "鏈壘鍒拌鍗曢泦",
             status.HTTP_404_NOT_FOUND,
-        ) from exc
+        )
     except Exception as exc:
         logger.error("Failed to queue summary for episode %s: %s", episode_id, exc)
         raise bilingual_http_exception(

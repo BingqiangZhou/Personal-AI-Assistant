@@ -114,10 +114,6 @@ class InvalidReorderPayloadError(BadRequestError):
     pass
 
 
-class TranscriptionTaskNotFoundError(NotFoundError):
-    pass
-
-
 # ── Exception handlers ───────────────────────────────────────────────────────
 
 
