@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_conversation_clear_response,
     build_conversation_history_response,
     build_conversation_send_response,

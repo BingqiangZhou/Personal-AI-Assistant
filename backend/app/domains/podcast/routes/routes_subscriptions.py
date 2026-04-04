@@ -8,11 +8,11 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from app.core.auth import get_token_user_id
 from app.core.exceptions import SubscriptionNotFoundError
-from app.domains.podcast.api.dependencies import (
+from app.domains.podcast.routes.dependencies import (
     get_podcast_schedule_service,
     get_podcast_subscription_service,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_schedule_config_list_response,
     build_schedule_config_response,
 )

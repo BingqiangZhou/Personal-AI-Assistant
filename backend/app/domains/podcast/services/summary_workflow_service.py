@@ -18,7 +18,7 @@ from app.domains.podcast.models import (
     TranscriptionTask,
 )
 from app.domains.podcast.repositories import PodcastSummaryRepository
-from app.domains.podcast.services.summary_generation_service import (
+from app.domains.podcast.services.summary_service import (
     PodcastSummaryGenerationService,
 )
 

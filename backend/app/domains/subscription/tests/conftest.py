@@ -54,7 +54,7 @@ def mock_subscription_service(mock_service_factory):
 
 @pytest.fixture
 def mock_schedule_service(mock_service_factory):
-    from app.domains.podcast.api.dependencies import get_podcast_schedule_service
+    from app.domains.podcast.routes.dependencies import get_podcast_schedule_service
 
     yield from mock_service_factory(get_podcast_schedule_service)
 

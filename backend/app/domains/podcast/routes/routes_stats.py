@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter, Depends
 
-from app.domains.podcast.api.dependencies import get_podcast_stats_service
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.dependencies import get_podcast_stats_service
+from app.domains.podcast.routes.response_assemblers import (
     build_podcast_profile_stats_response,
     build_podcast_stats_response,
 )

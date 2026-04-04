@@ -24,7 +24,7 @@ async def test_security_and_service_layers_mocked() -> None:
 
 @pytest.mark.asyncio
 async def test_routes_aggregator_exports_endpoints() -> None:
-    from app.domains.podcast.api.routes import router
+    from app.domains.podcast.routes.routes import router
 
     paths = {route.path for route in router.routes}
     assert any("/episodes" in path for path in paths)

@@ -2230,7 +2230,7 @@ class PodcastTranscriptionService:
                 task_id,
             )
 
-            from app.domains.podcast.services.summary_generation_service import (
+            from app.domains.podcast.services.summary_service import (
                 PodcastSummaryGenerationService,
             )
 

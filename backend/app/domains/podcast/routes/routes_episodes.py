@@ -12,17 +12,17 @@ from app.core.exceptions import (
     SubscriptionNotFoundError,
     ValidationError,
 )
-from app.domains.podcast.api.dependencies import (
+from app.domains.podcast.routes.dependencies import (
     get_podcast_episode_service,
     get_podcast_playback_service,
     get_podcast_search_service,
     get_summary_workflow_service,
 )
-from app.domains.podcast.api.episode_route_common import (
+from app.domains.podcast.routes.episode_route_common import (
     decode_cursor,
     encode_keyset_cursor,
 )
-from app.domains.podcast.api.response_assemblers import (
+from app.domains.podcast.routes.response_assemblers import (
     build_effective_playback_rate_response,
     build_episode_detail_response,
     build_episode_list_response,
@@ -53,7 +53,7 @@ from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.summary_workflow_service import SummaryWorkflowService
-from app.domains.podcast.tasks.summary_generation import (
+from app.domains.podcast.tasks.tasks_summary import (
     generate_episode_summary as generate_episode_summary_task,
 )
 from app.http.errors import bilingual_http_exception
