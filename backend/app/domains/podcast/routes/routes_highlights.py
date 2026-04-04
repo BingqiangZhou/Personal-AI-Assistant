@@ -31,7 +31,9 @@ async def list_highlights(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     episode_id: int | None = Query(None, description="Filter by episode ID"),
-    min_score: float | None = Query(None, ge=0, le=10, description="Minimum overall score"),
+    min_score: float | None = Query(
+        None, ge=0, le=10, description="Minimum overall score"
+    ),
     date_from: date | None = Query(None, description="Filter from date (YYYY-MM-DD)"),
     date_to: date | None = Query(None, description="Filter to date (YYYY-MM-DD)"),
     favorited_only: bool = Query(False, description="Show only favorited"),

@@ -53,4 +53,3 @@ def test_admin_routes_snapshot() -> None:
     }
 
     assert expected_paths.issubset(paths)
-

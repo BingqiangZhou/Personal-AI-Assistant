@@ -7,6 +7,14 @@ import 'package:personal_ai_assistant/core/network/dio_client.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
 import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+<<<<<<< Updated upstream
+=======
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+
+/// Signal provider that increments each time the server config changes.
+/// Feature-layer providers listen to this signal to invalidate their caches.
+final serverConfigChangedProvider = StateProvider<int>((ref) => 0);
+>>>>>>> Stashed changes
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
@@ -86,9 +94,18 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
     // 3. Clear media cache
     await ref.read(appCacheServiceProvider).clearAll();
 
+<<<<<<< Updated upstream
     // 4. Bump the server-config version so that feature-layer listeners
     //    invalidate their own caches and state.
     ref.read(serverConfigVersionProvider.notifier).bump();
+=======
+    // 4. Broadcast server config change signal so feature-layer providers
+    //    can invalidate their caches. This avoids core→feature imports.
+    ref.read(serverConfigChangedProvider.notifier).state++;
+
+    // 5. Clear auth tokens and reset auth state (triggers router redirect)
+    await ref.read(authProvider.notifier).clearLocalAuthState();
+>>>>>>> Stashed changes
   }
 
   /// Update server base URL and apply to DioClient

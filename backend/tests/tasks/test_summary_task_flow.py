@@ -131,7 +131,9 @@ async def test_generate_pending_summaries_resets_claim_for_skippable_validation_
             self.session = _session
 
         async def generate_summary(self, _episode_id):
-            raise ValidationError("Summary generation already in progress for episode 11")
+            raise ValidationError(
+                "Summary generation already in progress for episode 11"
+            )
 
     workflow = SummaryWorkflowService(
         db=AsyncMock(),
@@ -193,7 +195,10 @@ async def test_handler_skips_when_summary_lock_is_held(monkeypatch):
 
     result = await generate_pending_summaries_handler(object())
 
-    assert result == {"status": "skipped_locked", "reason": "summary_task_already_running"}
+    assert result == {
+        "status": "skipped_locked",
+        "reason": "summary_task_already_running",
+    }
 
 
 def test_generate_pending_summaries_retries_on_failure(monkeypatch):

@@ -110,7 +110,7 @@ async def http_request_with_retry(
 
             # Check if status code is retryable
             if response.status in retryable_status_codes and attempt < max_retries:
-                delay = min(initial_delay * (exponential_base ** attempt), max_delay)
+                delay = min(initial_delay * (exponential_base**attempt), max_delay)
                 logger.warning(
                     "HTTP %s %s returned %d, retrying in %.1fs (attempt %d/%d)",
                     method,
@@ -129,7 +129,7 @@ async def http_request_with_retry(
         except (TimeoutError, aiohttp.ClientError) as exc:
             last_exception = exc
             if attempt < max_retries:
-                delay = min(initial_delay * (exponential_base ** attempt), max_delay)
+                delay = min(initial_delay * (exponential_base**attempt), max_delay)
                 logger.warning(
                     "HTTP %s %s failed: %s, retrying in %.1fs (attempt %d/%d)",
                     method,
@@ -151,4 +151,3 @@ async def http_request_with_retry(
 
     # All retries exhausted
     raise last_exception or aiohttp.ClientError("Max retries exceeded")
-

@@ -15,7 +15,9 @@ from app.domains.podcast.tasks.tasks_maintenance import (
 
 
 @pytest.mark.asyncio
-async def test_opml_background_handler_does_not_mutate_existing_episode_status() -> None:
+async def test_opml_background_handler_does_not_mutate_existing_episode_status() -> (
+    None
+):
     existing_episode = PodcastEpisode(
         subscription_id=1,
         title="Existing",
@@ -59,12 +61,15 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
 
     service = PodcastTaskOrchestrationService(session=AsyncMock())
 
-    with patch(
-        "app.domains.podcast.services.task_orchestration_service.PodcastSubscriptionRepository",
-        return_value=mock_repo,
-    ), patch(
-        "app.domains.podcast.services.task_orchestration_service.SecureRSSParser",
-        return_value=mock_parser,
+    with (
+        patch(
+            "app.domains.podcast.services.task_orchestration_service.PodcastSubscriptionRepository",
+            return_value=mock_repo,
+        ),
+        patch(
+            "app.domains.podcast.services.task_orchestration_service.SecureRSSParser",
+            return_value=mock_parser,
+        ),
     ):
         result = await service.process_opml_subscription_episodes(
             subscription_id=1,

@@ -413,7 +413,9 @@ class AIClientService:
                 logger.info(
                     "%s model attempt model=%s provider=%s priority=%s order=%s/%s",
                     operation_name,
-                    model.display_name if hasattr(model, "display_name") else model.name,
+                    model.display_name
+                    if hasattr(model, "display_name")
+                    else model.name,
                     model.provider,
                     model.priority,
                     idx + 1,
@@ -555,7 +557,11 @@ class AIClientService:
             "messages": messages,
             "max_tokens": max_tokens or model.max_tokens or 1000,
             "temperature": temperature
-            or (model.get_temperature_float() if hasattr(model, "get_temperature_float") else None)
+            or (
+                model.get_temperature_float()
+                if hasattr(model, "get_temperature_float")
+                else None
+            )
             or 0.7,
         }
         if hasattr(model, "extra_config") and model.extra_config:

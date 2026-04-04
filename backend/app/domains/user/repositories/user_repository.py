@@ -132,7 +132,9 @@ class UserRepository:
     async def count_active_users(self) -> int:
         """Count users with active status."""
         result = await self.db.scalar(
-            select(func.count()).select_from(User).where(
+            select(func.count())
+            .select_from(User)
+            .where(
                 User.status == UserStatus.ACTIVE,
             ),
         )
@@ -533,7 +535,9 @@ class UserRepository:
         await self.db.commit()
         return session
 
-    async def get_active_session_by_token(self, session_token: str) -> UserSession | None:
+    async def get_active_session_by_token(
+        self, session_token: str
+    ) -> UserSession | None:
         """Get an active session by its session token.
 
         Args:

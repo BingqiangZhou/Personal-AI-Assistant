@@ -363,7 +363,12 @@ async def update_playback_progress(
             status.HTTP_404_NOT_FOUND,
         )
     except Exception as exc:
-        logger.error("Failed to update playback progress for episode %s: %s", episode_id, exc, exc_info=True)
+        logger.error(
+            "Failed to update playback progress for episode %s: %s",
+            episode_id,
+            exc,
+            exc_info=True,
+        )
         raise bilingual_http_exception(
             "Failed to update playback progress",
             "更新播放进度失败",

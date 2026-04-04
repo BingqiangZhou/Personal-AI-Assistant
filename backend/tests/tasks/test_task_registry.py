@@ -34,5 +34,7 @@ def test_task_routes_and_beat_reference_registered_tasks() -> None:
 
     for beat_name, beat_item in beat_schedule.items():
         task_name = beat_item["task"]
-        assert task_name in registered_names, f"{beat_name} references unregistered task"
+        assert task_name in registered_names, (
+            f"{beat_name} references unregistered task"
+        )
         assert "options" in beat_item and "queue" in beat_item["options"]

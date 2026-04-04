@@ -67,9 +67,7 @@ async def test_get_user_subscriptions_aggregates_item_counts_in_same_query():
     sub1.id = 101
     sub2 = MagicMock()
     sub2.id = 202
-    db.execute.return_value = _build_execute_rows_result(
-        [(sub1, 7, 2), (sub2, 0, 2)]
-    )
+    db.execute.return_value = _build_execute_rows_result([(sub1, 7, 2), (sub2, 0, 2)])
 
     repo = SubscriptionRepository(db)
     items, total, item_counts = await repo.get_user_subscriptions(

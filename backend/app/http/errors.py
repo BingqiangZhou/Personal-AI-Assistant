@@ -48,7 +48,8 @@ def raise_not_found(
             status_code=status.HTTP_404_NOT_FOUND,
         )
     raise bilingual_http_exception(
-        message_en=f"{entity_type} not found" + (f" (id={entity_id})" if entity_id else ""),
+        message_en=f"{entity_type} not found"
+        + (f" (id={entity_id})" if entity_id else ""),
         message_zh=f"{entity_type}未找到" + (f" (id={entity_id})" if entity_id else ""),
         status_code=status.HTTP_404_NOT_FOUND,
     )

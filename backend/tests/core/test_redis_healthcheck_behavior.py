@@ -62,7 +62,9 @@ async def test_cache_get_skips_ping_within_health_check_interval(monkeypatch):
     assert client.get_calls == 2
 
 
-@pytest.mark.skip(reason="Mock staticmethod interaction is complex; tested via integration tests")
+@pytest.mark.skip(
+    reason="Mock staticmethod interaction is complex; tested via integration tests"
+)
 @pytest.mark.asyncio
 async def test_get_client_reconnects_when_periodic_ping_fails(monkeypatch):
     """Test that _get_client reconnects when periodic health check ping fails."""
@@ -84,7 +86,9 @@ async def test_get_episode_metadata_reads_hash_with_hgetall():
         return await c.hgetall(key)
 
     # Call with the correct signature: client, episode_id, cache_hgetall_func
-    metadata = await redis.get_episode_metadata(client, 7, cache_hgetall_func=fake_hgetall)
+    metadata = await redis.get_episode_metadata(
+        client, 7, cache_hgetall_func=fake_hgetall
+    )
 
     assert metadata == {"id": "7", "title": "hello"}
     # Verify the key was requested
@@ -115,7 +119,9 @@ async def test_acquire_lock_accepts_custom_value():
     client = _FakeRedisClient()
     redis._get_client = AsyncMock(return_value=client)
 
-    acquired = await redis.acquire_lock("transcription:episode:42", expire=60, value="task:77")
+    acquired = await redis.acquire_lock(
+        "transcription:episode:42", expire=60, value="task:77"
+    )
 
     assert acquired is True
     assert client.set_calls == [

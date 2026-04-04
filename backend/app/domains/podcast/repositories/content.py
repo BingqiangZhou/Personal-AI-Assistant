@@ -397,7 +397,9 @@ class PodcastContentRepositoryMixin:
         results: list[dict[str, Any]] = []
         for episode, subscription_title in rows:
             description = episode.description or ""
-            transcript = episode.transcript.transcript_content if episode.transcript else ""
+            transcript = (
+                episode.transcript.transcript_content if episode.transcript else ""
+            )
             results.append(
                 {
                     "episode_id": episode.id,

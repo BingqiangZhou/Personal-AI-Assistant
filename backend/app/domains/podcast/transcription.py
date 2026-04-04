@@ -461,9 +461,7 @@ class AudioSplitter:
 
                 # FFmpeg -
                 await _run_ffmpeg_sync(
-                    lambda start_time=start_time,
-                    segment_duration=segment_duration,
-                    output_path=output_path: (
+                    lambda start_time=start_time, segment_duration=segment_duration, output_path=output_path: (
                         ffmpeg.input(input_path, ss=start_time, t=segment_duration)
                         .output(
                             output_path,
@@ -2071,11 +2069,13 @@ class PodcastTranscriptionService:
                 transcript_row.transcript_content = full_transcript
                 transcript_row.transcript_word_count = word_count
             else:
-                session.add(PodcastEpisodeTranscript(
-                    episode_id=task.episode_id,
-                    transcript_content=full_transcript,
-                    transcript_word_count=word_count,
-                ))
+                session.add(
+                    PodcastEpisodeTranscript(
+                        episode_id=task.episode_id,
+                        transcript_content=full_transcript,
+                        transcript_word_count=word_count,
+                    )
+                )
 
             episode_update = {
                 "transcript_url": f"file://{transcript_path}",
@@ -2321,9 +2321,7 @@ class PodcastTranscriptionService:
             )
             await session.commit()
 
-    async def _schedule_highlight_extraction(
-        self, session: AsyncSession, task_id: int
-    ):
+    async def _schedule_highlight_extraction(self, session: AsyncSession, task_id: int):
         """Trigger highlight extraction after successful transcription."""
         try:
             stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)

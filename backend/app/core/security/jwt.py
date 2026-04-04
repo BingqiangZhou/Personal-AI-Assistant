@@ -79,6 +79,7 @@ async def create_access_token(
     if sub is not None:
         try:
             from app.core.security.token_blacklist import register_user_token
+
             await register_user_token(int(sub), jti)
         except Exception:
             logger.debug("Token registration skipped (Redis unavailable)")
@@ -118,6 +119,7 @@ async def create_refresh_token(
     if sub is not None:
         try:
             from app.core.security.token_blacklist import register_user_token
+
             await register_user_token(int(sub), jti)
         except Exception:
             logger.debug("Token registration skipped (Redis unavailable)")
@@ -158,6 +160,7 @@ async def verify_token(token: str, token_type: str = "access") -> dict:
         if jti:
             try:
                 from app.core.security.token_blacklist import is_token_revoked
+
                 if await is_token_revoked(jti):
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -208,7 +211,10 @@ async def verify_token_optional(
 
 
 async def get_token_from_request(
-    token: str | None = Query(None, description="Auth token (development only, deprecated - use Authorization header)"),
+    token: str | None = Query(
+        None,
+        description="Auth token (development only, deprecated - use Authorization header)",
+    ),
     authorization: str | None = Header(
         None, description="Bearer token in Authorization header"
     ),
@@ -229,7 +235,9 @@ async def get_token_from_request(
     elif token is not None:
         # Query parameter provided (no Authorization header)
         if settings.ENVIRONMENT != "development":
-            logger.warning("Query parameter token rejected in non-development environment")
+            logger.warning(
+                "Query parameter token rejected in non-development environment"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Query parameter authentication not allowed in production",

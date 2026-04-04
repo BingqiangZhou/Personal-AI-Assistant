@@ -35,7 +35,9 @@ async def _generate_daily_reports_handler(
 @celery_app.task(bind=True, max_retries=3)
 def generate_daily_podcast_reports(self, report_date: str | None = None):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.tasks_daily_report.generate_daily_podcast_reports"
+    task_name = (
+        "app.domains.podcast.tasks.tasks_daily_report.generate_daily_podcast_reports"
+    )
     queue_name = "default"
     try:
         target_date = date.fromisoformat(report_date) if report_date else None

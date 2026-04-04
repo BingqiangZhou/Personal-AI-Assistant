@@ -14,4 +14,3 @@ def test_metadata_fix_smoke() -> None:
     print("[PASS] Service imports successfully")
     print("[PASS] Security components work")
     print("\n[FIX SUCCESS] metadata reserved attribute issue resolved")
-

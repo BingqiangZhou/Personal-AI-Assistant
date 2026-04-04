@@ -7,8 +7,12 @@ from app.main import app
 
 
 def test_readiness_endpoint_returns_healthy(monkeypatch):
-    fake_redis = type("FakeRedis", (), {"check_health": AsyncMock(return_value={"status": "healthy"})})()
-    monkeypatch.setattr(http_module, "check_db_readiness", AsyncMock(return_value={"status": "healthy"}))
+    fake_redis = type(
+        "FakeRedis", (), {"check_health": AsyncMock(return_value={"status": "healthy"})}
+    )()
+    monkeypatch.setattr(
+        http_module, "check_db_readiness", AsyncMock(return_value={"status": "healthy"})
+    )
     monkeypatch.setattr(http_module, "get_shared_redis", lambda: fake_redis)
 
     client = TestClient(app)
@@ -26,9 +30,15 @@ def test_readiness_endpoint_returns_503_when_dependency_unhealthy(monkeypatch):
     fake_redis = type(
         "FakeRedis",
         (),
-        {"check_health": AsyncMock(return_value={"status": "unhealthy", "error": "timeout"})},
+        {
+            "check_health": AsyncMock(
+                return_value={"status": "unhealthy", "error": "timeout"}
+            )
+        },
     )()
-    monkeypatch.setattr(http_module, "check_db_readiness", AsyncMock(return_value={"status": "healthy"}))
+    monkeypatch.setattr(
+        http_module, "check_db_readiness", AsyncMock(return_value={"status": "healthy"})
+    )
     monkeypatch.setattr(http_module, "get_shared_redis", lambda: fake_redis)
 
     client = TestClient(app)

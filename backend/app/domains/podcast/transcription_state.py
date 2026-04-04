@@ -435,7 +435,9 @@ class TranscriptionStateManager:
             "updated_at": datetime.now(UTC).isoformat(),
         }
 
-        await self.redis.cache_set(key, orjson.dumps(progress_data).decode('utf-8'), ttl=ttl_seconds)
+        await self.redis.cache_set(
+            key, orjson.dumps(progress_data).decode("utf-8"), ttl=ttl_seconds
+        )
         if status in {"pending", "in_progress"}:
             await self.redis.sorted_set_add(
                 self._active_task_index_key(),
@@ -521,7 +523,9 @@ class TranscriptionStateManager:
             "updated_at": datetime.now(UTC).isoformat(),
         }
 
-        await self.redis.cache_set(key, orjson.dumps(status_data).decode('utf-8'), ttl=ttl_seconds)
+        await self.redis.cache_set(
+            key, orjson.dumps(status_data).decode("utf-8"), ttl=ttl_seconds
+        )
 
     async def get_task_status(self, task_id: int) -> dict[str, Any] | None:
         """Get lightweight task status

@@ -190,7 +190,9 @@ class TestTimezoneFormatter:
 
     # -- Full format output -------------------------------------------------
 
-    def test_full_format_contains_level_and_message(self, formatter_shanghai: TimezoneFormatter):
+    def test_full_format_contains_level_and_message(
+        self, formatter_shanghai: TimezoneFormatter
+    ):
         """The full formatted log line contains level name and message."""
         fmt_str = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
         formatter = TimezoneFormatter(fmt=fmt_str, timezone_str="UTC")

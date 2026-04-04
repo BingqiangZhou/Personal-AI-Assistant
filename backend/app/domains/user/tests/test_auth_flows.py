@@ -36,7 +36,9 @@ from app.domains.user.services.auth_service import AuthenticationService
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 _engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
 _SessionFactory = async_sessionmaker(
-    _engine, class_=AsyncSession, expire_on_commit=False,
+    _engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 # Counter for generating unique mock JWT tokens
@@ -83,7 +85,9 @@ def mock_jwt():
 
     mock_dt = MagicMock()
     mock_dt.now.return_value = datetime.utcnow()
-    mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw) if a else datetime.utcnow()
+    mock_dt.side_effect = lambda *a, **kw: (
+        datetime(*a, **kw) if a else datetime.utcnow()
+    )
     # Preserve real datetime attributes used in auth_service
     mock_dt.timedelta = timedelta
     mock_dt.UTC = UTC
@@ -162,7 +166,9 @@ class TestRegistration:
     ):
         await _create_user(db, username="taken")
         with pytest.raises(ConflictError, match="Username already"):
-            await auth_service.register_user("other@example.com", "SecurePass123!", username="taken")
+            await auth_service.register_user(
+                "other@example.com", "SecurePass123!", username="taken"
+            )
 
     async def test_register_weak_password_raises_bad_request(
         self,
@@ -193,7 +199,9 @@ class TestAuthentication:
         db: AsyncSession,
     ):
         await _create_user(db)
-        user = await auth_service.authenticate_user("user@example.com", "SecurePass123!")
+        user = await auth_service.authenticate_user(
+            "user@example.com", "SecurePass123!"
+        )
         assert user is not None
         assert user.email == "user@example.com"
 
@@ -230,7 +238,9 @@ class TestAuthentication:
         user = await _create_user(db)
         user.status = "inactive"
         await db.commit()
-        result = await auth_service.authenticate_user("user@example.com", "SecurePass123!")
+        result = await auth_service.authenticate_user(
+            "user@example.com", "SecurePass123!"
+        )
         assert result is None
 
     async def test_authenticate_updates_last_login(
@@ -239,7 +249,9 @@ class TestAuthentication:
         db: AsyncSession,
     ):
         await _create_user(db)
-        user = await auth_service.authenticate_user("user@example.com", "SecurePass123!")
+        user = await auth_service.authenticate_user(
+            "user@example.com", "SecurePass123!"
+        )
         assert user is not None
         assert user.last_login_at is not None
 
@@ -259,7 +271,9 @@ class TestTokenRefresh:
         with patch("app.domains.user.services.auth_service.datetime") as mock_dt:
             mock_dt.now.return_value = datetime.utcnow()
             mock_dt.side_effect = lambda *a, **kw: datetime.utcnow()
-            result = await auth_service.refresh_access_token(session_data["refresh_token"])
+            result = await auth_service.refresh_access_token(
+                session_data["refresh_token"]
+            )
         assert "access_token" in result
         assert "refresh_token" in result
 
@@ -276,7 +290,9 @@ class TestTokenRefresh:
         self,
         auth_service: AuthenticationService,
     ):
-        with patch("app.domains.user.services.auth_service.verify_token") as mock_verify:
+        with patch(
+            "app.domains.user.services.auth_service.verify_token"
+        ) as mock_verify:
             mock_verify.side_effect = Exception("Token expired")
             with pytest.raises(UnauthorizedError):
                 await auth_service.refresh_access_token("expired")
@@ -322,7 +338,9 @@ class TestPasswordReset:
     ):
         await _create_user(db)
         # Create reset token via service
-        reset_result = await auth_service.create_password_reset_token("user@example.com")
+        reset_result = await auth_service.create_password_reset_token(
+            "user@example.com"
+        )
         token = reset_result["token"]
 
         result = await auth_service.reset_password(token, "NewSecure123!")
@@ -330,7 +348,8 @@ class TestPasswordReset:
 
         # Verify password changed
         updated_user = await auth_service.authenticate_user(
-            "user@example.com", "NewSecure123!",
+            "user@example.com",
+            "NewSecure123!",
         )
         assert updated_user is not None
 
@@ -365,7 +384,7 @@ class TestPasswordReset:
             email="user@example.com",
             token=token,
             expires_at=datetime.utcnow() + timedelta(hours=1),
-            is_used=True, # already used
+            is_used=True,  # already used
         )
         db.add(reset)
         await db.commit()
@@ -389,7 +408,9 @@ class TestPasswordReset:
         session_data = await auth_service.create_user_session(user)
 
         # Create reset token via service
-        reset_result = await auth_service.create_password_reset_token("user@example.com")
+        reset_result = await auth_service.create_password_reset_token(
+            "user@example.com"
+        )
 
         await auth_service.reset_password(reset_result["token"], "NewSecure123!")
 
@@ -495,7 +516,9 @@ class TestSessionManagement:
         with patch("app.domains.user.services.auth_service.datetime") as mock_dt:
             mock_dt.now.return_value = datetime.utcnow()
             mock_dt.side_effect = lambda *a, **kw: datetime.utcnow()
-            result = await auth_service.refresh_access_token(sessions[-1]["refresh_token"])
+            result = await auth_service.refresh_access_token(
+                sessions[-1]["refresh_token"]
+            )
         assert "access_token" in result
 
     async def test_remember_me_extends_refresh_expiry(
@@ -525,6 +548,7 @@ class TestSessionManagement:
         await auth_service.create_user_session(user)
         # Manually expire all sessions
         from sqlalchemy import update
+
         await db.execute(
             update(UserSession)
             .where(UserSession.user_id == user.id)

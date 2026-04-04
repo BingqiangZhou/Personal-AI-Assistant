@@ -117,7 +117,9 @@ class AdminSetupAuthService:
         )
         return response
 
-    def build_session_redirect(self, user_id: int, *, url: str, client_ip: str) -> RedirectResponse:
+    def build_session_redirect(
+        self, user_id: int, *, url: str, client_ip: str
+    ) -> RedirectResponse:
         response = RedirectResponse(url=url, status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie(
             key="admin_session",

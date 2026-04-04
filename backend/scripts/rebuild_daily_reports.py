@@ -56,7 +56,9 @@ def _parse_args() -> argparse.Namespace:
 
 async def _collect_user_report_dates() -> dict[int, list[date]]:
     async with async_session_factory() as session:
-        stmt = select(PodcastDailyReport.user_id, PodcastDailyReport.report_date).order_by(
+        stmt = select(
+            PodcastDailyReport.user_id, PodcastDailyReport.report_date
+        ).order_by(
             PodcastDailyReport.user_id.asc(),
             PodcastDailyReport.report_date.asc(),
         )
@@ -71,7 +73,9 @@ async def _collect_user_report_dates() -> dict[int, list[date]]:
 async def _clear_user_reports(user_id: int) -> None:
     async with async_session_factory() as session:
         await session.execute(
-            delete(PodcastDailyReportItem).where(PodcastDailyReportItem.user_id == user_id)
+            delete(PodcastDailyReportItem).where(
+                PodcastDailyReportItem.user_id == user_id
+            )
         )
         await session.execute(
             delete(PodcastDailyReport).where(PodcastDailyReport.user_id == user_id)
@@ -131,7 +135,9 @@ async def _run() -> int:
                 RebuildFailure(user_id=user_id, phase="clear", error=str(exc))
             )
 
-    blocked_users = {failure.user_id for failure in failures if failure.phase == "clear"}
+    blocked_users = {
+        failure.user_id for failure in failures if failure.phase == "clear"
+    }
     rebuild_user_ids = [user_id for user_id in user_ids if user_id not in blocked_users]
 
     print("[Phase B] Rebuilding reports per user/date...")

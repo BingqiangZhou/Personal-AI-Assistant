@@ -134,13 +134,14 @@ class TestNoInternalErrorLeak:
 
         dep = AdminAuthRequired(require_2fa=True)
 
-        with patch(
-            "app.admin.auth._get_serializer",
-            side_effect=RuntimeError("database connection pool exhausted"),
-        ), pytest.raises(Exception) as exc_info:
-            await dep.__call__(
-                request=mock_request, admin_session=token, db=mock_db
-            )
+        with (
+            patch(
+                "app.admin.auth._get_serializer",
+                side_effect=RuntimeError("database connection pool exhausted"),
+            ),
+            pytest.raises(Exception) as exc_info,
+        ):
+            await dep.__call__(request=mock_request, admin_session=token, db=mock_db)
 
         assert exc_info.value.status_code == 500
         # Must NOT contain the internal error message

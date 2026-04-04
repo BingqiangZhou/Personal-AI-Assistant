@@ -45,8 +45,14 @@ class TestIsRetryableHttpStatus:
 
 class TestLooksLikeHtmlErrorPage:
     def test_html_markers(self):
-        assert looks_like_html_error_page("<!doctype html><html><body>Error</body></html>") is True
-        assert looks_like_html_error_page("<html><head></head><body>5xx</body></html>") is True
+        assert (
+            looks_like_html_error_page("<!doctype html><html><body>Error</body></html>")
+            is True
+        )
+        assert (
+            looks_like_html_error_page("<html><head></head><body>5xx</body></html>")
+            is True
+        )
 
     def test_cloudflare_markers(self):
         assert looks_like_html_error_page("cloudflare error 524") is True
@@ -145,7 +151,10 @@ class TestCallAiApi:
         )
         mock_session = _make_mock_session(mock_response)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             result = await call_ai_api(model_config, "test-key", "Say hello")
         assert result == "Hello world"
 
@@ -154,7 +163,10 @@ class TestCallAiApi:
         mock_response = _FakeResponse(status=500, text="Server Error")
         mock_session = _make_mock_session(mock_response)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with pytest.raises(RetryableAIModelError):
                 await call_ai_api(model_config, "test-key", "Say hello")
 
@@ -163,7 +175,10 @@ class TestCallAiApi:
         mock_response = _FakeResponse(status=401, text="Unauthorized")
         mock_session = _make_mock_session(mock_response)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with pytest.raises(Exception, match="401"):
                 await call_ai_api(model_config, "test-key", "Say hello")
 
@@ -176,7 +191,10 @@ class TestCallAiApi:
         )
         mock_session = _make_mock_session(mock_response)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with pytest.raises(Exception, match="HTML error page"):
                 await call_ai_api(model_config, "test-key", "Say hello")
 
@@ -192,7 +210,10 @@ class TestCallAiApi:
 
         with patch("app.core.ai_client.settings") as mock_settings:
             mock_settings.AI_CLIENT_MAX_PROMPT_LENGTH = 50
-            with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+            with patch(
+                "app.core.ai_client.get_shared_http_session",
+                AsyncMock(return_value=mock_session),
+            ):
                 result = await call_ai_api(model_config, "test-key", long_prompt)
         assert result == "ok"
 
@@ -211,9 +232,16 @@ class TestCallAiApiWithRetry:
         response_parser = AsyncMock(return_value="parsed")
         ai_model_repo = AsyncMock()
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             parsed, time_taken, tokens = await call_ai_api_with_retry(
-                model_config, "test-key", "prompt", response_parser, ai_model_repo,
+                model_config,
+                "test-key",
+                "prompt",
+                response_parser,
+                ai_model_repo,
             )
         assert parsed == "parsed"
 
@@ -227,21 +255,32 @@ class TestCallAiApiWithRetry:
 
         # Use side_effect list — each call returns a _FakeResponse (sync, no coroutine)
         mock_session = MagicMock()
-        mock_session.post = MagicMock(side_effect=[
-            error_response, error_response, success_response,
-        ])
+        mock_session.post = MagicMock(
+            side_effect=[
+                error_response,
+                error_response,
+                success_response,
+            ]
+        )
 
         response_parser = AsyncMock(return_value="parsed")
         ai_model_repo = AsyncMock()
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with patch("app.core.ai_client.settings") as mock_settings:
                 mock_settings.AI_CLIENT_MAX_RETRIES = 3
                 mock_settings.AI_CLIENT_BASE_DELAY = 0
                 mock_settings.AI_CLIENT_MAX_PROMPT_LENGTH = 1000000
                 with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
                     parsed, _, _ = await call_ai_api_with_retry(
-                        model_config, "test-key", "prompt", response_parser, ai_model_repo,
+                        model_config,
+                        "test-key",
+                        "prompt",
+                        response_parser,
+                        ai_model_repo,
                     )
         assert parsed == "parsed"
 
@@ -252,10 +291,17 @@ class TestCallAiApiWithRetry:
         response_parser = AsyncMock(return_value="parsed")
         ai_model_repo = AsyncMock()
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with pytest.raises(Exception, match="401"):
                 await call_ai_api_with_retry(
-                    model_config, "test-key", "prompt", response_parser, ai_model_repo,
+                    model_config,
+                    "test-key",
+                    "prompt",
+                    response_parser,
+                    ai_model_repo,
                 )
 
 
@@ -275,7 +321,10 @@ class TestAIClientService:
         )
         mock_session = _make_mock_session(mock_resp)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             content, returned_model = await service.call_with_fallback(
                 messages=[{"role": "user", "content": "hi"}],
                 model_type=ModelType.TEXT_GENERATION,
@@ -295,7 +344,10 @@ class TestAIClientService:
         )
         mock_session = _make_mock_session(mock_resp)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             content, returned_model = await service.call_with_fallback(
                 messages=[{"role": "user", "content": "hi"}],
                 model_name="gpt-4o-mini",
@@ -321,7 +373,10 @@ class TestAIClientService:
         )
         mock_session = _make_mock_session(mock_resp)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             content, returned_model = await service.call_with_fallback(
                 messages=[{"role": "user", "content": "hi"}],
                 model_type=ModelType.TEXT_GENERATION,
@@ -340,7 +395,10 @@ class TestAIClientService:
         mock_resp = _FakeResponse(status=500, text="Error")
         mock_session = _make_mock_session(mock_resp)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
                 with patch("app.core.ai_client.settings") as mock_settings:
                     mock_settings.AI_CLIENT_MAX_RETRIES = 1
@@ -361,7 +419,10 @@ class TestAIClientService:
         mock_session = _make_mock_session(mock_resp)
         fallback = AsyncMock(return_value="fallback response")
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             with patch("app.core.ai_client.asyncio.sleep", AsyncMock()):
                 with patch("app.core.ai_client.settings") as mock_settings:
                     mock_settings.AI_CLIENT_MAX_RETRIES = 1
@@ -388,7 +449,10 @@ class TestAIClientService:
 
         custom_post = AsyncMock(side_effect=lambda x: x.upper())
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             content, _ = await service.call_with_fallback(
                 messages=[{"role": "user", "content": "hi"}],
                 model_type=ModelType.TEXT_GENERATION,
@@ -408,7 +472,10 @@ class TestAIClientService:
         )
         mock_session = _make_mock_session(mock_resp)
 
-        with patch("app.core.ai_client.get_shared_http_session", AsyncMock(return_value=mock_session)):
+        with patch(
+            "app.core.ai_client.get_shared_http_session",
+            AsyncMock(return_value=mock_session),
+        ):
             content, returned_model = await service.call_with_fallback(
                 messages=[{"role": "user", "content": "hi"}],
                 model_id=42,

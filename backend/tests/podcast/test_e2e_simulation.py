@@ -13,7 +13,9 @@ async def test_security_and_service_layers_mocked() -> None:
     validator = PodcastSecurityValidator()
     sanitizer = ContentSanitizer("standard")
 
-    malicious = "<!DOCTYPE data [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><data>&xxe;</data>"
+    malicious = (
+        "<!DOCTYPE data [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><data>&xxe;</data>"
+    )
     is_valid, _ = validator.validate_rss_xml(malicious)
     assert is_valid is False
 
@@ -40,9 +42,14 @@ async def test_subscription_service_mocked_add_subscription() -> None:
         PodcastSubscriptionService,
     )
 
-    with patch("app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository") as mock_repo_cls, patch(
-        "app.domains.podcast.services.subscription_service.SecureRSSParser"
-    ) as mock_parser_cls:
+    with (
+        patch(
+            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository"
+        ) as mock_repo_cls,
+        patch(
+            "app.domains.podcast.services.subscription_service.SecureRSSParser"
+        ) as mock_parser_cls,
+    ):
         repo = AsyncMock()
         repo.get_user_subscriptions.return_value = []
         sub = MagicMock()
@@ -68,6 +75,8 @@ async def test_subscription_service_mocked_add_subscription() -> None:
         mock_parser_cls.return_value = parser
 
         service = PodcastSubscriptionService(AsyncMock(spec=AsyncSession), user_id=1)
-        subscription, episodes = await service.add_subscription("https://example.com/feed.xml")
+        subscription, episodes = await service.add_subscription(
+            "https://example.com/feed.xml"
+        )
         assert subscription.id == 1
         assert episodes == []

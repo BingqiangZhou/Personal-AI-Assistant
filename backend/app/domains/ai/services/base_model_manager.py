@@ -71,11 +71,7 @@ class BaseModelManager:
         """
         if model_name:
             model = await self.ai_model_repo.get_by_name(model_name)
-            if (
-                not model
-                or not model.is_active
-                or model.model_type != self.model_type
-            ):
+            if not model or not model.is_active or model.model_type != self.model_type:
                 raise ValidationError(
                     f"{self.operation_name} model '{model_name}' not found or not active",
                 )
@@ -85,7 +81,9 @@ class BaseModelManager:
             self.model_type,
         )
         if not active_models:
-            msg = error_message or f"No active {self.operation_name.lower()} model found"
+            msg = (
+                error_message or f"No active {self.operation_name.lower()} model found"
+            )
             raise ValidationError(msg)
         return active_models[0]
 

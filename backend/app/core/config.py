@@ -149,10 +149,20 @@ class Settings(BaseSettings):
     AI_CLIENT_BASE_DELAY: int = 2
     AI_CLIENT_MAX_PROMPT_LENGTH: int = 1000000
 
-    _WEAK_PASSWORDS: frozenset[str] = frozenset({
-        "mysecurepass2024", "password", "admin", "root", "postgres",
-        "123456", "changeme", "default", "secret", "test",
-    })
+    _WEAK_PASSWORDS: frozenset[str] = frozenset(
+        {
+            "mysecurepass2024",
+            "password",
+            "admin",
+            "root",
+            "postgres",
+            "123456",
+            "changeme",
+            "default",
+            "secret",
+            "test",
+        }
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

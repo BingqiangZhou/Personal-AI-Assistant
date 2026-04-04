@@ -15,7 +15,9 @@ from app.domains.podcast.transcription import (
 
 @pytest.mark.asyncio
 async def test_transcribe_chunks_limits_in_flight_work() -> None:
-    transcriber = SiliconFlowTranscriber("test-key", "https://example.com", max_concurrent=2)
+    transcriber = SiliconFlowTranscriber(
+        "test-key", "https://example.com", max_concurrent=2
+    )
     active = 0
     peak_active = 0
 

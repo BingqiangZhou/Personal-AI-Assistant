@@ -41,7 +41,11 @@ def _mock_db() -> SimpleNamespace:
         commit=AsyncMock(),
         delete=AsyncMock(),
         expire=Mock(),
-        execute=AsyncMock(return_value=SimpleNamespace(unique=lambda: SimpleNamespace(scalar_one=lambda: None))),
+        execute=AsyncMock(
+            return_value=SimpleNamespace(
+                unique=lambda: SimpleNamespace(scalar_one=lambda: None)
+            )
+        ),
     )
 
 

@@ -229,7 +229,9 @@ async def forgot_password(
 
     return PasswordResetResponse(
         message=result["message"],
-        token=result.get("token"),  # Note: token is only returned in development environment for testing
+        token=result.get(
+            "token"
+        ),  # Note: token is only returned in development environment for testing
         expires_at=result.get("expires_at"),
     )
 
@@ -249,5 +251,3 @@ async def reset_password(
     return PasswordResetResponse(
         message=result["message"],
     )
-
-

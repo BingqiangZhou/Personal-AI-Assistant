@@ -19,6 +19,7 @@ from alembic import context
 # Add the app directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+
 # Mock Header class for security functions
 class Header:
     def __init__(self, default=None, **kwargs):

@@ -39,7 +39,9 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse)
 async def list_subscriptions(
     pagination: PaginationParams = Depends(),
-    status_query: str | None = Query(None, alias="status", description="Filter by status"),
+    status_query: str | None = Query(
+        None, alias="status", description="Filter by status"
+    ),
     source_type: str | None = Query(None, description="Filter by source type"),
     service: SubscriptionService = Depends(get_subscription_service),
 ):
@@ -177,7 +179,9 @@ async def get_subscription_items(
         bookmarked_only=bookmarked_only,
     )
     return PaginatedResponse.create(
-        items=[SubscriptionItemResponse(**assemble_item_payload(item)) for item in items],
+        items=[
+            SubscriptionItemResponse(**assemble_item_payload(item)) for item in items
+        ],
         total=total,
         page=pagination.page,
         size=pagination.size,
@@ -199,7 +203,9 @@ async def get_all_items(
         bookmarked_only=bookmarked_only,
     )
     return PaginatedResponse.create(
-        items=[SubscriptionItemResponse(**assemble_item_payload(item)) for item in items],
+        items=[
+            SubscriptionItemResponse(**assemble_item_payload(item)) for item in items
+        ],
         total=total,
         page=pagination.page,
         size=pagination.size,

@@ -144,7 +144,10 @@ class CacheWarmupService:
             # Get user's active subscriptions
             result = await self.db.execute(
                 select(Subscription.id, Subscription.title, Subscription.source_url)
-                .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+                .join(
+                    UserSubscription,
+                    UserSubscription.subscription_id == Subscription.id,
+                )
                 .where(
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived.is_(False),
@@ -189,7 +192,10 @@ class CacheWarmupService:
                     Subscription.source_url,
                     func.count(UserSubscription.user_id).label("subscriber_count"),
                 )
-                .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+                .join(
+                    UserSubscription,
+                    UserSubscription.subscription_id == Subscription.id,
+                )
                 .where(
                     Subscription.status == SubscriptionStatus.ACTIVE,
                     UserSubscription.is_archived.is_(False),

@@ -125,13 +125,15 @@ async def application_lifespan(app: FastAPI):
     warmup_task = asyncio.create_task(_run_cache_warmup_async(session_factory))
     # Add error callback to prevent silent failures
     warmup_task.add_done_callback(
-        lambda task: logger.error(
-            "Cache warmup background task failed: %s",
-            task.exception(),
-            exc_info=task.exception(),
+        lambda task: (
+            logger.error(
+                "Cache warmup background task failed: %s",
+                task.exception(),
+                exc_info=task.exception(),
+            )
+            if task.exception()
+            else None
         )
-        if task.exception()
-        else None
     )
 
     startup_lock_token: str | None = None

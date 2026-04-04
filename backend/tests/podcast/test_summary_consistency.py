@@ -137,7 +137,9 @@ async def test_generate_summary_reuses_existing_when_lock_contended() -> None:
             return False
 
         async def release_lock(self, *_args, **_kwargs):
-            raise AssertionError("release_lock should not be called when lock not acquired")
+            raise AssertionError(
+                "release_lock should not be called when lock not acquired"
+            )
 
     service.redis = _FakeRedis()
 

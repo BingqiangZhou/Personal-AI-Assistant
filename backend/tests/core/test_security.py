@@ -52,14 +52,17 @@ def sample_payload() -> dict:
 @pytest.fixture
 def mock_blacklist():
     """Mock the token blacklist so token operations work without Redis."""
-    with patch(
-        "app.core.security.token_blacklist.register_user_token",
-        new_callable=AsyncMock,
-    ) as mock_register, patch(
-        "app.core.security.token_blacklist.is_token_revoked",
-        new_callable=AsyncMock,
-        return_value=False,
-    ) as mock_is_revoked:
+    with (
+        patch(
+            "app.core.security.token_blacklist.register_user_token",
+            new_callable=AsyncMock,
+        ) as mock_register,
+        patch(
+            "app.core.security.token_blacklist.is_token_revoked",
+            new_callable=AsyncMock,
+            return_value=False,
+        ) as mock_is_revoked,
+    ):
         yield {"register": mock_register, "is_revoked": mock_is_revoked}
 
 
@@ -84,7 +87,9 @@ class TestTokenCreationRoundTrip:
     """Verify that created tokens can be decoded and contain expected claims."""
 
     @pytest.mark.asyncio
-    async def test_access_token_round_trip(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_access_token_round_trip(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         token = await create_access_token(sample_payload)
         payload = await verify_token(token, token_type="access")
 
@@ -97,7 +102,9 @@ class TestTokenCreationRoundTrip:
         assert "type" not in payload
 
     @pytest.mark.asyncio
-    async def test_refresh_token_round_trip(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_refresh_token_round_trip(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         token = await create_refresh_token(sample_payload)
         payload = await verify_token(token, token_type="refresh")
 
@@ -106,7 +113,9 @@ class TestTokenCreationRoundTrip:
         assert "jti" in payload
 
     @pytest.mark.asyncio
-    async def test_access_token_with_custom_expiry(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_access_token_with_custom_expiry(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         delta = timedelta(minutes=5)
         token = await create_access_token(sample_payload, expires_delta=delta)
         payload = await verify_token(token, token_type="access")
@@ -116,7 +125,9 @@ class TestTokenCreationRoundTrip:
         assert 200 < remaining_seconds < 400  # generous window
 
     @pytest.mark.asyncio
-    async def test_refresh_token_with_custom_expiry(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_refresh_token_with_custom_expiry(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         delta = timedelta(days=1)
         token = await create_refresh_token(sample_payload, expires_delta=delta)
         payload = await verify_token(token, token_type="refresh")
@@ -126,7 +137,9 @@ class TestTokenCreationRoundTrip:
         assert 80000 < remaining_seconds < 90000
 
     @pytest.mark.asyncio
-    async def test_access_token_accepted_for_any_type(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_access_token_accepted_for_any_type(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         """Access tokens don't have a 'type' field, so type check is skipped."""
         token = await create_access_token(sample_payload)
         # Access tokens lack the 'type' claim, so verify_token skips type enforcement
@@ -134,7 +147,9 @@ class TestTokenCreationRoundTrip:
         assert payload["sub"] == sample_payload["sub"]
 
     @pytest.mark.asyncio
-    async def test_refresh_token_rejected_as_access(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_refresh_token_rejected_as_access(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         """Refresh token used as access token should be rejected."""
         token = await create_refresh_token(sample_payload)
         with pytest.raises(HTTPException) as exc_info:
@@ -151,14 +166,20 @@ class TestExpiredTokenRejection:
     """Tokens past their expiry must be rejected."""
 
     @pytest.mark.asyncio
-    async def test_expired_access_token_rejected(self, sample_payload: dict, mock_blacklist) -> None:
-        token = await create_access_token(sample_payload, expires_delta=timedelta(seconds=-1))
+    async def test_expired_access_token_rejected(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
+        token = await create_access_token(
+            sample_payload, expires_delta=timedelta(seconds=-1)
+        )
         with pytest.raises(HTTPException) as exc_info:
             await verify_token(token, token_type="access")
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_expired_refresh_token_rejected(self, sample_payload: dict, mock_blacklist) -> None:
+    async def test_expired_refresh_token_rejected(
+        self, sample_payload: dict, mock_blacklist
+    ) -> None:
         token = await create_refresh_token(
             sample_payload, expires_delta=timedelta(seconds=-1)
         )
@@ -288,9 +309,7 @@ class TestGetTokenFromRequest:
         self, access_token: str, mock_blacklist
     ) -> None:
         """Authorization header without 'Bearer ' prefix should still work."""
-        payload = await get_token_from_request(
-            token=None, authorization=access_token
-        )
+        payload = await get_token_from_request(token=None, authorization=access_token)
         assert payload["sub"] == "42"
 
     @pytest.mark.asyncio
@@ -307,9 +326,7 @@ class TestGetTokenFromRequest:
         """Query param token must be rejected when not in development."""
         with patch.object(settings, "ENVIRONMENT", "production"):
             with pytest.raises(HTTPException) as exc_info:
-                await get_token_from_request(
-                    token=access_token, authorization=None
-                )
+                await get_token_from_request(token=access_token, authorization=None)
 
         assert exc_info.value.status_code == 401
         assert "production" in exc_info.value.detail.lower()
@@ -664,10 +681,13 @@ class TestRsaKeyMigration:
             private_key, public_key = get_or_generate_rsa_keys()
 
         # The key should still be usable
-        assert private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        ) == original_pub_pem
+        assert (
+            private_key.public_key().public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            == original_pub_pem
+        )
 
         # The file on disk should now be encrypted (not loadable without password)
         new_pem_data = key_file.read_bytes()

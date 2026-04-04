@@ -75,11 +75,15 @@ async def process_pending_transcriptions_handler(session) -> dict:
 @celery_app.task(bind=True, max_retries=3)
 def process_audio_transcription(self, task_id: int, config_db_id: int | None = None):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.tasks_transcription.process_audio_transcription"
+    task_name = (
+        "app.domains.podcast.tasks.tasks_transcription.process_audio_transcription"
+    )
     queue_name = "transcription"
     try:
         result = run_async(
-            _process_audio_transcription_async(task_id=task_id, config_db_id=config_db_id),
+            _process_audio_transcription_async(
+                task_id=task_id, config_db_id=config_db_id
+            ),
         )
         log_task_run(
             task_name=task_name,
@@ -117,13 +121,13 @@ async def _process_audio_transcription_async(task_id: int, config_db_id: int | N
 @celery_app.task(bind=True, max_retries=3)
 def process_podcast_episode_with_transcription(self, episode_id: int, user_id: int):
     started_at = datetime.now(UTC)
-    task_name = (
-        "app.domains.podcast.tasks.tasks_transcription.process_podcast_episode_with_transcription"
-    )
+    task_name = "app.domains.podcast.tasks.tasks_transcription.process_podcast_episode_with_transcription"
     queue_name = "transcription"
     try:
         result = run_async(
-            _process_episode_with_transcription_async(episode_id=episode_id, user_id=user_id),
+            _process_episode_with_transcription_async(
+                episode_id=episode_id, user_id=user_id
+            ),
         )
         log_task_run(
             task_name=task_name,
@@ -161,7 +165,9 @@ async def _process_episode_with_transcription_async(episode_id: int, user_id: in
 @celery_app.task(bind=True, max_retries=3)
 def process_pending_transcriptions(self):
     started_at = datetime.now(UTC)
-    task_name = "app.domains.podcast.tasks.tasks_transcription.process_pending_transcriptions"
+    task_name = (
+        "app.domains.podcast.tasks.tasks_transcription.process_pending_transcriptions"
+    )
     queue_name = "transcription"
     metadata = None
     try:

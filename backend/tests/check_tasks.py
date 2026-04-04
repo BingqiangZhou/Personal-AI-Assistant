@@ -27,6 +27,7 @@ def main():
         print("\nAll expected tasks are registered!")
         return True
 
+
 if __name__ == "__main__":
     success = main()
     exit(0 if success else 1)

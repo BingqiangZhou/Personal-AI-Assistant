@@ -23,6 +23,7 @@ from app.main import app
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_user() -> User:
     """Create a mock User object for dependency override."""
     user = User(

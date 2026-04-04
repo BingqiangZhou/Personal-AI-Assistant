@@ -1,6 +1,5 @@
 """Tests for exception handlers defined in app.core.exceptions."""
 
-
 import pytest
 from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
@@ -487,7 +486,9 @@ async def test_request_validation_error_missing_fields(app_validation_error: Fas
 async def test_request_validation_error_wrong_type(app_validation_error: FastAPI):
     transport = ASGITransport(app=app_validation_error)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/validate", json={"name": "Alice", "age": "not-a-number"})
+        response = await client.post(
+            "/validate", json={"name": "Alice", "age": "not-a-number"}
+        )
     assert response.status_code == 422
     data = response.json()
     assert data["detail"] == "Validation failed"

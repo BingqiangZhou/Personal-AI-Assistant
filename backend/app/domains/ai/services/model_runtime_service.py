@@ -117,7 +117,9 @@ class AIModelRuntimeService:
                     model.priority,
                 )
                 result = await self._call_transcription_model(
-                    model, audio_file_path, language,
+                    model,
+                    audio_file_path,
+                    language,
                 )
                 await self.repo.increment_usage(model.id, success=True)
                 logger.info(
@@ -162,7 +164,9 @@ class AIModelRuntimeService:
         if isinstance(model_id, int):
             resolved_model_id = model_id
         elif isinstance(model_id, str) and model_id:
-            resolved_model_id = int(model_id) if model_id.lstrip("-").isdigit() else None
+            resolved_model_id = (
+                int(model_id) if model_id.lstrip("-").isdigit() else None
+            )
 
         return await ai_client.call_with_fallback(
             messages,

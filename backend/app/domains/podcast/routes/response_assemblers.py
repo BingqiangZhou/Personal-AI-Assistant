@@ -96,9 +96,7 @@ def build_playback_history_list_response(
 ) -> PodcastPlaybackHistoryListResponse:
     """Build the lightweight playback history response."""
     return PodcastPlaybackHistoryListResponse(
-        items=[
-            PodcastPlaybackHistoryItemResponse(**episode) for episode in episodes
-        ],
+        items=[PodcastPlaybackHistoryItemResponse(**episode) for episode in episodes],
         total=total,
         page=page,
         size=size,
@@ -275,9 +273,7 @@ def build_queue_response(payload: dict[str, Any]) -> PodcastQueueResponse:
         current_episode_id=payload.get("current_episode_id"),
         revision=payload["revision"],
         updated_at=payload.get("updated_at"),
-        items=[
-            PodcastQueueItemResponse(**item) for item in payload.get("items", [])
-        ],
+        items=[PodcastQueueItemResponse(**item) for item in payload.get("items", [])],
     )
 
 

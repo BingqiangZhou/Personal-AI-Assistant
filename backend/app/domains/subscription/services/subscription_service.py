@@ -302,8 +302,7 @@ class SubscriptionService:
 
         # Create tasks for all subscriptions
         tasks = [
-            process_single(i, sub_data)
-            for i, sub_data in enumerate(subscriptions_data)
+            process_single(i, sub_data) for i, sub_data in enumerate(subscriptions_data)
         ]
 
         # Execute concurrently with semaphore limiting parallelism

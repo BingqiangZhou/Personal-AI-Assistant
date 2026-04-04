@@ -104,7 +104,9 @@ async def test_process_pending_transcriptions_dispatches_claimed_batch(monkeypat
             assert episode_ids == [11, 7]
             return dispatch_result
 
-    monkeypatch.setattr(transcription_module, "TranscriptionWorkflowService", _FakeWorkflow)
+    monkeypatch.setattr(
+        transcription_module, "TranscriptionWorkflowService", _FakeWorkflow
+    )
 
     service = PodcastTaskOrchestrationService(_FakeSession())
     result = await service.process_pending_transcriptions()

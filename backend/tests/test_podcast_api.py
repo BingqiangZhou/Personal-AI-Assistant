@@ -2,6 +2,7 @@
 Comprehensive API Validation Tests for Podcast Feature
 Tests security, models, and core functionality
 """
+
 import asyncio
 import sys
 
@@ -12,31 +13,33 @@ import pytest
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+
 class TestPodcastAPI:
     """Stage 3: API Validation Tests"""
 
     def test_xxe_protection(self):
         """Security Test: XXE attacks must be blocked"""
         from app.domains.podcast.integration.security import PodcastSecurityValidator
+
         validator = PodcastSecurityValidator()
 
         # Test XXE attack
-        malicious_xml = '''<?xml version="1.0"?>
+        malicious_xml = """<?xml version="1.0"?>
         <!DOCTYPE data [
           <!ENTITY xxe SYSTEM "file:///etc/passwd">
         ]>
-        <data>&xxe;</data>'''
+        <data>&xxe;</data>"""
 
         is_valid, error = validator.validate_rss_xml(malicious_xml)
         assert is_valid is False, "XXE should be blocked"
         print(f"[PASS] XXE防护: {error}")
 
         # Test OOB attack
-        oob_xml = '''<?xml version="1.0"?>
+        oob_xml = """<?xml version="1.0"?>
         <!DOCTYPE data [
           <!ENTITY xxe SYSTEM "http://internal-server/status">
         ]>
-        <data>&xxe;</data>'''
+        <data>&xxe;</data>"""
 
         is_valid, error = validator.validate_rss_xml(oob_xml)
         assert is_valid is False, "OOB XXE should be blocked"
@@ -46,9 +49,12 @@ class TestPodcastAPI:
         """Security Test: PII must be filtered"""
         from app.domains.ai.llm_privacy import ContentSanitizer
 
-        sanitizer = ContentSanitizer('standard')
+        sanitizer = ContentSanitizer("standard")
         test_cases = [
-            ("联系张三 zhangsan@email.com 13800138000", ["[EMAIL_REDACTED]", "[PHONE_REDACTED]"]),
+            (
+                "联系张三 zhangsan@email.com 13800138000",
+                ["[EMAIL_REDACTED]", "[PHONE_REDACTED]"],
+            ),
             # Short local numbers may not match strict phone redaction rules.
             ("User: john.doe@company.com, phone: 555-1234", ["[EMAIL_REDACTED]"]),
             ("No sensitive data", []),  # Should not modify
@@ -63,6 +69,7 @@ class TestPodcastAPI:
     def test_rss_security_validations(self):
         """Security Test: RSS URL and content validation"""
         from app.domains.podcast.integration.security import PodcastSecurityValidator
+
         validator = PodcastSecurityValidator()
 
         # Test dangerous URLs
@@ -70,7 +77,7 @@ class TestPodcastAPI:
             "http://localhost/evil.xml",
             "http://127.0.0.1/exploit.xml",
             "http://192.168.1.1/internal.xml",
-            "file:///etc/passwd"
+            "file:///etc/passwd",
         ]
 
         for url in dangerous_urls:
@@ -81,7 +88,7 @@ class TestPodcastAPI:
         # Test safe URLs
         safe_urls = [
             "https://example.com/podcast.mp3",
-            "http://cdn.example.com/audio/episode.mp3"
+            "http://cdn.example.com/audio/episode.mp3",
         ]
 
         for url in safe_urls:
@@ -95,23 +102,34 @@ class TestPodcastAPI:
         import pathlib
 
         # Check models file exists and valid
-        model_file = pathlib.Path(__file__).parent.parent / "app" / "domains" / "podcast" / "models.py"
+        model_file = (
+            pathlib.Path(__file__).parent.parent
+            / "app"
+            / "domains"
+            / "podcast"
+            / "models.py"
+        )
         assert model_file.exists(), "Podcast models file missing"
 
-        with open(model_file, encoding='utf-8') as f:
+        with open(model_file, encoding="utf-8") as f:
             content = f.read()
 
         # Parse without executing (avoid import issues)
         ast.parse(content)
 
         # Check for required imports (even if unused)
-        assert 'class PodcastEpisode' in content
-        assert 'class PodcastPlaybackState' in content
+        assert "class PodcastEpisode" in content
+        assert "class PodcastPlaybackState" in content
 
         # Check for key fields (string match, not import)
         expected_fields = [
-            'audio_url', 'ai_summary', 'item_link', 'subscription_id',
-            'current_position', 'user_id', 'episode_id'
+            "audio_url",
+            "ai_summary",
+            "item_link",
+            "subscription_id",
+            "current_position",
+            "user_id",
+            "episode_id",
         ]
 
         for field in expected_fields:
@@ -127,7 +145,7 @@ class TestPodcastAPI:
         validator = PodcastSecurityValidator()
 
         # Simulate secure RSS validation pipeline
-        good_rss = '''<?xml version="1.0"?>
+        good_rss = """<?xml version="1.0"?>
         <rss>
           <channel>
             <title>Test Podcast</title>
@@ -137,7 +155,7 @@ class TestPodcastAPI:
               <enclosure url="http://cdn.example.com/ep1.mp3" type="audio/mpeg" />
             </item>
           </channel>
-        </rss>'''
+        </rss>"""
 
         is_valid, error = validator.validate_rss_xml(good_rss)
         assert is_valid is True, "Valid RSS should pass"
@@ -166,7 +184,7 @@ class TestPodcastAPI:
         """Security Test: Edge cases for privacy filter"""
         from app.domains.ai.llm_privacy import ContentSanitizer
 
-        sanitizer = ContentSanitizer('standard')
+        sanitizer = ContentSanitizer("standard")
 
         edge_cases = [
             ("email@domain.com", "[EMAIL_REDACTED]"),
@@ -181,6 +199,7 @@ class TestPodcastAPI:
             if expected_pattern:
                 assert expected_pattern in result or expected_pattern == result
             print(f"[PASS] Edge case: '{input_text}' -> '{result}'")
+
 
 if __name__ == "__main__":
     # Run tests programmatically

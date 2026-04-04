@@ -361,7 +361,9 @@ async def get_episode_transcript_endpoint(
 async def batch_transcribe_subscription_endpoint(
     subscription_id: int,
     skip_existing: bool = Body(True, description="Skip episodes already transcribed"),
-    max_episodes: int = Body(50, ge=1, le=200, description="Maximum episodes to transcribe in batch"),
+    max_episodes: int = Body(
+        50, ge=1, le=200, description="Maximum episodes to transcribe in batch"
+    ),
     subscription_service: PodcastSubscriptionService = Depends(
         get_podcast_subscription_service
     ),
