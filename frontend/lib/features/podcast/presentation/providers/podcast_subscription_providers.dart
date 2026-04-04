@@ -1,9 +1,12 @@
+import 'dart:collection';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/data/utils/podcast_url_utils.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
 
 final podcastSubscriptionProvider =
@@ -232,3 +235,27 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Derived selectors (moved from podcast_subscription_selectors.dart)
+// ---------------------------------------------------------------------------
+
+final subscribedNormalizedFeedUrlsProvider = Provider<Set<String>>((ref) {
+  final subscriptions = ref.watch(
+    podcastSubscriptionProvider.select((state) => state.subscriptions),
+  );
+  return UnmodifiableSetView(
+    subscriptions
+        .map((sub) => PodcastUrlUtils.normalizeFeedUrl(sub.sourceUrl))
+        .toSet(),
+  );
+});
+
+final subscribingNormalizedFeedUrlsProvider = Provider<Set<String>>((ref) {
+  final subscribingFeedUrls = ref.watch(
+    podcastSubscriptionProvider.select((state) => state.subscribingFeedUrls),
+  );
+  return UnmodifiableSetView(
+    subscribingFeedUrls.map(PodcastUrlUtils.normalizeFeedUrl).toSet(),
+  );
+});

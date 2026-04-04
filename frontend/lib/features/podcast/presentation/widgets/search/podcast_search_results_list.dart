@@ -6,7 +6,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/utils/podcast_url_utils.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_subscription_selectors.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_subscription_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_search_result_card.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_episode_search_result_card.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
