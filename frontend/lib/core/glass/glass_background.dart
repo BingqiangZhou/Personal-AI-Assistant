@@ -78,7 +78,7 @@ class _GlassBackgroundState extends State<GlassBackground>
     return RepaintBoundary(
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0A0A0F) : const Color(0xFFF0F0F5),
+          color: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
         ),
         child: Stack(
           children: [

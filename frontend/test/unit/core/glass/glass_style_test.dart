@@ -10,84 +10,84 @@ void main() {
         final style = GlassStyle.forTier(GlassTier.ultraHeavy, Brightness.dark);
 
         expect(style.sigma, 30);
-        expect(style.fill, const Color(0x47FFFFFF));
-        expect(style.borderTop, const Color(0x5CFFFFFF));
-        expect(style.borderBottom, const Color(0x40FFFFFF));
+        expect(style.fill, const Color(0x1AFFFFFF));
+        expect(style.borderTop, const Color(0x66FFFFFF));
+        expect(style.borderBottom, const Color(0x1AFFFFFF));
         expect(style.innerGlow, const Color(0x0AFFFFFF));
-        expect(style.shadow, const Color(0x8C000000));
-        expect(style.noiseOpacity, 0.06);
-        expect(style.saturationBoost, 2.0);
-        expect(style.contentScrim, const Color(0x4CFFFFFF));
+        expect(style.shadow, const Color(0x1F000000));
+        expect(style.noiseOpacity, 0.04);
+        expect(style.saturationBoost, 1.8);
+        expect(style.contentScrim, const Color(0x33FFFFFF));
       });
 
       test('creates style for heavy tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.heavy, Brightness.dark);
 
         expect(style.sigma, 24);
-        expect(style.fill, const Color(0x3DFFFFFF));
-        expect(style.borderTop, const Color(0x52FFFFFF));
-        expect(style.borderBottom, const Color(0x35FFFFFF));
+        expect(style.fill, const Color(0x14FFFFFF));
+        expect(style.borderTop, const Color(0x66FFFFFF));
+        expect(style.borderBottom, const Color(0x1AFFFFFF));
         expect(style.innerGlow, const Color(0x0AFFFFFF));
-        expect(style.shadow, const Color(0x73000000));
-        expect(style.noiseOpacity, 0.05);
+        expect(style.shadow, const Color(0x19000000));
+        expect(style.noiseOpacity, 0.03);
         expect(style.saturationBoost, 1.8);
-        expect(style.contentScrim, const Color(0x38FFFFFF));
+        expect(style.contentScrim, const Color(0x29FFFFFF));
       });
 
       test('creates style for medium tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.medium, Brightness.dark);
 
         expect(style.sigma, 16);
-        expect(style.fill, const Color(0x2EFFFFFF));
-        expect(style.borderTop, const Color(0x47FFFFFF));
-        expect(style.borderBottom, const Color(0x28FFFFFF));
-        expect(style.innerGlow, const Color(0x0DFFFFFF));
-        expect(style.shadow, const Color(0x59000000));
-        expect(style.noiseOpacity, 0.04);
-        expect(style.saturationBoost, 1.5);
-        expect(style.contentScrim, const Color(0x2DFFFFFF));
+        expect(style.fill, const Color(0x0FFFFFFF));
+        expect(style.borderTop, const Color(0x66FFFFFF));
+        expect(style.borderBottom, const Color(0x1AFFFFFF));
+        expect(style.innerGlow, const Color(0x0AFFFFFF));
+        expect(style.shadow, const Color(0x14000000));
+        expect(style.noiseOpacity, 0.03);
+        expect(style.saturationBoost, 1.8);
+        expect(style.contentScrim, const Color(0x1FFFFFFF));
       });
 
       test('creates style for light tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.light, Brightness.dark);
 
         expect(style.sigma, 10);
-        expect(style.fill, const Color(0x24FFFFFF));
-        expect(style.borderTop, const Color(0x40FFFFFF));
-        expect(style.borderBottom, const Color(0x1EFFFFFF));
-        expect(style.innerGlow, const Color(0x0FFFFFFF));
-        expect(style.shadow, const Color(0x40000000));
+        expect(style.fill, const Color(0x0DFFFFFF));
+        expect(style.borderTop, const Color(0x66FFFFFF));
+        expect(style.borderBottom, const Color(0x1AFFFFFF));
+        expect(style.innerGlow, const Color(0x0AFFFFFF));
+        expect(style.shadow, const Color(0x0F000000));
         expect(style.noiseOpacity, 0.03);
-        expect(style.saturationBoost, 1.3);
-        expect(style.contentScrim, const Color(0x24FFFFFF));
+        expect(style.saturationBoost, 1.8);
+        expect(style.contentScrim, const Color(0x14FFFFFF));
       });
 
       test('creates style for ultraHeavy tier in light mode', () {
         final style = GlassStyle.forTier(GlassTier.ultraHeavy, Brightness.light);
 
         expect(style.sigma, 30);
-        expect(style.fill, const Color(0x38000000));
-        expect(style.borderTop, const Color(0x44000000));
-        expect(style.borderBottom, const Color(0x2C000000));
+        expect(style.fill, const Color(0x14000000));
+        expect(style.borderTop, const Color(0x66000000));
+        expect(style.borderBottom, const Color(0x1A000000));
         expect(style.innerGlow, const Color(0x0AFFFFFF));
         expect(style.shadow, const Color(0x1F000000));
         expect(style.noiseOpacity, 0.04);
-        expect(style.saturationBoost, 1.08);
-        expect(style.contentScrim, const Color(0x32000000));
+        expect(style.saturationBoost, 1.8);
+        expect(style.contentScrim, const Color(0x26000000));
       });
 
       test('creates style for medium tier in light mode', () {
         final style = GlassStyle.forTier(GlassTier.medium, Brightness.light);
 
         expect(style.sigma, 16);
-        expect(style.fill, const Color(0x22000000));
-        expect(style.borderTop, const Color(0x2E000000));
+        expect(style.fill, const Color(0x0D000000));
+        expect(style.borderTop, const Color(0x66000000));
         expect(style.borderBottom, const Color(0x1A000000));
-        expect(style.innerGlow, const Color(0x06FFFFFF));
+        expect(style.innerGlow, const Color(0x0AFFFFFF));
         expect(style.shadow, const Color(0x14000000));
         expect(style.noiseOpacity, 0.03);
-        expect(style.saturationBoost, 1.05);
-        expect(style.contentScrim, const Color(0x1E000000));
+        expect(style.saturationBoost, 1.8);
+        expect(style.contentScrim, const Color(0x14000000));
       });
     });
 

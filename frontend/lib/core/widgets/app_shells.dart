@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 
 /// StatusBadge - 状态徽章
 class StatusBadge extends StatelessWidget {
@@ -333,13 +334,10 @@ class _SurfacePanelState extends State<SurfacePanel> {
 
     final panel = Container(
       margin: widget.margin,
-      child: GlassContainer(
-        tier: GlassTier.light,
+      child: SurfaceCard(
         borderRadius: radius,
         padding: widget.padding,
-        tint: widget.backgroundColor,
-        animate: true,
-        interactive: false,
+        backgroundColor: widget.backgroundColor,
         child: widget.child,
       ),
     );

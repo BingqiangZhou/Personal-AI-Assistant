@@ -491,7 +491,10 @@ class AppTheme {
     );
 
     return base.copyWith(
-      primary: isDark ? const Color(0xFFA5B4FC) : AppColors.primary,
+      // Primary - Apple systemIndigo
+      primary: isDark
+          ? const Color(0xFF5E5CE6) // systemIndigo dark
+          : AppColors.primary, // systemIndigo light
       onPrimary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       primaryContainer: isDark
           ? AppColors.primaryContainerDark
@@ -499,15 +502,21 @@ class AppTheme {
       onPrimaryContainer: isDark
           ? AppColors.darkTextPrimary
           : const Color(0xFF312E81),
-      secondary: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+      // Secondary - Apple systemGray
+      secondary: isDark
+          ? const Color(0xFF8E8E93) // systemGray dark
+          : const Color(0xFF8E8E93), // systemGray light
       onSecondary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       secondaryContainer: isDark
-          ? const Color(0xFF1E293B)
-          : const Color(0xFFF1F5F9),
+          ? const Color(0xFF2C2C2E) // tertiarySystemGroupedBackground dark
+          : const Color(0xFFF2F2F7), // systemGroupedBackground light
       onSecondaryContainer: isDark
           ? AppColors.darkTextPrimary
-          : const Color(0xFF334155),
-      tertiary: isDark ? const Color(0xFF22C55E) : const Color(0xFF16A34A),
+          : AppColors.lightTextPrimary,
+      // Tertiary - Apple systemGreen
+      tertiary: isDark
+          ? const Color(0xFF30D158) // systemGreen dark
+          : const Color(0xFF34C759), // systemGreen light
       onTertiary: isDark ? const Color(0xFF0C0A1A) : Colors.white,
       tertiaryContainer: isDark
           ? const Color(0xFF14532D)
@@ -515,7 +524,8 @@ class AppTheme {
       onTertiaryContainer: isDark
           ? const Color(0xFFECFDF5)
           : const Color(0xFF166534),
-      error: AppColors.error,
+      // Error - Apple systemRed
+      error: AppColors.error, // systemRed light
       onError: Colors.white,
       errorContainer: isDark
           ? const Color(0xFF451A1B)
@@ -523,17 +533,22 @@ class AppTheme {
       onErrorContainer: isDark
           ? const Color(0xFFFECACA)
           : const Color(0xFF7F1D1D),
-      surface: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      // Surface - Apple systemGroupedBackground
+      surface: isDark
+          ? AppColors.darkSurface // secondarySystemGroupedBackground dark
+          : AppColors.lightSurface, // secondarySystemGroupedBackground light
       onSurface: isDark
-          ? AppColors.darkTextPrimary
-          : AppColors.lightTextPrimary,
+          ? AppColors.darkTextPrimary // Apple .label dark
+          : AppColors.lightTextPrimary, // Apple .label light
       onSurfaceVariant: isDark
-          ? AppColors.darkTextSecondary
-          : AppColors.lightTextSecondary,
-      outline: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+          ? const Color(0x99EBEBF5) // Apple .secondaryLabel dark (60%)
+          : const Color(0x993C3C43), // Apple .secondaryLabel light (60%)
+      outline: isDark
+          ? AppColors.darkOutline // Apple systemGray3 dark
+          : AppColors.lightOutline, // Apple systemGray3 light
       outlineVariant: isDark
-          ? AppColors.darkOutlineVariant
-          : AppColors.lightOutlineVariant,
+          ? AppColors.darkOutlineVariant // Apple systemGray4 dark
+          : AppColors.lightOutlineVariant, // Apple systemGray4 light
       shadow: Colors.black,
       scrim: Colors.black,
     );
