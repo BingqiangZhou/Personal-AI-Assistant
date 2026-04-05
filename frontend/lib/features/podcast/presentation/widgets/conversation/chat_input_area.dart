@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
@@ -34,27 +36,13 @@ class ChatInputArea extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final extension = appThemeOf(context);
-    return Container(
+    return GlassContainer(
+      tier: GlassTier.medium,
+      borderRadius: 0,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
       child: SafeArea(
-        top: false,
-        child: Row(
+      top: false,
+      child: Row(
           children: [
             Expanded(
               child: TextField(

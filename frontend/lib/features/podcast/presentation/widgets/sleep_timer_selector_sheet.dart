@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 
 /// Represents the user's sleep timer selection.
@@ -67,12 +68,9 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
     return Future<SleepTimerSelection?>.value(null);
   }
 
-  return showModalBottomSheet<SleepTimerSelection>(
+  return showAdaptiveSheet<SleepTimerSelection>(
     context: resolvedContext,
-    showDragHandle: true,
-    useRootNavigator: true,
     builder: (context) {
-      final theme = Theme.of(context);
       final l10n = context.l10n;
 
       return SafeArea(
@@ -85,15 +83,15 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
               children: [
                 Text(
                   l10n.player_sleep_timer_title,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.player_sleep_timer_desc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -119,7 +117,7 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
                     Icons.stop_circle_outlined,
-                    color: theme.colorScheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(
                     context.l10n.player_stop_after_episode,
@@ -137,12 +135,12 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
                       Icons.timer_off,
-                      color: theme.colorScheme.error,
+                      color: Theme.of(context).colorScheme.error,
                     ),
                     title: Text(
                       l10n.player_cancel_timer,
                       style: TextStyle(
-                            color: theme.colorScheme.error,
+                            color: Theme.of(context).colorScheme.error,
                           ),
                     ),
                     onTap: () {

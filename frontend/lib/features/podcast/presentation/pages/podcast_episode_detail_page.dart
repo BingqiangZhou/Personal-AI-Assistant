@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
@@ -369,25 +371,16 @@ class _PodcastEpisodeDetailPageState
     return Padding(
       key: const Key('podcast_episode_detail_scroll_to_top_button'),
       padding: EdgeInsets.only(right: rightMargin, bottom: bottomMargin),
-      child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        elevation: 2,
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: 16,
+        padding: EdgeInsets.zero,
+        animate: false,
         child: InkWell(
           onTap: _scrollToTop,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
+          child: SizedBox(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outline.withValues(alpha: 0.5),
-                width: 1,
-              ),
-            ),
             child: Icon(
               Icons.arrow_upward,
               color: Theme.of(context).colorScheme.onSurface,

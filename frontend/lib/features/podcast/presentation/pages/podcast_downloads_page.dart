@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/audio_download_service.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/database/app_database.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_episodes_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
@@ -79,33 +80,21 @@ class PodcastDownloadsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     List<DownloadTask> tasks,
-  ) {
+  ) async {
     final l10n = context.l10n;
-    showDialog(
+    final confirmed = await showGlassConfirmationDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.downloads_delete_confirm),
-        content: Text(l10n.downloads_delete_confirm_message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              MaterialLocalizations.of(ctx).cancelButtonLabel,
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              final service = ref.read(downloadManagerProvider);
-              for (final task in tasks) {
-                service.delete(task.episodeId);
-              }
-            },
-            child: Text(l10n.downloads_delete_all),
-          ),
-        ],
-      ),
+      title: l10n.downloads_delete_confirm,
+      message: l10n.downloads_delete_confirm_message,
+      confirmText: l10n.downloads_delete_all,
+      isDestructive: true,
     );
+    if (confirmed != true) return;
+
+    final service = ref.read(downloadManagerProvider);
+    for (final task in tasks) {
+      service.delete(task.episodeId);
+    }
   }
 }
 

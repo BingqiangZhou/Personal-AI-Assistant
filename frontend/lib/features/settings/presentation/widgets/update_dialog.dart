@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
@@ -83,7 +84,7 @@ class AppUpdateDialog extends ConsumerStatefulWidget {
     required GitHubRelease release,
     required String currentVersion,
   }) {
-    return showDialog(
+    return showGlassDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) =>
@@ -116,6 +117,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     );
 
     return AlertDialog(
+      backgroundColor: Colors.transparent,
       insetPadding: isMobile ? ResponsiveDialogHelper.insetPadding() : null,
       title: Row(
         children: [
@@ -650,7 +652,7 @@ class ManualUpdateCheckDialog extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context) {
     if (_isShowing) return Future.value();
     _isShowing = true;
-    return showDialog(
+    return showGlassDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => const ManualUpdateCheckDialog(),
@@ -689,6 +691,7 @@ class _ManualUpdateCheckDialogState
     final isMobile = context.isMobile;
 
     return AlertDialog(
+      backgroundColor: Colors.transparent,
       insetPadding: isMobile ? ResponsiveDialogHelper.insetPadding() : null,
       title: Text(l10n.update_check_updates),
       content: SizedBox(

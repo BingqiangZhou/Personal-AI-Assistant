@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
@@ -31,7 +34,12 @@ class ChatSessionsDrawer extends ConsumerWidget {
 
     return Drawer(
       width: MediaQuery.sizeOf(context).width * 0.75,
-      child: Column(
+      backgroundColor: Colors.transparent,
+      child: GlassContainer(
+        tier: GlassTier.heavy,
+        borderRadius: 0,
+        padding: EdgeInsets.zero,
+        child: Column(
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
@@ -107,6 +115,7 @@ class ChatSessionsDrawer extends ConsumerWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -146,27 +155,12 @@ class _SessionListTile extends ConsumerWidget {
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline, size: 20),
         onPressed: () async {
-          final confirm = await showDialog<bool>(
+          final confirm = await showGlassConfirmationDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: Text(l10n.podcast_conversation_delete_title),
-              content: Text(l10n.podcast_conversation_delete_confirm),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(
-                    l10n.delete,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            title: l10n.podcast_conversation_delete_title,
+            message: l10n.podcast_conversation_delete_confirm,
+            confirmText: l10n.delete,
+            isDestructive: true,
           );
           if (confirm == true) {
             try {

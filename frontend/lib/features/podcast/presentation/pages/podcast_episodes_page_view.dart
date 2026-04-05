@@ -1,5 +1,7 @@
 part of 'podcast_episodes_page.dart';
 
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
+
 extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
   Widget _buildHeader(AppLocalizations l10n, String? fallbackImageUrl) {
     return Padding(
@@ -321,10 +323,11 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
 
   void _showFilterDialog() {
     final l10n = context.l10n;
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.transparent,
           title: Text(l10n.podcast_filter_episodes),
           content: Column(
             mainAxisSize: MainAxisSize.min,

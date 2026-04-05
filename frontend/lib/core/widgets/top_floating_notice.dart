@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/providers/top_floating_notice_provider.dart';
 
 const double _topFloatingNoticeGap = 0;
@@ -42,13 +44,9 @@ void showTopFloatingNotice(
   final appBarHeight = scaffold?.widget.appBar?.preferredSize.height;
   final effectiveTopBarHeight =
       appBarHeight ?? (scaffold == null ? kToolbarHeight : 0);
-  final backgroundColor = isError
-      ? theme.colorScheme.errorContainer
-      : Colors.transparent;
   final foregroundColor = isError
       ? theme.colorScheme.onErrorContainer
       : theme.colorScheme.onSurface;
-  final borderColor = theme.colorScheme.outlineVariant;
   final icon = isError ? Icons.error_outline : Icons.check_circle_outline;
 
   final entry = OverlayEntry(
@@ -64,43 +62,30 @@ void showTopFloatingNotice(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
-            child: DecoratedBox(
+            child: GlassContainer(
               key: const Key('top_floating_notice'),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor, width: 1),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0xFF101010),
-                    blurRadius: 24,
-                    offset: Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 18, color: foregroundColor),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        message,
-                        key: const Key('top_floating_notice_message'),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: foregroundColor,
-                        ),
+              tier: GlassTier.light,
+              borderRadius: 12,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              animate: false,
+              tint: isError ? theme.colorScheme.error.withValues(alpha: 0.08) : null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 18, color: foregroundColor),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      key: const Key('top_floating_notice_message'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: foregroundColor,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

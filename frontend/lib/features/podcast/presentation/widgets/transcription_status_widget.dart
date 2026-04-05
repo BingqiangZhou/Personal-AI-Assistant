@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -53,13 +55,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final accentColor = theme.brightness == Brightness.dark
         ? scheme.tertiary
         : scheme.primary;
-    return Card(
-      elevation: 0,
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ext.cardRadius),
-        side: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
-      ),
+    return GlassContainer(
+      tier: GlassTier.light,
+      borderRadius: ext.cardRadius,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -550,13 +548,10 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final duration = transcription.durationSeconds ?? 0;
     final completedAt = transcription.completedAt;
 
-    return Card(
-      elevation: 0,
-      color: scheme.tertiary.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ext.cardRadius),
-        side: BorderSide(color: scheme.tertiary.withValues(alpha: 0.2)),
-      ),
+    return GlassContainer(
+      tier: GlassTier.light,
+      borderRadius: ext.cardRadius,
+      tint: scheme.tertiary.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -719,13 +714,10 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final friendlyMessage = _getFriendlyErrorMessage(context, errorMessage);
     final suggestion = _getErrorSuggestion(context, errorMessage);
 
-    return Card(
-      elevation: 0,
-      color: scheme.error.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ext.cardRadius),
-        side: BorderSide(color: scheme.error.withValues(alpha: 0.2)),
-      ),
+    return GlassContainer(
+      tier: GlassTier.light,
+      borderRadius: ext.cardRadius,
+      tint: scheme.error.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

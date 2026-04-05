@@ -340,7 +340,12 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
       width: drawerWidth,
       child: Drawer(
         key: const Key('podcast_episode_detail_chat_drawer'),
-        child: SafeArea(
+        backgroundColor: Colors.transparent,
+        child: GlassContainer(
+          tier: GlassTier.heavy,
+          borderRadius: 0,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
           child: Column(
             children: [
               Padding(
@@ -366,6 +371,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
               Expanded(child: _buildConversationContent(episode)),
             ],
           ),
+        ),
         ),
       ),
     );

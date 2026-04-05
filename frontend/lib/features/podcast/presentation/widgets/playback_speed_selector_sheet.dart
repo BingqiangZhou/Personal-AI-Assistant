@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/router/app_router.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/playback_speed_options.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
@@ -35,10 +36,8 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
     return Future<PlaybackSpeedSelection?>.value(null);
   }
 
-  return showModalBottomSheet<PlaybackSpeedSelection>(
+  return showAdaptiveSheet<PlaybackSpeedSelection>(
     context: resolvedContext,
-    showDragHandle: true,
-    useRootNavigator: true,
     builder: (context) => _PlaybackSpeedSelectorSheet(
       initialSpeed: initialSpeed,
       initialApplyToSubscription: initialApplyToSubscription,
@@ -77,7 +76,7 @@ class _PlaybackSpeedSelectorSheetState
   void initState() {
     super.initState();
     widget.correctedInitialSelection?.then(_applyCorrectedSelection).catchError(
-      (error, stackTrace) {
+      (Object error, StackTrace stackTrace) {
         logger.AppLogger.warning(
           '[PlaybackSpeedSheet] Failed to apply corrected initial selection: $error',
         );

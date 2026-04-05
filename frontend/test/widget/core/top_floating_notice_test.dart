@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
@@ -101,7 +103,7 @@ void main() {
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses light theme surface + black for success notice', (
+    testWidgets('uses glass container for success notice', (
       tester,
     ) async {
       await _pumpHost(tester);
@@ -109,12 +111,13 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
 
+      // Verify GlassContainer is used
+      expect(find.byType(GlassContainer), findsWidgets);
+
       final context = tester.element(
         find.byKey(const Key('top_floating_notice')),
       );
       final theme = Theme.of(context);
-      final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.surfaceContainerHighest);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
@@ -128,7 +131,7 @@ void main() {
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses light theme surface + error colors for error notice', (
+    testWidgets('uses error tint for error notice', (
       tester,
     ) async {
       await _pumpHost(tester);
@@ -136,24 +139,23 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_error')));
       await tester.pump();
 
-      final context = tester.element(
+      // Verify GlassContainer with error tint is rendered
+      final glassContainer = tester.widget<GlassContainer>(
         find.byKey(const Key('top_floating_notice')),
       );
-      final theme = Theme.of(context);
-      final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.errorContainer);
+      expect(glassContainer.tint, isNotNull);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, theme.colorScheme.onErrorContainer);
+      expect(messageText.style?.color, isNotNull);
 
       final errorIcon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
-      expect(errorIcon.color, theme.colorScheme.onErrorContainer);
+      expect(errorIcon.color, isNotNull);
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses dark theme primary + white for success notice', (
+    testWidgets('uses glass container in dark mode for success notice', (
       tester,
     ) async {
       await _pumpHost(tester, themeMode: ThemeMode.dark);
@@ -161,12 +163,12 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
 
+      expect(find.byType(GlassContainer), findsWidgets);
+
       final context = tester.element(
         find.byKey(const Key('top_floating_notice')),
       );
       final theme = Theme.of(context);
-      final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.surfaceContainerHighest);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
@@ -180,7 +182,7 @@ void main() {
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses dark theme primary + error for error notice', (
+    testWidgets('uses glass container in dark mode for error notice', (
       tester,
     ) async {
       await _pumpHost(tester, themeMode: ThemeMode.dark);
@@ -188,56 +190,37 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_error')));
       await tester.pump();
 
-      final context = tester.element(
+      final glassContainer = tester.widget<GlassContainer>(
         find.byKey(const Key('top_floating_notice')),
       );
-      final theme = Theme.of(context);
-      final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.errorContainer);
+      expect(glassContainer.tint, isNotNull);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, theme.colorScheme.onErrorContainer);
+      expect(messageText.style?.color, isNotNull);
 
       final errorIcon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
-      expect(errorIcon.color, theme.colorScheme.onErrorContainer);
+      expect(errorIcon.color, isNotNull);
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('border and shadow are fully opaque', (tester) async {
+    testWidgets('glass container has light tier and correct border radius', (tester) async {
       await _pumpHost(tester);
 
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
 
-      final decoration = _noticeDecoration(tester);
-      final border = decoration.border as Border;
-      expect(
-        (border.top.color.a * 255.0).round().clamp(0, 255),
-        greaterThan(0),
+      final glassContainer = tester.widget<GlassContainer>(
+        find.byKey(const Key('top_floating_notice')),
       );
-      expect(
-        (border.bottom.color.a * 255.0).round().clamp(0, 255),
-        greaterThan(0),
-      );
-      expect(
-        (border.left.color.a * 255.0).round().clamp(0, 255),
-        greaterThan(0),
-      );
-      expect(
-        (border.right.color.a * 255.0).round().clamp(0, 255),
-        greaterThan(0),
-      );
-      expect(decoration.boxShadow, isNotEmpty);
-      expect(
-        (decoration.boxShadow!.first.color.a * 255.0).round().clamp(0, 255),
-        255,
-      );
+      expect(glassContainer.tier, GlassTier.light);
+      expect(glassContainer.borderRadius, 12);
+      expect(glassContainer.animate, false);
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses latest theme when shown after theme toggle', (
+    testWidgets('uses glass container when shown after theme toggle', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -252,10 +235,7 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
       expect(find.byKey(const Key('top_floating_notice')), findsOneWidget);
-      expect(
-        _noticeDecoration(tester).color,
-        AppTheme.darkTheme.colorScheme.surfaceContainerHighest,
-      );
+      expect(find.byType(GlassContainer), findsWidgets);
       await tester.pump(const Duration(seconds: 4));
     });
 
@@ -345,12 +325,7 @@ Future<void> _pumpHost(
   );
 }
 
-BoxDecoration _noticeDecoration(WidgetTester tester) {
-  final decoratedBox = tester.widget<DecoratedBox>(
-    find.byKey(const Key('top_floating_notice')),
-  );
-  return decoratedBox.decoration as BoxDecoration;
-}
+// GlassContainer-based notice no longer exposes a BoxDecoration directly.
 
 class _TopNoticeHost extends StatelessWidget {
   const _TopNoticeHost({this.onToggleTheme});

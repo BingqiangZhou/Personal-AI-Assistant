@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -13,7 +15,7 @@ Future<void> showHighlightDetailSheet({
   required HighlightResponse highlight,
   VoidCallback? onFavoriteToggle,
 }) async {
-  await showAdaptiveSheet(
+  await showAdaptiveSheet<void>(
     context: context,
     builder: (context) => _HighlightDetailContent(
       highlight: highlight,
@@ -28,7 +30,7 @@ Future<void> showMultipleHighlightsSheet({
   required List<HighlightResponse> highlights,
   VoidCallback? onFavoriteToggle,
 }) async {
-  await showAdaptiveSheet(
+  await showAdaptiveSheet<void>(
     context: context,
     builder: (context) => _MultipleHighlightsContent(
       highlights: highlights,
@@ -371,18 +373,13 @@ class _HighlightListItem extends StatelessWidget {
       scoreColor = scheme.onSurfaceVariant;
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: scheme.outline.withValues(alpha: 0.15),
-        ),
-      ),
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: 12,
+        child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -435,6 +432,7 @@ class _HighlightListItem extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

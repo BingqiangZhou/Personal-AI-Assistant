@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -52,9 +53,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
   void _showErrorDialog(String message, BuildContext context) {
     final l10n = context.l10n;
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
         title: Text(l10n.error),
         content: Text(message),
         actions: [

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
@@ -11,6 +13,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
@@ -241,27 +244,14 @@ class _ProfileCacheManagementPageState
       (acc, obj) => acc + (obj.length ?? 0),
     );
 
-    final confirm = await showDialog<bool>(
+    final confirm = await showGlassConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile_clear_cache),
-        content: Text(
-          l10n.profile_cache_manage_delete_selected_confirm(
-            selectedObjects.length,
-            _formatBytes(selectedBytes),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
+      title: l10n.profile_clear_cache,
+      message: l10n.profile_cache_manage_delete_selected_confirm(
+        selectedObjects.length,
+        _formatBytes(selectedBytes),
       ),
+      confirmText: l10n.delete,
     );
     if (confirm != true || !mounted) return;
 
@@ -293,29 +283,19 @@ class _ProfileCacheManagementPageState
 
   Future<void> _clearAll() async {
     final l10n = context.l10n;
-    final confirm = await showDialog<bool>(
+    final confirm = await showGlassConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile_clear_cache),
-        content: Text(l10n.profile_clear_cache_confirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.clear),
-          ),
-        ],
-      ),
+      title: l10n.profile_clear_cache,
+      message: l10n.profile_clear_cache_confirm,
+      confirmText: l10n.clear,
     );
     if (confirm != true || !mounted) return;
 
-    showDialog<void>(
+    showGlassDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -589,19 +569,15 @@ class _ProfileCacheManagementPageState
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return Card(
+    return GlassContainer(
+      tier: GlassTier.light,
+      borderRadius: kPodcastRowCardCornerRadius,
+      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
       margin: EdgeInsets.symmetric(
         horizontal: _contentHorizontalInset(context),
         vertical: kPodcastRowCardVerticalMargin,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
-        side: BorderSide.none,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-        child: Row(
+      child: Row(
           children: [
             Container(
               width: 40,

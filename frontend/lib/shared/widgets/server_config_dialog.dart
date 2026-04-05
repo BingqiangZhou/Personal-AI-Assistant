@@ -10,6 +10,7 @@ import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Server configuration dialog widget
@@ -106,6 +107,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     final isMobile = screenWidth < Breakpoints.medium;
     final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
     return AlertDialog(
+      backgroundColor: Colors.transparent,
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Text(l10n.backend_api_server_config),
       content: SizedBox(
@@ -366,9 +368,10 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     }
 
     // Show confirmation dialog for server switch
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGlassDialog<bool>(
       context: dialogContext,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.transparent,
         title: Text(l10n.profile_server_switch_title),
         content: Text(l10n.profile_server_switch_message),
         actions: [
@@ -387,28 +390,26 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     if (confirmed != true) return;
 
     // Show loading dialog (use rootNavigator to show above all other dialogs)
-    showDialog<void>(
+    showGlassDialog<void>(
       context: dialogContext,
       barrierDismissible: false,
       useRootNavigator: true,
       builder: (ctx) => PopScope(
         canPop: false,
         child: Center(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(l10n.profile_server_switch_clearing),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(height: 16),
+                Text(l10n.profile_server_switch_clearing),
+              ],
             ),
           ),
         ),

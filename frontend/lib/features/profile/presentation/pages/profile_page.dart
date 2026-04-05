@@ -9,6 +9,7 @@ import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
@@ -468,9 +469,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     bool barrierDismissible = true,
     required Widget Function(BuildContext dialogContext) builder,
   }) {
-    return showDialog<T>(
+    return showGlassDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
+      useRootNavigator: false,
       builder: (dialogContext) => LayoutBuilder(
         builder: (dialogContext, constraints) {
           return ConstrainedBox(
@@ -492,6 +494,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Row(
             children: [
@@ -570,6 +573,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       builder: (dialogContext) {
         final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
         return AlertDialog(
+          backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Text(l10n.profile_security),
           content: SizedBox(
@@ -640,6 +644,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
+              backgroundColor: Colors.transparent,
               insetPadding: ResponsiveDialogHelper.insetPadding(),
               title: Text(l10n.profile_password_change_title),
               content: SizedBox(
@@ -797,6 +802,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
 
             return AlertDialog(
+              backgroundColor: Colors.transparent,
               insetPadding: ResponsiveDialogHelper.insetPadding(),
               title: Text(l10n.language),
               content: Column(
@@ -863,7 +869,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final packageInfo = await PackageInfo.fromPlatform();
     if (!context.mounted) return;
 
-    showDialog<void>(
+    showGlassDialog<void>(
       context: context,
       builder: (dialogContext) {
         final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
@@ -872,6 +878,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           desktopMaxWidth: 400,
         );
         return AlertDialog(
+          backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Row(
             children: [
@@ -927,7 +934,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _showServerConfigDialog(BuildContext context) {
-    showDialog(
+    showGlassDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const ServerConfigDialog(),
@@ -944,6 +951,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Text(l10n.profile_logout_title),
           content: Text(l10n.profile_logout_message),
