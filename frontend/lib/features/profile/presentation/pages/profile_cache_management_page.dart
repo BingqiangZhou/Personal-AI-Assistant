@@ -569,14 +569,15 @@ class _ProfileCacheManagementPageState
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return GlassContainer(
-      tier: GlassTier.light,
-      borderRadius: kPodcastRowCardCornerRadius,
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-      margin: EdgeInsets.symmetric(
+    return Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: _contentHorizontalInset(context),
         vertical: kPodcastRowCardVerticalMargin,
       ),
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: kPodcastRowCardCornerRadius,
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
       child: Row(
           children: [
             Container(
