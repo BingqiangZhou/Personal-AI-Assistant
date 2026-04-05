@@ -632,13 +632,18 @@ class HighlightExtractionService:
         if not episode_ids:
             return []
 
+        # Batch fetch existing tasks for all episode_ids
+        existing_stmt = select(HighlightExtractionTask).where(
+            HighlightExtractionTask.episode_id.in_(episode_ids)
+        )
+        existing_result = await self.db.execute(existing_stmt)
+        existing_tasks = {
+            task.episode_id: task for task in existing_result.scalars().all()
+        }
+
         claimed_ids: list[int] = []
         for episode_id in episode_ids:
-            existing_stmt = select(HighlightExtractionTask).where(
-                HighlightExtractionTask.episode_id == episode_id
-            )
-            existing_result = await self.db.execute(existing_stmt)
-            existing_task = existing_result.scalar_one_or_none()
+            existing_task = existing_tasks.get(episode_id)
 
             if existing_task is None:
                 task = HighlightExtractionTask(

@@ -87,6 +87,20 @@ def extract_episode_highlights(
             metadata={"episode_id": episode_id, "model_name": model_name},
         )
         return result
+    except SoftTimeLimitExceeded:
+        logger.warning(
+            "extract_episode_highlights timed out for episode_id=%s",
+            episode_id,
+        )
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+            metadata={"episode_id": episode_id, "model_name": model_name},
+        )
     except Exception as exc:
         logger.exception(
             "extract_episode_highlights failed for episode_id=%s (retry %d/%d)",

@@ -202,13 +202,18 @@ class TestFeedParser:
         """Test parsing feed from URL successfully."""
         parser = FeedParser()
 
-        # Mock HTTP client
-        mock_response = MagicMock()
+        # Mock HTTP client — must support async context manager protocol
+        mock_response = AsyncMock()
         mock_response.content = SAMPLE_RSS_FEED
         mock_response.raise_for_status = MagicMock()
+        mock_response.read = AsyncMock(return_value=SAMPLE_RSS_FEED)
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_context.__aexit__ = AsyncMock(return_value=False)
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.get = MagicMock(return_value=mock_context)
 
         parser._client = mock_client
 
@@ -223,12 +228,17 @@ class TestFeedParser:
         """Test parsing feed content via asyncio.to_thread."""
         parser = FeedParser()
 
-        mock_response = MagicMock()
+        mock_response = AsyncMock()
         mock_response.content = SAMPLE_RSS_FEED
         mock_response.raise_for_status = MagicMock()
+        mock_response.read = AsyncMock(return_value=SAMPLE_RSS_FEED)
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_context.__aexit__ = AsyncMock(return_value=False)
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.get = MagicMock(return_value=mock_context)
         parser._client = mock_client
 
         expected = FeedParseResult(feed_info=FeedInfo(title="Test Feed"), entries=[])
@@ -246,11 +256,15 @@ class TestFeedParser:
         """Test handling network error."""
         parser = FeedParser()
 
-        # Mock HTTP error
-        mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
+        # Mock HTTP error — exception raised when entering async context
+        mock_context = AsyncMock()
+        mock_context.__aenter__ = AsyncMock(
             side_effect=aiohttp.ClientError("Connection failed"),
         )
+        mock_context.__aexit__ = AsyncMock(return_value=False)
+
+        mock_client = AsyncMock()
+        mock_client.get = MagicMock(return_value=mock_context)
         parser._client = mock_client
 
         result = await parser.parse_feed("https://example.com/feed.xml")
@@ -264,10 +278,7 @@ class TestFeedParser:
         """Test handling HTTP error response."""
         parser = FeedParser()
 
-        # Mock HTTP 404 error
-        mock_response = MagicMock()
-        mock_response.status = 404
-
+        # Mock HTTP 404 error — raise_for_status triggers the exception
         error = aiohttp.ClientResponseError(
             request_info=MagicMock(),
             history=(),
@@ -275,8 +286,17 @@ class TestFeedParser:
             message="Not Found",
         )
 
+        mock_response = AsyncMock()
+        mock_response.status = 404
+        mock_response.raise_for_status = MagicMock(side_effect=error)
+        mock_response.read = AsyncMock(return_value=b"")
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_context.__aexit__ = AsyncMock(return_value=False)
+
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(side_effect=error)
+        mock_client.get = MagicMock(return_value=mock_context)
         parser._client = mock_client
 
         result = await parser.parse_feed("https://example.com/feed.xml")

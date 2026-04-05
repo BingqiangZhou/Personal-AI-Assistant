@@ -71,7 +71,7 @@ async def list_conversation_sessions(
         logger.error("Failed to list sessions for episode %s: %s", episode_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list sessions: {exc}",
+            detail="Failed to list sessions",
         )
 
 
@@ -110,7 +110,7 @@ async def create_conversation_session(
         logger.error("Failed to create session for episode %s: %s", episode_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create session: {exc}",
+            detail="Failed to create session",
         )
 
 
@@ -143,7 +143,7 @@ async def delete_conversation_session(
         logger.error("Failed to delete session %s: %s", session_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete session: {exc}",
+            detail="Failed to delete session",
         )
 
 
@@ -194,7 +194,7 @@ async def get_conversation_history(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get conversation history: {exc}",
+            detail="Failed to get conversation history",
         )
 
 
@@ -237,7 +237,7 @@ async def send_conversation_message(
         logger.error("Failed to send message for episode %s: %s", episode_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {exc}",
+            detail="Failed to send message",
         )
 
 
@@ -283,5 +283,5 @@ async def clear_conversation_history(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear conversation history: {exc}",
+            detail="Failed to clear conversation history",
         )

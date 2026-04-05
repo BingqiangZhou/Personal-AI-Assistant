@@ -380,16 +380,16 @@ class PodcastSubscriptionService:
                 {
                     "id": ep.id,
                     "title": ep.title,
-                    "description": ep.description[:100] + "..."
-                    if len(ep.description) > 100
-                    else ep.description,
+                    "description": (ep.description or "")[:100] + "..."
+                    if len(ep.description or "") > 100
+                    else ep.description or "",
                     "audio_url": ep.audio_url,
                     "duration": ep.audio_duration,
                     "published_at": ep.published_at,
                     "has_summary": ep.ai_summary is not None,
-                    "summary": ep.ai_summary[:200] + "..."
+                    "summary": (ep.ai_summary or "")[:200] + "..."
                     if ep.ai_summary and len(ep.ai_summary) > 200
-                    else ep.ai_summary,
+                    else ep.ai_summary or "",
                     "ai_confidence": ep.ai_confidence_score,
                     "play_count": ep.play_count,
                 }

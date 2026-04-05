@@ -93,7 +93,7 @@ async def start_transcription(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start transcription: {exc}",
+            detail="Failed to start transcription",
         ) from exc
 
 
@@ -199,7 +199,7 @@ async def get_transcription(
         logger.error("Failed to get transcription for episode %s: %s", episode_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get transcription: {exc}",
+            detail="Failed to get transcription",
         ) from exc
 
 
@@ -236,7 +236,7 @@ async def delete_transcription(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete transcription: {exc}",
+            detail="Failed to delete transcription task",
         ) from exc
 
 
@@ -274,7 +274,7 @@ async def get_transcription_status(
         logger.error("Failed to get transcription status for task %s: %s", task_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get transcription status: {exc}",
+            detail="Failed to get transcription status",
         ) from exc
 
 
@@ -317,7 +317,7 @@ async def schedule_episode_transcription_endpoint(
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to schedule transcription: {exc}",
+            detail="Failed to schedule transcription",
         ) from exc
 
 
@@ -347,7 +347,7 @@ async def get_episode_transcript_endpoint(
     except Exception as exc:
         logger.error("Failed to get transcript for episode %s: %s", episode_id, exc)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get transcript: {exc}"
+            status_code=500, detail="Failed to get transcript"
         ) from exc
 
 
@@ -386,7 +386,7 @@ async def batch_transcribe_subscription_endpoint(
             "Failed to batch transcribe subscription %s: %s", subscription_id, exc
         )
         raise HTTPException(
-            status_code=500, detail=f"Failed to batch transcribe: {exc}"
+            status_code=500, detail="Failed to batch transcribe"
         ) from exc
 
 
@@ -419,7 +419,7 @@ async def get_transcription_schedule_status(
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get transcription status: {exc}",
+            detail="Failed to get transcription status",
         ) from exc
 
 
@@ -449,7 +449,7 @@ async def cancel_transcription_endpoint(
             "Failed to cancel transcription for episode %s: %s", episode_id, exc
         )
         raise HTTPException(
-            status_code=500, detail=f"Failed to cancel transcription: {exc}"
+            status_code=500, detail="Failed to cancel transcription"
         ) from exc
 
 
@@ -483,7 +483,7 @@ async def check_and_transcribe_new_episodes(
             "Failed to check new episodes for subscription %s: %s", subscription_id, exc
         )
         raise HTTPException(
-            status_code=500, detail=f"Failed to check new episodes: {exc}"
+            status_code=500, detail="Failed to check new episodes"
         ) from exc
 
 
@@ -508,7 +508,7 @@ async def get_pending_transcriptions(
         logger.error("Failed to get pending transcriptions: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get pending transcriptions: {exc}",
+            detail="Failed to get pending transcriptions",
         ) from exc
 
 
