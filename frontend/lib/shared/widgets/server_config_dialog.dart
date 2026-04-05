@@ -182,9 +182,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                       labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
+                      backgroundColor: Colors.transparent,
                       side: BorderSide(
                         color: Theme.of(context).colorScheme.outlineVariant,
                       ),

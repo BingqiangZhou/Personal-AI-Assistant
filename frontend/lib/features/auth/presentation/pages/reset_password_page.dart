@@ -176,8 +176,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.auth_reset_password),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),

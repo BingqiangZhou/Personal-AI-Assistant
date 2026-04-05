@@ -297,7 +297,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -433,7 +433,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: releaseNotes.isEmpty
@@ -474,7 +474,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     code: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,
                       backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
+                          Colors.transparent,
                     ),
                     codeblockPadding: const EdgeInsets.all(12),
                     codeblockDecoration: BoxDecoration(

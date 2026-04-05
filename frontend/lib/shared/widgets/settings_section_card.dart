@@ -37,8 +37,6 @@ class SettingsSectionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide.none,
               ),
-          elevation: 0,
-          color: theme.colorScheme.surface,
           child: Column(children: children),
         ),
       ],

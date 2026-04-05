@@ -254,7 +254,6 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.auth_verification_title),
-        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -321,7 +320,7 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

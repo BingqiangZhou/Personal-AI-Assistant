@@ -82,8 +82,6 @@ class EpisodeCardSkeleton extends StatelessWidget {
       child: Card(
         margin: cardMargin ?? (compact ? const EdgeInsets.symmetric(horizontal: 4, vertical: 6) : null),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 0,
-        color: theme.colorScheme.surface,
         child: Padding(
           padding: padding,
           child: Column(

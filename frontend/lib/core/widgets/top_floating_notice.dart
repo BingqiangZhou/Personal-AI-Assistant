@@ -44,7 +44,7 @@ void showTopFloatingNotice(
       appBarHeight ?? (scaffold == null ? kToolbarHeight : 0);
   final backgroundColor = isError
       ? theme.colorScheme.errorContainer
-      : theme.colorScheme.surfaceContainerHighest;
+      : Colors.transparent;
   final foregroundColor = isError
       ? theme.colorScheme.onErrorContainer
       : theme.colorScheme.onSurface;

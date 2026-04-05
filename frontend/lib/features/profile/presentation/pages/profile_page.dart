@@ -526,10 +526,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(dialogContext)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.5),
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

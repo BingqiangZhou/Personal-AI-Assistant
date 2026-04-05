@@ -41,7 +41,7 @@ Future<T?> showAdaptiveSheet<T>({
               maxHeight: size.height * desktopMaxHeightFraction,
             ),
             child: Material(
-              color: Theme.of(dialogCtx).colorScheme.surface,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(28),
               clipBehavior: Clip.antiAlias,
               elevation: 6,
@@ -60,7 +60,7 @@ Future<T?> showAdaptiveSheet<T>({
     showDragHandle: showDragHandle,
     useSafeArea: useSafeArea,
     useRootNavigator: true,
-    backgroundColor: Theme.of(resolvedContext).colorScheme.surface,
+    backgroundColor: Colors.transparent,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),

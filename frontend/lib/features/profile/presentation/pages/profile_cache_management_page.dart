@@ -493,9 +493,7 @@ class _ProfileCacheManagementPageState
         key: const Key('cache_manage_overview_section'),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: theme.brightness == Brightness.dark ? 0.22 : 0.58,
-          ),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),

@@ -168,8 +168,7 @@ class _FontDropdownState extends ConsumerState<_FontDropdown> {
               menuHeight: 360,
               inputDecorationTheme: InputDecorationTheme(
                 filled: true,
-                fillColor:
-                    scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                fillColor: Colors.transparent,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: scheme.outlineVariant),
