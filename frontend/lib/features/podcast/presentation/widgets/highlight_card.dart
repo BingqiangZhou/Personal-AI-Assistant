@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_container.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_style.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_score_indicator.dart';
 
@@ -28,59 +30,45 @@ class HighlightCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final tokens = theme.extension<AppThemeExtension>();
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: (tokens?.glassSurfaceStrong ?? Colors.white).withValues(
-                  alpha: theme.brightness == Brightness.dark ? 0.34 : 0.76,
-                ),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: (tokens?.glassShadow ?? Colors.black).withValues(
-                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.08,
-                ),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              ),
-            ],
+        child: LiquidGlassContainer(
+          tier: LiquidGlassTier.light,
+          borderRadius: 22,
+          padding: EdgeInsets.fromLTRB(
+            isCompact ? 14 : 16,
+            isCompact ? 14 : 16,
+            isCompact ? 12 : 16,
+            isCompact ? 12 : 14,
           ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              isCompact ? 14 : 16,
-              isCompact ? 14 : 16,
-              isCompact ? 12 : 16,
-              isCompact ? 12 : 14,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 原文放在最上面
-                if (!isCompact) ...[
-                  _buildOriginalQuote(context, theme),
-                ] else ...[
-                  _buildCompactQuote(context, theme),
-                ],
-                // 分数和收藏按钮放在原文下面
-                const SizedBox(height: 10),
-                _buildHeader(context, theme),
-                const SizedBox(height: 10),
-                _buildScoresSection(context, theme),
-                const SizedBox(height: 10),
-                _buildMetadataSection(context, theme),
-                if (highlight.topicTags.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  _buildTopicTags(context, theme),
-                ],
+          animate: true,
+          interactive: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 原文放在最上面
+              if (!isCompact) ...[
+                _buildOriginalQuote(context, theme),
+              ] else ...[
+                _buildCompactQuote(context, theme),
               ],
-            ),
+              // 分数和收藏按钮放在原文下面
+              const SizedBox(height: 10),
+              _buildHeader(context, theme),
+              const SizedBox(height: 10),
+              _buildScoresSection(context, theme),
+              const SizedBox(height: 10),
+              _buildMetadataSection(context, theme),
+              if (highlight.topicTags.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                _buildTopicTags(context, theme),
+              ],
+            ],
           ),
         ),
       ),

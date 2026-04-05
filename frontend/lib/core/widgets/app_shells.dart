@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_container.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_style.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/widgets/stella_background.dart';
 
@@ -291,10 +293,10 @@ class HeaderCapsuleActionButton extends StatelessWidget {
   }
 }
 
-/// SurfacePanel - 实体面板组件
+/// SurfacePanel - Liquid Glass surface panel
 ///
-/// 提供纯色背景 + 边框 + 阴影的容器
-/// 首次构建时有微妙的淡入上滑入场动画
+/// Uses LiquidGlassContainer with light tier for cards and panels.
+/// Includes a subtle fade-in + slide-up entrance animation on first build.
 class SurfacePanel extends StatefulWidget {
   const SurfacePanel({
     super.key,
@@ -326,33 +328,18 @@ class _SurfacePanelState extends State<SurfacePanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
     final radius = widget.borderRadius ?? extension.cardRadius;
 
     final panel = Container(
       margin: widget.margin,
-      decoration: BoxDecoration(
-        color: widget.backgroundColor ?? scheme.surface,
-        borderRadius: BorderRadius.circular(radius),
-        border: widget.showBorder
-            ? Border.all(color: scheme.outlineVariant)
-            : null,
-        boxShadow: widget.showShadow
-            ? [
-                BoxShadow(
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.black.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
-      ),
-      child: Padding(
+      child: LiquidGlassContainer(
+        tier: LiquidGlassTier.light,
+        borderRadius: radius,
         padding: widget.padding,
+        tint: widget.backgroundColor,
+        animate: true,
+        interactive: false,
         child: widget.child,
       ),
     );

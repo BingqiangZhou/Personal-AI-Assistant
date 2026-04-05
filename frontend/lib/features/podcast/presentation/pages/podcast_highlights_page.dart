@@ -8,6 +8,9 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_container.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_style.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -412,14 +415,12 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: tokens.glassSurfaceStrong.withValues(
-                    alpha: theme.brightness == Brightness.dark ? 0.38 : 0.8,
-                  ),
-                  borderRadius: BorderRadius.circular(22),
-                ),
+              child: LiquidGlassContainer(
+                tier: LiquidGlassTier.light,
+                borderRadius: 22,
                 padding: const EdgeInsets.all(18),
+                animate: true,
+                interactive: false,
                 child: Text(
                   l10n.podcast_highlights_empty,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -701,7 +702,6 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     bool isDisabled = false,
   }) {
     final theme = Theme.of(context);
-    final tokens = appThemeOf(context);
     final normalizedDay = _toDateOnly(day);
     final selected = isSelected || _isSameDate(normalizedDay, selectedDate);
     Color textColor = theme.colorScheme.onSurface;
@@ -724,7 +724,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
         decoration: BoxDecoration(
           color: selected
               ? theme.colorScheme.primary
-              : tokens.glassSurfaceStrong.withValues(
+              : LiquidGlassTokens.of(context).glassFill.withValues(
                   alpha: isOutside || isDisabled ? 0.18 : 0.22,
                 ),
           borderRadius: BorderRadius.circular(14),

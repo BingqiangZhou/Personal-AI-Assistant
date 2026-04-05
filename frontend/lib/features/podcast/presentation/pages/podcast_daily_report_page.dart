@@ -7,6 +7,9 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_container.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_style.dart';
+import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -184,11 +187,11 @@ class _PodcastDailyReportPageState
             : l10n.refresh,
       ),
       style: FilledButton.styleFrom(
-        backgroundColor: tokens.glassSurfaceStrong.withValues(
+        backgroundColor: LiquidGlassTokens.of(context).glassFill.withValues(
           alpha: theme.brightness == Brightness.dark ? 0.6 : 0.86,
         ),
         foregroundColor: theme.colorScheme.onSurface,
-        disabledBackgroundColor: tokens.glassSurfaceStrong.withValues(
+        disabledBackgroundColor: LiquidGlassTokens.of(context).glassFill.withValues(
           alpha: 0.32,
         ),
         disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withValues(
@@ -274,17 +277,12 @@ class _PodcastDailyReportPageState
         context,
         title: EpisodeCardUtils.formatDate(targetDate),
         subtitle: l10n.podcast_daily_report_empty,
-        child: Container(
-          decoration: BoxDecoration(
-            color: tokens.glassSurfaceStrong.withValues(
-              alpha: theme.brightness == Brightness.dark ? 0.38 : 0.8,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-          ),
+        child: LiquidGlassContainer(
+          tier: LiquidGlassTier.light,
+          borderRadius: 22,
           padding: const EdgeInsets.all(18),
+          animate: true,
+          interactive: false,
           child: Text(
             l10n.podcast_daily_report_empty,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -423,7 +421,6 @@ class _PodcastDailyReportPageState
   ) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final tokens = appThemeOf(context);
     final metaLine =
         '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
 
@@ -435,25 +432,13 @@ class _PodcastDailyReportPageState
           context.push('/podcast/episode/detail/${item.episodeId}');
         },
         borderRadius: BorderRadius.circular(22),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: tokens.glassSurfaceStrong.withValues(
-              alpha: theme.brightness == Brightness.dark ? 0.34 : 0.76,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: tokens.glassShadow.withValues(
-                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.08,
-                ),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-            child: Column(
+        child: LiquidGlassContainer(
+          tier: LiquidGlassTier.light,
+          borderRadius: 22,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          animate: true,
+          interactive: true,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -492,8 +477,7 @@ class _PodcastDailyReportPageState
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _showCalendarPanel() async {
@@ -789,7 +773,7 @@ class _PodcastDailyReportPageState
         decoration: BoxDecoration(
           color: selected
               ? theme.colorScheme.primary
-              : tokens.glassSurfaceStrong.withValues(
+              : LiquidGlassTokens.of(context).glassFill.withValues(
                   alpha: isOutside || isDisabled ? 0.18 : 0.22,
                 ),
           borderRadius: BorderRadius.circular(14),

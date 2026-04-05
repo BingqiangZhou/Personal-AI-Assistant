@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -71,35 +72,87 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
   // Pre-generated noise texture (created once)
   ui.Image? _noiseImage;
 
+  bool _disableAnimations = false;
+
   @override
   void initState() {
     super.initState();
     _animationController = LiquidGlassAnimationController.create(this);
   }
 
+  /// Generates a small noise texture image for the glass surface.
+  Future<void> _generateNoiseTexture() async {
+    const size = 64;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final random = math.Random(42); // Fixed seed for consistency
+    final paint = Paint();
+
+    for (int x = 0; x < size; x++) {
+      for (int y = 0; y < size; y++) {
+        final gray = random.nextInt(256);
+        paint.color = Color.fromARGB(255, gray, gray, gray);
+        canvas.drawRect(
+          Rect.fromLTWH(x.toDouble(), y.toDouble(), 1, 1),
+          paint,
+        );
+      }
+    }
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(size, size);
+
+    if (mounted) {
+      setState(() {
+        _noiseImage = image;
+      });
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final shouldDisable = MediaQuery.of(context).disableAnimations;
+    if (shouldDisable != _disableAnimations) {
+      _disableAnimations = shouldDisable;
+      if (_disableAnimations) {
+        _animationController.stopLightFlow();
+      } else if (widget.animate) {
+        _animationController.startLightFlow();
+      }
+    }
+
+    // Resolve effective tier (degrade to subtle when animations disabled)
+    final effectiveTier = _disableAnimations ? LiquidGlassTier.subtle : widget.tier;
+
     // Update style when theme changes (safe to access Theme.of here)
     _style = LiquidGlassStyle.forTier(
-      widget.tier,
+      effectiveTier,
       Theme.of(context).brightness,
     );
+
+    // Generate noise texture once (skip if animations disabled)
+    if (_noiseImage == null && !_disableAnimations) {
+      _generateNoiseTexture();
+    }
   }
 
   @override
   void didUpdateWidget(LiquidGlassContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    final effectiveTier = _disableAnimations ? LiquidGlassTier.subtle : widget.tier;
+
     // Update style if tier changed
-    if (oldWidget.tier != widget.tier) {
+    if (oldWidget.tier != widget.tier || _disableAnimations) {
       _style = LiquidGlassStyle.forTier(
-        widget.tier,
+        effectiveTier,
         Theme.of(context).brightness,
       );
     }
     // Handle animation state changes
     if (oldWidget.animate != widget.animate) {
-      if (widget.animate) {
+      if (widget.animate && !_disableAnimations) {
         _animationController.startLightFlow();
         if (!_animationController.hasPlayedEntryAnimation) {
           _animationController.playEntryAnimation();
@@ -113,6 +166,7 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
   @override
   void dispose() {
     _animationController.dispose();
+    _noiseImage?.dispose();
     super.dispose();
   }
 
@@ -130,10 +184,10 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
         onTapCancel: widget.interactive ? _handlePressCancel : null,
         child: AnimatedBuilder(
           animation: Listenable.merge([
-            _animationController.lightFlow,
+            if (!_disableAnimations) _animationController.lightFlow,
             _animationController.entry,
-            if (_isHovered) _animationController.hover,
-            if (_isPressed) _animationController.press,
+            if (_isHovered && !_disableAnimations) _animationController.hover,
+            if (_isPressed && !_disableAnimations) _animationController.press,
           ]),
           builder: (context, child) {
             return _buildGlassContainer(borderRadius, effectivePadding, child!);
@@ -167,12 +221,15 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
             sigmaX: currentBlur,
             sigmaY: currentBlur,
           ),
-          child: _buildMaterialLayer(
-            borderRadius,
-            padding,
+          child: _buildSaturationFilter(
             effectiveStyle,
-            currentBorderOpacity,
-            child,
+            _buildMaterialLayer(
+              borderRadius,
+              padding,
+              effectiveStyle,
+              currentBorderOpacity,
+              child,
+            ),
           ),
         ),
       ),
@@ -228,7 +285,7 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
             child: Stack(
               children: [
                 // Noise texture overlay
-                if (_noiseImage != null)
+                if (_noiseImage != null && !_disableAnimations)
                   Positioned.fill(
                     child: Opacity(
                       opacity: style.noiseOpacity,
@@ -239,7 +296,7 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
                     ),
                   ),
                 // Light flow animation
-                if (widget.animate)
+                if (widget.animate && !_disableAnimations)
                   Positioned.fill(
                     child: _buildLightFlowOverlay(style),
                   ),
@@ -288,6 +345,28 @@ class _LiquidGlassContainerState extends State<LiquidGlassContainer>
           ),
         ),
       ),
+    );
+  }
+
+  /// Applies saturation boost via ColorFilter.matrix.
+  /// Skipped when animations are disabled (performance).
+  Widget _buildSaturationFilter(LiquidGlassStyle style, Widget child) {
+    if (_disableAnimations) return child;
+
+    final s = style.saturationBoost;
+    // Saturation matrix: grayscale base + scaled color difference
+    final r = 0.2126 * (1 - s);
+    final g = 0.7152 * (1 - s);
+    final b = 0.0722 * (1 - s);
+
+    return ColorFiltered(
+      colorFilter: ColorFilter.matrix(<double>[
+        r + s, g, b, 0, 0, //
+        r, g + s, b, 0, 0, //
+        r, g, b + s, 0, 0, //
+        0, 0, 0, 1, 0, //
+      ]),
+      child: child,
     );
   }
 

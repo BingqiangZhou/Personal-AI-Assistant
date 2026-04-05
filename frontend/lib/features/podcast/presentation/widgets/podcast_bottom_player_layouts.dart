@@ -255,7 +255,6 @@ class _PodcastExpandedOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final tokens = appThemeOf(context);
     final mediaSize = MediaQuery.sizeOf(context);
     final maxPanelWidth = math.min(
       mediaSize.width - (viewportSpec.dockHorizontalPadding * 2),
@@ -282,39 +281,14 @@ class _PodcastExpandedOverlay extends ConsumerWidget {
               duration: _kPlayerTransition,
               curve: Curves.easeOutCubic,
               opacity: visible ? 1 : 0,
-              child: Material(
+              child: LiquidGlassContainer(
                 key: visible ? const Key('podcast_player_mobile_sheet') : null,
-                color: Colors.transparent,
-                elevation: 10,
-                shadowColor: tokens.glassShadow.withValues(alpha: 0.28),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    viewportSpec.mobileDrawerBorderRadius,
-                  ),
-                  side: BorderSide(
-                    color: tokens.glassBorder.withValues(alpha: 0.56),
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Ink(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      viewportSpec.mobileDrawerBorderRadius,
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        tokens.glassSurfaceStrong.withValues(alpha: 0.96),
-                        theme.colorScheme.surface.withValues(alpha: 0.94),
-                        theme.colorScheme.primaryContainer.withValues(
-                          alpha: theme.brightness == Brightness.dark
-                              ? 0.42
-                              : 0.68,
-                        ),
-                      ],
-                    ),
-                  ),
+                tier: LiquidGlassTier.heavy,
+                borderRadius: viewportSpec.mobileDrawerBorderRadius,
+                animate: true,
+                interactive: false,
+                child: Material(
+                  type: MaterialType.transparency,
                   child: _ExpandedPanelContent(
                     episode: episode,
                     showPrimaryKeys: visible,
@@ -392,7 +366,7 @@ class _ExpandedPanelContent extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: appThemeOf(context).glassBorder,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
