@@ -122,13 +122,14 @@ class AppCache(
 
     def __init__(self):
         RedisClientManager.__init__(self)
+        self._background_tasks: set = set()
 
     # === Key Scanning ===
 
     async def _scan_keys(self, pattern: str) -> list[str]:
         client = await self._get_client()
         keys: list[str] = []
-        async for key in client.scan_iter(match=pattern):
+        async for key in client.scan_iter(match=pattern, count=100):
             keys.append(key)
         return keys
 
@@ -424,8 +425,10 @@ class AppCache(
     async def set_episode_metadata(self, episode_id: int, metadata: dict) -> None:
         client = await self._get_client()
         key = f"podcast:meta:{episode_id}"
-        await client.hset(key, mapping=metadata)
-        await client.expire(key, CacheTTL.EPISODE_METADATA)
+        async with client.pipeline(True) as pipe:
+            pipe.hset(key, mapping=metadata)
+            pipe.expire(key, CacheTTL.EPISODE_METADATA)
+            await pipe.execute()
 
     # === Distributed Lock ===
 

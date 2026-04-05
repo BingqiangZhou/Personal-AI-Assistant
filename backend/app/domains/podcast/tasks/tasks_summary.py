@@ -5,6 +5,8 @@ Merged from: summary_generation.py, handlers_summary.py
 
 from datetime import UTC, datetime
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from app.core.celery_app import celery_app
 from app.domains.podcast.services.summary_service import SummaryWorkflowService
 from app.domains.podcast.tasks.runtime import (
@@ -55,6 +57,16 @@ def generate_pending_summaries(self):
             finished_at=datetime.now(UTC),
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,
@@ -101,6 +113,17 @@ def generate_episode_summary(
             metadata={"episode_id": episode_id, "summary_model": summary_model},
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+            metadata={"episode_id": episode_id, "summary_model": summary_model},
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,

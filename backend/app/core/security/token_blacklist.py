@@ -37,10 +37,13 @@ async def revoke_token(jti: str, remaining_ttl: int | None = None) -> None:
         remaining_ttl: Optional remaining TTL in seconds.  Falls back to
             ``_MAX_TOKEN_TTL`` when not provided or non-positive.
     """
-    client = await _get_raw_client()
-    ttl = remaining_ttl if remaining_ttl and remaining_ttl > 0 else _MAX_TOKEN_TTL
-    await client.setex(_BLACKLIST_KEY.format(jti=jti), ttl, "1")
-    logger.info("Token revoked: jti=%s ttl=%s", jti, ttl)
+    try:
+        client = await _get_raw_client()
+        ttl = remaining_ttl if remaining_ttl and remaining_ttl > 0 else _MAX_TOKEN_TTL
+        await client.setex(_BLACKLIST_KEY.format(jti=jti), ttl, "1")
+        logger.info("Token revoked: jti=%s ttl=%s", jti, ttl)
+    except Exception:
+        logger.warning("Token revoke failed — Redis unavailable: jti=%s", jti)
 
 
 async def is_token_revoked(jti: str) -> bool:
@@ -51,9 +54,14 @@ async def is_token_revoked(jti: str) -> bool:
 
     Returns:
         ``True`` if the token is on the blacklist, ``False`` otherwise.
+        Fails open (returns ``False``) when Redis is unavailable.
     """
-    client = await _get_raw_client()
-    return bool(await client.exists(_BLACKLIST_KEY.format(jti=jti)))
+    try:
+        client = await _get_raw_client()
+        return bool(await client.exists(_BLACKLIST_KEY.format(jti=jti)))
+    except Exception:
+        logger.warning("Token blacklist check failed — Redis unavailable: jti=%s", jti)
+        return False  # Fail open: treat as not revoked
 
 
 async def revoke_all_user_tokens(user_id: int) -> None:
@@ -61,31 +69,51 @@ async def revoke_all_user_tokens(user_id: int) -> None:
 
     Looks up every JTI registered for *user_id* via the ``user_tokens``
     tracking set, adds each to the blacklist, then clears the set.
+
+    Note: Uses SSCAN pagination to avoid loading all JTIs into memory
+    at once for users with many active sessions.
     """
-    client = await _get_raw_client()
-    key = _USER_TOKENS_KEY.format(user_id=user_id)
+    try:
+        client = await _get_raw_client()
+        key = _USER_TOKENS_KEY.format(user_id=user_id)
 
-    # Get all JTIs for this user
-    jtis = await client.smembers(key)
-    if jtis:
-        # Revoke each token in a pipeline
-        pipe = client.pipeline()
-        for jti in jtis:
+        # Use SSCAN for paginated iteration instead of SMEMBERS to avoid
+        # loading the entire set into memory at once.
+        jti_count = 0
+
+        # Collect and revoke in batches
+        batch: list[str] = []
+        async for jti in client.sscan_iter(key, count=100):
             jti_str = jti.decode() if isinstance(jti, bytes) else jti
-            pipe.setex(
-                _BLACKLIST_KEY.format(jti=jti_str),
-                _MAX_TOKEN_TTL,
-                "1",
-            )
-        await pipe.execute()
+            batch.append(jti_str)
+            if len(batch) >= 100:
+                pipe = client.pipeline()
+                for j in batch:
+                    pipe.setex(_BLACKLIST_KEY.format(jti=j), _MAX_TOKEN_TTL, "1")
+                await pipe.execute()
+                jti_count += len(batch)
+                batch = []
 
-    # Clear the user's token set
-    await client.delete(key)
-    logger.info(
-        "All tokens revoked for user_id=%s count=%s",
-        user_id,
-        len(jtis),
-    )
+        # Flush remaining
+        if batch:
+            pipe = client.pipeline()
+            for j in batch:
+                pipe.setex(_BLACKLIST_KEY.format(jti=j), _MAX_TOKEN_TTL, "1")
+            await pipe.execute()
+            jti_count += len(batch)
+
+        # Clear the user's token set
+        await client.delete(key)
+        logger.info(
+            "All tokens revoked for user_id=%s count=%s",
+            user_id,
+            jti_count,
+        )
+    except Exception:
+        logger.warning(
+            "Revoke all user tokens failed — Redis unavailable: user_id=%s",
+            user_id,
+        )
 
 
 async def register_user_token(user_id: int, jti: str) -> None:
@@ -95,8 +123,15 @@ async def register_user_token(user_id: int, jti: str) -> None:
         user_id: The user's integer ID.
         jti: The JWT ID claim of the freshly-created token.
     """
-    client = await _get_raw_client()
-    key = _USER_TOKENS_KEY.format(user_id=user_id)
-    await client.sadd(key, jti)
-    # Refresh expiry on the tracking set to match max token lifetime
-    await client.expire(key, _MAX_TOKEN_TTL)
+    try:
+        client = await _get_raw_client()
+        key = _USER_TOKENS_KEY.format(user_id=user_id)
+        await client.sadd(key, jti)
+        # Refresh expiry on the tracking set to match max token lifetime
+        await client.expire(key, _MAX_TOKEN_TTL)
+    except Exception:
+        logger.warning(
+            "Token registration failed — Redis unavailable: user_id=%s jti=%s",
+            user_id,
+            jti,
+        )

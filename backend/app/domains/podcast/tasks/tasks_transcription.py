@@ -6,6 +6,8 @@ handlers_transcription.py, handlers_pending_transcription.py
 
 from datetime import UTC, datetime
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from app.core.celery_app import celery_app
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
@@ -72,7 +74,9 @@ async def process_pending_transcriptions_handler(session) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(
+    bind=True, max_retries=3, soft_time_limit=25 * 60, time_limit=28 * 60
+)
 def process_audio_transcription(self, task_id: int, config_db_id: int | None = None):
     started_at = datetime.now(UTC)
     task_name = (
@@ -94,6 +98,17 @@ def process_audio_transcription(self, task_id: int, config_db_id: int | None = N
             metadata={"task_id": task_id, "config_db_id": config_db_id},
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+            metadata={"task_id": task_id, "config_db_id": config_db_id},
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,
@@ -138,6 +153,17 @@ def process_podcast_episode_with_transcription(self, episode_id: int, user_id: i
             metadata={"episode_id": episode_id, "user_id": user_id},
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+            metadata={"episode_id": episode_id, "user_id": user_id},
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,
@@ -183,6 +209,17 @@ def process_pending_transcriptions(self):
             metadata=metadata,
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+            metadata=metadata,
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,

@@ -1,5 +1,6 @@
 """Password hashing (bcrypt), API key generation, and password reset tokens."""
 
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
@@ -7,6 +8,9 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 # Password hashing context
@@ -43,7 +47,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             hashed_password = hashed_password.encode("utf-8")
         try:
             return bcrypt.checkpw(plain_password, hashed_password)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Password verification failed: %s", type(exc).__name__)
             return False
     else:
         return pwd_context.verify(plain_password, hashed_password)

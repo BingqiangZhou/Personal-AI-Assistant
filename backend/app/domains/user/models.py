@@ -10,6 +10,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Float,
+    ForeignKey,
     Index,
     Integer,
     String,
@@ -92,7 +93,9 @@ class UserSession(Base):
     __tablename__ = "user_sessions"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     session_token = Column(String(255), unique=True, index=True, nullable=False)
     refresh_token = Column(String(255), unique=True, index=True, nullable=True)
     device_info = Column(JSON, nullable=True)

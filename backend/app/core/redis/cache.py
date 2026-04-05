@@ -30,6 +30,9 @@ _NULL_CACHE_TTL = 60  # seconds
 class CacheOperations:
     """Basic cache operations mixin."""
 
+    def __init__(self) -> None:
+        self._background_tasks: set[asyncio.Task] = set()
+
     async def cache_get(self, client: Any, key: str) -> str | None:
         value = await client.get(key)
         return value
@@ -55,10 +58,13 @@ class CacheOperations:
     async def cache_hset(
         self, client: Any, key: str, mapping: dict, ttl: int | None = None
     ) -> int:
-        result = await client.hset(key, mapping=mapping)
         if ttl:
-            await client.expire(key, ttl)
-        return result
+            async with client.pipeline(True) as pipe:
+                pipe.hset(key, mapping=mapping)
+                pipe.expire(key, ttl)
+                results = await pipe.execute()
+                return int(results[0] or 0)
+        return await client.hset(key, mapping=mapping)
 
     # --- JSON helpers ---
 
@@ -164,7 +170,9 @@ class CacheOperations:
         if value is not None:
             ttl_remaining = await client.ttl(key)
             if ttl_remaining > 0 and ttl_remaining < stale_ttl:
-                asyncio.create_task(self._background_refresh(key, loader, client, ttl))
+                task = asyncio.create_task(self._background_refresh(key, loader, client, ttl))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
             return value
 
         value = await loader()
@@ -372,7 +380,7 @@ class PodcastCacheOperations:
             return False
 
         async with client.pipeline() as pipe:
-            pipe.setex(key, 900, json_str)
+            pipe.setex(key, CacheTTL.SUBSCRIPTION_LIST, json_str)
             pipe.sadd(index_key, key)
             pipe.expire(index_key, 1800)
             await pipe.execute()
@@ -462,7 +470,7 @@ class PodcastCacheOperations:
             return False
 
         async with client.pipeline() as pipe:
-            pipe.setex(key, 600, json_str)
+            pipe.setex(key, CacheTTL.EPISODE_LIST, json_str)
             pipe.sadd(index_key, key)
             pipe.expire(index_key, 1800)
             await pipe.execute()

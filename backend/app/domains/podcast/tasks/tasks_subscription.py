@@ -5,6 +5,8 @@ Merged from: subscription_sync.py, handlers_subscription_sync.py
 
 from datetime import UTC, datetime
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from app.core.celery_app import celery_app
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
@@ -58,6 +60,16 @@ def refresh_all_podcast_feeds(self):
             finished_at=datetime.now(UTC),
         )
         return result
+    except SoftTimeLimitExceeded:
+        log_task_run(
+            task_name=task_name,
+            queue_name=queue_name,
+            status="timeout",
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+            error_message="SoftTimeLimitExceeded",
+        )
+        raise
     except Exception as exc:
         log_task_run(
             task_name=task_name,

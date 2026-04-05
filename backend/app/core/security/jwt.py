@@ -196,7 +196,7 @@ async def verify_token_optional(
         # Only return mock user in development mode with DEBUG enabled
         if settings.ENVIRONMENT == "development" and settings.DEBUG:
             return {
-                "sub": "dev-mock-00000000-0000-0000-000000000001",
+                "sub": "1",  # Use integer for mock user
                 "email": "dev-mock@internal.local",
                 "type": token_type,
                 "exp": int(time.time()) + 3600,  # 1 hour from now

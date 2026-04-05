@@ -95,6 +95,9 @@ async def application_lifespan(app: FastAPI):
             "Never use in production!"
         )
 
+    if settings.ENVIRONMENT == "production" and settings.DEBUG:
+        logger.warning("DEBUG is enabled in production — set DEBUG=false")
+
     # Initialize database
     await init_db()
 
@@ -173,9 +176,12 @@ async def application_lifespan(app: FastAPI):
                 "startup:reset-stale-transcription-tasks",
                 startup_lock_token,
             )
+        # Shutdown order: DB first (stops new queries),
+        # then HTTP (in-flight requests complete),
+        # then Redis (last since in-flight HTTP may need cache).
+        await close_db()
         await close_shared_http_session()
         await close_shared_redis()
-        await close_db()
         logger.info("Service shutdown completed")
 
 

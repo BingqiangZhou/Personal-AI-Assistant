@@ -464,15 +464,21 @@ class SubscriptionService:
             status=SubscriptionStatus.ACTIVE,
             source_type="rss",
         )
-        results = []
-        for sub in subs:
-            try:
-                results.append(await self.fetch_subscription(sub.id))
-            except Exception as exc:
-                results.append(
-                    {"subscription_id": sub.id, "status": "error", "error": str(exc)}
-                )
-        return results
+
+        sem = asyncio.Semaphore(5)  # limit concurrency
+
+        async def _fetch_one(sub: Subscription) -> dict[str, Any]:
+            async with sem:
+                try:
+                    return await self.fetch_subscription(sub.id)
+                except Exception as exc:
+                    return {
+                        "subscription_id": sub.id,
+                        "status": "error",
+                        "error": str(exc),
+                    }
+
+        return list(await asyncio.gather(*[_fetch_one(sub) for sub in subs]))
 
     # ── Category methods ───────────────────────────────────────────────────
 
@@ -544,7 +550,12 @@ class SubscriptionService:
                 )
             )
         else:
-            query = select(Subscription).options(selectinload(Subscription.categories))
+            # Admin export — cap at a reasonable limit to avoid unbounded load
+            query = (
+                select(Subscription)
+                .options(selectinload(Subscription.categories))
+                .limit(10000)
+            )
 
         if status_filter:
             query = query.where(Subscription.status == status_filter)

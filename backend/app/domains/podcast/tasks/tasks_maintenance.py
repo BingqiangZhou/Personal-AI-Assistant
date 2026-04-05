@@ -10,7 +10,12 @@ from app.core.celery_app import celery_app
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
 )
-from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_session
+from app.domains.podcast.tasks.runtime import (
+    log_task_run,
+    run_async,
+    single_instance_task_lock,
+    worker_session,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -20,7 +25,18 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 
 async def log_periodic_task_statistics_handler(session) -> dict:
     """Log current task statistics and return snapshot."""
-    return await PodcastTaskOrchestrationService(session).log_periodic_task_statistics()
+    async with single_instance_task_lock(
+        "task:log_periodic_task_statistics",
+        ttl_seconds=600,
+    ) as acquired:
+        if not acquired:
+            return {
+                "status": "skipped_locked",
+                "reason": "task_statistics_already_running",
+            }
+        return await PodcastTaskOrchestrationService(
+            session,
+        ).log_periodic_task_statistics()
 
 
 async def cleanup_old_playback_states_handler(session) -> dict:

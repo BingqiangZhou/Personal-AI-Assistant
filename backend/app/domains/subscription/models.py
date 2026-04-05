@@ -15,6 +15,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -99,6 +100,7 @@ class Subscription(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("source_url", "source_type", name="uq_subscriptions_source"),
         Index("idx_source_type", "source_type"),
         Index("idx_source_url", "source_url"),
     )

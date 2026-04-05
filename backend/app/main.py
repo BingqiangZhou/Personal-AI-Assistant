@@ -17,11 +17,15 @@ def create_application() -> FastAPI:
     """Create and configure FastAPI application."""
     settings = get_settings()
 
+    openapi_url = f"{settings.API_V1_STR}/openapi.json"
+    if settings.ENVIRONMENT == "production":
+        openapi_url = None
+
     app = FastAPI(
         title=settings.PROJECT_NAME,
         description="Personal AI Assistant API",
         version=settings.VERSION,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        openapi_url=openapi_url,
         lifespan=application_lifespan,
         default_response_class=CustomJSONResponse,
     )

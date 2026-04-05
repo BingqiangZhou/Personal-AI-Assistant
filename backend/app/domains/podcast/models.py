@@ -662,6 +662,7 @@ class PodcastConversation(Base):
         Index("idx_conversation_session", "session_id"),
         Index("idx_conversation_created", "created_at"),
         Index("idx_conversation_turn", "episode_id", "conversation_turn"),
+        Index("idx_conversation_parent", "parent_message_id"),
     )
 
     def __repr__(self):

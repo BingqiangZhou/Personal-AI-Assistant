@@ -70,17 +70,24 @@ def register_internal_routes(app: FastAPI) -> None:
 
     @app.get(f"{settings.API_V1_STR}/health/ready")
     async def readiness_check():
-        redis_status = await get_shared_redis().check_health()
-        db_status = await check_db_readiness()
-        overall_status = (
-            "healthy"
-            if db_status["status"] == "healthy" and redis_status["status"] == "healthy"
-            else "unhealthy"
-        )
-        payload = {
-            "status": overall_status,
-            "db": db_status,
-            "redis": redis_status,
-        }
-        status_code = 200 if overall_status == "healthy" else 503
-        return JSONResponse(status_code=status_code, content=payload)
+        try:
+            redis_status = await get_shared_redis().check_health()
+            db_status = await check_db_readiness()
+            overall_status = (
+                "healthy"
+                if db_status["status"] == "healthy" and redis_status["status"] == "healthy"
+                else "unhealthy"
+            )
+            payload = {
+                "status": overall_status,
+                "db": db_status,
+                "redis": redis_status,
+            }
+            status_code = 200 if overall_status == "healthy" else 503
+            return JSONResponse(status_code=status_code, content=payload)
+        except Exception as exc:
+            logger.error("Readiness check failed: %s", exc)
+            return JSONResponse(
+                status_code=503,
+                content={"status": "unhealthy", "error": str(exc)},
+            )

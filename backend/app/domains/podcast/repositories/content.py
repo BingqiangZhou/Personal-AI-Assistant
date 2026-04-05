@@ -351,7 +351,7 @@ class PodcastContentRepositoryMixin:
     async def get_unsummarized_episodes(
         self,
         subscription_id: int | None = None,
-        limit: int | None = None,
+        limit: int | None = 100,
     ) -> list[PodcastEpisode]:
         stmt = select(PodcastEpisode).where(
             and_(

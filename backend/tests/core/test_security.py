@@ -249,7 +249,7 @@ class TestVerifyTokenOptional:
             mock_settings.ENVIRONMENT = "development"
             result = await verify_token_optional(token=None, token_type="access")
 
-        assert result["sub"] == "dev-mock-00000000-0000-0000-000000000001"
+        assert result["sub"] == "1"
         assert result["email"] == "dev-mock@internal.local"
         assert result["type"] == "access"
         assert result["exp"] > int(time.time())

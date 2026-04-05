@@ -177,7 +177,7 @@ class TestCallAiApi:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ), pytest.raises(Exception, match="401"):
+        ), pytest.raises(Exception, match="AI service error"):
             await call_ai_api(model_config, "test-key", "Say hello")
 
     async def test_html_error_page(self):
@@ -290,7 +290,7 @@ class TestCallAiApiWithRetry:
         with patch(
             "app.core.ai_client.get_shared_http_session",
             AsyncMock(return_value=mock_session),
-        ), pytest.raises(Exception, match="401"):
+        ), pytest.raises(Exception, match="AI service error"):
             await call_ai_api_with_retry(
                 model_config,
                 "test-key",

@@ -32,6 +32,16 @@ class RetryableAIModelError(Exception):
     """Transient AI model invocation error that can be retried."""
 
 
+class AIClientError(Exception):
+    """Error raised when an AI model invocation fails after all retries."""
+
+    def __init__(self, message, model_name=None, provider=None, original_error=None):
+        super().__init__(message)
+        self.model_name = model_name
+        self.provider = provider
+        self.original_error = original_error
+
+
 def is_retryable_http_status(status_code: int) -> bool:
     """Check if HTTP status code indicates a retryable error.
 
@@ -95,7 +105,7 @@ async def call_ai_api(
         max_prompt_length = settings.AI_CLIENT_MAX_PROMPT_LENGTH
     # Truncate prompt if too long
     if len(prompt) > max_prompt_length:
-        prompt = prompt[:max_prompt_length] + "\n\n[内容过长，已截断]"
+        prompt = prompt[:max_prompt_length] + "\n\n[Content too long, truncated]"
 
     # Build API URL
     api_url = model_config.api_url
@@ -152,18 +162,33 @@ async def call_ai_api(
                 )
             # Non-retryable errors
             if response.status == 400:
+                logger.error(
+                    "AI API bad request (400) for model %s: %s",
+                    model_config.model_id,
+                    error_text,
+                )
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"AI API bad request (400). Error: {error_text[:200]}",
+                    status_code=502,
+                    detail="AI service error. Please try again later.",
                 )
             if response.status == 401:
-                raise HTTPException(
-                    status_code=500,
-                    detail="AI API authentication failed (401). Check API key configuration.",
+                logger.error(
+                    "AI API authentication failed (401) for model %s",
+                    model_config.model_id,
                 )
+                raise HTTPException(
+                    status_code=502,
+                    detail="AI service error. Please try again later.",
+                )
+            logger.error(
+                "AI API error %d for model %s: %s",
+                response.status,
+                model_config.model_id,
+                error_text,
+            )
             raise HTTPException(
-                status_code=500,
-                detail=f"AI API error: {response.status} - {error_text[:200]}",
+                status_code=502,
+                detail="AI service error. Please try again later.",
             )
 
         # Parse JSON response
@@ -296,8 +321,11 @@ async def call_ai_api_with_retry(
                 type(exc).__name__,
                 exc,
             )
-            raise Exception(
+            raise AIClientError(
                 f"Model {model_config.name} failed after {max_retries} attempts: {exc}",
+                model_name=model_config.name,
+                provider=model_config.provider,
+                original_error=exc,
             ) from exc
 
         except Exception as exc:
@@ -312,11 +340,14 @@ async def call_ai_api_with_retry(
                 type(exc).__name__,
                 exc,
             )
-            raise Exception(
+            raise AIClientError(
                 f"Model {model_config.name} failed without retry: {exc}",
+                model_name=model_config.name,
+                provider=model_config.provider,
+                original_error=exc,
             ) from exc
 
-    raise Exception("Unexpected error in call_ai_api_with_retry")
+    raise AIClientError("Unexpected error in call_ai_api_with_retry")
 
 
 class AIClientService:

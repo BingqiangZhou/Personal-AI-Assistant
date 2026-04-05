@@ -179,23 +179,25 @@ class PodcastAnalyticsRepositoryMixin:
                 episodes.append(episode)
             return episodes, total
 
-        try:
-            return await _execute_search(enable_pg_trgm=is_postgresql)
-        except DBAPIError as exc:
-            message = str(getattr(exc, "orig", exc)).lower()
-            pg_trgm_error = (
-                "similarity(" in message
-                or "operator does not exist" in message
-                or "pg_trgm" in message
-            )
-            if is_postgresql and pg_trgm_error:
-                logger.warning(
-                    "pg_trgm unavailable for search query; fallback to ILIKE path: %s",
-                    exc,
+        if is_postgresql:
+            try:
+                async with self.db.begin_nested():
+                    return await _execute_search(enable_pg_trgm=True)
+            except DBAPIError as exc:
+                message = str(getattr(exc, "orig", exc)).lower()
+                pg_trgm_error = (
+                    "similarity(" in message
+                    or "operator does not exist" in message
+                    or "pg_trgm" in message
                 )
-                await self.db.rollback()
-                return await _execute_search(enable_pg_trgm=False)
-            raise
+                if pg_trgm_error:
+                    logger.warning(
+                        "pg_trgm unavailable for search query; fallback to ILIKE path: %s",
+                        exc,
+                    )
+                    return await _execute_search(enable_pg_trgm=False)
+                raise
+        return await _execute_search(enable_pg_trgm=False)
 
     async def update_subscription_fetch_time(
         self,

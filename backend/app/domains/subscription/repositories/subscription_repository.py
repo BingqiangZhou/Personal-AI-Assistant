@@ -66,8 +66,14 @@ class SubscriptionRepository:
         user_id: int,
         title: str,
     ) -> Subscription | None:
-        query = select(Subscription).where(
-            func.lower(Subscription.title) == func.lower(title),
+        query = (
+            select(Subscription)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(
+                UserSubscription.user_id == user_id,
+                UserSubscription.is_archived.is_(False),
+                func.lower(Subscription.title) == func.lower(title),
+            )
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()

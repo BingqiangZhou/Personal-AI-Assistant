@@ -64,12 +64,16 @@ class TestRevokeAllUserTokens:
         redis = mock_redis["redis"]
         pipe = mock_redis["pipe"]
 
-        redis.smembers = AsyncMock(return_value={b"jti-1", b"jti-2"})
+        # Mock sscan_iter to return an async iterator of JTIs
+        async def _scan_iter(*args, **kwargs):
+            for jti in [b"jti-1", b"jti-2"]:
+                yield jti
+
+        redis.sscan_iter = MagicMock(return_value=_scan_iter())
         redis.delete = AsyncMock()
 
         await revoke_all_user_tokens(42)
 
-        redis.smembers.assert_called_once_with("user_tokens:42")
         assert pipe.setex.call_count == 2
         pipe.execute.assert_called_once()
         redis.delete.assert_called_once_with("user_tokens:42")
@@ -79,7 +83,13 @@ class TestRevokeAllUserTokens:
         from app.core.security.token_blacklist import revoke_all_user_tokens
 
         redis = mock_redis["redis"]
-        redis.smembers = AsyncMock(return_value=set())
+
+        # Mock sscan_iter to return an empty async iterator
+        async def _scan_iter(*args, **kwargs):
+            return
+            yield  # makes this an async generator
+
+        redis.sscan_iter = MagicMock(return_value=_scan_iter())
         redis.delete = AsyncMock()
 
         await revoke_all_user_tokens(42)

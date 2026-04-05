@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncGenerator
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,26 @@ from app.domains.user.repositories import UserRepository
 
 logger = logging.getLogger(__name__)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{get_settings().API_V1_STR}/auth/login")
+
+# Lazy-initialized OAuth2 scheme — avoids calling get_settings() at import time.
+_oauth2_scheme: OAuth2PasswordBearer | None = None
+
+
+def _get_oauth2_scheme() -> OAuth2PasswordBearer:
+    """Return a lazily-created OAuth2PasswordBearer singleton."""
+    global _oauth2_scheme
+    if _oauth2_scheme is None:
+        settings = get_settings()
+        _oauth2_scheme = OAuth2PasswordBearer(
+            tokenUrl=f"{settings.API_V1_STR}/auth/login",
+        )
+    return _oauth2_scheme
+
+
+async def _extract_token(request: Request) -> str:
+    """FastAPI dependency that lazily resolves the OAuth2 scheme and extracts the token."""
+    scheme = _get_oauth2_scheme()
+    return await scheme(request)
 
 
 # ── Base dependencies ────────────────────────────────────────────────────────
@@ -64,11 +83,15 @@ def get_user_repository(
 
 async def get_token_user_id(user=Depends(get_token_from_request)) -> int:
     """Resolve the authenticated user id for podcast routes."""
-    return int(user["sub"])
+    try:
+        user_id = int(user["sub"])
+    except (KeyError, ValueError, TypeError) as e:
+        raise HTTPException(status_code=401, detail="Invalid token payload") from e
+    return user_id
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(_extract_token),
     user_repo: UserRepository = Depends(get_user_repository),
 ) -> User:
     """Resolve the current authenticated user."""
@@ -90,13 +113,38 @@ async def get_current_user(
         logger.error("Exception in token verification: %s", exc)
         raise credentials_exception from exc
 
+    # Try cache first — skip DB lookup when user existence is cached
+    cache_key = f"auth:user:{user_id}"
+    try:
+        from app.core.redis import get_shared_redis
+
+        redis = get_shared_redis()
+        cached = await redis.cache_get_json(cache_key)
+        if cached and cached.get("exists"):
+            user = await user_repo.get_by_id(user_id)
+            if user:
+                return user
+    except Exception:
+        logger.debug("User cache lookup failed, falling back to DB query")
+
     user = await user_repo.get_by_id(user_id)
     if user is None:
         raise credentials_exception
 
+    # Cache user existence for subsequent requests (short TTL)
+    try:
+        from app.core.redis import get_shared_redis
+
+        redis = get_shared_redis()
+        await redis.cache_set_json(
+            cache_key, {"exists": True, "id": user.id}, ttl=60,
+        )
+    except Exception:
+        logger.debug("User cache set failed, continuing without caching")
+
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
 
@@ -109,7 +157,7 @@ async def get_current_active_user(
     """Resolve the current active user."""
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
     return current_user

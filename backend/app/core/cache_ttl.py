@@ -45,8 +45,9 @@ class CacheTTL:
     # Used for data that changes infrequently
     DEFAULT: int = 3600  # 1 hour - default cache duration
     METRICS: int = 3600  # 1 hour - runtime metrics
-    LOCK_TIMEOUT: int = 3600  # 1 hour - default lock timeout
-    SUBSCRIPTION_LIST: int = 3600  # 1 hour - subscription list cache
+    LOCK_TIMEOUT: int = 300  # 5 minutes - default lock timeout
+    SUBSCRIPTION_LIST: int = 900  # 15 minutes - subscription list cache
+    EPISODE_LIST: int = 600  # 10 minutes - episode list cache
 
     # === Long (days) ===
     # Used for data that rarely changes
