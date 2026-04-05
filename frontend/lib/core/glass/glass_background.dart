@@ -95,7 +95,7 @@ class _GlassBackgroundState extends State<GlassBackground>
   /// Build animated gradient orbs
   List<Widget> _buildOrbs(bool isDark) {
     final colors = _getThemeColors(isDark);
-    final opacity = isDark ? 0.10 : 0.06; // 8-12% dark, 5-8% light
+    final opacity = isDark ? 0.10 : 0.14; // 10% dark, 14% light
 
     // If no controller, render static orbs
     if (_controller == null) {

@@ -275,7 +275,7 @@ class _GlassContainerState extends State<GlassContainer>
         borderRadius: borderRadius,
         border: Border.all(
           width: 1.5,
-          color: Colors.white.withValues(alpha: borderOpacity * 0.3),
+          color: _getBorderColor(borderOpacity),
         ),
         boxShadow: [
           BoxShadow(
@@ -407,6 +407,15 @@ class _GlassContainerState extends State<GlassContainer>
         _buildLayer5Content(child),
       ],
     );
+  }
+
+  Color _getBorderColor(double borderOpacity) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      return Colors.white.withValues(alpha: borderOpacity * 0.3);
+    } else {
+      return const Color(0xFFE0E0E8).withValues(alpha: borderOpacity * 0.5);
+    }
   }
 
   /// Layer 5: Content
