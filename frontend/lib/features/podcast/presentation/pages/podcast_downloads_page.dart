@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/audio_download_service.dart';
@@ -20,37 +21,45 @@ class PodcastDownloadsPage extends ConsumerWidget {
     final asyncDownloads = ref.watch(downloadsListProvider);
     final grouped = ref.watch(groupedDownloadsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.downloads_page_title),
-        actions: [
-          if (grouped.completed.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep),
-              tooltip: l10n.downloads_delete_all,
-              onPressed: () =>
-                  _confirmDeleteAll(context, ref, grouped.completed),
-            ),
-        ],
-      ),
-      body: asyncDownloads.when(
-        data: (tasks) {
-          if (tasks.isEmpty) {
-            return const _EmptyState();
-          }
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const GlassBackground(theme: GlassBackgroundTheme.neutral, child: SizedBox.expand()),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(l10n.downloads_page_title),
+            backgroundColor: Colors.transparent,
+            actions: [
+              if (grouped.completed.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.delete_sweep),
+                  tooltip: l10n.downloads_delete_all,
+                  onPressed: () =>
+                      _confirmDeleteAll(context, ref, grouped.completed),
+                ),
+            ],
+          ),
+          body: asyncDownloads.when(
+            data: (tasks) {
+              if (tasks.isEmpty) {
+                return const _EmptyState();
+              }
 
-          // Build flat list with section headers for lazy rendering
-          final items = _buildItems(grouped, l10n);
+              // Build flat list with section headers for lazy rendering
+              final items = _buildItems(grouped, l10n);
 
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 100),
-            itemCount: items.length,
-            itemBuilder: (context, index) => items[index],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-      ),
+              return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 100),
+                itemCount: items.length,
+                itemBuilder: (context, index) => items[index],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text(e.toString())),
+          ),
+        ),
+      ],
     );
   }
 

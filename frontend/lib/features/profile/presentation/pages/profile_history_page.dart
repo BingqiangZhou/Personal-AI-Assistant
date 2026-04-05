@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -277,162 +279,162 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   ) {
     return RepaintBoundary(
       key: ValueKey('history_card_${episode.id}'),
-      child: Card(
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
-          side: BorderSide.none,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => context.push('/podcast/episode/detail/${episode.id}'),
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
-          child: SizedBox(
-            key: ValueKey('profile_history_card_content_${episode.id}'),
-            height: kPodcastRowCardTargetHeight,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: kPodcastRowCardHorizontalPadding,
-                vertical: 6,
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      kPodcastRowCardImageRadius,
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: kPodcastRowCardCornerRadius,
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/podcast/episode/detail/${episode.id}'),
+            borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+            child: SizedBox(
+              key: ValueKey('profile_history_card_content_${episode.id}'),
+              height: kPodcastRowCardTargetHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: kPodcastRowCardHorizontalPadding,
+                  vertical: 6,
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        kPodcastRowCardImageRadius,
+                      ),
+                      child: PodcastImageWidget(
+                        imageUrl: episode.imageUrl,
+                        fallbackImageUrl: episode.subscriptionImageUrl,
+                        width: kPodcastRowCardImageSize,
+                        height: kPodcastRowCardImageSize,
+                        iconSize: 24,
+                        iconColor: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                    child: PodcastImageWidget(
-                      imageUrl: episode.imageUrl,
-                      fallbackImageUrl: episode.subscriptionImageUrl,
-                      width: kPodcastRowCardImageSize,
-                      height: kPodcastRowCardImageSize,
-                      iconSize: 24,
-                      iconColor: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: kPodcastRowCardHorizontalGap),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          key: ValueKey(
-                            'profile_history_title_box_${episode.id}',
-                          ),
-                          height: 38,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              key: ValueKey(
-                                'profile_history_title_${episode.id}',
-                              ),
-                              episode.title,
-                              style: AppTheme.caption(
-                                    Theme.of(context).colorScheme.onSurface,
-                                  ).copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.15,
-                                  ),
-                              strutStyle: const StrutStyle(
-                                fontSize: 13,
-                                height: 1.15,
-                                forceStrutHeight: true,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: kPodcastRowCardHorizontalGap),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            key: ValueKey(
+                              'profile_history_title_box_${episode.id}',
                             ),
-                          ),
-                        ),
-                        SizedBox(
-                          key: const Key('profile_history_meta_row'),
-                          height: 18,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
+                            height: 38,
+                            child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 110,
+                              child: Text(
+                                key: ValueKey(
+                                  'profile_history_title_${episode.id}',
+                                ),
+                                episode.title,
+                                style: AppTheme.caption(
+                                      Theme.of(context).colorScheme.onSurface,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.15,
                                     ),
-                                    child: Container(
-                                      key: const Key(
-                                        'profile_history_meta_podcast',
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        episode.subscriptionTitle ??
-                                            AppLocalizations.of(
-                                              context,
-                                            )!.podcast_default_podcast,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTheme.navLabel(
-                                              Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimary,
-                                              weight: FontWeight.w700,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.calendar_today_outlined,
-                                    size: 13,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    _formatPlayedAt(episode.lastPlayedAt),
-                                    style: AppTheme.metaSmall(
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.schedule,
-                                    size: 13,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    _buildProgressText(context, episode),
-                                    style: AppTheme.metaSmall(
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                                ],
+                                strutStyle: const StrutStyle(
+                                  fontSize: 13,
+                                  height: 1.15,
+                                  forceStrutHeight: true,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            key: const Key('profile_history_meta_row'),
+                            height: 18,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 110,
+                                      ),
+                                      child: Container(
+                                        key: const Key(
+                                          'profile_history_meta_podcast',
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          episode.subscriptionTitle ??
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.podcast_default_podcast,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTheme.navLabel(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                                weight: FontWeight.w700,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 13,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      _formatPlayedAt(episode.lastPlayedAt),
+                                      style: AppTheme.metaSmall(
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.schedule,
+                                      size: 13,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      _buildProgressText(context, episode),
+                                      style: AppTheme.metaSmall(
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

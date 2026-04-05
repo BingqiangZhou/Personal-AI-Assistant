@@ -403,6 +403,15 @@ class _GlassContainerState extends State<GlassContainer>
         // Tint overlay
         if (widget.tint != null)
           Positioned.fill(child: Container(color: widget.tint)),
+        // Content scrim — text contrast backing
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: effectiveStyle.contentScrim,
+              borderRadius: BorderRadius.circular(widget.borderRadius - 1.5),
+            ),
+          ),
+        ),
         // Content layer
         _buildLayer5Content(child),
       ],

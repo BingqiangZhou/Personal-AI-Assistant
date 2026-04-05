@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/download_button.dart';
@@ -28,7 +30,6 @@ class EpisodeCardConfig {
     this.dense = false,
     this.cardMargin,
     this.cardPadding = const EdgeInsets.fromLTRB(16, 12, 16, 12),
-    this.cardColor,
     this.cornerRadius = 12.0,
     this.showPlayButton = true,
     this.showQueueButton = false,
@@ -67,7 +68,6 @@ class EpisodeCardConfig {
   final bool dense;
   final EdgeInsetsGeometry? cardMargin;
   final EdgeInsetsGeometry cardPadding;
-  final Color? cardColor;
   final double cornerRadius;
   final bool showPlayButton;
   final bool showQueueButton;
@@ -128,46 +128,45 @@ class BaseEpisodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveColor =
-        config.cardColor ?? theme.colorScheme.surface;
 
-    return Card(
-      margin: config.cardMargin,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(config.cornerRadius),
-        side: BorderSide.none,
-      ),
-      elevation: 0,
-      color: effectiveColor,
-      clipBehavior: config.showImage ? Clip.none : Clip.antiAlias,
-      child: Semantics(
-        button: true,
-        label: title,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(config.cornerRadius),
-          child: Padding(
-          padding: config.cardPadding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderRow(context, theme),
-              if (config.showDescription &&
-                  config.description != null &&
-                  config.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Flexible(child: _buildDescription(context, theme)),
-                const SizedBox(height: 4),
-              ] else if (config.showDescription) ...[
-                const SizedBox(height: 4),
-              ],
-              if (_hasMetaOrActions)
-                _buildMetaActionRow(context, theme),
-            ],
+    return Padding(
+      padding: config.cardMargin ?? EdgeInsets.zero,
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: config.cornerRadius,
+        padding: EdgeInsets.zero,
+        child: Semantics(
+          button: true,
+          label: title,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(config.cornerRadius),
+              child: Padding(
+                padding: config.cardPadding,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeaderRow(context, theme),
+                    if (config.showDescription &&
+                        config.description != null &&
+                        config.description!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Flexible(child: _buildDescription(context, theme)),
+                      const SizedBox(height: 4),
+                    ] else if (config.showDescription) ...[
+                      const SizedBox(height: 4),
+                    ],
+                    if (_hasMetaOrActions)
+                      _buildMetaActionRow(context, theme),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-      ),
       ),
     );
   }

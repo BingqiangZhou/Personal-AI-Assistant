@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -21,7 +22,7 @@ class PrivacyPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const SizedBox(),
+            const GlassBackground(theme: GlassBackgroundTheme.neutral, child: SizedBox.expand()),
             SafeArea(
               bottom: false,
               child: ResponsiveContainer(

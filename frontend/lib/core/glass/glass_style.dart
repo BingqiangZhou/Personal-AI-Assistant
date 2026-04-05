@@ -18,6 +18,7 @@ class GlassStyle {
     required this.shadow,
     required this.noiseOpacity,
     required this.saturationBoost,
+    required this.contentScrim,
   });
 
   /// Blur sigma value
@@ -44,6 +45,9 @@ class GlassStyle {
   /// Saturation boost factor for backdrop filter
   final double saturationBoost;
 
+  /// Content scrim color — subtle tint layer under child content for text contrast
+  final Color contentScrim;
+
   /// Create style for a specific tier and brightness
   factory GlassStyle.forTier(GlassTier tier, Brightness brightness) {
     final tokens = brightness == Brightness.dark
@@ -60,10 +64,11 @@ class GlassStyle {
       shadow: params.shadow,
       noiseOpacity: params.noiseOpacity,
       saturationBoost: params.saturationBoost,
+      contentScrim: params.contentScrim,
     );
   }
 
-  /// Create hover state style: sigma+2, fill alpha+3%, border alpha x1.5
+  /// Create hover state style: sigma+2, fill alpha+3%, border alpha x1.5, scrim alpha+2%
   GlassStyle withHover() {
     return GlassStyle(
       sigma: sigma + 2,
@@ -74,6 +79,7 @@ class GlassStyle {
       shadow: shadow,
       noiseOpacity: noiseOpacity,
       saturationBoost: saturationBoost,
+      contentScrim: _addAlpha(contentScrim, 0.02),
     );
   }
 
@@ -88,6 +94,7 @@ class GlassStyle {
       shadow: shadow,
       noiseOpacity: noiseOpacity,
       saturationBoost: saturationBoost,
+      contentScrim: contentScrim,
     );
   }
 
@@ -101,6 +108,7 @@ class GlassStyle {
     Color? shadow,
     double? noiseOpacity,
     double? saturationBoost,
+    Color? contentScrim,
   }) {
     return GlassStyle(
       sigma: sigma ?? this.sigma,
@@ -111,6 +119,7 @@ class GlassStyle {
       shadow: shadow ?? this.shadow,
       noiseOpacity: noiseOpacity ?? this.noiseOpacity,
       saturationBoost: saturationBoost ?? this.saturationBoost,
+      contentScrim: contentScrim ?? this.contentScrim,
     );
   }
 
@@ -137,7 +146,8 @@ class GlassStyle {
         other.innerGlow == innerGlow &&
         other.shadow == shadow &&
         other.noiseOpacity == noiseOpacity &&
-        other.saturationBoost == saturationBoost;
+        other.saturationBoost == saturationBoost &&
+        other.contentScrim == contentScrim;
   }
 
   @override
@@ -151,6 +161,7 @@ class GlassStyle {
       shadow,
       noiseOpacity,
       saturationBoost,
+      contentScrim,
     );
   }
 }

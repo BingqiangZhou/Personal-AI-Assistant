@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -373,22 +375,21 @@ class _ProfileSubscriptionsPageState
   ) {
     return RepaintBoundary(
       key: ValueKey('subscription_card_${subscription.id}'),
-      child: Card(
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
-          side: BorderSide.none,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            context.push(
-              '/podcast/episodes/${subscription.id}',
-              extra: subscription,
-            );
-          },
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
-          child: SizedBox(
+      child: GlassContainer(
+        tier: GlassTier.light,
+        borderRadius: kPodcastRowCardCornerRadius,
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              context.push(
+                '/podcast/episodes/${subscription.id}',
+                extra: subscription,
+              );
+            },
+            borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+            child: SizedBox(
             key: ValueKey('profile_subscription_card_content_${subscription.id}'),
             height: kPodcastRowCardTargetHeight,
             child: Padding(
@@ -450,6 +451,7 @@ class _ProfileSubscriptionsPageState
             ),
           ),
         ),
+      ),
       ),
     );
   }

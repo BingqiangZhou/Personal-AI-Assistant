@@ -2,9 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
+import 'package:personal_ai_assistant/core/glass/glass_container.dart';
+import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 
 /// Authentication Verification Page - Direct API Testing
 /// This page bypasses complex build issues and tests backend connectivity directly
@@ -252,122 +256,133 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.auth_verification_title),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status Display
-            Container(
+      backgroundColor: Colors.transparent,
+      body: GlassBackground(
+        theme: GlassBackgroundTheme.neutral,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _statusColor.withValues(alpha: 0.1),
-                border: Border.all(color: _statusColor),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _status,
-                style: AppTheme.monoStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: _statusColor,
+              child: SurfacePanel(
+                showBorder: false,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.auth_verification_title,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Status Display
+                    GlassContainer(
+                      tier: GlassTier.light,
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 12,
+                      child: Text(
+                        _status,
+                        style: AppTheme.monoStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: _statusColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Test Buttons
+                    _TestButton(
+                      text: '🔧 1. Check Backend Health',
+                      onPressed: _testBackendHealth,
+                    ),
+                    const SizedBox(height: 8),
+
+                    _TestButton(
+                      text: '📝 2. Register New User',
+                      onPressed: _testRegister,
+                    ),
+                    const SizedBox(height: 8),
+
+                    _TestButton(
+                      text: '🔓 3. Login (Get Tokens)',
+                      onPressed: _testLogin,
+                    ),
+                    const SizedBox(height: 8),
+
+                    _TestButton(
+                      text: '👤 4. Get User Info (with Token)',
+                      onPressed: _testGetUser,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Instructions
+                    _buildInstructions(),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Test Buttons
-            _TestButton(
-              text: '🔧 1. Check Backend Health',
-              color: Theme.of(context).colorScheme.primary,
-              onPressed: _testBackendHealth,
-            ),
-            const SizedBox(height: 8),
-
-            _TestButton(
-              text: '📝 2. Register New User',
-              color: Theme.of(context).colorScheme.secondary,
-              onPressed: _testRegister,
-            ),
-            const SizedBox(height: 8),
-
-            _TestButton(
-              text: '🔓 3. Login (Get Tokens)',
-              color: Theme.of(context).colorScheme.tertiary,
-              onPressed: _testLogin,
-            ),
-            const SizedBox(height: 8),
-
-            _TestButton(
-              text: '👤 4. Get User Info (with Token)',
-              color: Theme.of(context).colorScheme.primaryContainer,
-              onPressed: _testGetUser,
-            ),
-            const SizedBox(height: 20),
-
-            // Instructions
-            _buildInstructions(),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildInstructions() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('📋 Test Flow:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          const SizedBox(height: 6),
-          Text('1. Must run Backend Docker first (port 8000)', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('2. Click "Check Health" to verify connection', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('3. Click "Register" to create test user', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('4. Click "Login" to get access/refresh tokens', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('5. Click "Get User Info" to verify tokens work', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text('6. If all pass → Backend ✅ Ready!', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('📋 Test Flow:',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text('1. Must run Backend Docker first (port 8000)', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text('2. Click "Check Health" to verify connection', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text('3. Click "Register" to create test user', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text('4. Click "Login" to get access/refresh tokens', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text('5. Click "Get User Info" to verify tokens work', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text('6. If all pass → Backend ✅ Ready!', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+      ],
     );
   }
 }
 
 class _TestButton extends StatelessWidget {
   final String text;
-  final Color color;
   final VoidCallback onPressed;
 
   const _TestButton({
     required this.text,
-    required this.color,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: Text(
-        text,
-        style: AppTheme.monoStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+    return GlassContainer(
+      tier: GlassTier.light,
+      padding: EdgeInsets.zero,
+      borderRadius: 12,
+      interactive: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            child: Text(
+              text,
+              style: AppTheme.monoStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
       ),
     );
