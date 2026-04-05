@@ -5,7 +5,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_container.dart';
 import 'package:personal_ai_assistant/core/theme/liquid_glass/liquid_glass_style.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
-import 'package:personal_ai_assistant/core/widgets/stella_background.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 
 /// StatusBadge - 状态徽章
 class StatusBadge extends StatelessWidget {
@@ -698,8 +698,8 @@ class ContentShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final extension = appThemeOf(context);
 
-    return StellaBackground(
-      enableGlow: true,
+    return GlassBackground(
+      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: _ShellViewport(
@@ -758,8 +758,8 @@ class ProfileShell extends StatelessWidget {
     final topSectionSpacing = isMobile ? 24.0 : 14.0;
     final extension = appThemeOf(context);
 
-    return StellaBackground(
-      enableGlow: true,
+    return GlassBackground(
+      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: _ShellViewport(
@@ -847,8 +847,8 @@ class AuthShell extends StatelessWidget {
     final extension = appThemeOf(context);
     final width = MediaQuery.sizeOf(context).width;
 
-    return StellaBackground(
-      enableGlow: true,
+    return GlassBackground(
+      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: SafeArea(

@@ -8,7 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
-import 'package:personal_ai_assistant/core/widgets/stella_background.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 
 /// Minimal splash page that immediately redirects
 /// The native splash screen (with app icon) is shown during Flutter initialization
@@ -63,8 +63,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: StellaBackground(
-        enableGlow: true,
+      body: GlassBackground(
+        theme: GlassBackgroundTheme.neutral,
         child: Center(
           child: SizedBox(
             width: 32,

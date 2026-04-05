@@ -191,6 +191,7 @@ void main() {
             theme: ThemeData.dark(),
             home: Scaffold(
               body: GlassBackground(
+                enableAnimation: true,
                 child: Container(),
               ),
             ),
@@ -198,6 +199,8 @@ void main() {
         );
 
         await tester.pump();
+        // Pump past the animation startup delay
+        await tester.pump(const Duration(milliseconds: 600));
         await tester.pump(const Duration(milliseconds: 100));
 
         // Animation should still be running

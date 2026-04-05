@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
-import 'package:personal_ai_assistant/core/widgets/stella_background.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/onboarding_provider.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -52,8 +52,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final isLastPage = _currentPage == _pageCount - 1;
 
     return Scaffold(
-      body: StellaBackground(
-        enableGlow: true,
+      body: GlassBackground(
+        theme: GlassBackgroundTheme.neutral,
         child: SafeArea(
           child: Column(
             children: [
