@@ -44,6 +44,7 @@ def render_admin_template(
 ):
     """Render an admin template with the request injected."""
     return templates.TemplateResponse(
+        request,
         template_name,
         {
             "request": request,

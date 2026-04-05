@@ -31,6 +31,7 @@ async def dashboard(
         context = await get_dashboard_context(db)
 
         return templates.TemplateResponse(
+            request,
             "dashboard.html",
             {
                 "request": request,

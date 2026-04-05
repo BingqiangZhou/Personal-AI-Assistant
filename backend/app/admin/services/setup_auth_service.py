@@ -183,6 +183,7 @@ class AdminSetupAuthService:
     ):
         """Render a template response without mutating CSRF cookies."""
         return templates.TemplateResponse(
+            request,
             template_name,
             {
                 "request": request,
@@ -205,6 +206,7 @@ class AdminSetupAuthService:
         """Render a template with a fresh CSRF token and matching cookie."""
         csrf_token = generate_csrf_token()
         response = templates.TemplateResponse(
+            request,
             template_name,
             {
                 "request": request,

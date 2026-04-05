@@ -35,6 +35,7 @@ async def monitoring_page(
 ):
     """Render monitoring dashboard page."""
     return templates.TemplateResponse(
+        request,
         "monitoring.html",
         {
             "request": request,

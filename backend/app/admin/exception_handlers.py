@@ -82,7 +82,7 @@ async def csrf_exception_handler(request: Request, exc: CSRFException) -> Respon
         )
 
     # Render the template with error message
-    response = templates.TemplateResponse(current_template, context)
+    response = templates.TemplateResponse(request, current_template, context)
 
     # Set new CSRF token in cookie
     response.set_cookie(
