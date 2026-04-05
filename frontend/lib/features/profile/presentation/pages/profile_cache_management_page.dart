@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -787,7 +788,7 @@ class _ProfileCacheManagementPageState
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const SizedBox(),
+            const GlassBackground(theme: GlassBackgroundTheme.neutral, child: SizedBox.expand()),
             SafeArea(
               bottom: false,
               child: ResponsiveContainer(

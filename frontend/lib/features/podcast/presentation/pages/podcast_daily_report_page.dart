@@ -7,6 +7,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
@@ -92,7 +93,7 @@ class _PodcastDailyReportPageState
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const SizedBox(),
+            const GlassBackground(theme: GlassBackgroundTheme.neutral, child: SizedBox.expand()),
             SafeArea(
               bottom: false,
               child: ResponsiveContainer(

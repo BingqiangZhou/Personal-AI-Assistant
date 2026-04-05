@@ -5,10 +5,10 @@ import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 void main() {
   group('GlassTier', () {
     test('has correct sigma values', () {
-      expect(GlassTier.ultraHeavy.sigma, 28);
-      expect(GlassTier.heavy.sigma, 20);
-      expect(GlassTier.medium.sigma, 14);
-      expect(GlassTier.light.sigma, 8);
+      expect(GlassTier.ultraHeavy.sigma, 30);
+      expect(GlassTier.heavy.sigma, 24);
+      expect(GlassTier.medium.sigma, 16);
+      expect(GlassTier.light.sigma, 10);
     });
   });
 

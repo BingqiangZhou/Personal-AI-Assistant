@@ -9,7 +9,7 @@ void main() {
       test('creates style for ultraHeavy tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.ultraHeavy, Brightness.dark);
 
-        expect(style.sigma, 28);
+        expect(style.sigma, 30);
         expect(style.fill, const Color(0x47FFFFFF));
         expect(style.borderTop, const Color(0x5CFFFFFF));
         expect(style.borderBottom, const Color(0x40FFFFFF));
@@ -23,7 +23,7 @@ void main() {
       test('creates style for heavy tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.heavy, Brightness.dark);
 
-        expect(style.sigma, 20);
+        expect(style.sigma, 24);
         expect(style.fill, const Color(0x3DFFFFFF));
         expect(style.borderTop, const Color(0x52FFFFFF));
         expect(style.borderBottom, const Color(0x35FFFFFF));
@@ -37,7 +37,7 @@ void main() {
       test('creates style for medium tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.medium, Brightness.dark);
 
-        expect(style.sigma, 14);
+        expect(style.sigma, 16);
         expect(style.fill, const Color(0x2EFFFFFF));
         expect(style.borderTop, const Color(0x47FFFFFF));
         expect(style.borderBottom, const Color(0x28FFFFFF));
@@ -51,7 +51,7 @@ void main() {
       test('creates style for light tier in dark mode', () {
         final style = GlassStyle.forTier(GlassTier.light, Brightness.dark);
 
-        expect(style.sigma, 8);
+        expect(style.sigma, 10);
         expect(style.fill, const Color(0x24FFFFFF));
         expect(style.borderTop, const Color(0x40FFFFFF));
         expect(style.borderBottom, const Color(0x1EFFFFFF));
@@ -65,7 +65,7 @@ void main() {
       test('creates style for ultraHeavy tier in light mode', () {
         final style = GlassStyle.forTier(GlassTier.ultraHeavy, Brightness.light);
 
-        expect(style.sigma, 28);
+        expect(style.sigma, 30);
         expect(style.fill, const Color(0x38000000));
         expect(style.borderTop, const Color(0x44000000));
         expect(style.borderBottom, const Color(0x2C000000));
@@ -79,7 +79,7 @@ void main() {
       test('creates style for medium tier in light mode', () {
         final style = GlassStyle.forTier(GlassTier.medium, Brightness.light);
 
-        expect(style.sigma, 14);
+        expect(style.sigma, 16);
         expect(style.fill, const Color(0x22000000));
         expect(style.borderTop, const Color(0x2E000000));
         expect(style.borderBottom, const Color(0x1A000000));

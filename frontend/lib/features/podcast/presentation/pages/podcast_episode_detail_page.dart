@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
+import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -287,7 +288,11 @@ class _PodcastEpisodeDetailPageState
           endDrawer: episodeDetail == null
               ? null
               : _buildChatDrawer(episodeDetail),
-          body: episodeDetailAsync.when(
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              const GlassBackground(theme: GlassBackgroundTheme.neutral, child: SizedBox.expand()),
+              episodeDetailAsync.when(
             data: (episodeDetail) {
               if (episodeDetail == null) {
                 final l10n =
@@ -302,6 +307,8 @@ class _PodcastEpisodeDetailPageState
             },
             loading: () => _buildPageLoadingState(context),
             error: (error, stack) => _buildErrorState(context, error),
+              ),
+            ],
           ),
         );
       },
