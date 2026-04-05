@@ -240,8 +240,9 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: scheme.surface,
         elevation: 0,
+        color: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shadowColor: extension.shadowMd.color,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
@@ -250,9 +251,9 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
+        elevation: 0,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
@@ -266,9 +267,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 22),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark
-            ? scheme.surfaceContainerHighest
-            : scheme.surface,
+        fillColor: scheme.surfaceContainerHighest.withOpacity(0.6),
         hintStyle: _withBody(
           textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -279,34 +278,38 @@ class AppTheme {
             color: scheme.onSurfaceVariant,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
         ),
-        border: _inputBorder(extension, scheme.outlineVariant),
-        enabledBorder: _inputBorder(extension, scheme.outlineVariant),
-        focusedBorder: _inputBorder(
-          extension,
-          scheme.primary.withValues(alpha: 0.6),
-          width: 1.4,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         errorBorder: _inputBorder(extension, scheme.error),
         focusedErrorBorder: _inputBorder(extension, scheme.error, width: 1.4),
       ),
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         iconColor: scheme.onSurfaceVariant,
         textColor: scheme.onSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(extension.cardRadius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: scheme.surfaceContainerHighest,
-        selectedColor: scheme.primary.withValues(alpha: 0.14),
-        disabledColor: scheme.surfaceContainerHighest,
-        secondarySelectedColor: scheme.primary.withValues(alpha: 0.16),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.8),
+        selectedColor: scheme.primary.withOpacity(0.15),
+        disabledColor: scheme.surfaceContainerHighest.withOpacity(0.5),
+        secondarySelectedColor: scheme.primary.withOpacity(0.18),
+        side: BorderSide(color: scheme.outline.withOpacity(0.15)),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         labelStyle: _withBody(
           textTheme.labelMedium?.copyWith(color: scheme.onSurface),
         ),
@@ -370,8 +373,9 @@ class AppTheme {
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
       ),
