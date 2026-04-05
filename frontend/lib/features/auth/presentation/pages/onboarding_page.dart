@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/onboarding_provider.dart';
@@ -97,22 +98,22 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     _OnboardingScreen(
                       icon: Icons.auto_awesome_rounded,
                       iconBackgroundColor: isDark
-                          ? AppColors.accentWarm.withValues(alpha: 0.15)
+                          ? AppleColors.systemOrangeDark.withValues(alpha: 0.15)
                           : const Color(0xFFFEF3C7),
                       iconColor: isDark
-                          ? AppColors.accentWarmLight
-                          : AppColors.accentWarm,
+                          ? AppleColors.systemOrangeDark
+                          : AppleColors.systemOrangeLight,
                       title: l10n.onboarding_summary_title,
                       body: l10n.onboarding_summary_body,
                     ),
                     _OnboardingScreen(
                       icon: Icons.chat_bubble_rounded,
                       iconBackgroundColor: isDark
-                          ? AppColors.accentCoral.withValues(alpha: 0.15)
+                          ? AppleColors.systemPinkDark.withValues(alpha: 0.15)
                           : const Color(0xFFFCE7F3),
                       iconColor: isDark
-                          ? AppColors.accentCoralLight
-                          : AppColors.accentCoral,
+                          ? AppleColors.systemPinkDark
+                          : AppleColors.systemPinkLight,
                       title: l10n.onboarding_chat_title,
                       body: l10n.onboarding_chat_body,
                     ),

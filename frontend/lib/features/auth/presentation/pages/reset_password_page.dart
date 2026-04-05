@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
@@ -141,7 +142,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 height: 80,
                 decoration: BoxDecoration(
                   color: _passwordReset
-                      ? AppColors.accentWarm.withValues(alpha: 0.1)
+                      ? AppleColors.systemOrange.of(context).withValues(alpha: 0.1)
                       : Theme.of(
                           context,
                         ).colorScheme.primary.withValues(alpha: 0.1),
@@ -151,7 +152,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   _passwordReset ? Icons.check_circle_outline : Icons.lock_open,
                   size: 40,
                   color: _passwordReset
-                      ? AppColors.accentWarm
+                      ? AppleColors.systemOrange.of(context)
                       : Theme.of(context).colorScheme.primary,
                 ),
               ),

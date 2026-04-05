@@ -7,6 +7,7 @@ import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
@@ -575,8 +576,7 @@ class _ProfileCacheManagementPageState
         horizontal: _contentHorizontalInset(context),
         vertical: kPodcastRowCardVerticalMargin,
       ),
-      child: GlassContainer(
-        tier: GlassTier.light,
+      child: SurfaceCard(
         borderRadius: kPodcastRowCardCornerRadius,
         padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
       child: Row(

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/font_combination.dart';
 
@@ -169,11 +168,10 @@ class FontComboCard extends StatelessWidget {
 
     if (isSelected) {
       // Selected state: show primary-colored border on glass
-      return GlassContainer(
-        tier: GlassTier.light,
+      return SurfaceCard(
         borderRadius: extension.cardRadius,
         padding: EdgeInsets.zero,
-        tint: scheme.primary.withValues(alpha: 0.04),
+        backgroundColor: scheme.primary.withValues(alpha: 0.04),
         child: Container(
           decoration: BoxDecoration(
             border: Border.fromBorderSide(
@@ -186,8 +184,7 @@ class FontComboCard extends StatelessWidget {
       );
     }
 
-    return GlassContainer(
-      tier: GlassTier.light,
+    return SurfaceCard(
       borderRadius: extension.cardRadius,
       padding: EdgeInsets.zero,
       child: child,

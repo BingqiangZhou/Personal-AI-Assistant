@@ -4,8 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -208,8 +207,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       errorText: authState.fieldErrors?['password'],
                     ),
                     const SizedBox(height: 4),
-                    GlassContainer(
-                      tier: GlassTier.light,
+                    SurfaceCard(
                       borderRadius: 8,
                       padding: const EdgeInsets.all(8),
                       child: Column(

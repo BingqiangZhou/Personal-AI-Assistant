@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -278,8 +279,7 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
                     const SizedBox(height: 16),
 
                     // Status Display
-                    GlassContainer(
-                      tier: GlassTier.light,
+                    SurfaceCard(
                       padding: const EdgeInsets.all(16),
                       borderRadius: 12,
                       child: Text(
@@ -363,11 +363,9 @@ class _TestButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      tier: GlassTier.light,
+    return SurfaceCard(
       padding: EdgeInsets.zero,
       borderRadius: 12,
-      interactive: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(

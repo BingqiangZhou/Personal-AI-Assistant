@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -280,8 +281,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   ) {
     return RepaintBoundary(
       key: ValueKey('history_card_${episode.id}'),
-      child: GlassContainer(
-        tier: GlassTier.light,
+      child: SurfaceCard(
         borderRadius: kPodcastRowCardCornerRadius,
         padding: EdgeInsets.zero,
         child: Material(

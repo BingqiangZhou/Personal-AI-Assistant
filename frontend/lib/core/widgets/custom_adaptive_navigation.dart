@@ -3,6 +3,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/constants/po
 
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
@@ -476,7 +477,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: AppColors.accentWarm,
+                        color: AppleColors.systemOrange.of(context),
                         shape: BoxShape.circle,
                       ),
                     ),

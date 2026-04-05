@@ -10,6 +10,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -277,12 +278,9 @@ class _PodcastDailyReportPageState
         context,
         title: EpisodeCardUtils.formatDate(targetDate),
         subtitle: l10n.podcast_daily_report_empty,
-        child: GlassContainer(
-          tier: GlassTier.light,
+        child: SurfaceCard(
           borderRadius: 22,
           padding: const EdgeInsets.all(18),
-          animate: true,
-          interactive: false,
           child: Text(
             l10n.podcast_daily_report_empty,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -432,12 +430,9 @@ class _PodcastDailyReportPageState
           context.push('/podcast/episode/detail/${item.episodeId}');
         },
         borderRadius: BorderRadius.circular(22),
-        child: GlassContainer(
-          tier: GlassTier.light,
+        child: SurfaceCard(
           borderRadius: 22,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-          animate: true,
-          interactive: true,
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

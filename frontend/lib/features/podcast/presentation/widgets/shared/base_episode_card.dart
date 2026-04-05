@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/download_button.dart';
@@ -131,8 +132,7 @@ class BaseEpisodeCard extends StatelessWidget {
 
     return Padding(
       padding: config.cardMargin ?? EdgeInsets.zero,
-      child: GlassContainer(
-        tier: GlassTier.light,
+      child: SurfaceCard(
         borderRadius: config.cornerRadius,
         padding: EdgeInsets.zero,
         child: Semantics(

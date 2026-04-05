@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_score_indicator.dart';
 
@@ -36,8 +38,7 @@ class HighlightCard extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
-        child: GlassContainer(
-          tier: GlassTier.light,
+        child: SurfaceCard(
           borderRadius: 22,
           padding: EdgeInsets.fromLTRB(
             isCompact ? 14 : 16,
@@ -45,8 +46,6 @@ class HighlightCard extends ConsumerWidget {
             isCompact ? 12 : 16,
             isCompact ? 12 : 14,
           ),
-          animate: true,
-          interactive: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -89,7 +88,7 @@ class HighlightCard extends ConsumerWidget {
   Widget _buildOverallScoreBadge(BuildContext context, ThemeData theme) {
     final score = highlight.overallScore;
     final scoreText = score.toStringAsFixed(1);
-    final scoreColor = _getScoreColor(score, theme);
+    final scoreColor = _getScoreColor(context, score);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -266,15 +265,15 @@ class HighlightCard extends ConsumerWidget {
     );
   }
 
-  Color _getScoreColor(double score, ThemeData theme) {
+  Color _getScoreColor(BuildContext context, double score) {
     if (score >= 8.5) {
-      return AppColors.leaf;
+      return AppleColors.systemGreen.of(context);
     } else if (score >= 7.0) {
-      return AppColors.primary;
+      return AppleColors.systemIndigo.of(context);
     } else if (score >= 5.5) {
-      return AppColors.sunGlow;
+      return AppleColors.systemYellow.of(context);
     }
-    return theme.colorScheme.onSurfaceVariant;
+    return Theme.of(context).colorScheme.onSurfaceVariant;
   }
 
   bool _canFavorite() {

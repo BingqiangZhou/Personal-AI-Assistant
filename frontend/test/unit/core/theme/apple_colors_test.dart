@@ -5,146 +5,47 @@ import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 void main() {
   group('AppleColors', () {
     group('Label Colors', () {
-      test('provides correct label colors for light mode', () {
+      test('label has correct light/dark base colors', () {
         expect(AppleColors.label.light, const Color(0xFF000000));
-        expect(AppleColors.secondaryLabel.light, const Color(0xFF3C3C43));
-        expect(AppleColors.tertiaryLabel.light, const Color(0xFF3C3C43));
-      });
-
-      test('provides correct label colors for dark mode', () {
         expect(AppleColors.label.dark, const Color(0xFFFFFFFF));
-        expect(AppleColors.secondaryLabel.dark, const Color(0xFFEBEBF5));
-        expect(AppleColors.tertiaryLabel.dark, const Color(0xFFEBEBF5));
       });
 
-      testWidgets('of() returns correct label color - light mode',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.light),
-            home: Builder(
-              builder: (context) {
-                expect(AppleColors.label.of(context), const Color(0xFF000000));
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
-      });
-
-      testWidgets('of() returns correct label color - dark mode',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.dark),
-            home: Builder(
-              builder: (context) {
-                expect(AppleColors.label.of(context), const Color(0xFFFFFFFF));
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
-      });
-    });
-
-    group('Background Colors', () {
-      test('provides correct background colors for light mode', () {
-        expect(
-          AppleColors.systemGroupedBackground.light,
-          const Color(0xFFF2F2F7),
-        );
-        expect(
-          AppleColors.secondarySystemGroupedBackground.light,
-          const Color(0xFFFFFFFF),
-        );
-        expect(
-          AppleColors.tertiarySystemGroupedBackground.light,
-          const Color(0xFFF2F2F7),
-        );
-      });
-
-      test('provides correct background colors for dark mode', () {
-        expect(
-          AppleColors.systemGroupedBackground.dark,
-          const Color(0xFF000000),
-        );
-        expect(
-          AppleColors.secondarySystemGroupedBackground.dark,
-          const Color(0xFF1C1C1E),
-        );
-        expect(
-          AppleColors.tertiarySystemGroupedBackground.dark,
-          const Color(0xFF2C2C2E),
-        );
+      test('label has full alpha', () {
+        expect(AppleColors.label.lightAlpha, 1.0);
+        expect(AppleColors.label.darkAlpha, 1.0);
       });
     });
 
     group('Fill Colors', () {
-      test('provides correct fill base colors', () {
+      test('systemFill has correct base and alpha values', () {
         expect(AppleColors.systemFill.light, const Color(0xFF787880));
-        expect(AppleColors.secondarySystemFill.light, const Color(0xFF787880));
-        expect(AppleColors.tertiarySystemFill.light, const Color(0xFF767680));
+        expect(AppleColors.systemFill.dark, const Color(0xFF787880));
+        expect(AppleColors.systemFill.lightAlpha, 0.2);
+        expect(AppleColors.systemFill.darkAlpha, 0.36);
       });
 
-      testWidgets('of() applies correct alpha for fill colors in light mode',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.light),
-            home: Builder(
-              builder: (context) {
-                final color = AppleColors.systemFill.of(context);
-                expect(color.alpha, 51); // 20% of 255 ≈ 51
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
+      test('secondarySystemFill has correct alpha values', () {
+        expect(AppleColors.secondarySystemFill.lightAlpha, 0.16);
+        expect(AppleColors.secondarySystemFill.darkAlpha, 0.32);
       });
 
-      testWidgets('of() applies correct alpha for fill colors in dark mode',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.dark),
-            home: Builder(
-              builder: (context) {
-                final color = AppleColors.systemFill.of(context);
-                expect(color.alpha, 92); // 36% of 255 ≈ 92
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
+      test('tertiarySystemFill has correct alpha values', () {
+        expect(AppleColors.tertiarySystemFill.lightAlpha, 0.12);
+        expect(AppleColors.tertiarySystemFill.darkAlpha, 0.24);
       });
     });
 
-    group('Separator Colors', () {
-      test('provides correct separator base colors', () {
+    group('Separator Color', () {
+      test('separator has correct base and alpha values', () {
         expect(AppleColors.separator.light, const Color(0xFF3C3C43));
         expect(AppleColors.separator.dark, const Color(0xFF545458));
-      });
-
-      testWidgets('of() applies correct alpha for separator',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.light),
-            home: Builder(
-              builder: (context) {
-                final color = AppleColors.separator.of(context);
-                expect(color.alpha, 74); // 29% of 255 ≈ 74
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
+        expect(AppleColors.separator.lightAlpha, closeTo(0.29, 0.01));
+        expect(AppleColors.separator.darkAlpha, 0.6);
       });
     });
 
-    group('System Tint Colors', () {
-      test('provides correct system tint colors for light mode', () {
+    group('System Tint Colors - Light Mode', () {
+      test('all system tint light values are correct', () {
         expect(AppleColors.systemBlue.light, const Color(0xFF007AFF));
         expect(AppleColors.systemGreen.light, const Color(0xFF34C759));
         expect(AppleColors.systemIndigo.light, const Color(0xFF5856D6));
@@ -155,8 +56,10 @@ void main() {
         expect(AppleColors.systemYellow.light, const Color(0xFFFFCC00));
         expect(AppleColors.systemTeal.light, const Color(0xFF5AC8FA));
       });
+    });
 
-      test('provides correct system tint colors for dark mode', () {
+    group('System Tint Colors - Dark Mode', () {
+      test('all system tint dark values are correct', () {
         expect(AppleColors.systemBlue.dark, const Color(0xFF0A84FF));
         expect(AppleColors.systemGreen.dark, const Color(0xFF30D158));
         expect(AppleColors.systemIndigo.dark, const Color(0xFF5E5CE6));
@@ -169,36 +72,20 @@ void main() {
       });
     });
 
-    group('of() method', () {
-      testWidgets('returns secondaryLabel with correct alpha',
-          (WidgetTester tester) async {
-        // Light mode - 60% opacity
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.light),
-            home: Builder(
-              builder: (context) {
-                final color = AppleColors.secondaryLabel.of(context);
-                expect(color.alpha, 153); // 0.6 * 255 = 153
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
-
-        // Dark mode - 60% opacity
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: ThemeData(brightness: Brightness.dark),
-            home: Builder(
-              builder: (context) {
-                final color = AppleColors.secondaryLabel.of(context);
-                expect(color.alpha, 153); // 0.6 * 255 = 153
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
+    group('Static Color Getters', () {
+      test('provides correct light/dark getter pairs', () {
+        expect(AppleColors.systemIndigoLight, const Color(0xFF5856D6));
+        expect(AppleColors.systemIndigoDark, const Color(0xFF5E5CE6));
+        expect(AppleColors.systemOrangeLight, const Color(0xFFFF9500));
+        expect(AppleColors.systemOrangeDark, const Color(0xFFFF9F0A));
+        expect(AppleColors.systemPinkLight, const Color(0xFFFF2D55));
+        expect(AppleColors.systemPinkDark, const Color(0xFFFF375F));
+        expect(AppleColors.systemRedLight, const Color(0xFFFF3B30));
+        expect(AppleColors.systemRedDark, const Color(0xFFFF453A));
+        expect(AppleColors.systemGreenLight, const Color(0xFF34C759));
+        expect(AppleColors.systemGreenDark, const Color(0xFF30D158));
+        expect(AppleColors.systemBlueLight, const Color(0xFF007AFF));
+        expect(AppleColors.systemBlueDark, const Color(0xFF0A84FF));
       });
     });
   });

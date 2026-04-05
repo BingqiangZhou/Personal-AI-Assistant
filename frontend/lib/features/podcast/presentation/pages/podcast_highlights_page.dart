@@ -11,6 +11,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -415,12 +416,9 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: GlassContainer(
-                tier: GlassTier.light,
+              child: SurfaceCard(
                 borderRadius: 22,
                 padding: const EdgeInsets.all(18),
-                animate: true,
-                interactive: false,
                 child: Text(
                   l10n.podcast_highlights_empty,
                   style: theme.textTheme.bodyMedium?.copyWith(

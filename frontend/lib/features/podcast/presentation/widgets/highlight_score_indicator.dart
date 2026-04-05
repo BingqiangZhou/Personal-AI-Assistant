@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
@@ -30,15 +31,15 @@ class HighlightScoreIndicator extends StatelessWidget {
   static const double _denseScoreWidth = 24.0;
 
   Color _getInsightColor(BuildContext context) {
-    return AppColors.indigo;
+    return AppleColors.systemIndigo.of(context);
   }
 
   Color _getNoveltyColor(BuildContext context) {
-    return AppColors.accentWarm;
+    return AppleColors.systemOrange.of(context);
   }
 
   Color _getActionabilityColor(BuildContext context) {
-    return AppColors.accentCoral;
+    return AppleColors.systemPink.of(context);
   }
 
   @override

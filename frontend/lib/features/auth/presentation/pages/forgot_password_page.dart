@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -125,7 +126,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 height: 80,
                 decoration: BoxDecoration(
                   color: _emailSent
-                      ? AppColors.accentWarm.withValues(alpha: 0.1)
+                      ? AppleColors.systemOrange.of(context).withValues(alpha: 0.1)
                       : Theme.of(
                           context,
                         ).colorScheme.primary.withValues(alpha: 0.1),
@@ -135,7 +136,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   _emailSent ? Icons.check_circle_outline : Icons.lock_reset,
                   size: 40,
                   color: _emailSent
-                      ? AppColors.accentWarm
+                      ? AppleColors.systemOrange.of(context)
                       : Theme.of(context).colorScheme.primary,
                 ),
               ),

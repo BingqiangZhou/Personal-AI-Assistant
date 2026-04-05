@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -55,8 +54,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final accentColor = theme.brightness == Brightness.dark
         ? scheme.tertiary
         : scheme.primary;
-    return GlassContainer(
-      tier: GlassTier.light,
+    return SurfaceCard(
       borderRadius: ext.cardRadius,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -548,10 +546,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final duration = transcription.durationSeconds ?? 0;
     final completedAt = transcription.completedAt;
 
-    return GlassContainer(
-      tier: GlassTier.light,
+    return SurfaceCard(
       borderRadius: ext.cardRadius,
-      tint: scheme.tertiary.withValues(alpha: 0.05),
+      backgroundColor: scheme.tertiary.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -714,10 +711,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final friendlyMessage = _getFriendlyErrorMessage(context, errorMessage);
     final suggestion = _getErrorSuggestion(context, errorMessage);
 
-    return GlassContainer(
-      tier: GlassTier.light,
+    return SurfaceCard(
       borderRadius: ext.cardRadius,
-      tint: scheme.error.withValues(alpha: 0.05),
+      backgroundColor: scheme.error.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
