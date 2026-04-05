@@ -18,8 +18,8 @@ class AppColors {
   // ============================================================
 
   // Background Colors - 背景色系
-  static const Color lightBackground = Color(0xFFFAFAFA);
-  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightBackground = Color(0xFFF0F0F5);
+  static const Color lightSurface = Color(0xFFF5F5FA);
   static const Color lightSurfaceVariant = Color(0xFFF5F5F5);
 
   // Text Colors - 文字色系
@@ -36,10 +36,10 @@ class AppColors {
   // 纯黑背景 + 明亮的蓝色强调
   // ============================================================
 
-  // Background Colors - 背景色系 (indigo-tinted for Cosmic Editorial palette)
-  static const Color darkBackground = Color(0xFF0C0A1A);
-  static const Color darkSurface = Color(0xFF16132B);
-  static const Color darkSurfaceVariant = Color(0xFF1E1B35);
+  // Background Colors - 背景色系 (neutral for Liquid Glass palette)
+  static const Color darkBackground = Color(0xFF0A0A0F);
+  static const Color darkSurface = Color(0xFF0F0F18);
+  static const Color darkSurfaceVariant = Color(0xFF141420);
 
   // Text Colors - 文字色系
   static const Color darkTextPrimary = Color(0xFFFAFAFA);
@@ -106,13 +106,13 @@ class AppColors {
 
   // Legacy gradients
   static const LinearGradient darkSubtleGradient = LinearGradient(
-    colors: [Color(0xFF0C0A1A), Color(0xFF16132B)],
+    colors: [Color(0xFF0A0A0F), Color(0xFF0F0F18)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient softBackgroundGradient = LinearGradient(
-    colors: [Color(0xFFFAFAFA), Color(0xFFF5F3FF)],
+    colors: [Color(0xFFF0F0F5), Color(0xFFF5F3FF)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -428,7 +428,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   /// Dark theme with gradient (non-const, for runtime use)
   static AppThemeExtension get darkWithGradient => dark.copyWith(
     shellGradient: const LinearGradient(
-      colors: [Color(0xFF0C0A1A), Color(0xFF16132B)],
+      colors: [Color(0xFF0A0A0F), Color(0xFF0F0F18)],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     ),
