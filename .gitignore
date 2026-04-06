@@ -145,6 +145,7 @@ docker/storage/
 docker/temp/
 
 specs/
+docs/superpowers/
 
 # Worktrees
 .worktrees/
