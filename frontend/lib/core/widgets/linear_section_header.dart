@@ -9,8 +9,7 @@ import 'package:flutter/material.dart';
 /// - Consistent vertical spacing
 class LinearSectionHeader extends StatelessWidget {
   const LinearSectionHeader({
-    super.key,
-    required this.title,
+    required this.title, super.key,
     this.subtitle,
     this.trailing,
     this.titleSize = 48,
@@ -61,7 +60,7 @@ class LinearSectionHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );
@@ -77,8 +76,7 @@ class LinearSectionHeader extends StatelessWidget {
 /// - Compact padding
 class LinearSubsectionHeader extends StatelessWidget {
   const LinearSubsectionHeader({
-    super.key,
-    required this.title,
+    required this.title, super.key,
     this.leading,
     this.trailing,
     this.titleSize = 24,
@@ -99,7 +97,6 @@ class LinearSubsectionHeader extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (leading != null) ...[
             leading!,
@@ -115,7 +112,7 @@ class LinearSubsectionHeader extends StatelessWidget {
               ),
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

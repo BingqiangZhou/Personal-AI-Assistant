@@ -9,9 +9,9 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
-            home: Scaffold(
+            home: const Scaffold(
               body: GlassBackground(
-                child: const Text('Test Content'),
+                child: Text('Test Content'),
               ),
             ),
           ),
@@ -119,11 +119,11 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
-            home: MediaQuery(
-              data: const MediaQueryData(disableAnimations: true),
+            home: const MediaQuery(
+              data: MediaQueryData(disableAnimations: true),
               child: Scaffold(
                 body: GlassBackground(
-                  child: const Text('Static Content'),
+                  child: Text('Static Content'),
                 ),
               ),
             ),
@@ -141,7 +141,6 @@ void main() {
             theme: ThemeData.dark(),
             home: Scaffold(
               body: GlassBackground(
-                theme: GlassBackgroundTheme.podcast,
                 child: Container(),
               ),
             ),

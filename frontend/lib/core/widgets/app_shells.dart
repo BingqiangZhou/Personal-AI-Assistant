@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
-import 'package:personal_ai_assistant/core/theme/app_colors.dart';
-import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 
 /// StatusBadge - 状态徽章
 class StatusBadge extends StatelessWidget {
-  const StatusBadge({super.key, required this.label, this.icon, this.color});
+  const StatusBadge({required this.label, super.key, this.icon, this.color});
 
   final String label;
   final IconData? icon;
@@ -53,8 +52,7 @@ class StatusBadge extends StatelessWidget {
 /// AppSectionHeader - 区块标题
 class AppSectionHeader extends StatelessWidget {
   const AppSectionHeader({
-    super.key,
-    required this.title,
+    required this.title, super.key,
     this.subtitle,
     this.trailing,
     this.hideTitle = false,
@@ -116,9 +114,7 @@ enum HeaderCapsuleActionButtonStyle {
 /// HeaderCapsuleActionButton - 头部胶囊按钮
 class HeaderCapsuleActionButton extends StatelessWidget {
   const HeaderCapsuleActionButton({
-    super.key,
-    required this.icon,
-    required this.onPressed,
+    required this.icon, required this.onPressed, super.key,
     this.tooltip,
     this.label,
     this.trailingIcon,
@@ -298,8 +294,7 @@ class HeaderCapsuleActionButton extends StatelessWidget {
 /// Includes a subtle fade-in + slide-up entrance animation on first build.
 class SurfacePanel extends StatefulWidget {
   const SurfacePanel({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.padding = const EdgeInsets.all(18),
     this.margin,
     this.borderRadius,
@@ -347,7 +342,7 @@ class _SurfacePanelState extends State<SurfacePanel> {
     if (_hasAnimated) return panel;
 
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
+      tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
       onEnd: () => _hasAnimated = true,
@@ -371,8 +366,7 @@ class _SurfacePanelState extends State<SurfacePanel> {
 /// CompactHeaderPanel - 紧凑头部面板
 class CompactHeaderPanel extends StatelessWidget {
   const CompactHeaderPanel({
-    super.key,
-    required this.title,
+    required this.title, super.key,
     this.leading,
     this.trailing,
   });
@@ -422,9 +416,7 @@ class CompactHeaderPanel extends StatelessWidget {
 /// Staggered fade-in entrance for eyebrow (0ms), title (50ms), subtitle (100ms).
 class HeroHeader extends StatefulWidget {
   const HeroHeader({
-    super.key,
-    required this.title,
-    required this.subtitle,
+    required this.title, required this.subtitle, super.key,
     this.eyebrow,
     this.leading,
     this.trailing,
@@ -532,7 +524,7 @@ class _HeroHeaderState extends State<HeroHeader> {
                 ),
                 if (widget.trailing != null) ...[
                   const SizedBox(width: 12),
-                  Align(alignment: Alignment.topCenter, child: widget.trailing!),
+                  Align(alignment: Alignment.topCenter, child: widget.trailing),
                 ],
               ],
             ),
@@ -608,9 +600,7 @@ class _StaggeredFadeInState extends State<_StaggeredFadeIn> {
 /// AppEmptyState - 空状态
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
-    super.key,
-    required this.icon,
-    required this.title,
+    required this.icon, required this.title, super.key,
     this.subtitle,
     this.action,
   });
@@ -669,10 +659,7 @@ class AppEmptyState extends StatelessWidget {
 /// ContentShell - 内容页面壳
 class ContentShell extends StatelessWidget {
   const ContentShell({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.child,
+    required this.title, required this.subtitle, required this.child, super.key,
     this.eyebrow,
     this.leading,
     this.trailing,
@@ -698,7 +685,6 @@ class ContentShell extends StatelessWidget {
     final extension = appThemeOf(context);
 
     return GlassBackground(
-      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: _ShellViewport(
@@ -732,11 +718,7 @@ class ContentShell extends StatelessWidget {
 /// ProfileShell - 个人资料页面壳
 class ProfileShell extends StatelessWidget {
   const ProfileShell({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.summary,
-    required this.child,
+    required this.title, required this.subtitle, required this.summary, required this.child, super.key,
     this.trailing,
     this.badges = const <Widget>[],
     this.roundedViewport = false,
@@ -758,7 +740,6 @@ class ProfileShell extends StatelessWidget {
     final extension = appThemeOf(context);
 
     return GlassBackground(
-      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: _ShellViewport(
@@ -827,10 +808,7 @@ class _ShellViewport extends StatelessWidget {
 /// AuthShell - 认证页面壳
 class AuthShell extends StatelessWidget {
   const AuthShell({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.child,
+    required this.title, required this.subtitle, required this.child, super.key,
     this.header,
     this.footer,
   });
@@ -847,7 +825,6 @@ class AuthShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     return GlassBackground(
-      theme: GlassBackgroundTheme.podcast,
       child: Material(
         color: Colors.transparent,
         child: SafeArea(

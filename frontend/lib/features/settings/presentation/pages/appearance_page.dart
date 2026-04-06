@@ -56,9 +56,9 @@ class AppearancePage extends ConsumerWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: const _FontDropdown(),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: _FontDropdown(),
               ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 16),

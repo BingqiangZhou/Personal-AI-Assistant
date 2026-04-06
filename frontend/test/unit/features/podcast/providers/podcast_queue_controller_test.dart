@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
@@ -20,7 +20,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
         ],
       );
       addTearDown(container.dispose);
@@ -89,7 +89,6 @@ void main() {
         );
         final audioNotifier = _FakeAudioPlayerNotifier(
           initialState: AudioPlayerState(
-            isPlaying: false,
             currentEpisode: _episode(1),
           ),
         );
@@ -129,10 +128,7 @@ void main() {
           reorderQueueResult: reorderedQueue,
         );
         final audioNotifier = _FakeAudioPlayerNotifier(
-          initialState: const AudioPlayerState(
-            isPlaying: false,
-            currentEpisode: null,
-          ),
+          
         );
         final container = ProviderContainer(
           overrides: [
@@ -221,9 +217,7 @@ void main() {
       () async {
         final repository = _FakePodcastRepository(
           removeQueueResult: const PodcastQueueModel(
-            currentEpisodeId: null,
             revision: 15,
-            items: <PodcastQueueItemModel>[],
           ),
         );
         final audioNotifier = _FakeAudioPlayerNotifier(
@@ -332,7 +326,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
         ],
       );
       addTearDown(container.dispose);
@@ -340,7 +334,7 @@ void main() {
       final controller = container.read(
         podcastQueueControllerProvider.notifier,
       );
-      await controller.loadQueue(forceRefresh: true);
+      await controller.loadQueue();
       expect(container.read(podcastQueueControllerProvider).value?.revision, 1);
 
       await controller.reorderQueue(<int>[2, 1]);
@@ -350,7 +344,7 @@ void main() {
         2,
       );
 
-      await controller.loadQueue(forceRefresh: true);
+      await controller.loadQueue();
       expect(container.read(podcastQueueControllerProvider).value?.revision, 2);
       expect(
         container.read(podcastQueueControllerProvider).value?.currentEpisodeId,
@@ -377,7 +371,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+            audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
           ],
         );
         addTearDown(container.dispose);
@@ -385,7 +379,7 @@ void main() {
         final controller = container.read(
           podcastQueueControllerProvider.notifier,
         );
-        await controller.loadQueue(forceRefresh: true);
+        await controller.loadQueue();
 
         final reorderFuture = controller.reorderQueue(<int>[2, 1, 3]);
         await Future<void>.delayed(Duration.zero);
@@ -430,7 +424,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+            audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
           ],
         );
         addTearDown(container.dispose);
@@ -438,7 +432,7 @@ void main() {
         final controller = container.read(
           podcastQueueControllerProvider.notifier,
         );
-        await controller.loadQueue(forceRefresh: true);
+        await controller.loadQueue();
 
         final removeFuture = controller.removeFromQueue(2);
         await Future<void>.delayed(Duration.zero);
@@ -473,7 +467,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => _FakeAudioPlayerNotifier()),
+          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
           podcastQueueControllerProvider.overrideWith(
             _TimeoutPodcastQueueController.new,
           ),
@@ -555,8 +549,8 @@ PodcastEpisodeModel _episode(int episodeId) {
     subscriptionId: 1,
     title: 'Episode $episodeId',
     audioUrl: 'https://example.com/audio-$episodeId.mp3',
-    publishedAt: DateTime(2026, 2, 1),
-    createdAt: DateTime(2026, 2, 1),
+    publishedAt: DateTime(2026, 2),
+    createdAt: DateTime(2026, 2),
   );
 }
 

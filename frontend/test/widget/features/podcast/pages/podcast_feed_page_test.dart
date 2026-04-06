@@ -1,13 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'dart:async';
-
-import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
-import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 void main() {
   group('PodcastFeedPage Widget Tests', () {
@@ -22,17 +22,15 @@ void main() {
     });
 
     testWidgets('displays loading shimmer initially', (
-      WidgetTester tester,
+      tester,
     ) async {
       final testContainer = ProviderContainer(
         overrides: [
           podcastFeedProvider.overrideWith(
             () => MockPodcastFeedNotifier(
               const PodcastFeedState(
-                episodes: [],
                 isLoading: true,
                 hasMore: false,
-                total: 0,
               ),
             ),
           ),
@@ -42,8 +40,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -60,13 +58,10 @@ void main() {
       testContainer.dispose();
     });
 
-    testWidgets('calls loadInitialFeed on init', (WidgetTester tester) async {
+    testWidgets('calls loadInitialFeed on init', (tester) async {
       final feedNotifier = LoadTrackingPodcastFeedNotifier(
         const PodcastFeedState(
-          episodes: [],
-          isLoading: false,
           hasMore: false,
-          total: 0,
         ),
       );
       final testContainer = ProviderContainer(
@@ -76,7 +71,7 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -90,14 +85,11 @@ void main() {
     });
 
     testWidgets('shows loading before first empty result resolves', (
-      WidgetTester tester,
+      tester,
     ) async {
       final feedNotifier = DelayedLoadPodcastFeedNotifier(
         const PodcastFeedState(
-          episodes: [],
-          isLoading: false,
           hasMore: false,
-          total: 0,
         ),
       );
       final testContainer = ProviderContainer(
@@ -107,11 +99,11 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -131,7 +123,7 @@ void main() {
     });
 
     testWidgets('displays empty state when no episodes', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Arrange - Override provider to return empty state
       final testContainer = ProviderContainer(
@@ -139,10 +131,7 @@ void main() {
           podcastFeedProvider.overrideWith(
             () => MockPodcastFeedNotifier(
               const PodcastFeedState(
-                episodes: [],
-                isLoading: false,
                 hasMore: false,
-                total: 0,
               ),
             ),
           ),
@@ -152,8 +141,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -172,7 +161,7 @@ void main() {
     });
 
     testWidgets('displays episode cards when data is loaded', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Arrange - Create mock episodes
       final mockEpisodes = [
@@ -201,8 +190,6 @@ void main() {
             () => MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: mockEpisodes,
-                isLoading: false,
-                hasMore: true,
                 total: 2,
               ),
             ),
@@ -213,8 +200,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -233,7 +220,7 @@ void main() {
     });
 
     testWidgets('displays error state when loading fails', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Arrange - Override provider to return error state
       final testContainer = ProviderContainer(
@@ -241,10 +228,7 @@ void main() {
           podcastFeedProvider.overrideWith(
             () => MockPodcastFeedNotifier(
               const PodcastFeedState(
-                episodes: [],
-                isLoading: false,
                 hasMore: false,
-                total: 0,
                 error: 'Network error occurred',
               ),
             ),
@@ -255,8 +239,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -279,7 +263,7 @@ void main() {
       testContainer.dispose();
     });
 
-    testWidgets('displays loading more indicator', (WidgetTester tester) async {
+    testWidgets('displays loading more indicator', (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -304,9 +288,7 @@ void main() {
             () => MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: mockEpisodes,
-                isLoading: false,
                 isLoadingMore: true,
-                hasMore: true,
                 total: 1,
               ),
             ),
@@ -317,8 +299,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
@@ -334,7 +316,7 @@ void main() {
     });
 
     testWidgets('does not show load-more indicator when hasMore=false', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -358,7 +340,6 @@ void main() {
             () => MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: mockEpisodes,
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -370,8 +351,8 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
-          child: MaterialApp(
-            locale: const Locale('en'),
+          child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),

@@ -110,7 +110,7 @@ void main() {
       await _pumpWithSize(
         tester: tester,
         size: const Size(1200, 900),
-        child: _buildNavigation(desktopNavExpanded: true),
+        child: _buildNavigation(),
       );
 
       expect(find.text('AI Assistant'), findsOneWidget);

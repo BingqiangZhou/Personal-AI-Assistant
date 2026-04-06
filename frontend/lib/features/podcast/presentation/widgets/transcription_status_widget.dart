@@ -7,22 +7,20 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
-
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model_extensions.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_indicators.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_mapper.dart';
 
 class TranscriptionStatusWidget extends ConsumerWidget {
-  final int episodeId;
-  final PodcastTranscriptionResponse? transcription;
 
   const TranscriptionStatusWidget({
-    super.key,
-    required this.episodeId,
+    required this.episodeId, super.key,
     this.transcription,
   });
+  final int episodeId;
+  final PodcastTranscriptionResponse? transcription;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

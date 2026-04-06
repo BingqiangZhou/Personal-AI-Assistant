@@ -126,8 +126,6 @@ class _MiniDockBody extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: AppColors.violetColors,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(14),
       ),
@@ -333,7 +331,6 @@ class _ExpandedPanelContent extends StatelessWidget {
             ? const Key('podcast_bottom_player_expanded')
             : null,
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Center(
@@ -363,8 +360,8 @@ class _ExpandedPanelContent extends StatelessWidget {
           const SizedBox(height: 10),
           const _ExpandedProgressSection(),
           const SizedBox(height: 10),
-          RepaintBoundary(
-            child: const _TransportRow(),
+          const RepaintBoundary(
+            child: _TransportRow(),
           ),
         ],
       ),
@@ -414,7 +411,7 @@ class _ExpandedHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurfaceVariant;
-    final imageSize = 72.0;
+    const imageSize = 72.0;
     final currentLocation = ref.watch(currentRouteProvider);
 
     return Row(
@@ -436,7 +433,7 @@ class _ExpandedHero extends ConsumerWidget {
             key: const Key('podcast_bottom_player_expanded_title'),
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              String resolvedCurrentLocation = currentLocation;
+              var resolvedCurrentLocation = currentLocation;
               try {
                 resolvedCurrentLocation = GoRouterState.of(context).uri.toString();
               } catch (e) {
@@ -475,7 +472,6 @@ class _ExpandedHero extends ConsumerWidget {
                         ? MainAxisAlignment.center
                         : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
                     children: [
                       Text(
                         key: const Key(

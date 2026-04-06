@@ -428,7 +428,7 @@ class _ProfileSubscriptionsPageState
                         Text(
                           subscription.description != null
                               ? EpisodeDescriptionHelper.stripHtmlTags(
-                                  subscription.description!,
+                                  subscription.description,
                                 )
                               : l10n.podcast_description,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(

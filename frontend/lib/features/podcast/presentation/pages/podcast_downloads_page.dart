@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:personal_ai_assistant/core/database/app_database.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
-import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/services/audio_download_service.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
-import 'package:personal_ai_assistant/core/database/app_database.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_episodes_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
@@ -86,7 +85,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
     return items;
   }
 
-  void _confirmDeleteAll(
+  Future<void> _confirmDeleteAll(
     BuildContext context,
     WidgetRef ref,
     List<DownloadTask> tasks,
@@ -109,9 +108,9 @@ class PodcastDownloadsPage extends ConsumerWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  final String title;
 
   const _SectionHeader({required this.title});
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +121,7 @@ class _SectionHeader extends StatelessWidget {
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontSize: 11,
-              letterSpacing: 1.0,
+              letterSpacing: 1,
               fontWeight: FontWeight.w700,
               color: scheme.onSurfaceVariant,
             ),
@@ -132,9 +131,9 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _DownloadTaskTile extends ConsumerWidget {
-  final DownloadTask task;
 
   const _DownloadTaskTile({required this.task});
+  final DownloadTask task;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -207,9 +206,7 @@ class _DownloadTaskTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  task.status == 'downloading'
-                      ? LinearProgressIndicator(value: task.progress)
-                      : Text(
+                  if (task.status == 'downloading') LinearProgressIndicator(value: task.progress) else Text(
                           _statusText(task, l10n),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
@@ -266,9 +263,9 @@ class _DownloadTaskTile extends ConsumerWidget {
 }
 
 class _StatusIcon extends StatelessWidget {
-  final DownloadTask task;
 
   const _StatusIcon({required this.task});
+  final DownloadTask task;
 
   @override
   Widget build(BuildContext context) {

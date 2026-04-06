@@ -2,22 +2,18 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 220);
 
 class CustomAdaptiveNavigation extends ConsumerStatefulWidget {
   const CustomAdaptiveNavigation({
-    super.key,
-    required this.destinations,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
+    required this.destinations, required this.selectedIndex, required this.onDestinationSelected, super.key,
     this.body,
     this.floatingActionButton,
     this.appBar,
@@ -539,7 +535,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
     if (isSelected) {
       // Gradient background for active state
       return BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: AppColors.violetColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -688,7 +684,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
                     ),
                     decoration: BoxDecoration(
                       gradient: isSelected
-                          ? LinearGradient(
+                          ? const LinearGradient(
                               colors: AppColors.violetColors,
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -729,8 +725,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
 
 class ResponsiveContainer extends StatelessWidget {
   const ResponsiveContainer({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.alignment,
     this.maxWidth,
     this.padding,
@@ -790,7 +785,7 @@ class _CleanSidebar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.darkSurface,
         borderRadius: expanded
-            ? BorderRadius.horizontal(right: Radius.circular(14))
+            ? const BorderRadius.horizontal(right: Radius.circular(14))
             : BorderRadius.circular(16),
       ),
       child: child,
@@ -848,7 +843,7 @@ class _NavInkWellState extends State<_NavInkWell> {
 
 /// Arc+Linear style dock with dark surface + blur
 class _CleanDock extends StatelessWidget {
-  const _CleanDock({super.key, required this.child, required this.width});
+  const _CleanDock({required this.child, required this.width, super.key});
 
   final Widget child;
   final double width;

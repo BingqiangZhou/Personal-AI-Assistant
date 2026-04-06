@@ -13,7 +13,7 @@ void main() {
     test('uses server effective rate for speed sheet state', () async {
       final repository = _TrackingPodcastRepository(
         effectiveResponse: const PlaybackRateEffectiveResponse(
-          globalPlaybackRate: 1.0,
+          globalPlaybackRate: 1,
           subscriptionPlaybackRate: 1.5,
           effectivePlaybackRate: 1.5,
           source: 'subscription',
@@ -25,8 +25,7 @@ void main() {
           audioPlayerProvider.overrideWith(
             () => _TestAudioPlayerNotifier(
               AudioPlayerState(
-                currentEpisode: _episode(playbackRate: 1.0),
-                playbackRate: 1.0,
+                currentEpisode: _episode(playbackRate: 1),
               ),
             ),
           ),
@@ -105,7 +104,7 @@ void main() {
     test('resume refreshes audio speed from server before playing', () async {
       final repository = _TrackingPodcastRepository(
         effectiveResponse: const PlaybackRateEffectiveResponse(
-          globalPlaybackRate: 1.0,
+          globalPlaybackRate: 1,
           subscriptionPlaybackRate: 1.75,
           effectivePlaybackRate: 1.75,
           source: 'subscription',
@@ -113,8 +112,7 @@ void main() {
       );
       final notifier = _TestAudioPlayerNotifier(
         AudioPlayerState(
-          currentEpisode: _episode(playbackRate: 1.0),
-          playbackRate: 1.0,
+          currentEpisode: _episode(playbackRate: 1),
         ),
       );
       final container = ProviderContainer(
@@ -167,8 +165,7 @@ void main() {
       final repository = _TrackingPodcastRepository();
       final notifier = _TestAudioPlayerNotifier(
         AudioPlayerState(
-          currentEpisode: _episode(playbackRate: 1.0),
-          playbackRate: 1.0,
+          currentEpisode: _episode(playbackRate: 1),
         ),
       );
       final container = ProviderContainer(
@@ -270,9 +267,9 @@ class _TestAudioPlayerNotifier extends AudioPlayerNotifier {
 class _TrackingPodcastRepository extends PodcastRepository {
   _TrackingPodcastRepository({
     this.effectiveResponse = const PlaybackRateEffectiveResponse(
-      globalPlaybackRate: 1.0,
+      globalPlaybackRate: 1,
       subscriptionPlaybackRate: null,
-      effectivePlaybackRate: 1.0,
+      effectivePlaybackRate: 1,
       source: 'global',
     ),
     this.effectivePlaybackRateError,

@@ -11,11 +11,11 @@ import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
-import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 
 class ProfileHistoryPage extends ConsumerStatefulWidget {
   const ProfileHistoryPage({super.key});
@@ -32,7 +32,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
       if (!mounted) {
         return;
       }
-      ref.read(playbackHistoryLiteProvider.notifier).load(forceRefresh: false);
+      ref.read(playbackHistoryLiteProvider.notifier).load();
     });
   }
 
@@ -354,7 +354,6 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                 alignment: Alignment.centerLeft,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     ConstrainedBox(
                                       constraints: const BoxConstraints(

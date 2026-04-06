@@ -44,6 +44,12 @@ class GlassTokens {
     required this.overlay,
   });
 
+  /// Dark mode tokens
+  const factory GlassTokens.dark() = _DarkGlassTokens;
+
+  /// Light mode tokens
+  const factory GlassTokens.light() = _LightGlassTokens;
+
   final Brightness brightness;
   final GlassTierParams standard;
   final GlassTierParams overlay;
@@ -55,12 +61,6 @@ class GlassTokens {
         ? const GlassTokens.dark()
         : const GlassTokens.light();
   }
-
-  /// Dark mode tokens
-  const factory GlassTokens.dark() = _DarkGlassTokens;
-
-  /// Light mode tokens
-  const factory GlassTokens.light() = _LightGlassTokens;
 
   /// Get params for a specific tier
   GlassTierParams paramsForTier(GlassTier tier) {

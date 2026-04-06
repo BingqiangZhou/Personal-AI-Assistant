@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/simplified_episode_card.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/simplified_episode_card.dart';
 
 void main() {
   group('SimplifiedEpisodeCard layout', () {
     testWidgets(
       'mobile layout removes cover and subscription tag, keeps metadata and action icons',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -81,7 +80,7 @@ void main() {
 
     testWidgets(
       'desktop layout keeps same structure and uses 4-line description',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(1200, 900);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -148,7 +147,7 @@ void main() {
 
     testWidgets(
       'title is rendered and card structure is correct',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(1200, 900);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -190,7 +189,7 @@ void main() {
     );
 
     testWidgets('add-to-queue button shows loading and becomes disabled', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;

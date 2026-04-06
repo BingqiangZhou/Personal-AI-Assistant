@@ -5,7 +5,7 @@ import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 
 void main() {
   group('GlassContainer', () {
-    testWidgets('renders with default parameters', (WidgetTester tester) async {
+    testWidgets('renders with default parameters', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -20,7 +20,7 @@ void main() {
       expect(find.byType(GlassContainer), findsOneWidget);
     });
 
-    testWidgets('renders with custom tier', (WidgetTester tester) async {
+    testWidgets('renders with custom tier', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -35,7 +35,7 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('renders with custom border radius', (WidgetTester tester) async {
+    testWidgets('renders with custom border radius', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -50,7 +50,7 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('renders with custom padding', (WidgetTester tester) async {
+    testWidgets('renders with custom padding', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -65,7 +65,7 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('renders with tint', (WidgetTester tester) async {
+    testWidgets('renders with tint', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -80,7 +80,7 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('renders with null child', (WidgetTester tester) async {
+    testWidgets('renders with null child', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -92,7 +92,7 @@ void main() {
       expect(find.byType(GlassContainer), findsOneWidget);
     });
 
-    testWidgets('all tiers render correctly', (WidgetTester tester) async {
+    testWidgets('all tiers render correctly', (tester) async {
       for (final tier in GlassTier.values) {
         await tester.pumpWidget(
           MaterialApp(
@@ -109,7 +109,7 @@ void main() {
       }
     });
 
-    testWidgets('works in dark mode', (WidgetTester tester) async {
+    testWidgets('works in dark mode', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.dark(),
@@ -124,7 +124,7 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('works in light mode', (WidgetTester tester) async {
+    testWidgets('works in light mode', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.light(),
@@ -139,14 +139,13 @@ void main() {
       expect(find.text('Test content'), findsOneWidget);
     });
 
-    testWidgets('can nest multiple containers', (WidgetTester tester) async {
+    testWidgets('can nest multiple containers', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: GlassContainer(
               tier: GlassTier.overlay,
               child: GlassContainer(
-                tier: GlassTier.standard,
                 child: Text('Nested content'),
               ),
             ),
@@ -158,7 +157,7 @@ void main() {
       expect(find.byType(GlassContainer), findsNWidgets(2));
     });
 
-    testWidgets('child is correctly padded', (WidgetTester tester) async {
+    testWidgets('child is correctly padded', (tester) async {
       const customPadding = EdgeInsets.all(32);
 
       await tester.pumpWidget(
@@ -175,7 +174,7 @@ void main() {
       expect(find.text('Padded content'), findsOneWidget);
     });
 
-    testWidgets('uses BackdropFilter', (WidgetTester tester) async {
+    testWidgets('uses BackdropFilter', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

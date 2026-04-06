@@ -95,7 +95,7 @@ void main() {
           const AudioPlayerState(),
         );
         final episodesNotifier = _TestPodcastEpisodesNotifier(
-          const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
+          const PodcastEpisodesState(hasMore: false),
         );
 
         await tester.pumpWidget(
@@ -115,7 +115,7 @@ void main() {
     ) async {
       final audioNotifier = _TestAudioPlayerNotifier(const AudioPlayerState());
       final episodesNotifier = _TestPodcastEpisodesNotifier(
-        const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
+        const PodcastEpisodesState(hasMore: false),
       );
 
       await tester.pumpWidget(
@@ -147,10 +147,10 @@ Widget _createSwitchingWidget({
       audioPlayerProvider.overrideWith(() => audioNotifier),
       podcastEpisodesProvider.overrideWith(() => episodesNotifier),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const PodcastPlayerLayoutFrame(child: _SubscriptionSwitchHarness()),
+      home: PodcastPlayerLayoutFrame(child: _SubscriptionSwitchHarness()),
     ),
   );
 }

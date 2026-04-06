@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
-import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 class _TestPodcastFeedNotifier extends PodcastFeedNotifier {
@@ -33,7 +32,7 @@ class _TestPodcastFeedNotifier extends PodcastFeedNotifier {
 
 class _TestAuthNotifier extends AuthNotifier {
   @override
-  AuthState build() => const AuthState(isAuthenticated: false);
+  AuthState build() => const AuthState();
 }
 
 void main() {
@@ -93,7 +92,7 @@ void main() {
     }
 
     testWidgets('renders with localized page title and page structure', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
         wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
@@ -113,7 +112,7 @@ void main() {
     });
 
     testWidgets('displays mock data on mobile screen', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -137,7 +136,7 @@ void main() {
     });
 
     testWidgets('displays mock data on desktop screen', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -160,7 +159,7 @@ void main() {
     });
 
     testWidgets('has no overflow errors on small screens', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(320, 480);
       tester.view.devicePixelRatio = 1.0;
@@ -178,7 +177,7 @@ void main() {
       expect(find.byType(Card), findsWidgets);
     });
 
-    testWidgets('cards contain play buttons', (WidgetTester tester) async {
+    testWidgets('cards contain play buttons', (tester) async {
       tester.view.physicalSize = const Size(800, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -194,7 +193,7 @@ void main() {
       expect(find.byIcon(Icons.play_circle_outline), findsWidgets);
     });
 
-    testWidgets('cards contain metadata icons', (WidgetTester tester) async {
+    testWidgets('cards contain metadata icons', (tester) async {
       tester.view.physicalSize = const Size(800, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

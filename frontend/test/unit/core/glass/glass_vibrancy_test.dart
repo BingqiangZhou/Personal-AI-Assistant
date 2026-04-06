@@ -7,7 +7,7 @@ void main() {
   group('GlassVibrancy', () {
     group('primaryText', () {
       testWidgets('returns black in light mode regardless of tier',
-          (WidgetTester tester) async {
+          (tester) async {
         for (final tier in GlassTier.values) {
           await tester.pumpWidget(
             MaterialApp(
@@ -25,7 +25,7 @@ void main() {
       });
 
       testWidgets('returns white in dark mode regardless of tier',
-          (WidgetTester tester) async {
+          (tester) async {
         for (final tier in GlassTier.values) {
           await tester.pumpWidget(
             MaterialApp(
@@ -42,7 +42,7 @@ void main() {
         }
       });
 
-      testWidgets('always has full opacity', (WidgetTester tester) async {
+      testWidgets('always has full opacity', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
@@ -62,7 +62,7 @@ void main() {
 
     group('secondaryText', () {
       testWidgets('returns correct base color in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -84,7 +84,7 @@ void main() {
       });
 
       testWidgets('returns correct base color in dark mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
@@ -106,7 +106,7 @@ void main() {
       });
 
       testWidgets('applies 60% base alpha on overlay tier in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -124,7 +124,7 @@ void main() {
       });
 
       testWidgets('boosts alpha to 70% on standard tier in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -144,7 +144,7 @@ void main() {
       });
 
       testWidgets('standard tier alpha is higher than overlay tier',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -166,7 +166,7 @@ void main() {
 
     group('tertiaryText', () {
       testWidgets('returns correct base color in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -188,7 +188,7 @@ void main() {
       });
 
       testWidgets('applies 30% base alpha on overlay tier in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -206,7 +206,7 @@ void main() {
       });
 
       testWidgets('boosts alpha to 45% on standard tier in light mode',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
@@ -226,7 +226,7 @@ void main() {
       });
 
       testWidgets('standard tier alpha is higher than overlay tier',
-          (WidgetTester tester) async {
+          (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),

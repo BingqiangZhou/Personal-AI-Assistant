@@ -437,7 +437,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 // Helper for refreshListenable - notifies on auth status or onboarding changes
 class AuthStateListenable extends ChangeNotifier {
-  final Ref ref;
 
   AuthStateListenable(this.ref) {
     ref.listen(authProvider.select((s) => s.isAuthenticated), (previous, next) {
@@ -447,6 +446,7 @@ class AuthStateListenable extends ChangeNotifier {
       notifyListeners();
     });
   }
+  final Ref ref;
 }
 
 class ErrorPage extends StatelessWidget {

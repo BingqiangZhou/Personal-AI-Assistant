@@ -10,9 +10,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/disc
 /// Top charts section header with category chips
 class DiscoverTopChartsSection extends ConsumerWidget {
   const DiscoverTopChartsSection({
-    super.key,
-    required this.state,
-    required this.onCategorySelected,
+    required this.state, required this.onCategorySelected, super.key,
     this.isDense = false,
   });
 

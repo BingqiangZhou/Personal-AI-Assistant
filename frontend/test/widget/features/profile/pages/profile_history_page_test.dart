@@ -13,7 +13,7 @@ import 'package:personal_ai_assistant/features/profile/presentation/pages/profil
 
 void main() {
   testWidgets('shows bare loading state without content GlassPanel', (
-    WidgetTester tester,
+    tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
@@ -24,14 +24,14 @@ void main() {
       ProviderScope(
         overrides: [
           playbackHistoryLiteProvider.overrideWith(
-            () => _LoadingPlaybackHistoryLiteNotifier(),
+            _LoadingPlaybackHistoryLiteNotifier.new,
           ),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const ProfileHistoryPage(),
+          locale: Locale('en'),
+          home: ProfileHistoryPage(),
         ),
       ),
     );
@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets('renders history list from lightweight provider', (
-    WidgetTester tester,
+    tester,
   ) async {
     final now = DateTime.now();
 
@@ -66,9 +66,7 @@ void main() {
                     id: 101,
                     subscriptionId: 2,
                     subscriptionTitle: 'Podcast X',
-                    subscriptionImageUrl: null,
                     title: 'Episode X',
-                    imageUrl: null,
                     audioDuration: 1800,
                     playbackPosition: 120,
                     lastPlayedAt: now,
@@ -95,10 +93,10 @@ void main() {
             ),
           ),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const ProfileHistoryPage(),
+          home: ProfileHistoryPage(),
         ),
       ),
     );

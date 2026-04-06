@@ -7,14 +7,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shar
 
 class PodcastFeedEpisodeCard extends StatelessWidget {
   const PodcastFeedEpisodeCard({
-    super.key,
-    required this.episode,
-    required this.compact,
-    required this.isAddingToQueue,
-    required this.displayDescription,
-    required this.onOpenDetail,
-    required this.onPlayAndOpenDetail,
-    required this.onAddToQueue,
+    required this.episode, required this.compact, required this.isAddingToQueue, required this.displayDescription, required this.onOpenDetail, required this.onPlayAndOpenDetail, required this.onAddToQueue, super.key,
   });
 
   final PodcastEpisodeModel episode;
@@ -35,7 +28,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
     final titleFontSize = titleStyle?.fontSize ?? 13;
     final titleLineHeightFactor = titleStyle?.height ?? 1.0;
     final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
-    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
+    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0);
 
     // Determine identity gradient colors based on subscription title hash
     final subscriptionTitle = episode.subscriptionTitle ?? l10n.podcast_default_podcast;
@@ -44,7 +37,6 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
 
     return BaseEpisodeCard(
       config: EpisodeCardConfig(
-        showImage: true,
         imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
         imageSize: coverSize,
         imageIconSize: coverIconSize,
@@ -62,7 +54,6 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         showDescription: displayDescription.isNotEmpty,
         description: displayDescription.isNotEmpty ? displayDescription : null,
         descriptionMaxLines: compact ? 2 : 4,
-        showPlayButton: true,
         showQueueButton: true,
         isAddingToQueue: isAddingToQueue,
         showDownloadButton: true,

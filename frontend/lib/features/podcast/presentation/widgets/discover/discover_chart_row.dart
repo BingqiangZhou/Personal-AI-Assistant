@@ -7,12 +7,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podc
 /// Chart row widget for displaying a single discover item with rank and actions
 class DiscoverChartRow extends StatelessWidget {
   const DiscoverChartRow({
-    super.key,
-    required this.rank,
-    required this.item,
-    required this.onTap,
-    required this.onSubscribe,
-    required this.onPlay,
+    required this.rank, required this.item, required this.onTap, required this.onSubscribe, required this.onPlay, super.key,
     this.isSubscribing = false,
     this.isSubscribed = false,
     this.isDense = false,
@@ -57,8 +52,6 @@ class DiscoverChartRow extends StatelessWidget {
             AppColors.goldColors[0].withValues(alpha: 0.12),
             AppColors.goldColors[1].withValues(alpha: 0.08),
           ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(extension.cardRadius),
       );
@@ -70,8 +63,6 @@ class DiscoverChartRow extends StatelessWidget {
             AppColors.coralColors[0].withValues(alpha: 0.1),
             AppColors.coralColors[1].withValues(alpha: 0.06),
           ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(extension.cardRadius),
       );
@@ -83,8 +74,6 @@ class DiscoverChartRow extends StatelessWidget {
             AppColors.violetColors[0].withValues(alpha: 0.1),
             AppColors.violetColors[1].withValues(alpha: 0.06),
           ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(extension.cardRadius),
       );

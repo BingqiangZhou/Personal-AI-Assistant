@@ -7,6 +7,14 @@ import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
 /// Podcast image widget with retry/fallback handling.
 class PodcastImageWidget extends StatefulWidget {
+
+  const PodcastImageWidget({
+    required this.imageUrl, required this.width, required this.height, super.key,
+    this.fallbackImageUrl,
+    this.fit = BoxFit.cover,
+    this.iconColor,
+    this.iconSize,
+  });
   final String? imageUrl;
   final String? fallbackImageUrl;
   final double width;
@@ -14,17 +22,6 @@ class PodcastImageWidget extends StatefulWidget {
   final BoxFit fit;
   final Color? iconColor;
   final double? iconSize;
-
-  const PodcastImageWidget({
-    super.key,
-    required this.imageUrl,
-    this.fallbackImageUrl,
-    required this.width,
-    required this.height,
-    this.fit = BoxFit.cover,
-    this.iconColor,
-    this.iconSize,
-  });
 
   @override
   State<PodcastImageWidget> createState() => _PodcastImageWidgetState();
@@ -99,7 +96,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
       precacheImage(
         provider,
         context,
-        onError: (Object error, StackTrace? stackTrace) {
+        onError: (error, stackTrace) {
           // Prevent async precache failures from surfacing as FlutterError.
           logger.AppLogger.debug('Failed to precache image: $error');
         },
@@ -228,7 +225,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
           ),
           child: Center(
             child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.4, end: 1.0),
+              tween: Tween(begin: 0.4, end: 1),
               duration: const Duration(milliseconds: 1200),
               curve: Curves.easeInOut,
               onEnd: () => setState(() {}),
@@ -285,7 +282,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Icon(
         Icons.podcasts,

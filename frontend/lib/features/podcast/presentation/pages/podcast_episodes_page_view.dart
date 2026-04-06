@@ -350,7 +350,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
                   ),
                 ],
                 selected: {_selectedFilter},
-                onSelectionChanged: (Set<String> selection) {
+                onSelectionChanged: (selection) {
                   setDialogState(() {
                     _selectedFilter = selection.first;
                   });

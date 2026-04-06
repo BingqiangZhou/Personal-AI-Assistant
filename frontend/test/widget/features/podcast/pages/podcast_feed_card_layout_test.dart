@@ -37,7 +37,7 @@ void main() {
   group('PodcastFeedPage card layout', () {
     testWidgets(
       'mobile card shows description and metadata/action row below',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -49,7 +49,6 @@ void main() {
               () => _MockPodcastFeedNotifier(
                 PodcastFeedState(
                   episodes: [_buildEpisode()],
-                  isLoading: false,
                   hasMore: false,
                   total: 1,
                 ),
@@ -62,10 +61,10 @@ void main() {
         await tester.pumpWidget(
           UncontrolledProviderScope(
             container: container,
-            child: MaterialApp(
+            child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const PodcastFeedPage(),
+              home: PodcastFeedPage(),
             ),
           ),
         );
@@ -111,7 +110,7 @@ void main() {
 
     testWidgets(
       'desktop card keeps play action and shows 4-line description with metadata below',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(1200, 900);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -126,7 +125,6 @@ void main() {
               () => _MockPodcastFeedNotifier(
                 PodcastFeedState(
                   episodes: [_buildEpisode()],
-                  isLoading: false,
                   hasMore: false,
                   total: 1,
                 ),
@@ -139,10 +137,10 @@ void main() {
         await tester.pumpWidget(
           UncontrolledProviderScope(
             container: container,
-            child: MaterialApp(
+            child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const PodcastFeedPage(),
+              home: PodcastFeedPage(),
             ),
           ),
         );
@@ -181,7 +179,7 @@ void main() {
     );
 
     testWidgets('mobile podcast badge uses menu icon color in dark mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -194,7 +192,6 @@ void main() {
             () => _MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: [_buildEpisode()],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -232,7 +229,7 @@ void main() {
     });
 
     testWidgets('desktop podcast badge uses menu icon color in dark mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -248,7 +245,6 @@ void main() {
             () => _MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: [_buildEpisode()],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -285,7 +281,7 @@ void main() {
     });
 
     testWidgets('mobile podcast badge uses menu icon color in light mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -298,7 +294,6 @@ void main() {
             () => _MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: [_buildEpisode()],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -335,7 +330,7 @@ void main() {
     });
 
     testWidgets('desktop podcast badge uses menu icon color in light mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -351,7 +346,6 @@ void main() {
             () => _MockPodcastFeedNotifier(
               PodcastFeedState(
                 episodes: [_buildEpisode()],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -388,7 +382,7 @@ void main() {
     });
 
     testWidgets('mobile card strips html tags in description', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -406,7 +400,6 @@ void main() {
                         '<p style="color:#333333;font-size:16px">A &amp; B</p>',
                   ),
                 ],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -419,10 +412,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -441,7 +434,7 @@ void main() {
     });
 
     testWidgets('desktop card strips html tags in description', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -462,7 +455,6 @@ void main() {
                         '<p style="color:#333333;font-size:16px">A &amp; B</p>',
                   ),
                 ],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -475,10 +467,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -496,7 +488,7 @@ void main() {
     });
 
     testWidgets('desktop card strips malformed html tag fragments', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -517,7 +509,6 @@ void main() {
                         '\u56DE\u5230\u5BB6\uFF0C\u4E3A\u4EC0\u4E48\u603B\u662F\u524D\u4E24\u5929\u6BCD\u6148\u5B50\u5B5D\n<p style="color:#333333;font-size:16px',
                   ),
                 ],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -530,10 +521,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -554,7 +545,7 @@ void main() {
     });
 
     testWidgets('desktop card keeps content after malformed tag fragment', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -575,7 +566,6 @@ void main() {
                         '<p style="color:#333333;font-size:16px;"This preview should stay visible',
                   ),
                 ],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -588,10 +578,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -611,7 +601,7 @@ void main() {
     });
 
     testWidgets('desktop card removes standalone css declaration lines', (
-      WidgetTester tester,
+      tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -635,7 +625,6 @@ void main() {
                         'hyphens:auto;text-align:justify;',
                   ),
                 ],
-                isLoading: false,
                 hasMore: false,
                 total: 1,
               ),
@@ -648,10 +637,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastFeedPage(),
+            home: PodcastFeedPage(),
           ),
         ),
       );
@@ -674,7 +663,7 @@ void main() {
 
     testWidgets(
       'mobile add-to-queue button shows loading, disables repeat taps, and restores after completion',
-      (WidgetTester tester) async {
+      (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -687,7 +676,6 @@ void main() {
               () => _MockPodcastFeedNotifier(
                 PodcastFeedState(
                   episodes: [_buildEpisode()],
-                  isLoading: false,
                   hasMore: false,
                   total: 1,
                 ),
@@ -701,10 +689,10 @@ void main() {
         await tester.pumpWidget(
           UncontrolledProviderScope(
             container: container,
-            child: MaterialApp(
+            child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const PodcastFeedPage(),
+              home: PodcastFeedPage(),
             ),
           ),
         );

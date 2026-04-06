@@ -10,12 +10,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conve
 /// and supports select mode and text selection for sharing.
 class ChatMessageBubble extends StatelessWidget {
   const ChatMessageBubble({
-    super.key,
-    required this.message,
-    required this.isSelectMode,
-    required this.isSelected,
-    required this.onToggleSelection,
-    required this.onTextSelected,
+    required this.message, required this.isSelectMode, required this.isSelected, required this.onToggleSelection, required this.onTextSelected, super.key,
   });
 
   final PodcastConversationMessage message;
@@ -119,15 +114,13 @@ class ChatMessageBubble extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          isSelectMode
-              ? Text(
+          if (isSelectMode) Text(
                   message.content,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurface,
                     height: 1.5,
                   ),
-                )
-              : SelectableText(
+                ) else SelectableText(
                   message.content,
                   onSelectionChanged: (selection, _) {
                     if (selection.isCollapsed ||
@@ -230,15 +223,13 @@ class ChatMessageBubble extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                isSelectMode
-                    ? Text(
+                if (isSelectMode) Text(
                         message.content,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurface,
                           height: 1.5,
                         ),
-                      )
-                    : SelectableText(
+                      ) else SelectableText(
                         message.content,
                         onSelectionChanged: (selection, _) {
                           if (selection.isCollapsed ||

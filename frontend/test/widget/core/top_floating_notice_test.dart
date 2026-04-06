@@ -370,7 +370,6 @@ class _TopNoticeHost extends StatelessWidget {
                   showTopFloatingNotice(
                     context,
                     message: 'First Notice',
-                    duration: const Duration(seconds: 3),
                   );
                 },
                 child: const Text('Show first'),
@@ -381,7 +380,6 @@ class _TopNoticeHost extends StatelessWidget {
                   showTopFloatingNotice(
                     context,
                     message: 'Second Notice',
-                    duration: const Duration(seconds: 3),
                   );
                 },
                 child: const Text('Show second'),
@@ -393,7 +391,6 @@ class _TopNoticeHost extends StatelessWidget {
                     context,
                     message: 'Error Notice',
                     isError: true,
-                    duration: const Duration(seconds: 3),
                   );
                 },
                 child: const Text('Show error'),

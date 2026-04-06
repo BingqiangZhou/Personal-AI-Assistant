@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
-import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
-import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
-import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_text_field.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_requirement_item.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_text_field.dart';
+import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
-  final String? token;
 
   const ResetPasswordPage({super.key, this.token});
+  final String? token;
 
   @override
   ConsumerState<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -93,9 +92,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   bool _hasMinLength(String password) => password.length >= 8;
-  bool _hasUppercase(String password) => password.contains(RegExp(r'[A-Z]'));
-  bool _hasLowercase(String password) => password.contains(RegExp(r'[a-z]'));
-  bool _hasNumber(String password) => password.contains(RegExp(r'[0-9]'));
+  bool _hasUppercase(String password) => password.contains(RegExp('[A-Z]'));
+  bool _hasLowercase(String password) => password.contains(RegExp('[a-z]'));
+  bool _hasNumber(String password) => password.contains(RegExp('[0-9]'));
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +259,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             height: 48,
             child: FilledButton(
               key: const Key('reset_password_button'),
-              onPressed: () => _submitResetPassword(),
+              onPressed: _submitResetPassword,
               child: Text(l10n.auth_reset_password),
             ),
           ),

@@ -65,7 +65,7 @@ class GlassContainer extends StatelessWidget {
           child: tint != null
               ? Stack(
                   children: [
-                    if (child != null) child!,
+                    ?child,
                     Positioned.fill(
                       child: Container(color: tint),
                     ),

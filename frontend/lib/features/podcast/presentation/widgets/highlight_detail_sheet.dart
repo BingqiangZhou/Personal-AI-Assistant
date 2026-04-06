@@ -412,7 +412,7 @@ class _HighlightListItem extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (highlight.isUserFavorited)
-                    Icon(
+                    const Icon(
                       Icons.favorite,
                       size: 14,
                       color: AppColors.error,

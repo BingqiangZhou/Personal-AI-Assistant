@@ -3,11 +3,11 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 
 /// ============================================================
-/// Apple Liquid Glass Design System - 苹果液态玻璃设计系统
+/// Arc + Linear Design System
 ///
 /// Design Philosophy:
-/// Based on Apple Human Interface Guidelines (HIG) with
-/// Liquid Glass visual effects for depth and vibrancy.
+/// Dark base theme with colorful gradient accents (Arc-style)
+/// combined with Linear's precise typography and spacing.
 /// ============================================================
 
 class AppColors {
@@ -193,7 +193,7 @@ class AppColors {
 
 /// ============================================================
 /// APP THEME EXTENSION
-/// Apple Liquid Glass Theme Extension
+/// Arc + Linear Theme Extension
 /// ============================================================
 
 @immutable
@@ -212,23 +212,10 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.shadowMd,
     required this.shadowLg,
     required this.chartColors,
-    // Legacy properties for backwards compatibility (non-nullable with defaults)
+    required this.aiPrimary, // AI accent tokens
+    required this.aiBubbleUserColor, required this.aiBubbleAssistantColor, required this.aiChipColor, required this.aiHighlightSurfaceColor, required this.cosmicFilterActiveColor, // Arc+Linear tier tokens
+    required this.surfaceTierFill, required this.cardTierFill, required this.elevatedTierFill, required this.surfaceTierBorder, required this.cardTierBorder, required this.elevatedTierBorder, required this.podcastGradientColors, // Legacy properties for backwards compatibility (non-nullable with defaults)
     this.shellGradient,
-    required this.aiPrimary,
-    // AI accent tokens
-    required this.aiBubbleUserColor,
-    required this.aiBubbleAssistantColor,
-    required this.aiChipColor,
-    required this.aiHighlightSurfaceColor,
-    required this.cosmicFilterActiveColor,
-    // Arc+Linear tier tokens
-    required this.surfaceTierFill,
-    required this.cardTierFill,
-    required this.elevatedTierFill,
-    required this.surfaceTierBorder,
-    required this.cardTierBorder,
-    required this.elevatedTierBorder,
-    required this.podcastGradientColors,
   });
 
   // Layout

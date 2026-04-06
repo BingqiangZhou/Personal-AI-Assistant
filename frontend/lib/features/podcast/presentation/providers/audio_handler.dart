@@ -45,6 +45,40 @@ import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 /// - **iOS**: Background playback with lock screen controls
 /// - **Desktop**: Basic playback controls (no lock screen)
 class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
+
+  PodcastAudioHandler() {
+    // Setup player event listeners
+    _listenPlayerEvents();
+
+    // Initialize with default MediaItem
+    mediaItem.add(
+      const MediaItem(
+        id: 'default',
+        title: 'No media',
+        artist: 'Unknown',
+      ),
+    );
+
+    // Initialize playback state
+    playbackState.add(
+      PlaybackState(
+        controls: [MediaControl.play],
+        androidCompactActionIndices: const [0],
+        systemActions: const {
+          MediaAction.play,
+          MediaAction.pause,
+          MediaAction.stop,
+          MediaAction.seek,
+          MediaAction.rewind,
+          MediaAction.fastForward,
+        },
+      ),
+    );
+
+    if (kDebugMode) {
+      logger.AppLogger.debug('🎵 PodcastAudioHandler initialized (audioplayers)');
+    }
+  }
   final AudioPlayer _player = AudioPlayer();
   Duration _currentPosition = Duration.zero;
   Duration? _currentDuration;
@@ -78,45 +112,6 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     return uri;
-  }
-
-  PodcastAudioHandler() {
-    // Setup player event listeners
-    _listenPlayerEvents();
-
-    // Initialize with default MediaItem
-    mediaItem.add(
-      MediaItem(
-        id: 'default',
-        title: 'No media',
-        artist: 'Unknown',
-      ),
-    );
-
-    // Initialize playback state
-    playbackState.add(
-      PlaybackState(
-        controls: [MediaControl.play],
-        androidCompactActionIndices: const [0],
-        processingState: AudioProcessingState.idle,
-        playing: false,
-        updatePosition: Duration.zero,
-        bufferedPosition: Duration.zero,
-        speed: 1.0,
-        systemActions: const {
-          MediaAction.play,
-          MediaAction.pause,
-          MediaAction.stop,
-          MediaAction.seek,
-          MediaAction.rewind,
-          MediaAction.fastForward,
-        },
-      ),
-    );
-
-    if (kDebugMode) {
-      logger.AppLogger.debug('🎵 PodcastAudioHandler initialized (audioplayers)');
-    }
   }
 
   void _listenPlayerEvents() {
@@ -201,14 +196,14 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     final updateTime = DateTime.now();
 
     // Build controls list based on current state
-    final bool hasContent =
+    final hasContent =
         processingState != AudioProcessingState.idle &&
         processingState != AudioProcessingState.loading;
 
     final controls = hasContent
         ? [
             MediaControl.rewind,
-            playing ? MediaControl.pause : MediaControl.play,
+            if (playing) MediaControl.pause else MediaControl.play,
             MediaControl.fastForward,
           ]
         : [MediaControl.play];
@@ -505,9 +500,6 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       playbackState.add(
         PlaybackState(
           controls: [],
-          systemActions: const {},
-          processingState: AudioProcessingState.idle,
-          playing: false,
         ),
       );
       mediaItem.add(null);
@@ -557,7 +549,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   // Volume control (desktop-oriented; mobile typically uses hardware keys).
-  double _volume = 1.0;
+  double _volume = 1;
 
   /// Get current volume level (0.0 to 1.0).
   double get volume => _volume;

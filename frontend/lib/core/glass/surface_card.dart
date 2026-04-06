@@ -57,8 +57,7 @@ enum SurfaceCardVariant {
 class SurfaceCard extends StatelessWidget {
   /// Creates a surface card.
   const SurfaceCard({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.padding,
     this.borderRadius = 16,
     this.tier = CardTier.card,
@@ -101,14 +100,14 @@ class SurfaceCard extends StatelessWidget {
     final effectiveTier = _getEffectiveTier();
 
     // Resolve fill and border colors from tier
-    final Color bg = backgroundColor ??
+    final bg = backgroundColor ??
         switch (effectiveTier) {
           CardTier.surface => extension.surfaceTierFill,
           CardTier.card => extension.cardTierFill,
           CardTier.elevated => extension.elevatedTierFill,
         };
 
-    final Color borderColor = switch (effectiveTier) {
+    final borderColor = switch (effectiveTier) {
       CardTier.surface => extension.surfaceTierBorder,
       CardTier.card => extension.cardTierBorder,
       CardTier.elevated => extension.elevatedTierBorder,
@@ -120,7 +119,6 @@ class SurfaceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: borderColor,
-          width: 1,
         ),
       ),
       child: ClipRRect(

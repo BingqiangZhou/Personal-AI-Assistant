@@ -9,14 +9,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 /// and disables input when no summary is available.
 class ChatInputArea extends StatelessWidget {
   const ChatInputArea({
-    super.key,
-    required this.controller,
-    required this.focusNode,
-    required this.inputTextNotifier,
-    required this.isReady,
-    required this.isSending,
-    required this.hasSummary,
-    required this.onSend,
+    required this.controller, required this.focusNode, required this.inputTextNotifier, required this.isReady, required this.isSending, required this.hasSummary, required this.onSend, super.key,
   });
 
   final TextEditingController controller;
@@ -33,7 +26,7 @@ class ChatInputArea extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
-    final gradient = LinearGradient(
+    const gradient = LinearGradient(
       colors: AppColors.violetColors,
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -62,18 +55,18 @@ class ChatInputArea extends StatelessWidget {
                   hintText: !hasSummary
                       ? l10n.podcast_conversation_no_summary_hint
                       : l10n.podcast_conversation_send_hint,
-                  hintStyle: TextStyle(color: AppColors.darkOnSurfaceMuted),
+                  hintStyle: const TextStyle(color: AppColors.darkOnSurfaceMuted),
                   filled: true,
                   fillColor: Colors.transparent,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(extension.cardRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.darkBorder,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(extension.cardRadius),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppColors.darkBorder,
                     ),
                   ),

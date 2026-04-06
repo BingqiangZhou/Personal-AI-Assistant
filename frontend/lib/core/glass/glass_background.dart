@@ -104,8 +104,8 @@ class _GlassBackgroundState extends State<GlassBackground>
           left: 100.0 * index,
           top: 100.0 * index,
           child: Container(
-            width: 200.0,
-            height: 200.0,
+            width: 200,
+            height: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
@@ -175,7 +175,7 @@ class _GlassBackgroundState extends State<GlassBackground>
     final y = baseY + scaleB * math.sin(t) * math.cos(t);
 
     // Constrain to screen bounds with margin
-    final margin = 50.0;
+    const margin = 50.0;
     final constrainedX = x.clamp(margin, size.width - margin);
     final constrainedY = y.clamp(margin, size.height - margin);
 

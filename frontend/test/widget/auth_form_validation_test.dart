@@ -50,7 +50,7 @@ Future<void> _setTermsAgreed(WidgetTester tester, bool value) async {
 void main() {
   group('Auth Form Validation Tests', () {
     testWidgets('Register form should validate email correctly', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const RegisterPage());
 
@@ -69,7 +69,7 @@ void main() {
     });
 
     testWidgets('Register form should validate password correctly', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const RegisterPage());
 
@@ -103,7 +103,7 @@ void main() {
     });
 
     testWidgets('Register form should validate password confirmation', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const RegisterPage());
 
@@ -124,7 +124,7 @@ void main() {
     });
 
     testWidgets('Login form should validate fields', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const LoginPage());
 
@@ -160,7 +160,7 @@ void main() {
     });
 
     testWidgets('Should navigate between login and register', (
-      WidgetTester tester,
+      tester,
     ) async {
       final router = GoRouter(
         initialLocation: '/login',
@@ -208,7 +208,7 @@ void main() {
     });
 
     testWidgets('Should toggle password visibility', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const LoginPage());
 
@@ -230,7 +230,7 @@ void main() {
     });
 
     testWidgets('Should handle remember me checkbox', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const LoginPage());
 
@@ -249,7 +249,7 @@ void main() {
     });
 
     testWidgets('Should show terms agreement error', (
-      WidgetTester tester,
+      tester,
     ) async {
       await _pumpAuthPage(tester, const RegisterPage());
 

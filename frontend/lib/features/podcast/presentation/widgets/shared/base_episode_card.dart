@@ -118,10 +118,7 @@ class EpisodeCardConfig {
 /// a [BaseEpisodeCard] instead of reimplementing the layout.
 class BaseEpisodeCard extends StatelessWidget {
   const BaseEpisodeCard({
-    super.key,
-    required this.config,
-    required this.title,
-    required this.onTap,
+    required this.config, required this.title, required this.onTap, super.key,
     this.subtitle,
     this.subtitle2,
     this.trailingWidget,
@@ -269,7 +266,6 @@ class BaseEpisodeCard extends StatelessWidget {
         ?.copyWith(fontWeight: FontWeight.w700);
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (config.showImage && config.imageUrl != null) ...[
           _buildImage(context, theme),
@@ -333,7 +329,7 @@ class BaseEpisodeCard extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(config.imageBorderRadius),
           child: PodcastImageWidget(
-            imageUrl: config.imageUrl!,
+            imageUrl: config.imageUrl,
             width: size,
             height: size,
             iconSize: config.imageIconSize,
@@ -385,7 +381,6 @@ class BaseEpisodeCard extends StatelessWidget {
     final l10n = context.l10n;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Align(
@@ -395,7 +390,6 @@ class BaseEpisodeCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (config.showSubscriptionBadge)
                     _buildSubscriptionBadge(theme),

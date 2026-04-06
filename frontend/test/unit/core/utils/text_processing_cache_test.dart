@@ -3,14 +3,11 @@ import 'package:personal_ai_assistant/core/utils/text_processing_cache.dart';
 
 void main() {
   group('TextProcessingCache - LRU Eviction Tests', () {
-    setUp(() {
-      // Clear cache before each test
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('LRU eviction removes oldest entry when cache is full', () {
       // Fill the cache beyond max size (100)
-      for (int i = 0; i < 105; i++) {
+      for (var i = 0; i < 105; i++) {
         TextProcessingCache.getCachedDescription('Description $i');
       }
 
@@ -23,7 +20,7 @@ void main() {
     test('LRU eviction works for sentence cache', () {
       // Fill sentence cache beyond max size
       // Each string needs to be unique with sufficient variation
-      for (int i = 0; i < 105; i++) {
+      for (var i = 0; i < 105; i++) {
         // Add padding to ensure unique hash codes
         final padding = 'x' * i;
         TextProcessingCache.getCachedSentences('Sentence $padding. End $i.');
@@ -42,7 +39,7 @@ void main() {
       TextProcessingCache.getCachedDescription('First description');
 
       // Add more items to trigger eviction
-      for (int i = 2; i < 102; i++) {
+      for (var i = 2; i < 102; i++) {
         TextProcessingCache.getCachedDescription('Description $i');
       }
 
@@ -57,7 +54,7 @@ void main() {
 
     test('max cache size is enforced for both caches independently', () {
       // Fill both caches with unique values
-      for (int i = 0; i < 105; i++) {
+      for (var i = 0; i < 105; i++) {
         final padding = 'x' * i;
         TextProcessingCache.getCachedDescription('Desc $padding$i');
         TextProcessingCache.getCachedSentences('Sent $padding$i. End.');
@@ -73,9 +70,7 @@ void main() {
   });
 
   group('TextProcessingCache - Description Processing Tests', () {
-    setUp(() {
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('returns empty string for null input', () {
       final result = TextProcessingCache.getCachedDescription(null);
@@ -88,7 +83,7 @@ void main() {
     });
 
     test('removes HTML tags from description', () {
-      final html = '<p>Hello <b>world</b></p>';
+      const html = '<p>Hello <b>world</b></p>';
       final result = TextProcessingCache.getCachedDescription(html);
       expect(result, contains('Hello'));
       expect(result, contains('world'));
@@ -97,7 +92,7 @@ void main() {
     });
 
     test('converts br tags to newlines', () {
-      final html = 'Line 1<br>Line 2<br/>Line 3';
+      const html = 'Line 1<br>Line 2<br/>Line 3';
       final result = TextProcessingCache.getCachedDescription(html);
       expect(result, contains('\n'));
       expect(result, isNot(contains('<br')));
@@ -113,22 +108,20 @@ void main() {
     });
 
     test('handles malformed HTML tags', () {
-      final malformed = 'Content <a href="http://example.com" broken';
+      const malformed = 'Content <a href="http://example.com" broken';
       final result = TextProcessingCache.getCachedDescription(malformed);
       expect(result, contains('Content'));
     });
 
     test('removes CSS noise from description', () {
-      final css = 'color: red; font-size: 14px; Actual content';
+      const css = 'color: red; font-size: 14px; Actual content';
       final result = TextProcessingCache.getCachedDescription(css);
       expect(result, contains('Actual content'));
     });
   });
 
   group('TextProcessingCache - Sentence Splitting Tests', () {
-    setUp(() {
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('returns empty list for empty input', () {
       final result = TextProcessingCache.getCachedSentences('');
@@ -138,7 +131,7 @@ void main() {
     test('splits sentences with delimiters followed by more text', () {
       // The regex is greedy and matches from start through delimiters
       // until it finds a delimiter followed by non-delimiter content
-      final text = 'First sentence. Second sentence. Third sentence. More text';
+      const text = 'First sentence. Second sentence. Third sentence. More text';
       final result = TextProcessingCache.getCachedSentences(text);
 
       // Result: [First sentence. Second sentence, Third sentence. More text]
@@ -150,7 +143,7 @@ void main() {
     });
 
     test('splits Chinese sentences', () {
-      final text = '第一句。第二句。第三句。更多内容';
+      const text = '第一句。第二句。第三句。更多内容';
       final result = TextProcessingCache.getCachedSentences(text);
 
       expect(result.length, 2);
@@ -160,7 +153,7 @@ void main() {
     });
 
     test('splits sentences by question marks', () {
-      final text = 'Is this a question? Yes it is! Really? Tell me more';
+      const text = 'Is this a question? Yes it is! Really? Tell me more';
       final result = TextProcessingCache.getCachedSentences(text);
 
       expect(result.length, 2);
@@ -170,7 +163,7 @@ void main() {
     });
 
     test('splits sentences by exclamation marks', () {
-      final text = 'Wow! Amazing! Incredible! That is great';
+      const text = 'Wow! Amazing! Incredible! That is great';
       final result = TextProcessingCache.getCachedSentences(text);
 
       expect(result.length, 2);
@@ -188,7 +181,7 @@ void main() {
     });
 
     test('handles mixed Chinese and English punctuation', () {
-      final text = 'Hello world。How are you? 我很好！Tell me';
+      const text = 'Hello world。How are you? 我很好！Tell me';
       final result = TextProcessingCache.getCachedSentences(text);
 
       expect(result.length, 2);
@@ -198,14 +191,14 @@ void main() {
     });
 
     test('returns original text if no delimiters found', () {
-      final text = 'No punctuation here';
+      const text = 'No punctuation here';
       final result = TextProcessingCache.getCachedSentences(text);
       expect(result.length, 1);
       expect(result[0], 'No punctuation here');
     });
 
     test('handles single sentence with delimiter and following text', () {
-      final text = 'Hello world. How are you';
+      const text = 'Hello world. How are you';
       final result = TextProcessingCache.getCachedSentences(text);
 
       expect(result.length, 1);
@@ -215,9 +208,7 @@ void main() {
   });
 
   group('TextProcessingCache - Cleanup Tests', () {
-    setUp(() {
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('clearAll removes all cached entries', () {
       // Add some entries
@@ -248,7 +239,7 @@ void main() {
 
     test('performCleanup reduces cache size to 70% of max', () {
       // Fill cache to max size
-      for (int i = 0; i < 100; i++) {
+      for (var i = 0; i < 100; i++) {
         TextProcessingCache.getCachedDescription('Description $i');
       }
 
@@ -280,9 +271,7 @@ void main() {
   });
 
   group('TextProcessingCache - Statistics Tests', () {
-    setUp(() {
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('getStats returns correct initial state', () {
       final stats = TextProcessingCache.getStats();
@@ -313,9 +302,7 @@ void main() {
   });
 
   group('TextProcessingCache - Edge Cases Tests', () {
-    setUp(() {
-      TextProcessingCache.clearAll();
-    });
+    setUp(TextProcessingCache.clearAll);
 
     test('handles very long descriptions', () {
       final longDesc = '<p>${'A' * 10000}</p>';
@@ -324,32 +311,32 @@ void main() {
     });
 
     test('handles descriptions with only HTML tags', () {
-      final htmlOnly = '<div><span></span></div>';
+      const htmlOnly = '<div><span></span></div>';
       final result = TextProcessingCache.getCachedDescription(htmlOnly);
       expect(result, isEmpty);
     });
 
     test('handles special characters in descriptions', () {
-      final special = 'Hello &quot;world&quot; &amp; friends';
+      const special = 'Hello &quot;world&quot; &amp; friends';
       final result = TextProcessingCache.getCachedDescription(special);
       expect(result, contains('Hello'));
     });
 
     test('handles Unicode characters', () {
-      final unicode = 'Hello 世界 🌍';
+      const unicode = 'Hello 世界 🌍';
       final result = TextProcessingCache.getCachedDescription(unicode);
       expect(result, contains('Hello'));
       expect(result, contains('世界'));
     });
 
     test('handles sentences with trailing spaces', () {
-      final text = 'First.  Second.   ';
+      const text = 'First.  Second.   ';
       final result = TextProcessingCache.getCachedSentences(text);
       expect(result.length, greaterThan(0));
     });
 
     test('handles empty sentences between delimiters', () {
-      final text = 'First.. Second... Third';
+      const text = 'First.. Second... Third';
       final result = TextProcessingCache.getCachedSentences(text);
       expect(result.length, greaterThan(0));
     });

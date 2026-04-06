@@ -15,9 +15,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/co
 /// and a button to start a new chat.
 class ChatSessionsDrawer extends ConsumerWidget {
   const ChatSessionsDrawer({
-    super.key,
-    required this.episodeId,
-    required this.onStartNewChat,
+    required this.episodeId, required this.onStartNewChat, super.key,
   });
 
   final int episodeId;
@@ -37,7 +35,7 @@ class ChatSessionsDrawer extends ConsumerWidget {
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.transparent,
             ),
             child: Center(
@@ -95,7 +93,7 @@ class ChatSessionsDrawer extends ConsumerWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.infinity,
               child: FilledButton.icon(

@@ -144,7 +144,7 @@ class AppTheme {
     _bodyBaseFor(_currentFonts).copyWith(
       fontSize: 10,
       fontWeight: weight,
-      height: 1.0,
+      height: 1,
       letterSpacing: 0.2,
       color: color,
     );
@@ -371,11 +371,11 @@ class AppTheme {
         }),
         indicatorColor: scheme.primary.withValues(alpha: isDark ? 0.22 : 0.14),
       ),
-      bottomSheetTheme: BottomSheetThemeData(
+      bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
       ),
@@ -606,7 +606,7 @@ class AppTheme {
         fontSize: 30,
         height: 1.1,
         fontWeight: FontWeight.w700,
-        letterSpacing: -1.0,
+        letterSpacing: -1,
         color: primary,
       ),
       headlineMedium: TextStyle(

@@ -9,9 +9,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shar
 
 class DiscoverEpisodeDetailSheet extends StatelessWidget {
   const DiscoverEpisodeDetailSheet({
-    super.key,
-    required this.episode,
-    required this.onPlay,
+    required this.episode, required this.onPlay, super.key,
   });
 
   final ITunesPodcastEpisodeResult episode;
@@ -92,7 +90,6 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Align(
-                            alignment: Alignment.center,
                             child: IconButton(
                               key: const Key('discover_episode_detail_play_button'),
                               tooltip: l10n.podcast_play,

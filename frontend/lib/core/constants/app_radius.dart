@@ -22,18 +22,18 @@ class AppRadius {
   // CORE RADIUS VALUES — aligned with AppThemeExtension
   // ============================================================
 
-  static const double cardValue = 14.0;
-  static const double buttonValue = 10.0;
-  static const double itemValue = 8.0;
+  static const double cardValue = 14;
+  static const double buttonValue = 10;
+  static const double itemValue = 8;
 
   // Incremental scale
-  static const double xs = 6.0;
-  static const double sm = 8.0;
-  static const double md = 10.0;
-  static const double lg = 14.0;
-  static const double xl = 20.0;
-  static const double xxl = 28.0;
-  static const double pill = 999.0;
+  static const double xs = 6;
+  static const double sm = 8;
+  static const double md = 10;
+  static const double lg = 14;
+  static const double xl = 20;
+  static const double xxl = 28;
+  static const double pill = 999;
 
   // ============================================================
   // PRE-BUILT BORDER RADIUS INSTANCES - 预构建圆角实例

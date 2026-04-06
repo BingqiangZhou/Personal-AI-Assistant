@@ -351,13 +351,13 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
 }
 
 class _TestButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
 
   const _TestButton({
     required this.text,
     required this.onPressed,
   });
+  final String text;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {

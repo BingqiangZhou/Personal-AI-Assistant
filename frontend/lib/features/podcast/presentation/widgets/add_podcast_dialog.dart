@@ -90,7 +90,6 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                     TextFormField(
                       controller: _feedUrlController,
                       minLines: 1,
-                      maxLines: 1,
                       decoration: InputDecoration(
                         labelText: l10n.podcast_rss_feed_url,
                         hintText: l10n.podcast_feed_url_hint,

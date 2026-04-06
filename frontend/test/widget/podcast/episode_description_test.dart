@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
@@ -121,7 +121,7 @@ Deep insights...
       test('decodes numeric HTML entities', () {
         const html = '<p>Price: &#36;100 or &#8364;50</p>';
         final result = EpisodeDescriptionHelper.stripHtmlTags(html);
-        expect(result, contains('\$100'));
+        expect(result, contains(r'$100'));
         expect(result, contains('50'));
       });
 
@@ -194,7 +194,6 @@ Deep insights...
             '<p>This is the <strong>original</strong> shownotes content.</p>';
 
         final result = EpisodeDescriptionHelper.getDisplayDescription(
-          aiSummary: null,
           description: description,
         );
 
@@ -205,8 +204,7 @@ Deep insights...
 
       test('returns empty string when description is null', () {
         final result = EpisodeDescriptionHelper.getDisplayDescription(
-          aiSummary: null,
-          description: null,
+          
         );
 
         expect(result, isEmpty);

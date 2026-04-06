@@ -338,7 +338,6 @@ void main() {
         AudioPlayerState(
           currentEpisode: _episode(
             title: 'Short title',
-            subscriptionTitle: 'Test Podcast',
           ),
           duration: 180000,
         ),
@@ -381,7 +380,6 @@ void main() {
             title:
                 'This is a deliberately long podcast title that should wrap '
                 'onto a second line in the expanded player',
-            subscriptionTitle: 'Test Podcast',
           ),
           duration: 180000,
         ),
@@ -733,10 +731,10 @@ Widget _createDesktopFrameWidget({
       podcastQueueControllerProvider.overrideWith(() => queueController),
       podcastPlayerUiProvider.overrideWith(() => uiNotifier),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const PodcastPlayerLayoutFrame(child: Scaffold(body: SizedBox())),
+      home: PodcastPlayerLayoutFrame(child: Scaffold(body: SizedBox())),
     ),
   );
 }

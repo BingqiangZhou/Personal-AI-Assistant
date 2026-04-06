@@ -14,21 +14,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/su
 /// select mode, share, reload).
 class ChatHeader extends ConsumerWidget {
   const ChatHeader({
-    super.key,
-    required this.hasMessages,
-    required this.isSending,
-    required this.isReady,
-    required this.hasError,
-    required this.isMessageSelectMode,
-    required this.selectedMessageCount,
-    required this.selectedModel,
-    required this.onNewChat,
-    required this.onToggleSelectMode,
-    required this.onShareSelected,
-    required this.onShareAll,
-    required this.onReload,
-    required this.onModelChanged,
-    required this.onOpenHistory,
+    required this.hasMessages, required this.isSending, required this.isReady, required this.hasError, required this.isMessageSelectMode, required this.selectedMessageCount, required this.selectedModel, required this.onNewChat, required this.onToggleSelectMode, required this.onShareSelected, required this.onShareAll, required this.onReload, required this.onModelChanged, required this.onOpenHistory, super.key,
   });
 
   final bool hasMessages;
@@ -60,7 +46,6 @@ class ChatHeader extends ConsumerWidget {
         border: Border(
           bottom: BorderSide(
             color: extension.surfaceTierBorder,
-            width: 1,
           ),
         ),
       ),

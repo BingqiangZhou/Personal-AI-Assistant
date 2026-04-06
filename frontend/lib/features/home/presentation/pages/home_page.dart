@@ -19,9 +19,9 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podc
 /// Replaces the old `HomePage` which used local `IndexedStack` + `setState`.
 /// GoRouter's `StatefulNavigationShell` now manages branch state persistence.
 class HomeShellWidget extends ConsumerStatefulWidget {
-  final StatefulNavigationShell navigationShell;
 
-  const HomeShellWidget({super.key, required this.navigationShell});
+  const HomeShellWidget({required this.navigationShell, super.key});
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<HomeShellWidget> createState() => _HomeShellWidgetState();
@@ -192,7 +192,6 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
         destinations: _buildDestinations(context),
         selectedIndex: widget.navigationShell.currentIndex,
         onDestinationSelected: _handleNavigation,
-        appBar: null,
         floatingActionButton: _buildFloatingActionButton(),
         desktopNavExpanded: _desktopNavExpanded,
         onDesktopNavToggle: () {
@@ -201,7 +200,6 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
           });
         },
         body: PodcastPlayerLayoutFrame(
-          includeMiniPlayer: true,
           applyMiniPlayerSafeArea: false,
           child: widget.navigationShell,
         ),

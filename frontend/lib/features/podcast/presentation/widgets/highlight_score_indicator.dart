@@ -10,10 +10,7 @@ import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 /// with distinct colors for each dimension.
 class HighlightScoreIndicator extends StatelessWidget {
   const HighlightScoreIndicator({
-    super.key,
-    required this.insightScore,
-    required this.noveltyScore,
-    required this.actionabilityScore,
+    required this.insightScore, required this.noveltyScore, required this.actionabilityScore, super.key,
     this.isDense = false,
   });
 
@@ -22,12 +19,12 @@ class HighlightScoreIndicator extends StatelessWidget {
   final double actionabilityScore;
   final bool isDense;
 
-  static const double _defaultBarHeight = 5.0;
-  static const double _denseBarHeight = 4.0;
-  static const double _defaultLabelWidth = 48.0;
-  static const double _denseLabelWidth = 42.0;
-  static const double _defaultScoreWidth = 28.0;
-  static const double _denseScoreWidth = 24.0;
+  static const double _defaultBarHeight = 5;
+  static const double _denseBarHeight = 4;
+  static const double _defaultLabelWidth = 48;
+  static const double _denseLabelWidth = 42;
+  static const double _defaultScoreWidth = 28;
+  static const double _denseScoreWidth = 24;
 
   Color _getInsightColor(BuildContext context) {
     return AppColors.primary;

@@ -128,7 +128,7 @@ void main() {
         overrides: [
           conversationProvider(
             1,
-          ).overrideWith(() => _ReadyConversationNotifier()),
+          ).overrideWith(_ReadyConversationNotifier.new),
           availableModelsProvider.overrideWith(
             (ref) async => const <SummaryModelInfo>[],
           ),
@@ -178,7 +178,7 @@ class _ReadyConversationNotifier extends ConversationNotifier {
   _ReadyConversationNotifier() : super(1);
 
   @override
-  ConversationState build() => const ConversationState(messages: []);
+  ConversationState build() => const ConversationState();
 }
 
 class _FakeLocalStorageService implements LocalStorageService {

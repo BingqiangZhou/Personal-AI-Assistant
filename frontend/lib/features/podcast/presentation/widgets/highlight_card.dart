@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
-import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_score_indicator.dart';
 
@@ -14,8 +13,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/high
 /// episode source, topic tags, and favorite button.
 class HighlightCard extends ConsumerWidget {
   const HighlightCard({
-    super.key,
-    required this.highlight,
+    required this.highlight, super.key,
     this.onFavoriteToggle,
     this.onTap,
     this.isCompact = false,
@@ -246,7 +244,7 @@ class HighlightCard extends ConsumerWidget {
             ),
           ),
           visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           backgroundColor: theme.colorScheme.secondaryContainer.withValues(
             alpha: 0.4,

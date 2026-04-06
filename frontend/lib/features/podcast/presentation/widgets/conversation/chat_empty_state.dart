@@ -8,8 +8,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 /// Displays an icon, title, hint text, and an optional AI summary preview.
 class ChatEmptyState extends StatelessWidget {
   const ChatEmptyState({
-    super.key,
-    required this.aiSummary,
+    required this.aiSummary, super.key,
   });
 
   final String? aiSummary;

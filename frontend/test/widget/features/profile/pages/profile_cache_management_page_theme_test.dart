@@ -101,7 +101,7 @@ void main() {
       for (final card in cards) {
         expect(
           card.margin,
-          const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+          const EdgeInsets.symmetric(vertical: 2),
         );
       }
 
@@ -152,7 +152,7 @@ void main() {
       final audioLegend = tester.widget<Container>(
         find.byKey(const Key('cache_legend_audio')),
       );
-      final audioLegendDecoration = audioLegend.decoration as BoxDecoration;
+      final audioLegendDecoration = audioLegend.decoration! as BoxDecoration;
       expect(
         audioLegendDecoration.color,
         _buildTestTheme(brightness: Brightness.light).colorScheme.tertiary,
@@ -179,7 +179,7 @@ void main() {
       final noticeBox = tester.widget<Container>(
         find.byKey(const Key('cache_manage_notice_box')),
       );
-      final noticeDecoration = noticeBox.decoration as BoxDecoration;
+      final noticeDecoration = noticeBox.decoration! as BoxDecoration;
       expect(
         noticeDecoration.color,
         _buildTestTheme(brightness: Brightness.light).colorScheme.onSurfaceVariant.withValues(
@@ -248,7 +248,7 @@ void main() {
       final noticeBox = tester.widget<Container>(
         find.byKey(const Key('cache_manage_notice_box')),
       );
-      final noticeDecoration = noticeBox.decoration as BoxDecoration;
+      final noticeDecoration = noticeBox.decoration! as BoxDecoration;
       expect(
         noticeDecoration.color,
         _buildTestTheme(brightness: Brightness.dark).colorScheme.onSurfaceVariant.withValues(alpha: 0.24),
@@ -279,9 +279,7 @@ ThemeData _buildTestTheme({required Brightness brightness}) {
     brightness: brightness,
     colorScheme: colorScheme,
     extensions: [
-      brightness == Brightness.dark
-          ? AppThemeExtension.dark
-          : AppThemeExtension.light,
+      if (brightness == Brightness.dark) AppThemeExtension.dark else AppThemeExtension.light,
     ],
   );
 }
