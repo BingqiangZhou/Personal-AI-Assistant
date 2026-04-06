@@ -656,7 +656,7 @@ class _ProfileCacheManagementPageState
     return SurfacePanel(
       key: const Key('cache_manage_content_panel'),
       padding: EdgeInsets.zero,
-      borderRadius: appThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -560,7 +560,7 @@ class AppTheme {
     double width = 1,
   }) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(extension.inputRadius),
+      borderRadius: BorderRadius.circular(extension.buttonRadius),
       borderSide: BorderSide(color: color, width: width),
     );
   }

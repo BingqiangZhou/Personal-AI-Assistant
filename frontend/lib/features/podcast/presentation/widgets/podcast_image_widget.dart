@@ -181,7 +181,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
     final iconSize = widget.iconSize ?? (widget.width * 0.6);
 
     if (_currentImageUrl == null || _currentImageUrl!.isEmpty) {
-      return _buildIconPlaceholder(iconColor, iconSize, extension.inputRadius);
+      return _buildIconPlaceholder(iconColor, iconSize, extension.buttonRadius);
     }
 
     final stableCacheKey =
@@ -224,7 +224,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
           height: widget.height,
           decoration: BoxDecoration(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(extension.inputRadius),
+            borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           child: Center(
             child: TweenAnimationBuilder<double>(
@@ -263,7 +263,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
               color: theme.colorScheme.surfaceContainerHighest.withValues(
                 alpha: 0.5,
               ),
-              borderRadius: BorderRadius.circular(extension.inputRadius),
+              borderRadius: BorderRadius.circular(extension.buttonRadius),
             ),
             child: Icon(
               Icons.refresh,

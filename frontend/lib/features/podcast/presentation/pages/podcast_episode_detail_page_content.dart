@@ -8,7 +8,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
     return SurfacePanel(
       key: key,
       padding: EdgeInsets.zero,
-      borderRadius: tokens.panelRadius,
+      borderRadius: tokens.cardRadius,
       backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.22),
       showBorder: false,
       showHighlight: false,

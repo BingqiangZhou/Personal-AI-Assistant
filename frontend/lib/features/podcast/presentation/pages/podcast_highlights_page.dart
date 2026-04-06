@@ -226,7 +226,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     return SurfacePanel(
       padding: EdgeInsets.zero,
       showBorder: false,
-      borderRadius: tokens.panelRadius,
+      borderRadius: tokens.cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -339,7 +339,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     return SurfacePanel(
       padding: EdgeInsets.zero,
       showBorder: false,
-      borderRadius: appThemeOf(context).panelRadius,
+      borderRadius: appThemeOf(context).cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -398,7 +398,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     return SurfacePanel(
       padding: EdgeInsets.zero,
       showBorder: false,
-      borderRadius: tokens.panelRadius,
+      borderRadius: tokens.cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

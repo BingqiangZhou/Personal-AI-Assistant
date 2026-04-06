@@ -202,11 +202,9 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.contentMaxWidth,
     required this.sectionGap,
     required this.cardRadius,
-    required this.panelRadius,
     required this.buttonRadius,
-    required this.inputRadius,
     required this.navItemRadius,
-    required this.controlRadius,
+    required this.itemRadius,
     required this.sheetRadius,
     required this.pillRadius,
     required this.shadowXs,
@@ -237,11 +235,9 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final double contentMaxWidth;
   final double sectionGap;
   final double cardRadius;
-  final double panelRadius;
   final double buttonRadius;
-  final double inputRadius;
   final double navItemRadius;
-  final double controlRadius;
+  final double itemRadius;
   final double sheetRadius;
   final double pillRadius;
 
@@ -279,11 +275,9 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     double? contentMaxWidth,
     double? sectionGap,
     double? cardRadius,
-    double? panelRadius,
     double? buttonRadius,
-    double? inputRadius,
     double? navItemRadius,
-    double? controlRadius,
+    double? itemRadius,
     double? sheetRadius,
     double? pillRadius,
     BoxShadow? shadowXs,
@@ -310,11 +304,9 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
       sectionGap: sectionGap ?? this.sectionGap,
       cardRadius: cardRadius ?? this.cardRadius,
-      panelRadius: panelRadius ?? this.panelRadius,
       buttonRadius: buttonRadius ?? this.buttonRadius,
-      inputRadius: inputRadius ?? this.inputRadius,
       navItemRadius: navItemRadius ?? this.navItemRadius,
-      controlRadius: controlRadius ?? this.controlRadius,
+      itemRadius: itemRadius ?? this.itemRadius,
       sheetRadius: sheetRadius ?? this.sheetRadius,
       pillRadius: pillRadius ?? this.pillRadius,
       shadowXs: shadowXs ?? this.shadowXs,
@@ -356,11 +348,9 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       contentMaxWidth: lerpDouble(contentMaxWidth, other.contentMaxWidth, t)!,
       sectionGap: lerpDouble(sectionGap, other.sectionGap, t)!,
       cardRadius: lerpDouble(cardRadius, other.cardRadius, t)!,
-      panelRadius: lerpDouble(panelRadius, other.panelRadius, t)!,
       buttonRadius: lerpDouble(buttonRadius, other.buttonRadius, t)!,
-      inputRadius: lerpDouble(inputRadius, other.inputRadius, t)!,
       navItemRadius: lerpDouble(navItemRadius, other.navItemRadius, t)!,
-      controlRadius: lerpDouble(controlRadius, other.controlRadius, t)!,
+      itemRadius: lerpDouble(itemRadius, other.itemRadius, t)!,
       sheetRadius: lerpDouble(sheetRadius, other.sheetRadius, t)!,
       pillRadius: lerpDouble(pillRadius, other.pillRadius, t)!,
       shadowXs: BoxShadow.lerp(shadowXs, other.shadowXs, t)!,
@@ -398,13 +388,11 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   static const light = AppThemeExtension(
     contentMaxWidth: 1240,
     sectionGap: 24,
-    cardRadius: 12,
-    panelRadius: 16,
+    cardRadius: 14,
     buttonRadius: 10,
-    inputRadius: 8,
     navItemRadius: 10,
-    controlRadius: 14,
-    sheetRadius: 28,
+    itemRadius: 8,
+    sheetRadius: 20,
     pillRadius: 999,
     shadowXs: BoxShadow(
       color: Color(0x0A000000),
@@ -449,13 +437,11 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   static const dark = AppThemeExtension(
     contentMaxWidth: 1240,
     sectionGap: 24,
-    cardRadius: 12,
-    panelRadius: 16,
+    cardRadius: 14,
     buttonRadius: 10,
-    inputRadius: 8,
     navItemRadius: 10,
-    controlRadius: 14,
-    sheetRadius: 28,
+    itemRadius: 8,
+    sheetRadius: 20,
     pillRadius: 999,
     shadowXs: BoxShadow(
       color: Color(0x33000000),

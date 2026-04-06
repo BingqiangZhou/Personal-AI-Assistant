@@ -427,7 +427,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
                     // Progress bar
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(ext.inputRadius),
+                      borderRadius: BorderRadius.circular(ext.buttonRadius),
                       child: LinearProgressIndicator(
                         value: progress / 100,
                         backgroundColor: scheme.outline.withValues(alpha: 0.2),
@@ -443,7 +443,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                         padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
                         decoration: BoxDecoration(
                           color: scheme.surface,
-                          borderRadius: BorderRadius.circular(ext.inputRadius),
+                          borderRadius: BorderRadius.circular(ext.buttonRadius),
                           border: Border.all(
                             color: scheme.outline.withValues(alpha: 0.1),
                           ),
@@ -797,7 +797,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: scheme.surface,
-                      borderRadius: BorderRadius.circular(ext.inputRadius),
+                      borderRadius: BorderRadius.circular(ext.buttonRadius),
                     ),
                     child: Text(
                       errorMessage,

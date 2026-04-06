@@ -294,7 +294,7 @@ class _PodcastDailyReportPageState
     return SurfacePanel(
       padding: EdgeInsets.zero,
       showBorder: false,
-      borderRadius: tokens.panelRadius,
+      borderRadius: tokens.cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -358,7 +358,7 @@ class _PodcastDailyReportPageState
     return SurfacePanel(
       padding: EdgeInsets.zero,
       showBorder: false,
-      borderRadius: tokens.panelRadius,
+      borderRadius: tokens.cardRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

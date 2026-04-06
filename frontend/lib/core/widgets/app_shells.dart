@@ -388,7 +388,7 @@ class CompactHeaderPanel extends StatelessWidget {
     return SurfacePanel(
       key: key,
       padding: kCompactHeaderPanelPadding,
-      borderRadius: extension.panelRadius,
+      borderRadius: extension.cardRadius,
       child: SizedBox(
         height: kCompactHeaderContentHeight,
         child: Row(
@@ -467,7 +467,7 @@ class _HeroHeaderState extends State<HeroHeader> {
       key: widget.key,
       child: SurfacePanel(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        borderRadius: extension.panelRadius,
+        borderRadius: extension.cardRadius,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -703,7 +703,7 @@ class ContentShell extends StatelessWidget {
         child: _ShellViewport(
           enabled: roundedViewport,
           clipKey: const Key('content_shell_viewport_clip'),
-          borderRadius: extension.panelRadius,
+          borderRadius: extension.cardRadius,
           child: ResponsiveContainer(
             maxWidth: maxWidth ?? extension.contentMaxWidth,
             child: Column(
@@ -763,7 +763,7 @@ class ProfileShell extends StatelessWidget {
         child: _ShellViewport(
           enabled: roundedViewport,
           clipKey: const Key('profile_shell_viewport_clip'),
-          borderRadius: extension.panelRadius,
+          borderRadius: extension.cardRadius,
           child: ResponsiveContainer(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,7 +866,7 @@ class AuthShell extends StatelessWidget {
                     ],
                     SurfacePanel(
                       padding: const EdgeInsets.fromLTRB(28, 28, 28, 28),
-                      borderRadius: extension.panelRadius,
+                      borderRadius: extension.cardRadius,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

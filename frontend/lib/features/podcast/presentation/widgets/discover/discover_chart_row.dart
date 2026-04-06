@@ -89,7 +89,7 @@ class DiscoverChartRow extends StatelessWidget {
                 SizedBox(width: isDense ? 4 : 6),
                 RepaintBoundary(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(extension.inputRadius),
+                    borderRadius: BorderRadius.circular(extension.buttonRadius),
                     child: PodcastImageWidget(
                       imageUrl: item.artworkUrl,
                       width: imageSize,

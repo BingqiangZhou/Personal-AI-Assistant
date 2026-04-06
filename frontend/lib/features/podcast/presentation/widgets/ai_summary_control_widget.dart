@@ -141,7 +141,7 @@ class _AISummaryControlWidgetState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(extension.controlRadius),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
         border: Border.all(
           color: scheme.error.withValues(alpha: 0.3),
         ),
@@ -257,7 +257,7 @@ class _AISummaryControlWidgetState
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: scheme.secondaryContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(extension.controlRadius),
+              borderRadius: BorderRadius.circular(extension.cardRadius),
             ),
             child: Wrap(
               spacing: 16,
@@ -378,13 +378,13 @@ class _AISummaryControlWidgetState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(extension.controlRadius),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
       ),
       child: DropdownButtonFormField<SummaryModelInfo>(
         initialValue: _selectedModel,
         decoration: InputDecoration(
           labelText: l10n.podcast_ai_model,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(extension.controlRadius)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(extension.cardRadius)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 8,
@@ -453,7 +453,7 @@ class _AISummaryControlWidgetState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(extension.controlRadius),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
         border: Border.all(
           color: scheme.error.withValues(alpha: 0.3),
         ),

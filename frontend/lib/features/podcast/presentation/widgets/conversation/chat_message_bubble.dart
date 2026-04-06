@@ -32,12 +32,12 @@ class ChatMessageBubble extends StatelessWidget {
     final extension = appThemeOf(context);
     final isUser = message.isUser;
     final userTextColor = scheme.onSurface;
-    final panelR = extension.panelRadius;
+    final cardR = extension.cardRadius;
     final bubbleRadius = BorderRadius.only(
-      topLeft: Radius.circular(panelR),
-      topRight: Radius.circular(panelR),
-      bottomLeft: Radius.circular(isUser ? 4.0 : panelR),
-      bottomRight: Radius.circular(isUser ? panelR : 4.0),
+      topLeft: Radius.circular(cardR),
+      topRight: Radius.circular(cardR),
+      bottomLeft: Radius.circular(isUser ? 4.0 : cardR),
+      bottomRight: Radius.circular(isUser ? cardR : 4.0),
     );
     final l10n = AppLocalizations.of(context)!;
     final roleLabel = isUser

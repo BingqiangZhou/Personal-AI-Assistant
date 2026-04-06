@@ -92,7 +92,7 @@ class _DiscoverSearchInputState extends ConsumerState<DiscoverSearchInput> {
         shadowColor: _isFocused ? extension.shadowXs.color : Colors.transparent,
         elevation: _isFocused ? 1 : 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(extension.controlRadius),
+          borderRadius: BorderRadius.circular(extension.cardRadius),
           side: borderSide,
         ),
         child: SizedBox(
