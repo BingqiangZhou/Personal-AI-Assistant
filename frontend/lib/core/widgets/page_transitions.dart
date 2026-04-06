@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 /// ============================================================
@@ -237,7 +236,7 @@ class _AuroraTransition extends StatelessWidget {
                             colors: [
                               AppColors.primary.withValues(alpha: v * 0.6),
                               AppColors.primaryLight.withValues(alpha: v * 0.4),
-                              AppleColors.systemOrange.of(context).withValues(alpha: v * 0.15),
+                              AppColors.accentWarm.withValues(alpha: v * 0.15),
                             ],
                             stops: const [0.0, 0.6, 1.0],
                           ),

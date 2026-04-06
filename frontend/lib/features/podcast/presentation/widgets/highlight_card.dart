@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
-import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/glass/glass_container.dart';
@@ -267,11 +266,11 @@ class HighlightCard extends ConsumerWidget {
 
   Color _getScoreColor(BuildContext context, double score) {
     if (score >= 8.5) {
-      return AppleColors.systemGreen.of(context);
+      return AppColors.tertiary;
     } else if (score >= 7.0) {
-      return AppleColors.systemIndigo.of(context);
+      return AppColors.primary;
     } else if (score >= 5.5) {
-      return AppleColors.systemYellow.of(context);
+      return AppColors.sunGlow;
     }
     return Theme.of(context).colorScheme.onSurfaceVariant;
   }

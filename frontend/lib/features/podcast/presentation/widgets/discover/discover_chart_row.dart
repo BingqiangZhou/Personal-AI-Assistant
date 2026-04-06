@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
@@ -77,7 +76,7 @@ class DiscoverChartRow extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: rank == 1
-                              ? AppleColors.systemOrange.of(context)
+                              ? AppColors.accentWarm
                               : rank <= 3
                                   ? scheme.primary
                                   : theme.colorScheme.onSurfaceVariant,

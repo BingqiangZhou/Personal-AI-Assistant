@@ -4,7 +4,6 @@ import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
-import 'package:personal_ai_assistant/core/theme/apple_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
@@ -103,7 +102,7 @@ class _HighlightDetailContent extends StatelessWidget {
                         : Icons.favorite_border,
                     size: 18,
                     color: highlight.isUserFavorited
-                        ? AppleColors.systemRed.of(context)
+                        ? AppColors.error
                         : scheme.onSurfaceVariant,
                   ),
                   label: Text(
@@ -162,9 +161,9 @@ class _HighlightDetailContent extends StatelessWidget {
     // Determine score color
     Color scoreColor;
     if (highlight.overallScore >= 8.0) {
-      scoreColor = AppleColors.systemGreen.of(context);
+      scoreColor = AppColors.tertiary;
     } else if (highlight.overallScore >= 6.0) {
-      scoreColor = AppleColors.systemOrange.of(context);
+      scoreColor = AppColors.accentWarm;
     } else {
       scoreColor = scheme.onSurfaceVariant;
     }
@@ -368,9 +367,9 @@ class _HighlightListItem extends StatelessWidget {
     // Determine score color
     Color scoreColor;
     if (highlight.overallScore >= 8.0) {
-      scoreColor = AppleColors.systemGreen.of(context);
+      scoreColor = AppColors.tertiary;
     } else if (highlight.overallScore >= 6.0) {
-      scoreColor = AppleColors.systemOrange.of(context);
+      scoreColor = AppColors.accentWarm;
     } else {
       scoreColor = scheme.onSurfaceVariant;
     }
@@ -417,7 +416,7 @@ class _HighlightListItem extends StatelessWidget {
                     Icon(
                       Icons.favorite,
                       size: 14,
-                      color: AppleColors.systemRed.of(context),
+                      color: AppColors.error,
                     ),
                 ],
               ),
