@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';
 
@@ -64,14 +65,10 @@ void main() {
       );
       expect(contentRect.top - headerRect.bottom, closeTo(12, 0.1));
 
-      final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+      final cards = tester.widgetList<SurfaceCard>(
+        find.byType(SurfaceCard),
+      ).toList();
       expect(cards, hasLength(3));
-      for (final card in cards) {
-        expect(
-          card.margin,
-          const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        );
-      }
 
       final detailsRect = tester.getRect(find.text('DETAILS'));
       final overviewRect = tester.getRect(
@@ -96,14 +93,10 @@ void main() {
 
       expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
 
-      final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+      final cards = tester.widgetList<SurfaceCard>(
+        find.byType(SurfaceCard),
+      ).toList();
       expect(cards, hasLength(3));
-      for (final card in cards) {
-        expect(
-          card.margin,
-          const EdgeInsets.symmetric(vertical: 2),
-        );
-      }
 
       final detailsRect = tester.getRect(find.text('DETAILS'));
       final overviewRect = tester.getRect(

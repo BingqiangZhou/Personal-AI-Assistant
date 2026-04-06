@@ -1,13 +1,17 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/audio_handler.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AudioPlayerNotifier lifecycle', () {
     test(
       'replacing managed resources cancels stale subscriptions and timers',
@@ -17,6 +21,7 @@ void main() {
             podcastRepositoryProvider.overrideWithValue(
               _FakePodcastRepository(),
             ),
+            audioHandlerProvider.overrideWithValue(_FakeAudioHandler()),
           ],
         );
         addTearDown(container.dispose);
@@ -57,6 +62,9 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastRepositoryProvider.overrideWithValue(_FakePodcastRepository()),
+          audioHandlerProvider.overrideWithValue(
+            PodcastAudioHandler.testOnly(),
+          ),
         ],
       );
 
@@ -87,6 +95,7 @@ void main() {
             podcastRepositoryProvider.overrideWithValue(
               _FakePodcastRepository(),
             ),
+            audioHandlerProvider.overrideWithValue(_FakeAudioHandler()),
           ],
         );
         addTearDown(container.dispose);
@@ -103,7 +112,11 @@ void main() {
         expect(firstState.sleepTimerAfterEpisode, isTrue);
         expect(firstState.sleepTimerEndTime, isNull);
         expect(firstState.sleepTimerRemainingLabel, 'After current episode');
-        expect(secondState, firstState);
+        // Only compare sleep-timer fields; processingState may differ due to
+        // async listener callbacks from the audio handler during the delay.
+        expect(secondState.sleepTimerAfterEpisode, firstState.sleepTimerAfterEpisode);
+        expect(secondState.sleepTimerEndTime, firstState.sleepTimerEndTime);
+        expect(secondState.sleepTimerRemainingLabel, firstState.sleepTimerRemainingLabel);
       },
     );
   });
@@ -164,4 +177,15 @@ class _ManagedResourceBundle {
 
 class _FakePodcastRepository extends PodcastRepository {
   _FakePodcastRepository() : super(PodcastApiService(Dio()));
+}
+
+/// Fake audio handler that provides required streams without creating a real
+/// AudioPlayer (which would fail with MissingPluginException in tests).
+/// Extends PodcastAudioHandler via testOnly() and overrides positionStream
+/// so the late-final _player is never accessed.
+class _FakeAudioHandler extends PodcastAudioHandler {
+  _FakeAudioHandler() : super.testOnly();
+
+  @override
+  Stream<Duration> get positionStream => const Stream.empty();
 }

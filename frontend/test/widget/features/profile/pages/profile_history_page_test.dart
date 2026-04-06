@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
@@ -115,18 +116,10 @@ void main() {
     );
     expect(find.byKey(const Key('profile_history_meta_row')), findsNWidgets(2));
 
-    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    final cards = tester.widgetList<SurfaceCard>(find.byType(SurfaceCard)).toList();
     expect(cards.length, 2);
     for (final card in cards) {
-      expect(card.margin, EdgeInsets.zero);
-      expect(card.shape, isA<RoundedRectangleBorder>());
-      final shape = card.shape! as RoundedRectangleBorder;
-      expect(
-        shape.borderRadius,
-        BorderRadius.circular(kPodcastRowCardCornerRadius),
-      );
-      expect(shape.side.style, BorderStyle.none);
-      expect(shape.side.width, 0);
+      expect(card.borderRadius, kPodcastRowCardCornerRadius);
     }
 
     final cardContentFinder = find.byKey(

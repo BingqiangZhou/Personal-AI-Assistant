@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockito/mockito.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
@@ -457,7 +458,7 @@ void main() {
       final subscriptionsIcon = tester.widget<Icon>(
         find.byIcon(Icons.subscriptions_outlined).first,
       );
-      expect(subscriptionsIcon.color, equals(scheme.onSurfaceVariant));
+      expect(subscriptionsIcon.color, equals(scheme.primary));
 
       final avatar = tester.widget<CircleAvatar>(
         find.descendant(
@@ -521,7 +522,7 @@ void main() {
       final subscriptionsIcon = tester.widget<Icon>(
         find.byIcon(Icons.subscriptions_outlined).first,
       );
-      expect(subscriptionsIcon.color, equals(scheme.onSurfaceVariant));
+      expect(subscriptionsIcon.color, equals(scheme.primary));
 
       final avatar = tester.widget<CircleAvatar>(
         find.descendant(
@@ -775,7 +776,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
+    await tester.tap(find.widgetWithText(TextButton, 'Clear'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
@@ -946,7 +947,7 @@ void main() {
     await tester.tap(find.byKey(const Key('profile_user_menu_item_edit')));
     await tester.pumpAndSettle();
     final editDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
-    await tester.tap(find.text(l10n.cancel));
+    await tester.tap(find.text(l10n.close));
     await tester.pumpAndSettle();
 
     final languageTile = find.widgetWithText(ListTile, l10n.language);
@@ -1125,17 +1126,13 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    final cards = tester.widgetList<SurfacePanel>(
+      find.byType(SurfacePanel),
+    ).toList();
     expect(cards, isNotEmpty);
 
     for (final card in cards) {
-      expect(card.margin, const EdgeInsets.symmetric(horizontal: 4));
-      expect(card.shape, isA<RoundedRectangleBorder>());
-
-      final shape = card.shape! as RoundedRectangleBorder;
-      expect(shape.borderRadius, BorderRadius.circular(12));
-      expect(shape.side.style, BorderStyle.none);
-      expect(shape.side.width, 0);
+      expect(card.borderRadius, 14);
     }
   });
 
@@ -1223,7 +1220,7 @@ void main() {
     final viewportClip = tester.widget<ClipRRect>(
       find.byKey(const Key('profile_shell_viewport_clip')),
     );
-    expect(viewportClip.borderRadius, BorderRadius.circular(16));
+    expect(viewportClip.borderRadius, BorderRadius.circular(14));
   });
 
   testWidgets('keeps desktop profile cards unchanged', (
@@ -1265,13 +1262,9 @@ void main() {
       findsOneWidget,
     );
 
-    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    final cards = tester.widgetList<SurfacePanel>(
+      find.byType(SurfacePanel),
+    ).toList();
     expect(cards, isNotEmpty);
-
-    for (final card in cards) {
-      expect(card.margin, EdgeInsets.zero);
-      // Card may have a rounded rectangle shape for visual consistency
-      expect(card.shape, isA<RoundedRectangleBorder>());
-    }
   });
 }

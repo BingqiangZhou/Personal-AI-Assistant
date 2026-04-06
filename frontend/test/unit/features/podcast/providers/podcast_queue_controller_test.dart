@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:riverpod/riverpod.dart' show Override;
+import 'package:personal_ai_assistant/core/services/audio_download_service.dart';
+import 'package:personal_ai_assistant/core/services/download_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
@@ -18,10 +21,7 @@ void main() {
         addDelay: const Duration(milliseconds: 80),
       );
       final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
-        ],
+        overrides: _testOverrides(repository: repository),
       );
       addTearDown(container.dispose);
 
@@ -56,10 +56,7 @@ void main() {
         ),
       );
       final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => audioNotifier),
-        ],
+        overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
       );
       addTearDown(container.dispose);
 
@@ -93,10 +90,7 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-          ],
+          overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
         );
         addTearDown(container.dispose);
 
@@ -128,13 +122,10 @@ void main() {
           reorderQueueResult: reorderedQueue,
         );
         final audioNotifier = _FakeAudioPlayerNotifier(
-          
+
         );
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-          ],
+          overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
         );
         addTearDown(container.dispose);
 
@@ -154,10 +145,7 @@ void main() {
       final repository = _FakePodcastRepository();
       final audioNotifier = _FakeAudioPlayerNotifier();
       final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => audioNotifier),
-        ],
+        overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
       );
       addTearDown(container.dispose);
 
@@ -192,10 +180,7 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-          ],
+          overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
         );
         addTearDown(container.dispose);
 
@@ -228,10 +213,7 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-          ],
+          overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
         );
         addTearDown(container.dispose);
 
@@ -263,10 +245,7 @@ void main() {
           ),
         );
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-          ],
+          overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
         );
         addTearDown(container.dispose);
 
@@ -288,10 +267,7 @@ void main() {
       repository.reorderCompleter = Completer<void>();
       final audioNotifier = _FakeAudioPlayerNotifier();
       final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(() => audioNotifier),
-        ],
+        overrides: _testOverrides(repository: repository, audioNotifier: audioNotifier),
       );
       addTearDown(container.dispose);
 
@@ -324,10 +300,7 @@ void main() {
         reorderQueueResult: _queue(revision: 2, currentEpisodeId: 2),
       );
       final container = ProviderContainer(
-        overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
-        ],
+        overrides: _testOverrides(repository: repository),
       );
       addTearDown(container.dispose);
 
@@ -369,10 +342,7 @@ void main() {
         repository.reorderError = StateError('reorder failed');
 
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
-          ],
+          overrides: _testOverrides(repository: repository),
         );
         addTearDown(container.dispose);
 
@@ -422,10 +392,7 @@ void main() {
         repository.removeError = StateError('remove failed');
 
         final container = ProviderContainer(
-          overrides: [
-            podcastRepositoryProvider.overrideWithValue(repository),
-            audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
-          ],
+          overrides: _testOverrides(repository: repository),
         );
         addTearDown(container.dispose);
 
@@ -466,8 +433,7 @@ void main() {
         ..getQueueCompleter = Completer<void>();
       final container = ProviderContainer(
         overrides: [
-          podcastRepositoryProvider.overrideWithValue(repository),
-          audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
+          ..._testOverrides(repository: repository),
           podcastQueueControllerProvider.overrideWith(
             _TimeoutPodcastQueueController.new,
           ),
@@ -552,6 +518,27 @@ PodcastEpisodeModel _episode(int episodeId) {
     publishedAt: DateTime(2026, 2),
     createdAt: DateTime(2026, 2),
   );
+}
+
+/// No-op download service so queue operations never touch the real DB.
+class _FakeAudioDownloadService implements AudioDownloadService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Common provider overrides shared by all queue-controller tests.
+List<Override> _testOverrides({
+  required PodcastRepository repository,
+  AudioPlayerNotifier? audioNotifier,
+}) {
+  return [
+    podcastRepositoryProvider.overrideWithValue(repository),
+    downloadManagerProvider.overrideWithValue(_FakeAudioDownloadService()),
+    if (audioNotifier != null)
+      audioPlayerProvider.overrideWith(() => audioNotifier)
+    else
+      audioPlayerProvider.overrideWith(_FakeAudioPlayerNotifier.new),
+  ];
 }
 
 class _FakePodcastRepository extends PodcastRepository {

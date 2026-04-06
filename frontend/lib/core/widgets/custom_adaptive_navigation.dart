@@ -327,8 +327,6 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
         const SizedBox(height: 8),
         ..._buildNavigationItems(context, compact: false),
         const Spacer(),
-        _buildPinnedPodcastsSection(context),
-        const SizedBox(height: 16),
         if (widget.destinations.isNotEmpty)
           _buildProfileNavigationItem(context, compact: false),
       ],
@@ -546,85 +544,6 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
     return BoxDecoration(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(extension.navItemRadius),
-    );
-  }
-
-  Widget _buildPinnedPodcastsSection(BuildContext context) {
-    // Sample pinned podcasts - in real app, this would come from a provider
-    final samplePodcasts = [
-      'Tech Talk Daily',
-      'Design Matters',
-      'AI Frontiers',
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text(
-            'Pinned',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...samplePodcasts.map((podcast) => _buildPinnedPodcastItem(context, podcast)),
-      ],
-    );
-  }
-
-  Widget _buildPinnedPodcastItem(BuildContext context, String podcastName) {
-    final extension = appThemeOf(context);
-    // Deterministically pick a color from the palette based on hash of name
-    // Deterministically pick a color from the palette based on hash of name
-    final colorIndex = podcastName.hashCode % AppColors.podcastGradientColors.length;
-    final gradientColors = AppColors.podcastGradientColors[colorIndex];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(extension.navItemRadius),
-        child: Container(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(extension.navItemRadius),
-          ),
-          child: Row(
-            children: [
-              // Gradient color block
-              Container(
-                width: 4,
-                height: 16,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: gradientColors,
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  podcastName,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

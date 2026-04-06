@@ -173,8 +173,8 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
           items: updatedItems,
           total: previousData.total,
           page: previousData.page,
-          perPage: previousData.perPage,
-          hasMore: previousData.hasMore,
+          size: previousData.size,
+          pages: previousData.pages,
         ),
       );
     } catch (error) {
@@ -203,8 +203,8 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
           items: updatedItems,
           total: previousData.total - 1,
           page: previousData.page,
-          perPage: previousData.perPage,
-          hasMore: previousData.hasMore,
+          size: previousData.size,
+          pages: previousData.pages,
         ),
       );
 
@@ -230,7 +230,7 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
       final newData = await _repository.getHighlights(
         date: targetDate,
         page: nextPage,
-        perPage: currentData.perPage,
+        perPage: currentData.size,
       );
 
       final combinedItems = [...currentData.items, ...newData.items];
@@ -240,8 +240,8 @@ class HighlightsNotifier extends AsyncNotifier<HighlightsListResponse?> {
           items: combinedItems,
           total: newData.total,
           page: newData.page,
-          perPage: newData.perPage,
-          hasMore: newData.hasMore,
+          size: newData.size,
+          pages: newData.pages,
         ),
       );
     } catch (error) {

@@ -123,8 +123,8 @@ class HighlightsListResponse extends Equatable {
     required this.items,
     required this.total,
     required this.page,
-    required this.perPage,
-    required this.hasMore,
+    required this.size,
+    required this.pages,
   });
 
   factory HighlightsListResponse.fromJson(Map<String, dynamic> json) =>
@@ -132,15 +132,17 @@ class HighlightsListResponse extends Equatable {
   final List<HighlightResponse> items;
   final int total;
   final int page;
-  @JsonKey(name: 'per_page')
-  final int perPage;
-  @JsonKey(name: 'has_more')
-  final bool hasMore;
+  @JsonKey(name: 'size')
+  final int size;
+  @JsonKey(name: 'pages')
+  final int pages;
+
+  bool get hasMore => page < pages;
 
   Map<String, dynamic> toJson() => _$HighlightsListResponseToJson(this);
 
   @override
-  List<Object?> get props => [items, total, page, perPage, hasMore];
+  List<Object?> get props => [items, total, page, size, pages];
 }
 
 /// 高光日期响应
