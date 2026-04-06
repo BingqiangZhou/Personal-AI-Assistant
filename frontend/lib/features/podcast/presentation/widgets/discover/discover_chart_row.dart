@@ -46,6 +46,54 @@ class DiscoverChartRow extends StatelessWidget {
         (isDense ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
+    // Determine rank colors with gradient accents for top 3
+    Color rankColor;
+    Decoration? rowDecoration;
+
+    if (rank == 1) {
+      rankColor = AppColors.accentWarm;
+      rowDecoration = BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.goldColors[0].withValues(alpha: 0.12),
+            AppColors.goldColors[1].withValues(alpha: 0.08),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
+      );
+    } else if (rank == 2) {
+      rankColor = AppColors.coralColors[0];
+      rowDecoration = BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.coralColors[0].withValues(alpha: 0.1),
+            AppColors.coralColors[1].withValues(alpha: 0.06),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
+      );
+    } else if (rank == 3) {
+      rankColor = AppColors.violetColors[0];
+      rowDecoration = BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.violetColors[0].withValues(alpha: 0.1),
+            AppColors.violetColors[1].withValues(alpha: 0.06),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(extension.cardRadius),
+      );
+    } else {
+      rankColor = theme.colorScheme.onSurfaceVariant;
+      rowDecoration = null;
+    }
+
     return Padding(
       key: Key('podcast_discover_chart_row_${item.itemId}'),
       padding: EdgeInsets.symmetric(vertical: rowOuterPadding),
@@ -53,12 +101,7 @@ class DiscoverChartRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(extension.cardRadius),
         onTap: onTap,
         child: Container(
-          decoration: BoxDecoration(
-            color: rank <= 3
-                ? scheme.primary.withValues(alpha: rank == 1 ? 0.08 : 0.04)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(extension.cardRadius),
-          ),
+          decoration: rowDecoration,
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: rowInnerPadding),
@@ -75,11 +118,7 @@ class DiscoverChartRow extends StatelessWidget {
                         maxLines: 1,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: rank == 1
-                              ? AppColors.accentWarm
-                              : rank <= 3
-                                  ? scheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
+                          color: rankColor,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

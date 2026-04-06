@@ -725,7 +725,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
               : GlassTokens.of(context).glassFill.withValues(
                   alpha: isOutside || isDisabled ? 0.18 : 0.22,
                 ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
           border: Border.all(
             color: isToday && !selected
                 ? theme.colorScheme.primary.withValues(alpha: 0.75)

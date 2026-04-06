@@ -209,6 +209,58 @@ class BaseEpisodeCard extends StatelessWidget {
       config.showSubscribeAction ||
       (additionalMetadata != null && additionalMetadata!.isNotEmpty);
 
+  Widget _buildIdentityBar(BuildContext context) {
+    // Use gradient colors if available and enabled
+    if (config.useGradientIdentityBar &&
+        config.identityGradientColors != null &&
+        config.identityGradientColors!.isNotEmpty) {
+      return Container(
+        width: 3,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: config.identityGradientColors!,
+          ),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(config.cornerRadius),
+            bottomLeft: Radius.circular(config.cornerRadius),
+          ),
+        ),
+      );
+    }
+
+    // Fall back to solid color
+    if (config.identityColor != null) {
+      return Container(
+        width: 3,
+        decoration: BoxDecoration(
+          color: config.identityColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(config.cornerRadius),
+            bottomLeft: Radius.circular(config.cornerRadius),
+          ),
+        ),
+      );
+    }
+
+    // Default to violet gradient if no color specified
+    return Container(
+      width: 3,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: AppColors.violetColors,
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(config.cornerRadius),
+          bottomLeft: Radius.circular(config.cornerRadius),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeaderRow(BuildContext context, ThemeData theme) {
     final scheme = theme.colorScheme;
     final titleStyle = (config.dense

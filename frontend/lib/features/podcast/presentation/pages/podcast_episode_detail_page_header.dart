@@ -645,12 +645,13 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     AppLocalizations l10n,
   ) {
     final theme = Theme.of(context);
+    final extension = appThemeOf(context);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         key: const Key('podcast_episode_detail_source_button'),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(extension.itemRadius),
         onTap: () {
           unawaited(_launchEpisodeSource(episode));
         },

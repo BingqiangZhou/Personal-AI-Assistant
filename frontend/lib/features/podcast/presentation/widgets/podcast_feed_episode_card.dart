@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart';
 
@@ -36,6 +37,11 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
     final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
     final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
 
+    // Determine identity gradient colors based on subscription title hash
+    final subscriptionTitle = episode.subscriptionTitle ?? l10n.podcast_default_podcast;
+    final colorIndex = subscriptionTitle.hashCode % AppColors.podcastGradientColors.length;
+    final identityGradientColors = AppColors.podcastGradientColors[colorIndex];
+
     return BaseEpisodeCard(
       config: EpisodeCardConfig(
         showImage: true,
@@ -69,6 +75,8 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         audioDuration: episode.audioDuration,
         publishedAt: episode.publishedAt,
         heroTag: 'episode_cover_${episode.id}',
+        useGradientIdentityBar: true,
+        identityGradientColors: identityGradientColors,
       ),
       title: episode.title,
       onTap: onOpenDetail,
