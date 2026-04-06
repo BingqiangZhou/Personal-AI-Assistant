@@ -16,18 +16,19 @@ import 'package:personal_ai_assistant/features/auth/presentation/providers/onboa
 import 'package:personal_ai_assistant/features/home/presentation/pages/home_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/navigation/podcast_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_daily_report_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_downloads_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episodes_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_highlights_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_list_page.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_downloads_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_history_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_subscriptions_page.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/pages/appearance_page.dart';
+import 'package:personal_ai_assistant/features/splash/presentation/pages/splash_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
