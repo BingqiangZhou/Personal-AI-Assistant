@@ -43,6 +43,11 @@ class ChatMessageBubble extends StatelessWidget {
         ? l10n.podcast_conversation_user
         : l10n.podcast_conversation_assistant;
 
+    // Use dedicated bubble colors from Arc+Linear theme
+    final bubbleColor = isUser
+        ? extension.aiBubbleUserColor
+        : extension.aiBubbleAssistantColor;
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
@@ -54,9 +59,7 @@ class ChatMessageBubble extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isUser
-                ? extension.cardTierFill
-                : extension.surfaceTierFill,
+            color: bubbleColor,
             borderRadius: bubbleRadius,
             border: isUser
                 ? null
@@ -77,13 +80,13 @@ class ChatMessageBubble extends StatelessWidget {
                   Icon(
                     isUser ? Icons.person_outline : Icons.smart_toy_outlined,
                     size: 14,
-                    color: AppColors.darkOnBackground,
+                    color: scheme.onSurface,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     roleLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.darkOnBackground,
+                      color: scheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -95,7 +98,7 @@ class ChatMessageBubble extends StatelessWidget {
                           : Icons.radio_button_unchecked,
                       size: 16,
                       color:
-                          isSelected ? scheme.primary : AppColors.darkOnSurface,
+                          isSelected ? scheme.primary : scheme.onSurfaceVariant,
                     ),
                   ],
                 ],
@@ -105,7 +108,7 @@ class ChatMessageBubble extends StatelessWidget {
                   ? Text(
                       message.content,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.darkOnBackground,
+                        color: scheme.onSurface,
                         height: 1.5,
                       ),
                     )
@@ -148,7 +151,7 @@ class ChatMessageBubble extends StatelessWidget {
                         );
                       },
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.darkOnBackground,
+                        color: scheme.onSurface,
                         height: 1.5,
                       ),
                     ),
