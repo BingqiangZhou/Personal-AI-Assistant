@@ -530,7 +530,7 @@ class _QueueListState extends ConsumerState<_QueueList> {
                   shadowColor: Theme.of(
                     context,
                   ).colorScheme.shadow.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
                   child: child,
                 ),
               );
@@ -660,7 +660,7 @@ class _QueueListItem extends ConsumerWidget {
       key: Key('queue_item_tile_${item.episodeId}'),
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -671,7 +671,7 @@ class _QueueListItem extends ConsumerWidget {
               end: Alignment.bottomRight,
               colors: cardColors,
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
             border: Border.all(
               color: isCurrent
                   ? theme.colorScheme.primary.withValues(alpha: 0.30)
@@ -697,7 +697,7 @@ class _QueueListItem extends ConsumerWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withValues(alpha: 0.72),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(appThemeOf(context).itemRadius),
                   ),
                   child: ReorderableDragStartListener(
                     key: Key('queue_item_drag_${item.episodeId}'),

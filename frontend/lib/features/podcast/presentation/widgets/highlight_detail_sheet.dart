@@ -246,12 +246,13 @@ class _HighlightDetailContent extends StatelessWidget {
   Widget _buildEpisodeSource(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final extension = appThemeOf(context);
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(extension.itemRadius),
       ),
       child: Row(
         children: [
