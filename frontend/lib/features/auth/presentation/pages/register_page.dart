@@ -388,10 +388,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      l10n.auth_already_have_account,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Flexible(
+                      child: Text(
+                        l10n.auth_already_have_account,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 4),
                     GestureDetector(
                       onTap: () => context.go('/login'),
                       child: Text(
