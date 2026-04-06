@@ -4,6 +4,103 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.41.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.40.0...v0.41.0) - 2026-04-06 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.41.0))
+
+### Merge
+
+- Feat/arc-linear-ui-redesign into main ([7d66df6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7d66df6b08d88e619c4743bd933d734fdb4eaf6b))
+
+### ⚙️ Miscellaneous Tasks
+
+- Apply dart fixes and remove old design system comments ([96ada14](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/96ada1475de6eef2e09a87166de8fd3e919f5c98))
+
+### 🐛 Bug Fixes
+
+- Clarify build number rule in release skill ([d2f9307](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d2f93073e289c8f80ebde45b88d0d48c86e73528))
+- *(glass)* Improve light mode contrast with lower fill opacity ([02a69cc](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/02a69cc3229b0af39849fdc25efca88d53b2e8c2))
+- *(backend)* Pre-launch audit — resolve critical stability and security, and performance issues ([a696f88](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a696f8812d259a33f12bffb9c69f5ad43988f16d))
+- *(backend)* Pre-launch audit — resolve HIGH/MEDIUM/LOW issues across all layers ([9d87cc8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9d87cc8f62f418410df8b0021fd76a7abf5c89e6))
+- *(alembic)* Mock security as package for sub-module imports ([1d68b4d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1d68b4dccda4eada361f99fc5fc0958d8bcbdf39))
+- *(glass)* Fix compilation errors from agent migration ([6fcc355](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6fcc355239662d64fab8116e94fb29323189b78a))
+- *(admin)* Update TemplateResponse calls for Starlette 1.0 signature ([139dca6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/139dca69d095f85d5f87ee3aa08642697491a049))
+- *(backend)* Resolve audit findings — broken import, crashes, info leaks, N+1 query, test failures ([9eacbb7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9eacbb7ed912969a61eae45fe7c06958f2231b48))
+- *(auth)* Widen session_token/refresh_token columns from VARCHAR(255) to TEXT ([8a0dd51](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8a0dd51998e3b5509c6a0046b02e318d0ae42a69))
+- *(podcast)* Eagerly load transcript to fix MissingGreenlet in Celery worker ([cd51ca5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cd51ca598ef9cb1ef74d5910ed9b5129fb844316))
+- *(glass)* Fix AppleColors API and test compilation errors ([724f4f2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/724f4f2df92be67cb56930675975adf471d71f7c))
+- *(podcast)* Update remaining widget files with new tokens ([143b0fe](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/143b0fedea627fc2dc9112323f92d5a99c981f7c))
+- *(podcast)* Update highlight detail sheet border radius values ([c524e1d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c524e1d89950082f3d08c0bcac977e5162e2946d))
+- *(tests)* Fix compilation errors in test files ([424a28f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/424a28f242cfcd19947523c5ee22aa69d0123c71))
+- *(auth)* Prevent text overflow in register page ([7fed1d6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7fed1d6b15a873a38915cc83a612a1201251c057))
+- *(tests)* Fix highlight_detail_sheet and register_page overflow ([1aaec03](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1aaec03cfef57ef6ba150427637a728266b68b8d))
+
+### 📚 Documentation
+
+- Update README.md for v0.40.0 release ([dcf32d7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dcf32d7e1046a85c6f8b31c5117cbcbf311b691b))
+- Add Liquid Glass redesign design spec ([0f70c54](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0f70c5405fb3bf7cf2587b31984a4899ef4c8e67))
+- Add Liquid Glass redesign design spec ([37213c3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/37213c3937c4953a27f954189c7ef7cabce5930a))
+- Add Liquid Glass redesign implementation plan ([26ffc4e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/26ffc4ed47dcd2d3595a4e33e04f0b8661744d37))
+- Add CLAUDE.md rewrite design spec ([7e6bd37](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7e6bd3767092e69131969ce28ce0fdadad521b6c))
+- Rewrite CLAUDE.md following Anthropic best practices ([917cdac](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/917cdac69eb8c5764c93c82940488eb6a6e83013))
+
+### 🚀 Features
+
+- *(ui)* Implement Apple Liquid Glass design system ([c4f858f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c4f858f501ca4e4aeabf7aecba60cf371cf57849))
+- *(ui)* Integrate Liquid Glass into navigation and background ([b210c42](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b210c4287008d38474d30ba58db0a7a5ae228b37))
+- *(ui)* Migrate feature widgets to LiquidGlassContainer and enhance core glass effects ([91ce955](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/91ce955850f153cd91d4bec1247738f7301d9ae4))
+- *(glass)* Add GlassTier enum and GlassTokens ([c0c278c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c0c278c6cb6fd7220a10448b18255dafbd5a2bc4))
+- *(glass)* Add GlassStyle data class ([e1fb834](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e1fb8344ce9a9b5d35fed2a8fbe00a54e289ec12))
+- *(glass)* Add GlassBackground with dynamic gradient orbs ([3d4a998](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3d4a99858b498369d4d993f4dde2d733aa32710e))
+- *(glass)* Wire GlassBackground into app shells ([061e3e0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/061e3e062ae39c34e9fe08907473f8c81e67c795))
+- *(glass)* Implement Glass Painters and GlassContainer for Phase 2 ([7f4e975](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7f4e9754e01cfddef040b6fd85d746f57c49e0ad))
+- *(glass)* Migrate adaptive sheets and settings cards to GlassContainer ([3f5f723](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3f5f72376d48ae9e2f7aab8bb3959f306b2125d0))
+- *(glass)* Full glass migration — dialogs, sheets, drawers, containers ([6d17c55](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6d17c556d2b95b6ea0b797ce85faff66dbb878ed))
+- *(glass)* Apply liquid glass to all remaining pages + fix light mode readability ([d75171f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d75171feef591a01592ca07323f9a25eadc706ae))
+- *(glass)* Add GlassBackground to 6 missing pages + fix test sigma values ([36a1444](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/36a1444e14d0395d6529c1468caeb364ff983594))
+- *(glass)* Update glass tokens to Apple Liquid Glass spec ([64d4d14](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/64d4d148f549bb77e31a0790a0165e3148fff7da))
+- *(glass)* Add Phase 5 interactive enhancements to GlassContainer ([3398def](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3398deff510702420ca80dafc1ce8382797437d1))
+- *(theme)* Add Arc+Linear design tokens to AppColors and AppThemeExtension ([65502fd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/65502fd562cd2017146808fcbcc12b8e63372dc7))
+- *(components)* Add 3-tier card system (surface/card/elevated) ([dfb119e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dfb119e1d6df36e7311e03aa3928e64a5573b7b9))
+- *(player)* Redesign mini player with gradient background ([1292286](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/12922860077cc3800389fe9b01522bd338b27cde))
+- *(chat)* Update message bubbles with Arc+Linear theme tokens ([e765c4a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e765c4a987f74143c9af288c8cb63eeb2722dc7a))
+- *(chat)* Restyle chat bubbles with Arc+Linear theme ([9ee89ae](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9ee89ae029fdf9342fed2e3cc2ef8ac561397c3d))
+- *(ai-chat)* Redesign chat bubbles with Arc+Linear style ([0aa9dfb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0aa9dfb1854b8f0332c30a4bff93132c755df3ab))
+- *(nav)* Redesign sidebar with Arc+Linear expandable style ([f9b4dad](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f9b4dadb16eb3ffe0c33ba10394378154c43d713))
+- *(podcast)* Add Linear-style section headers and episode card identity bar ([72c7e08](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/72c7e0873467c253570718e9fbda60bfbe881d57))
+- *(podcast)* Update shared widgets with Arc+Linear tokens ([4c67360](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4c67360f4a80e903401209c9c1e655de93b41028))
+- *(podcast)* Update podcast widgets with Arc+Linear tokens ([f237b22](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f237b22c9f7cc39df96836d2ed2927239c1779f2))
+- *(podcast)* Update all podcast pages with Arc+Linear visual style ([84da71e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/84da71ec9871e15a33d305633438bd54c7cbc0a0))
+- *(ui)* Update shared podcast widgets with Arc+Linear style ([ca56b2c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ca56b2c4627cebe0c43d62a5b79e88f02f418551))
+- *(ui)* Apply Arc+Linear design refinements and fix test suite ([19abc01](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/19abc01aa671cc1f9b026d34f87bade296c367fb))
+- *(ui)* Finalize Arc+Linear redesign with downloads page and navigation refinements ([300f47e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/300f47e34336b3bf933c4e01d5dc29f5d36b1dd2))
+
+### 🚜 Refactor
+
+- *(theme)* Update background colors for neutral glass palette ([19e62d8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/19e62d80c140d3d6379918e6bc2edf3fc0db8122))
+- *(podcast)* Migrate remaining podcast pages to new glass system ([24a6810](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/24a681082773b7dbdd006e7e978196d220fdc3c8))
+- *(theme)* Add glass-style component theme overrides for full coverage ([4cbd30c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4cbd30c80f475d286b498d2465b7513a9ef6bb96))
+- *(features)* Replace hardcoded surface colors with transparent for glass theme ([7e78a4d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7e78a4d64af9fdf22df01ea55efeef0adc730f6f))
+- *(podcast)* Replace hardcoded surface colors with transparent for glass theme ([b49f3db](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b49f3db17573d271341edc4e896fba4fa56f3fd3))
+- *(glass)* Update glass components, tokens, and tests ([26b907b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/26b907b79bbeee2f48d1735060559700bdb9435c))
+- *(theme)* Merge apple_colors into app_colors, eliminate dual color system ([94c55a4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/94c55a4f8daa6aaf882ee28cf14239315b2f877b))
+- *(tokens)* Unify radius tokens for Arc+Linear design ([e14c637](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e14c6378b96e021f144dea941b80f8e20abb7f4d))
+- *(glass)* Simplify glass system - delete painters, 4->2 tiers, StatefulWidget->StatelessWidget ([6423a5b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6423a5b8c2bd4ba5f757a30458d63021efa20af0))
+- *(glass)* Darken background orbs, update vibrancy for Arc+Linear theme ([cf6350b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cf6350bb5b66a85e6eb3b077f4d76418b0985156))
+- *(transitions)* Simplify to 150ms fade, rename to Stella ([995211d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/995211db7aaebb24d39944dd4a54300293d6877c))
+- *(auth/profile/settings)* Remove unused glass imports ([d24f22b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d24f22bcd631dfcb9b41e290694172b6e3878fbc))
+- *(transcript)* Use Arc+Linear theme tokens ([872d020](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/872d020a21035a4fb88ce8bd2282256205bdcc1a))
+- *(podcast-pages)* Use Arc+Linear theme tokens ([ea3a76a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ea3a76a99963d4941e99c83ac16ec9562d23daa2))
+- *(podcast)* Remove unused glass_container import from highlights_page ([2b57db0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2b57db03cbf620f0ca053062ceb0390949afa405))
+- *(widgets)* Apply Arc+Linear theme tokens to remaining widgets ([dc4e6a7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dc4e6a70ca82fd75b45dc0707790e86d85c1bf06))
+- *(cleanup)* Remove unused imports ([aa4a40d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/aa4a40d3b45ac4e51d43294d65f9201137047bb0))
+
+### 🧪 Testing
+
+- Fix all test failures after Arc+Linear UI redesign ([ae5a3be](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ae5a3be00c7877d17c514babf357e20745258a62))
+- Fix unit test failures after UI redesign ([2688206](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2688206d9918da1d7ccdd194cf1ff12b1940346e))
+- Fix remaining widget and unit test failures after UI redesign ([5e9a7fa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5e9a7faaa613d7d8b28cdf6716772e9a6f06f657))
+
+
+
 ## [0.40.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.39.0...v0.40.0) - 2026-04-04 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.40.0))
 
 ### ⚙️ Miscellaneous Tasks
@@ -22,6 +119,7 @@ All notable changes to this project will be documented in this file.
 - Update tests to use dict access after projection removal ([4d7eb70](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d7eb7079a97be77c9ae27dcf815e9ce87c54819))
 - Remove duplicate exception and fix stale 'from exc' in routes ([4ff728a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4ff728a3264aaef6b68f8f31e051028635912cf2))
 - Add `from None` to HTTPException raises in except blocks (B904) ([5444652](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/54446524b11911996b895b3305e2222b10c62391))
+- Correct build number to 100 ([211e154](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/211e154aa4d2067921e3b3736e44e7e40b24184a))
 
 ### 📚 Documentation
 
