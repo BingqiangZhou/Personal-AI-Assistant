@@ -30,7 +30,6 @@ class DiscoverChartRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
     final showSubscribe = item.isPodcastShow;
     final rankLabel = '$rank';
