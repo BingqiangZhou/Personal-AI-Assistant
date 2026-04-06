@@ -296,7 +296,7 @@ class HeaderCapsuleActionButton extends StatelessWidget {
 
 /// SurfacePanel - Liquid Glass surface panel
 ///
-/// Uses GlassContainer with light tier for cards and panels.
+/// Uses SurfaceCard with card tier for panels.
 /// Includes a subtle fade-in + slide-up entrance animation on first build.
 class SurfacePanel extends StatefulWidget {
   const SurfacePanel({
@@ -306,6 +306,7 @@ class SurfacePanel extends StatefulWidget {
     this.margin,
     this.borderRadius,
     this.backgroundColor,
+    this.tier = CardTier.card,
     this.showBorder = true,
     this.showShadow = true,
     this.showHighlight = false, // Legacy parameter, no longer used
@@ -316,6 +317,7 @@ class SurfacePanel extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final double? borderRadius;
   final Color? backgroundColor;
+  final CardTier tier;
   final bool showBorder;
   final bool showShadow;
   final bool showHighlight; // Legacy parameter, ignored
@@ -338,6 +340,7 @@ class _SurfacePanelState extends State<SurfacePanel> {
         borderRadius: radius,
         padding: widget.padding,
         backgroundColor: widget.backgroundColor,
+        tier: widget.tier,
         child: widget.child,
       ),
     );
@@ -505,7 +508,7 @@ class _HeroHeaderState extends State<HeroHeader> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.headlineSmall,
+                          style: theme.textTheme.displaySmall,
                         ),
                       ),
                       if (hasSubtitle) ...[
@@ -872,7 +875,7 @@ class AuthShell extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            style: Theme.of(context).textTheme.displaySmall,
                           ),
                           if (subtitle.isNotEmpty) ...[
                             const SizedBox(height: 12),
