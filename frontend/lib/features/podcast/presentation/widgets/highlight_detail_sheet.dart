@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
-import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_highlight_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_score_indicator.dart';
 
@@ -123,6 +120,7 @@ class _HighlightDetailContent extends StatelessWidget {
   Widget _buildQuoteSection(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final extension = appThemeOf(context);
 
     return Container(
       width: double.infinity,
@@ -244,6 +242,7 @@ class _HighlightDetailContent extends StatelessWidget {
   Widget _buildEpisodeSource(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final extension = appThemeOf(context);
 
     return Container(
       padding: const EdgeInsets.all(12),
