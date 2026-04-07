@@ -25,10 +25,8 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
 
   String _extractReadableErrorMessage(Object error) {
     if (error is AppException) {
-      final message = error.message.trim();
-      return message.isNotEmpty ? message : 'Network error occurred';
+      return error.userMessage;
     }
-
     final message = error.toString().trim();
     return message.isNotEmpty ? message : 'Network error occurred';
   }

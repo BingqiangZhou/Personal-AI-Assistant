@@ -29,6 +29,29 @@ abstract class AppException implements Exception {
 
   @override
   String toString() => message;
+
+  /// Human-readable error message for UI display.
+  String get userMessage {
+    final trimmed = message.trim();
+    if (trimmed.isNotEmpty) return trimmed;
+    return switch (errorCode) {
+      NetworkErrorCode.connectionTimeout ||
+      NetworkErrorCode.sendTimeout ||
+      NetworkErrorCode.receiveTimeout ||
+      NetworkErrorCode.noConnection =>
+        'Network error. Please check your connection and try again.',
+      NetworkErrorCode.serverError => 'Server error. Please try again later.',
+      NetworkErrorCode.authExpired => 'Session expired. Please login again.',
+      NetworkErrorCode.accessDenied =>
+        'You do not have permission to perform this action.',
+      NetworkErrorCode.notFound => 'The requested resource was not found.',
+      NetworkErrorCode.conflict => message,
+      NetworkErrorCode.validation => message,
+      NetworkErrorCode.unknown =>
+        'An unexpected error occurred. Please try again.',
+      null => 'An unexpected error occurred. Please try again.',
+    };
+  }
 }
 
 class NetworkException extends AppException {
