@@ -544,6 +544,61 @@ class PodcastCacheOperations:
         """Invalidate episode detail cache after update or summary generation."""
         await cache_delete_func(f"podcast:episode:detail:{episode_id}")
 
+    # --- Highlight dates (calendar) ---
+
+    async def get_highlight_dates(
+        self,
+        client: Any,
+        user_id: int,
+        loader: Callable[[], Awaitable[list[str]]],
+        cache_get_with_lock_func: Any = None,
+    ) -> list[str]:
+        """Cache highlight dates for calendar with 10-minute TTL."""
+        key = f"highlights:dates:{user_id}"
+        result, _from_cache = await cache_get_with_lock_func(
+            key=key,
+            loader=loader,
+            ttl=CacheTTL.HIGHLIGHT_DATES,
+        )
+        return result or []
+
+    async def invalidate_highlight_dates(
+        self, client: Any, user_id: int, cache_delete_func: Any = None
+    ) -> None:
+        """Invalidate highlight dates cache after extraction or favorite toggle."""
+        await cache_delete_func(f"highlights:dates:{user_id}")
+
+    # --- Playback rate ---
+
+    async def get_effective_playback_rate(
+        self,
+        client: Any,
+        user_id: int,
+        subscription_id: int | None,
+        loader: Callable[[], Awaitable[dict]],
+        cache_get_with_lock_func: Any = None,
+    ) -> dict | None:
+        """Cache effective playback rate with 30-minute TTL."""
+        key = f"playback:rate:{user_id}:{subscription_id or 'global'}"
+        result, _from_cache = await cache_get_with_lock_func(
+            key=key,
+            loader=loader,
+            ttl=CacheTTL.PLAYBACK_RATE,
+        )
+        return result
+
+    async def invalidate_playback_rate(
+        self,
+        client: Any,
+        user_id: int,
+        subscription_id: int | None = None,
+        cache_delete_func: Any = None,
+    ) -> None:
+        """Invalidate playback rate cache after preference change."""
+        await cache_delete_func(
+            f"playback:rate:{user_id}:{subscription_id or 'global'}"
+        )
+
     # --- Batch invalidation ---
 
     async def invalidate_user_caches(

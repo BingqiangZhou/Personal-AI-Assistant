@@ -428,6 +428,63 @@ class AppCache(
             cache_delete_func=self.cache_delete,
         )
 
+    # === Highlight Dates ===
+
+    async def get_highlight_dates(
+        self,
+        user_id: int,
+        loader: Any,
+    ) -> list[str]:
+        client = await self._get_client()
+        return await PodcastCacheOperations.get_highlight_dates(
+            self,
+            client,
+            user_id,
+            loader=loader,
+            cache_get_with_lock_func=self.cache_get_with_lock,
+        )
+
+    async def invalidate_highlight_dates(self, user_id: int) -> None:
+        client = await self._get_client()
+        await PodcastCacheOperations.invalidate_highlight_dates(
+            self,
+            client,
+            user_id,
+            cache_delete_func=self.cache_delete,
+        )
+
+    # === Playback Rate ===
+
+    async def get_effective_playback_rate(
+        self,
+        user_id: int,
+        subscription_id: int | None,
+        loader: Any,
+    ) -> Any | None:
+        client = await self._get_client()
+        return await PodcastCacheOperations.get_effective_playback_rate(
+            self,
+            client,
+            user_id,
+            subscription_id,
+            loader=loader,
+            cache_get_with_lock_func=self.cache_get_with_lock,
+        )
+
+    async def invalidate_playback_rate(
+        self,
+        user_id: int,
+        subscription_id: int | None = None,
+    ) -> None:
+        client = await self._get_client()
+        await PodcastCacheOperations.invalidate_playback_rate(
+            self,
+            client,
+            user_id,
+            subscription_id=subscription_id,
+            cache_delete_func=self.cache_delete,
+        )
+
     # === User Progress ===
 
     async def set_user_progress(

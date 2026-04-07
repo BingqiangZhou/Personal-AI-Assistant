@@ -49,6 +49,8 @@ class CacheTTL:
     SUBSCRIPTION_LIST: int = 900  # 15 minutes - subscription list cache
     EPISODE_LIST: int = 600  # 10 minutes - episode list cache
     EPISODE_DETAIL: int = 300  # 5 minutes - single episode detail with summary
+    HIGHLIGHT_DATES: int = 600  # 10 minutes - highlight dates for calendar
+    PLAYBACK_RATE: int = 1800  # 30 minutes - effective playback rate preference
 
     # === Long (days) ===
     # Used for data that rarely changes

@@ -18,6 +18,7 @@ from sqlalchemy.orm import selectinload
 from app.core.ai_client import call_ai_api_with_retry
 from app.core.database import worker_db_session
 from app.core.exceptions import ValidationError
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.ai.models import ModelType
 from app.domains.ai.services.base_model_manager import BaseModelManager
 from app.domains.podcast.models import (
@@ -737,9 +738,11 @@ class HighlightService:
         self,
         db: AsyncSession,
         user_id: int,
+        redis: Any | None = None,
     ):
         self.db = db
         self.user_id = user_id
+        self._redis = redis
 
     async def get_highlights(
         self,
@@ -847,24 +850,32 @@ class HighlightService:
 
     async def get_highlight_dates(self) -> dict:
         """Get list of dates that have highlights for calendar component."""
-        # Query for distinct dates where user has highlights
-        query = (
-            select(func.date(EpisodeHighlight.created_at).label("highlight_date"))
-            .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
-            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
-            .where(
-                and_(
-                    UserSubscription.user_id == self.user_id,
-                    EpisodeHighlight.status == "active",
-                )
-            )
-            .distinct()
-            .order_by(desc("highlight_date"))
-        )
+        redis = self._redis or get_shared_redis()
 
-        result = await self.db.execute(query)
-        dates = [row[0] for row in result.all()]
+        async def _loader() -> list[str]:
+            query = (
+                select(func.date(EpisodeHighlight.created_at).label("highlight_date"))
+                .join(PodcastEpisode, EpisodeHighlight.episode_id == PodcastEpisode.id)
+                .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+                .join(UserSubscription, Subscription.id == UserSubscription.subscription_id)
+                .where(
+                    and_(
+                        UserSubscription.user_id == self.user_id,
+                        EpisodeHighlight.status == "active",
+                    )
+                )
+                .distinct()
+                .order_by(desc("highlight_date"))
+            )
+            result = await self.db.execute(query)
+            dates = [str(row[0]) for row in result.all()]
+            return dates
+
+        try:
+            dates = await redis.get_highlight_dates(self.user_id, _loader)
+        except Exception:
+            # Fallback to direct DB query if Redis is unavailable
+            dates = await _loader()
 
         return {"dates": dates}
 
@@ -939,6 +950,13 @@ class HighlightService:
         # Update favorite status
         highlight.is_user_favorited = favorited
         await self.db.commit()
+
+        # Invalidate highlight dates cache (toggle_favorite may change dates)
+        try:
+            redis = self._redis or get_shared_redis()
+            await redis.invalidate_highlight_dates(self.user_id)
+        except Exception:
+            pass  # Cache invalidation is best-effort
 
         return {
             "success": True,

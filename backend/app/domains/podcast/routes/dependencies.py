@@ -224,9 +224,10 @@ def get_daily_report_service(
 def get_highlight_service(
     db: AsyncSession = Depends(get_db_session_dependency),
     user_id: int = Depends(get_token_user_id),
+    redis: PodcastRedis = Depends(get_redis_client),
 ) -> HighlightService:
     """Provide request-scoped podcast highlight service."""
-    return HighlightService(db, user_id)
+    return HighlightService(db, user_id, redis=redis)
 
 
 def get_summary_workflow_service(
