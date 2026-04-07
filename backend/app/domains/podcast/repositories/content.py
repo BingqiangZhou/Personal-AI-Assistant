@@ -393,7 +393,7 @@ class PodcastContentRepositoryMixin:
             )
             .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
         )
-        rows = (await self.db.execute(stmt)).all()
+        rows = (await self.db.execute(stmt)).unique().all()
         results: list[dict[str, Any]] = []
         for episode, subscription_title in rows:
             description = episode.description or ""

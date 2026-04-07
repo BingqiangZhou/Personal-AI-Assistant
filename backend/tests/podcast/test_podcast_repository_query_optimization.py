@@ -12,6 +12,9 @@ class _RowsResult:
     def __init__(self, rows):
         self._rows = rows
 
+    def unique(self):
+        return self
+
     def all(self):
         return self._rows
 
@@ -19,6 +22,9 @@ class _RowsResult:
 class _ScalarRowsResult:
     def __init__(self, values):
         self._values = values
+
+    def unique(self):
+        return self
 
     def scalars(self):
         return self

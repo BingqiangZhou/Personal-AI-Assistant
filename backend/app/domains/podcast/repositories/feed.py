@@ -395,7 +395,7 @@ class PodcastFeedRepositoryMixin:
         ).limit(size + 1)
 
         result = await self.db.execute(query)
-        rows = list(result.scalars().all())
+        rows = list(result.unique().scalars().all())
 
         has_more = len(rows) > size
         episodes = rows[:size]
