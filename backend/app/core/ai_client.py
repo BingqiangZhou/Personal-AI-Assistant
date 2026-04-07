@@ -73,6 +73,88 @@ def looks_like_html_error_page(text: str) -> bool:
     return any(marker in lowered for marker in markers)
 
 
+def _build_chat_url(base_url: str) -> str:
+    """Ensure the URL ends with /chat/completions."""
+    if base_url.endswith("/chat/completions"):
+        return base_url
+    return f"{base_url.rstrip('/')}/chat/completions"
+
+
+async def _make_ai_http_request(
+    session: aiohttp.ClientSession,
+    *,
+    url: str,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    timeout: aiohttp.ClientTimeout,
+    model_label: str = "unknown",
+) -> str:
+    """Shared HTTP request logic for AI API calls.
+
+    Sends a POST request, validates the response, and returns the
+    extracted content string from ``choices[0].message.content``.
+
+    Raises:
+        RetryableAIModelError: For retryable HTTP status codes.
+        HTTPException: For non-retryable failures or invalid responses.
+    """
+    async with session.post(url, headers=headers, json=payload, timeout=timeout) as response:
+        response_text = await response.text()
+        content_type = response.headers.get("Content-Type", "")
+
+        # Detect HTML error pages
+        if "text/html" in content_type.lower() or (
+            looks_like_html_error_page(response_text)
+            and "application/json" not in content_type.lower()
+        ):
+            raise HTTPException(
+                status_code=500,
+                detail="AI provider returned an HTML error page instead of JSON response",
+            )
+
+        # Handle non-200 status codes
+        if response.status != 200:
+            if is_retryable_http_status(response.status):
+                raise RetryableAIModelError(
+                    f"AI API transient error: {response.status} - {response_text[:200]}",
+                )
+            logger.error(
+                "AI API error %d for model %s: %s",
+                response.status,
+                model_label,
+                response_text[:200],
+            )
+            raise HTTPException(
+                status_code=502,
+                detail="AI service error. Please try again later.",
+            )
+
+        # Parse JSON response
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail="AI provider returned non-JSON response",
+            ) from exc
+
+        # Validate response structure
+        if "choices" not in result or not result["choices"]:
+            raise HTTPException(
+                status_code=500,
+                detail="Invalid response from AI API",
+            )
+
+        content = result["choices"][0].get("message", {}).get("content")
+        if not content or not isinstance(content, str):
+            raise HTTPException(
+                status_code=500,
+                detail="AI API returned empty or invalid content",
+            )
+
+        return content
+
+
 async def call_ai_api(
     model_config: Any,
     api_key: str,
@@ -107,121 +189,39 @@ async def call_ai_api(
     if len(prompt) > max_prompt_length:
         prompt = prompt[:max_prompt_length] + "\n\n[Content too long, truncated]"
 
-    # Build API URL
-    api_url = model_config.api_url
-    if not api_url.endswith("/chat/completions"):
-        api_url = (
-            f"{api_url}chat/completions"
-            if api_url.endswith("/")
-            else f"{api_url}/chat/completions"
-        )
-
-    # Build request
-    timeout = aiohttp.ClientTimeout(total=model_config.timeout_seconds)
+    url = _build_chat_url(model_config.api_url)
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
-    data = {
+    payload: dict[str, Any] = {
         "model": model_config.model_id,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": model_config.temperature or 0.7,
     }
     if model_config.max_tokens is not None:
-        data["max_tokens"] = model_config.max_tokens
+        payload["max_tokens"] = model_config.max_tokens
     if model_config.extra_config:
-        data.update(model_config.extra_config)
+        payload.update(model_config.extra_config)
 
-    # Make request
     session = await get_shared_http_session()
-    async with session.post(
-        api_url,
+    content = await _make_ai_http_request(
+        session,
+        url=url,
         headers=headers,
-        json=data,
-        timeout=timeout,
-    ) as response:
-        response_text = await response.text()
-        content_type = response.headers.get("Content-Type", "")
+        payload=payload,
+        timeout=aiohttp.ClientTimeout(total=model_config.timeout_seconds),
+        model_label=model_config.model_id,
+    )
 
-        # Check for HTML error page
-        if "text/html" in content_type.lower() or (
-            looks_like_html_error_page(response_text)
-            and "application/json" not in content_type.lower()
-        ):
-            raise HTTPException(
-                status_code=500,
-                detail="AI provider returned an HTML error page instead of JSON response",
-            )
+    # Check for HTML error in content
+    if looks_like_html_error_page(content):
+        raise HTTPException(
+            status_code=500,
+            detail="AI provider returned HTML error content inside the completion payload",
+        )
 
-        # Handle non-200 status codes
-        if response.status != 200:
-            error_text = response_text
-            if is_retryable_http_status(response.status):
-                raise RetryableAIModelError(
-                    f"AI API transient error: {response.status} - {error_text[:200]}",
-                )
-            # Non-retryable errors
-            if response.status == 400:
-                logger.error(
-                    "AI API bad request (400) for model %s: %s",
-                    model_config.model_id,
-                    error_text,
-                )
-                raise HTTPException(
-                    status_code=502,
-                    detail="AI service error. Please try again later.",
-                )
-            if response.status == 401:
-                logger.error(
-                    "AI API authentication failed (401) for model %s",
-                    model_config.model_id,
-                )
-                raise HTTPException(
-                    status_code=502,
-                    detail="AI service error. Please try again later.",
-                )
-            logger.error(
-                "AI API error %d for model %s: %s",
-                response.status,
-                model_config.model_id,
-                error_text,
-            )
-            raise HTTPException(
-                status_code=502,
-                detail="AI service error. Please try again later.",
-            )
-
-        # Parse JSON response
-        try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(
-                status_code=500,
-                detail="AI provider returned non-JSON response",
-            ) from exc
-
-        # Validate response structure
-        if "choices" not in result or not result["choices"]:
-            raise HTTPException(
-                status_code=500,
-                detail="Invalid response from AI API",
-            )
-
-        content = result["choices"][0].get("message", {}).get("content")
-        if not content or not isinstance(content, str):
-            raise HTTPException(
-                status_code=500,
-                detail="AI API returned empty or invalid content",
-            )
-
-        # Check for HTML error in content
-        if looks_like_html_error_page(content):
-            raise HTTPException(
-                status_code=500,
-                detail="AI provider returned HTML error content inside the completion payload",
-            )
-
-        return content
+    return content
 
 
 async def call_ai_api_with_retry(
@@ -564,95 +564,41 @@ class AIClientService:
     ) -> str:
         """Call a single model with per-model retry.
 
-        Builds the request from the model config + overrides, then
-        delegates to ``call_ai_api_with_retry``.
+        Uses ``_make_ai_http_request`` for the HTTP layer and wraps it
+        with retry + exponential backoff logic.
         """
-        # Build a synthetic prompt for call_ai_api compatibility
-        # (call_ai_api expects a single prompt string; we wrap messages)
-        # We use the lower-level call_ai_api directly to support messages.
         max_retries = settings.AI_CLIENT_MAX_RETRIES
         base_delay = settings.AI_CLIENT_BASE_DELAY
 
-        # Build URL
-        api_url = model.api_url
-        if not api_url.endswith("/chat/completions"):
-            api_url = (
-                f"{api_url}chat/completions"
-                if api_url.endswith("/")
-                else f"{api_url}/chat/completions"
-            )
-
-        # Build request payload
-        data: dict[str, Any] = {
+        url = _build_chat_url(model.api_url)
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        payload: dict[str, Any] = {
             "model": model.model_id,
             "messages": messages,
             "max_tokens": max_tokens or model.max_tokens or 1000,
             "temperature": temperature or model.temperature or 0.7,
         }
         if hasattr(model, "extra_config") and model.extra_config:
-            data.update(model.extra_config)
-
-        timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
+            payload.update(model.extra_config)
 
         session = await get_shared_http_session()
+        timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
         last_error: Exception | None = None
 
         for attempt in range(max_retries):
             try:
-                async with session.post(
-                    api_url,
+                content = await _make_ai_http_request(
+                    session,
+                    url=url,
                     headers=headers,
-                    json=data,
+                    payload=payload,
                     timeout=timeout,
-                ) as response:
-                    response_text = await response.text()
-                    content_type = response.headers.get("Content-Type", "")
-
-                    # Detect HTML error pages
-                    if "text/html" in content_type.lower() or (
-                        looks_like_html_error_page(response_text)
-                        and "application/json" not in content_type.lower()
-                    ):
-                        raise HTTPException(
-                            status_code=500,
-                            detail="AI provider returned an HTML error page instead of JSON response",
-                        )
-
-                    if response.status != 200:
-                        error_msg = f"HTTP {response.status}: {response_text[:200]}"
-                        if is_retryable_http_status(response.status):
-                            raise RetryableAIModelError(error_msg)
-                        raise HTTPException(
-                            status_code=500,
-                            detail=error_msg,
-                        )
-
-                    try:
-                        result = json.loads(response_text)
-                    except json.JSONDecodeError as exc:
-                        raise HTTPException(
-                            status_code=500,
-                            detail="AI provider returned non-JSON response",
-                        ) from exc
-
-                    if "choices" not in result or not result["choices"]:
-                        raise HTTPException(
-                            status_code=500,
-                            detail="Invalid response from AI API",
-                        )
-
-                    content = result["choices"][0].get("message", {}).get("content")
-                    if not content or not isinstance(content, str):
-                        raise HTTPException(
-                            status_code=500,
-                            detail="AI API returned empty or invalid content",
-                        )
-
-                    return content.strip()
+                    model_label=model.model_id,
+                )
+                return content.strip()
 
             except (aiohttp.ClientError, TimeoutError, RetryableAIModelError) as exc:
                 last_error = exc
