@@ -118,6 +118,29 @@ class PodcastSubscriptionListResponse(PodcastBaseSchema):
     pages: int
 
 
+class SubscriptionDeleteResponse(BaseSchema):
+    """Response for DELETE /subscriptions/{id}."""
+
+    success: bool = True
+    message: str = "Subscription deleted"
+    subscription_id: int
+
+
+class SubscriptionRefreshResponse(BaseSchema):
+    """Response for POST /subscriptions/{id}/refresh."""
+
+    success: bool = True
+    new_episodes: int = 0
+    message: str = ""
+
+
+class SubscriptionReparseResponse(BaseSchema):
+    """Response for POST /subscriptions/{id}/reparse."""
+
+    success: bool = True
+    result: dict[str, Any] = {}
+
+
 # === Episode相关 ===
 
 

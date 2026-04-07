@@ -25,6 +25,9 @@ from app.domains.podcast.schemas import (
     PodcastSubscriptionResponse,
     ScheduleConfigResponse,
     ScheduleConfigUpdate,
+    SubscriptionDeleteResponse,
+    SubscriptionRefreshResponse,
+    SubscriptionReparseResponse,
 )
 from app.domains.podcast.services.schedule_service import PodcastScheduleService
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
@@ -160,6 +163,7 @@ async def get_subscription(
 
 @router.delete(
     "/{subscription_id}",
+    response_model=SubscriptionDeleteResponse,
     summary="Delete podcast subscription",
 )
 async def delete_subscription(
@@ -169,12 +173,12 @@ async def delete_subscription(
     success = await service.remove_subscription(subscription_id)
     if not success:
         raise HTTPException(status_code=404, detail="Subscription not found") from None
-    # TODO: Add a proper response model (e.g. ActionSuccessResponse) instead of raw dict
-    return {"success": True, "message": "Subscription deleted"}
+    return SubscriptionDeleteResponse(subscription_id=subscription_id)
 
 
 @router.post(
     "/{subscription_id}/refresh",
+    response_model=SubscriptionRefreshResponse,
     summary="Refresh podcast subscription",
 )
 async def refresh_subscription(
@@ -183,12 +187,10 @@ async def refresh_subscription(
 ):
     try:
         new_episodes = await service.refresh_subscription(subscription_id)
-        # TODO: Add a proper response model (e.g. RefreshResponse) instead of raw dict
-        return {
-            "success": True,
-            "new_episodes": len(new_episodes),
-            "message": f"Updated, found {len(new_episodes)} new episodes",
-        }
+        return SubscriptionRefreshResponse(
+            new_episodes=len(new_episodes),
+            message=f"Updated, found {len(new_episodes)} new episodes",
+        )
     except SubscriptionNotFoundError:
         raise HTTPException(status_code=404, detail="Subscription not found") from None
     except ValueError as exc:
@@ -199,6 +201,7 @@ async def refresh_subscription(
 
 @router.post(
     "/{subscription_id}/reparse",
+    response_model=SubscriptionReparseResponse,
     summary="Reparse podcast subscription",
 )
 async def reparse_subscription(
@@ -210,8 +213,7 @@ async def reparse_subscription(
         result = await service.reparse_subscription(
             subscription_id, force_all=force_all
         )
-        # TODO: Add a proper response model (e.g. ReparseResponse) instead of raw dict
-        return {"success": True, "result": result}
+        return SubscriptionReparseResponse(result=result)
     except SubscriptionNotFoundError:
         raise HTTPException(status_code=404, detail="Subscription not found") from None
     except ValueError as exc:
