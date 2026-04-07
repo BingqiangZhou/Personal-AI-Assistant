@@ -57,4 +57,28 @@ class EpisodeCacheDao extends DatabaseAccessor<AppDatabase>
           ..where((t) => t.subscriptionId.equals(subscriptionId)))
         .go();
   }
+
+  /// Removes entries older than [maxAge].
+  Future<int> evictStaleEntries({Duration maxAge = const Duration(days: 7)}) {
+    final cutoff = DateTime.now().subtract(maxAge);
+    return (delete(episodesCache)
+          ..where((t) => t.updatedAt.isSmallerThanValue(cutoff)))
+        .go();
+  }
+
+  /// Watches episodes, optionally filtered by subscription and limited.
+  Stream<List<EpisodesCacheData>> watchFiltered({
+    int? subscriptionId,
+    int? limit,
+  }) {
+    var query = select(episodesCache)
+      ..orderBy([(t) => OrderingTerm.desc(t.publishedAt)]);
+    if (subscriptionId != null) {
+      query = query..where((t) => t.subscriptionId.equals(subscriptionId));
+    }
+    if (limit != null) {
+      query = query..limit(limit);
+    }
+    return query.watch();
+  }
 }

@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +44,13 @@ class AppDatabase extends _$AppDatabase {
           "WHEN status = 'failed' THEN 3 "
           "WHEN status = 'paused' THEN 4 "
           "ELSE 0 END",
+        );
+      }
+      if (from < 5) {
+        // Add composite index for efficient episode lookups by subscription
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_episodes_cache_subscription_published '
+          'ON episodes_cache (subscription_id, published_at DESC)',
         );
       }
     },
