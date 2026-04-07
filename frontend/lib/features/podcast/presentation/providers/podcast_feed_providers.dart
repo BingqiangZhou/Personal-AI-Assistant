@@ -7,6 +7,7 @@ import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/base/deduplicating_notifier.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_core_providers.dart';
 
 final podcastFeedProvider =
@@ -14,9 +15,9 @@ final podcastFeedProvider =
       PodcastFeedNotifier.new,
     );
 
-class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
+class PodcastFeedNotifier extends Notifier<PodcastFeedState>
+    with DeduplicatingNotifier<PodcastFeedState> {
   PodcastRepository get _repository => ref.read(podcastRepositoryProvider);
-  Future<void>? _inFlightInitialLoad;
 
   @override
   PodcastFeedState build() {
@@ -43,16 +44,11 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       return;
     }
 
-    final existingLoad = _inFlightInitialLoad;
-    if (existingLoad != null) {
-      return existingLoad;
-    }
+    await deduplicate(() async {
+      if (shouldShowInitialLoader) {
+        state = currentState.copyWith(isLoading: true, clearError: true);
+      }
 
-    if (shouldShowInitialLoader) {
-      state = currentState.copyWith(isLoading: true, clearError: true);
-    }
-
-    final loadFuture = () async {
       try {
         final response = await _repository.getPodcastFeed(
           page: 1,
@@ -72,12 +68,10 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       } catch (error) {
         logger.AppLogger.debug('[Error] Failed to load feed: $error');
 
-        // Check if this is an authentication error
         if (error is AuthenticationException) {
           logger.AppLogger.debug(
             'Authentication failed while loading feed, checking auth status.',
           );
-          // Trigger auth status check to update state and redirect to login
           ref.read(authProvider.notifier).checkAuthStatus();
         }
 
@@ -86,16 +80,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
           error: _extractReadableErrorMessage(error),
         );
       }
-    }();
-
-    _inFlightInitialLoad = loadFuture;
-    try {
-      await loadFuture;
-    } finally {
-      if (identical(_inFlightInitialLoad, loadFuture)) {
-        _inFlightInitialLoad = null;
-      }
-    }
+    });
   }
 
   Future<void> loadMoreFeed() async {
@@ -123,12 +108,10 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
     } catch (error) {
       logger.AppLogger.debug('[Error] Failed to load more feed: $error');
 
-      // Check if this is an authentication error
       if (error is AuthenticationException) {
         logger.AppLogger.debug(
           'Authentication failed while loading more feed, checking auth status.',
         );
-        // Trigger auth status check to update state and redirect to login
         ref.read(authProvider.notifier).checkAuthStatus();
       }
 
