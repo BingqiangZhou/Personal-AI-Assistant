@@ -25,7 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             plain_password.encode("utf-8"),
             hashed_password.encode("utf-8"),
         )
-    except Exception as exc:
+    except (ValueError, TypeError) as exc:
         logger.warning("Password verification failed: %s", type(exc).__name__)
         return False
 

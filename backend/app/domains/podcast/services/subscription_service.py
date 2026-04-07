@@ -174,13 +174,14 @@ class PodcastSubscriptionService:
             episodes_data=episodes_payload,
         )
 
-        try:
-            await self.redis.invalidate_subscription_list(self.user_id)
-        except Exception:
-            logger.warning(
-                "Failed to invalidate subscription list cache after add: user_id=%s",
-                self.user_id,
-            )
+        await safe_cache_invalidate(
+            lambda: self.redis.invalidate_subscription_list(self.user_id),
+            log_warning=logger.warning,
+            error_message=(
+                "Cache invalidation skipped: "
+                f"op=add cache=subscription_list user_id={self.user_id}"
+            ),
+        )
 
         logger.info(
             f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes",

@@ -407,7 +407,7 @@ class SubscriptionService:
                         or entry.published_at > latest_published_at
                     ):
                         latest_published_at = entry.published_at
-                except Exception as exc:
+                except (AttributeError, TypeError) as exc:
                     logger.warning("Error processing entry %s: %s", entry.id, exc)
                     if config.strict_mode:
                         raise
