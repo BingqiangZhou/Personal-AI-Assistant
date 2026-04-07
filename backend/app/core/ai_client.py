@@ -89,7 +89,7 @@ async def call_ai_api(
             - timeout_seconds: Request timeout
             - max_tokens: Optional max tokens
             - extra_config: Optional extra configuration dict
-            - get_temperature_float(): Method to get temperature
+            - temperature: Optional temperature parameter
         api_key: API key for authentication
         prompt: The prompt to send
         max_prompt_length: Maximum prompt length before truncation (defaults to settings.AI_CLIENT_MAX_PROMPT_LENGTH)
@@ -125,7 +125,7 @@ async def call_ai_api(
     data = {
         "model": model_config.model_id,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": model_config.get_temperature_float() or 0.7,
+        "temperature": model_config.temperature or 0.7,
     }
     if model_config.max_tokens is not None:
         data["max_tokens"] = model_config.max_tokens
@@ -587,13 +587,7 @@ class AIClientService:
             "model": model.model_id,
             "messages": messages,
             "max_tokens": max_tokens or model.max_tokens or 1000,
-            "temperature": temperature
-            or (
-                model.get_temperature_float()
-                if hasattr(model, "get_temperature_float")
-                else None
-            )
-            or 0.7,
+            "temperature": temperature or model.temperature or 0.7,
         }
         if hasattr(model, "extra_config") and model.extra_config:
             data.update(model.extra_config)

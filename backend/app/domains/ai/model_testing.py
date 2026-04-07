@@ -155,7 +155,7 @@ async def test_text_generation_model(
         "model": model.model_id,
         "messages": [{"role": "user", "content": test_prompt}],
         "max_tokens": 50,
-        "temperature": model.get_temperature_float() or 0.7,
+        "temperature": model.temperature or 0.7,
     }
 
     timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)

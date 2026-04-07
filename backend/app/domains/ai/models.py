@@ -4,7 +4,7 @@
 
 from enum import StrEnum
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.sql import func
 
 from app.core.database import Base
@@ -48,7 +48,7 @@ class AIModelConfig(Base):
 
     # 性能配置
     max_tokens = Column(Integer, nullable=True, comment="最大令牌数")
-    temperature = Column(String(10), nullable=True, comment="温度参数")
+    temperature = Column(Float, nullable=True, comment="温度参数")
     timeout_seconds = Column(Integer, default=300, comment="请求超时时间（秒）")
     max_retries = Column(Integer, default=3, comment="最大重试次数")
 
@@ -57,8 +57,8 @@ class AIModelConfig(Base):
     rate_limit_per_minute = Column(Integer, default=60, comment="每分钟请求限制")
 
     # 成本配置
-    cost_per_input_token = Column(String(20), nullable=True, comment="每输入令牌成本")
-    cost_per_output_token = Column(String(20), nullable=True, comment="每输出令牌成本")
+    cost_per_input_token = Column(Float, nullable=True, comment="每输入令牌成本")
+    cost_per_output_token = Column(Float, nullable=True, comment="每输出令牌成本")
 
     # 额外配置（JSON格式）
     extra_config = Column(JSON, default=dict, comment="额外配置参数")
@@ -100,33 +100,6 @@ class AIModelConfig(Base):
         return (
             f"<AIModelConfig(id={self.id}, name={self.name}, type={self.model_type})>"
         )
-
-    def get_cost_per_input_token_float(self) -> float | None:
-        """获取输入令牌成本的浮点数"""
-        try:
-            return (
-                float(self.cost_per_input_token) if self.cost_per_input_token else None
-            )
-        except (ValueError, TypeError):
-            return None
-
-    def get_cost_per_output_token_float(self) -> float | None:
-        """获取输出令牌成本的浮点数"""
-        try:
-            return (
-                float(self.cost_per_output_token)
-                if self.cost_per_output_token
-                else None
-            )
-        except (ValueError, TypeError):
-            return None
-
-    def get_temperature_float(self) -> float | None:
-        """获取温度参数的浮点数"""
-        try:
-            return float(self.temperature) if self.temperature else None
-        except (ValueError, TypeError):
-            return None
 
     def get_success_rate(self) -> float:
         """获取成功率"""

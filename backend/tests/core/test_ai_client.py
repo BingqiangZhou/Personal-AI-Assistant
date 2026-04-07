@@ -102,7 +102,7 @@ def _make_model_config(**overrides: Any) -> Any:
     config = MagicMock()
     for key, val in defaults.items():
         setattr(config, key, val)
-    config.get_temperature_float = MagicMock(return_value=0.7)
+    config.temperature = 0.7
     return config
 
 
@@ -126,7 +126,7 @@ def _make_model(name="gpt-4o", provider="openai", priority=1) -> MagicMock:
     model.max_tokens = 1000
     model.is_active = True
     model.extra_config = None
-    model.get_temperature_float = MagicMock(return_value=0.7)
+    model.temperature = 0.7
     return model
 
 
