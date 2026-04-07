@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
@@ -206,7 +207,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(36),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.smRadius,
                       ),
                     ),
                     icon: const Icon(Icons.computer, size: 16),
@@ -274,7 +275,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smRadius,
         border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(

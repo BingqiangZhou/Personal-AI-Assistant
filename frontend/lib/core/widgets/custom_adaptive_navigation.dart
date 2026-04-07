@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -358,7 +359,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
       width: 38,
       height: 38,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smRadius,
         child: Image.asset('assets/icons/Logo3.png', fit: BoxFit.contain),
       ),
     );
@@ -586,7 +587,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
           splashColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
           highlightColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
           child: Padding(
@@ -613,7 +614,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
                             )
                           : null,
                       color: isSelected ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdLgRadius,
                     ),
                     child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
@@ -708,8 +709,8 @@ class _CleanSidebar extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant,
         borderRadius: expanded
-            ? const BorderRadius.horizontal(right: Radius.circular(14))
-            : BorderRadius.circular(16),
+            ? const BorderRadius.horizontal(right: Radius.circular(AppRadius.lg))
+            : AppRadius.lgXlRadius,
       ),
       child: child,
     );

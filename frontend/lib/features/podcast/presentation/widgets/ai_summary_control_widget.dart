@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -403,7 +404,7 @@ class _AISummaryControlWidgetState
                       ),
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                        borderRadius: AppRadius.xsRadius,
                       ),
                       child: Text(
                         l10n.podcast_default_model,

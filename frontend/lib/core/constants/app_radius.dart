@@ -30,7 +30,9 @@ class AppRadius {
   static const double xs = 6;
   static const double sm = 8;
   static const double md = 10;
+  static const double mdLg = 12;
   static const double lg = 14;
+  static const double lgXl = 16;
   static const double xl = 20;
   static const double xxl = 28;
   static const double pill = 999;
@@ -42,7 +44,9 @@ class AppRadius {
   static BorderRadius get xsRadius => BorderRadius.circular(xs);
   static BorderRadius get smRadius => BorderRadius.circular(sm);
   static BorderRadius get mdRadius => BorderRadius.circular(md);
+  static BorderRadius get mdLgRadius => BorderRadius.circular(mdLg);
   static BorderRadius get lgRadius => BorderRadius.circular(lg);
+  static BorderRadius get lgXlRadius => BorderRadius.circular(lgXl);
   static BorderRadius get xlRadius => BorderRadius.circular(xl);
   static BorderRadius get xxlRadius => BorderRadius.circular(xxl);
   static BorderRadius get card => BorderRadius.circular(cardValue);
@@ -60,8 +64,12 @@ class AppRadius {
       RoundedRectangleBorder(borderRadius: smRadius);
   static RoundedRectangleBorder get mdShape =>
       RoundedRectangleBorder(borderRadius: mdRadius);
+  static RoundedRectangleBorder get mdLgShape =>
+      RoundedRectangleBorder(borderRadius: mdLgRadius);
   static RoundedRectangleBorder get lgShape =>
       RoundedRectangleBorder(borderRadius: lgRadius);
+  static RoundedRectangleBorder get lgXlShape =>
+      RoundedRectangleBorder(borderRadius: lgXlRadius);
   static RoundedRectangleBorder get xlShape =>
       RoundedRectangleBorder(borderRadius: xlRadius);
   static RoundedRectangleBorder get xxlShape =>

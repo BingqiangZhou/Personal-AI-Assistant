@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -128,7 +129,7 @@ class _ScoreRow extends StatelessWidget {
               color.withValues(alpha: 0.85),
             ),
             minHeight: barHeight,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadius.pillRadius,
           ),
         ),
         const SizedBox(width: 6),

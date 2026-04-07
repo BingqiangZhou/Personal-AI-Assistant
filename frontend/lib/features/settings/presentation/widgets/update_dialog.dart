@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
@@ -298,7 +300,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdLgRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +436,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdLgRadius,
           ),
           child: releaseNotes.isEmpty
               ? Text(
@@ -479,7 +481,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     codeblockPadding: const EdgeInsets.all(12),
                     codeblockDecoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdLgRadius,
                       border: Border.all(
                         color: theme.colorScheme.outlineVariant,
                       ),
@@ -487,7 +489,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     blockquotePadding: const EdgeInsets.all(12),
                     blockquoteDecoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdLgRadius,
                       border: Border(
                         left: BorderSide(color: palette.accent, width: 3),
                       ),

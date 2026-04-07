@@ -138,7 +138,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
       key: Key('episode_detail_mobile_tab_$tabIndex'),
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.mdRadius,
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -162,7 +162,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
                   height: 2,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: AppRadius.pillRadius,
                   ),
                 )
               else
@@ -181,7 +181,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
       key: const Key('podcast_episode_detail_chat_button'),
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.mdRadius,
         onTap: _openChatDrawer,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -231,7 +231,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
           ? colorScheme.primary.withValues(alpha: 0.16)
           : Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgRadius,
         side: BorderSide(
           color: isSelected
               ? colorScheme.primary.withValues(alpha: 0.35)
@@ -239,7 +239,7 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgRadius,
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.fromLTRB(

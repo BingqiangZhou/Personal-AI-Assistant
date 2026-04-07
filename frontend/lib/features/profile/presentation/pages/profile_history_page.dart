@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
@@ -371,7 +372,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                           color: Theme.of(
                                             context,
                                           ).colorScheme.primary,
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: AppRadius.mdRadius,
                                         ),
                                         child: Text(
                                           episode.subscriptionTitle ??

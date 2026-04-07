@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -565,7 +566,7 @@ class ContentImageShareService {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdLgRadius,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -740,7 +741,7 @@ class ContentImageShareService {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: bubbleColor,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: AppRadius.lgRadius,
               border: Border.all(color: borderColor),
             ),
             child: Column(
@@ -961,7 +962,7 @@ class ContentImageShareService {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: AppRadius.lgXlRadius,
                       border: Border.all(color: Colors.black38),
                     ),
                     child: Text(
@@ -979,7 +980,7 @@ class ContentImageShareService {
                     padding: EdgeInsets.all(contentPadding),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdLgRadius,
                       border: Border.all(color: Colors.black38, width: 1.1),
                     ),
                     child: body,

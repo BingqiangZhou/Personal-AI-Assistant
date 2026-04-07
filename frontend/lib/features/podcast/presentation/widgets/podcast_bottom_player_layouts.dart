@@ -80,7 +80,7 @@ class _PodcastMiniDock extends ConsumerWidget {
             color: Colors.transparent,
             elevation: 4,
             shadowColor: Colors.black.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppRadius.lgRadius,
             clipBehavior: Clip.antiAlias,
             child: _MiniDockBody(
               episode: episode,
@@ -134,7 +134,7 @@ class _MiniDockBody extends ConsumerWidget {
         gradient: LinearGradient(
           colors: identityGradientColors,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgRadius,
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
       child: Row(
@@ -184,7 +184,7 @@ class _MiniDockBody extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: AppRadius.pillRadius,
                             child: const _MiniProgressIndicator(),
                           ),
                         ),
@@ -355,7 +355,7 @@ class _ExpandedPanelContent extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: AppRadius.pillRadius,
                 ),
               ),
             ),

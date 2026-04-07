@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
@@ -56,7 +57,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       return null;
     }
     return RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppRadius.mdLgRadius,
     );
   }
 
@@ -82,7 +83,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           }
         },
         offset: const Offset(0, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xlRadius),
         itemBuilder: (context) => [
           PopupMenuItem<String>(
             enabled: false,
@@ -472,7 +473,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdLgRadius,
                   ),
                   child: Row(
                     children: [

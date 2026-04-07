@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
@@ -388,7 +389,7 @@ class _ProfileCacheManagementPageState
     final emptyFlex = 1000 - imagesFlex - audioFlex - otherFlex;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: AppRadius.mdRadius,
       child: SizedBox(
         height: 12,
         child: Row(
@@ -473,7 +474,7 @@ class _ProfileCacheManagementPageState
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppRadius.xlRadius,
           border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
@@ -583,7 +584,7 @@ class _ProfileCacheManagementPageState
               height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdLgRadius,
               ),
               child: Icon(icon, color: color, size: 20),
             ),
@@ -716,7 +717,7 @@ class _ProfileCacheManagementPageState
                             ? 0.24
                             : 0.16,
                       ),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: AppRadius.lgRadius,
                     ),
                     child: Row(
                       children: [

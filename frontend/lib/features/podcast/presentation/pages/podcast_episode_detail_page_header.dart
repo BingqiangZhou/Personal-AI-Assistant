@@ -322,11 +322,11 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
         key: key,
         color: resolvedColor.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadius.pillRadius,
           side: BorderSide(color: resolvedColor.withValues(alpha: 0.18)),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadius.pillRadius,
           onTap: onTap,
           child: iconOnly
               ? SizedBox(

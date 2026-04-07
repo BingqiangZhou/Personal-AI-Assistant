@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
@@ -302,7 +303,7 @@ class _QueueInfoChip extends StatelessWidget {
         color: emphasized
             ? theme.colorScheme.primary.withValues(alpha: 0.12)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadius.pillRadius,
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),
@@ -961,7 +962,7 @@ class _EqualizerBadge extends StatelessWidget {
                     height: height,
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: AppRadius.pillRadius,
                     ),
                   ),
                 ),

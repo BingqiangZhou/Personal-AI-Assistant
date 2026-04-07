@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/font_combination.dart';
 import 'package:personal_ai_assistant/core/theme/responsive_helpers.dart';
@@ -280,15 +281,15 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
           borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
           borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         errorBorder: _inputBorder(extension, scheme.error),
@@ -299,7 +300,7 @@ class AppTheme {
         iconColor: scheme.onSurfaceVariant,
         textColor: scheme.onSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
         ),
       ),
       chipTheme: ChipThemeData(

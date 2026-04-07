@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/glass/surface_card.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -32,7 +33,7 @@ class HighlightCard extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadius.xlRadius,
         child: SurfaceCard(
           borderRadius: 22,
           padding: EdgeInsets.fromLTRB(
@@ -89,7 +90,7 @@ class HighlightCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: scoreColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadius.pillRadius,
         border: Border.all(color: scoreColor.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -145,7 +146,7 @@ class HighlightCard extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadius.lgRadius,
           border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
@@ -253,7 +254,7 @@ class HighlightCard extends ConsumerWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadius.pillRadius,
           ),
         );
       }).toList(),

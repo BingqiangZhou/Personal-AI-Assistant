@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart' show BaseEpisodeCard;
 
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
@@ -82,7 +83,7 @@ class EpisodeCardSkeleton extends StatelessWidget {
     return ShimmerLoading(
       child: Card(
         margin: cardMargin ?? (compact ? const EdgeInsets.symmetric(horizontal: 4, vertical: 6) : null),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: AppRadius.mdLgShape,
         child: Padding(
           padding: padding,
           child: Column(

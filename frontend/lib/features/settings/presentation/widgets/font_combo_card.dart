@@ -145,7 +145,7 @@ class FontComboCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: scheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.xs),
+                borderRadius: AppRadius.xsRadius,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

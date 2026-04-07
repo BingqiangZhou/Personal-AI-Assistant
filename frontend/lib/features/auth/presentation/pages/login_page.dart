@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -139,7 +140,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 color: Colors.transparent,
                 child: InkWell(
                   onLongPress: _showServerConfigDialog,
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.xxlRadius,
                   child: SizedBox(
                     width: 96,
                     height: 96,
@@ -215,7 +216,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           width: 2,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: AppRadius.xsRadius,
                         ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onChanged: (value) async {

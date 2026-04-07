@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -385,15 +386,15 @@ class TranscriptDisplayWidgetState
                       )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.xxlRadius,
                   borderSide: BorderSide(color: scheme.outline),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.xxlRadius,
                   borderSide: BorderSide(color: scheme.outline),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.xxlRadius,
                   borderSide: BorderSide(
                     color: scheme.primary,
                     width: 2,
@@ -937,7 +938,7 @@ class FormattedTranscriptWidget extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AppRadius.xsRadius,
                       border: Border.all(
                         color: scheme.primary.withValues(alpha: 0.3),
                       ),

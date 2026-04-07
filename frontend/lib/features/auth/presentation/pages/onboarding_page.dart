@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/glass/glass_background.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -139,7 +140,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             color: isActive
                                 ? scheme.primary
                                 : scheme.outlineVariant,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: AppRadius.xsRadius,
                           ),
                         );
                       }),
@@ -156,7 +157,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.mdLgRadius,
                           ),
                         ),
                         child: Text(

@@ -75,10 +75,10 @@ class _PlaybackSpeedChip extends StatelessWidget {
     final theme = Theme.of(context);
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgRadius,
       child: InkWell(
         key: const Key('podcast_bottom_player_speed'),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgRadius,
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -307,7 +307,7 @@ class _CoverImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgRadius,
       child: SizedBox(
         width: size,
         height: size,
