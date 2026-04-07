@@ -269,6 +269,9 @@ class AuthNotifier extends Notifier<AuthState> {
         expiresIn: authResponse.expiresIn,
       );
 
+      // Populate in-memory token cache to avoid SecureStorage round-trips
+      ref.read(dioClientProvider).setToken(authResponse.accessToken);
+
       // Fetch user info after successful login
       try {
         final user = await _authRepository.getCurrentUser();
@@ -324,6 +327,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
     try {
       final authResponse = await _authRepository.register(request);
+
+      // Populate in-memory token cache to avoid SecureStorage round-trips
+      ref.read(dioClientProvider).setToken(authResponse.accessToken);
 
       await _saveTokenExpiry(
         expiresAt: authResponse.expiresAt,
