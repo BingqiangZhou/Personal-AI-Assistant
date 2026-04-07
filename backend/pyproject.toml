@@ -15,7 +15,6 @@ dependencies = [
     "alembic>=1.18.4",
     "redis>=7.3.0",
     "orjson>=3.10.0",
-    "python-jose[cryptography]>=3.5.0",
     "passlib[bcrypt]>=1.7.4",
     "python-multipart>=0.0.22",
     "celery>=5.6.2",
@@ -36,6 +35,8 @@ dependencies = [
     "psutil>=7.2.2",
     "pyotp>=2.9.0",
     "qrcode[pil]>=8.2",
+    "pyjwt>=2.12.1",
+    "cryptography>=46.0.6",
 ]
 
 [project.optional-dependencies]

@@ -7,7 +7,8 @@ from datetime import timedelta
 from typing import Any
 
 from fastapi import Depends, Header, HTTPException, Query, status
-from jose import JWTError, jwt
+import jwt as pyjwt
+from jwt.exceptions import InvalidTokenError as JWTError
 
 from app.core.config import settings
 
@@ -68,7 +69,7 @@ async def create_access_token(
 
     # HS256 is already highly optimized in python-jose (uses pyca/cryptography)
     # The jose library will cache the key internally
-    encoded_jwt = jwt.encode(
+    encoded_jwt = pyjwt.encode(
         claims,
         settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
@@ -108,7 +109,7 @@ async def create_refresh_token(
     )
     claims["jti"] = jti
 
-    encoded_jwt = jwt.encode(
+    encoded_jwt = pyjwt.encode(
         claims,
         settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
@@ -132,7 +133,7 @@ async def verify_token(token: str, token_type: str = "access") -> dict:
     try:
         logger.debug("Verifying token")
 
-        payload = jwt.decode(
+        payload = pyjwt.decode(
             token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],

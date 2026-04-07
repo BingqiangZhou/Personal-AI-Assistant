@@ -4,7 +4,7 @@ import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from jose import jwt
+import jwt as pyjwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -60,7 +60,7 @@ def generate_password_reset_token(email: str) -> str:
     now = datetime.now(UTC)
     expires = now + delta
     exp = expires.timestamp()
-    encoded_jwt = jwt.encode(
+    encoded_jwt = pyjwt.encode(
         {"exp": exp, "nbf": now, "sub": email},
         settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
@@ -71,13 +71,13 @@ def generate_password_reset_token(email: str) -> str:
 def verify_password_reset_token(token: str) -> str | None:
     """Verify password reset token."""
     try:
-        decoded_token = jwt.decode(
+        decoded_token = pyjwt.decode(
             token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],
         )
         return decoded_token["sub"]
-    except jwt.JWTError:
+    except pyjwt.InvalidTokenError:
         return None
 
 

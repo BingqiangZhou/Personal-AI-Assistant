@@ -220,12 +220,12 @@ class TestInvalidTokenRejection:
     @pytest.mark.asyncio
     async def test_wrong_secret_key_rejected(self, sample_payload: dict) -> None:
         """Token signed with a different key must be rejected."""
-        from jose import jwt
+        import jwt as pyjwt
 
         from app.core.config import settings
 
         # Forge a token with a different secret
-        forged = jwt.encode(
+        forged = pyjwt.encode(
             {"sub": "99", "exp": int(time.time()) + 3600, "iat": int(time.time())},
             "wrong-secret-key-not-the-real-one",
             algorithm=settings.ALGORITHM,
