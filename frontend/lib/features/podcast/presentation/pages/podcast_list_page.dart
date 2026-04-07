@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
-import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/debounce.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/linear_section_header.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
@@ -18,14 +15,13 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/country_selector_dropdown.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_charts_list.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/sections/discover_interaction_handler.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/sections/search_mode_toggle.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_search_input.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_top_charts_section.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover_episode_detail_sheet.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover_show_episodes_sheet.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/search/podcast_search_results_list.dart';
 
-/// Podcast list/discover page with search and top charts
+/// Podcast list/discover page with search and top charts.
 class PodcastListPage extends ConsumerStatefulWidget {
   const PodcastListPage({super.key});
 
@@ -61,12 +57,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     super.dispose();
   }
 
-  // Tab and category selection
   void _handleDiscoverTabSelected(search.PodcastSearchMode mode) {
     ref.read(search.podcastSearchProvider.notifier).setSearchMode(mode);
-    ref
-        .read(podcastDiscoverProvider.notifier)
-        .setTab(
+    ref.read(podcastDiscoverProvider.notifier).setTab(
           mode == search.PodcastSearchMode.podcasts
               ? PodcastDiscoverTab.podcasts
               : PodcastDiscoverTab.episodes,
@@ -79,7 +72,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     _resetDiscoverListScroll();
   }
 
-  // Search handling
   void _onSearchChanged(String query) {
     if (query.trim().isEmpty) {
       _searchDebounce?.cancel();
@@ -105,7 +97,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     _searchFocusNode.requestFocus();
   }
 
-  // Scroll handling
   void _onDiscoverListScroll() {
     if (!_discoverListScrollController.hasClients) return;
     final position = _discoverListScrollController.position;
@@ -116,28 +107,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   void _resetDiscoverListScroll() {
     if (!_discoverListScrollController.hasClients) return;
     _discoverListScrollController.jumpTo(0);
-  }
-
-  // Subscription handlers
-  Future<void> _handleSubscribeFromSearch(PodcastSearchResult result) async {
-    final l10n = context.l10n;
-    final feedUrl = result.feedUrl;
-    final collectionName = result.collectionName;
-    if (feedUrl == null || collectionName == null) {
-      _showErrorNotice(l10n.podcast_subscribe_failed('Invalid podcast data'));
-      return;
-    }
-
-    try {
-      await ref
-          .read(podcastSubscriptionProvider.notifier)
-          .addSubscription(feedUrl: feedUrl);
-      if (!mounted) return;
-      _showSuccessNotice(l10n.podcast_subscribe_success(collectionName));
-    } catch (error) {
-      if (!mounted) return;
-      _showErrorNotice(l10n.podcast_subscribe_failed(error.toString()));
-    }
   }
 
   Future<void> _handleSubscribeFromChart(PodcastDiscoverItem item) async {
@@ -164,258 +133,20 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
       if (!mounted) return;
       setState(() => _subscribedShowIds.add(itunesId));
-      _showSuccessNotice(
-        l10n.podcast_subscribe_success(lookup?.collectionName ?? item.title),
+      showTopFloatingNotice(
+        context,
+        message: l10n.podcast_subscribe_success(lookup?.collectionName ?? item.title),
       );
     } catch (error) {
       if (!mounted) return;
-      _showErrorNotice(l10n.podcast_subscribe_failed(error.toString()));
+      showTopFloatingNotice(
+        context,
+        message: l10n.podcast_subscribe_failed(error.toString()),
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _subscribingShowIds.remove(itunesId));
     }
-  }
-
-  // Episode/play handlers
-  Future<void> _handleEpisodeTap(ITunesPodcastEpisodeResult episode) async {
-    final resolved = await _resolveEpisodeForSearchResult(episode);
-    if (!mounted || resolved == null) {
-      if (mounted) _showErrorNotice(context.l10n.podcast_failed_load_episodes);
-      return;
-    }
-    await _showEpisodeDetailSheetFromSearch(resolved);
-  }
-
-  Future<void> _handleEpisodePlay(ITunesPodcastEpisodeResult episode) async {
-    final resolved = await _resolveEpisodeForSearchResult(episode);
-    if (!mounted || resolved == null) {
-      if (mounted) _showErrorNotice(context.l10n.podcast_player_no_audio);
-      return;
-    }
-    await _playDiscoverEpisode(episode: resolved, showId: resolved.collectionId);
-  }
-
-  Future<void> _handleChartRowTap(PodcastDiscoverItem item) async {
-    if (item.isPodcastShow) {
-      await _showPodcastEpisodeInfoSheet(item);
-    } else {
-      await _showEpisodeDetailSheet(item);
-    }
-  }
-
-  Future<void> _playEpisodeFromChartRow(PodcastDiscoverItem item) async {
-    final selection = await _resolveDiscoverEpisodeSelection(item);
-    if (selection != null) {
-      await _playDiscoverEpisode(
-        episode: selection.episode,
-        showId: selection.showId,
-      );
-    }
-  }
-
-  // Sheet display helpers
-  Future<void> _showPodcastEpisodeInfoSheet(PodcastDiscoverItem item) async {
-    final l10n = context.l10n;
-    final country = ref.read(countrySelectorProvider).selectedCountry;
-    final showId = _resolveShowIdForPodcast(item);
-    if (showId == null) {
-      _showErrorNotice(l10n.podcast_failed_load_episodes);
-      return;
-    }
-
-    try {
-      final searchService = ref.read(search.iTunesSearchServiceProvider);
-      final lookup = await searchService.lookupPodcastEpisodes(
-        showId: showId,
-        country: country,
-      );
-      if (!mounted || lookup.episodes.isEmpty) {
-        if (mounted) _showErrorNotice(l10n.podcast_no_episodes_found);
-        return;
-      }
-
-      await showAdaptiveSheet<void>(
-        context: context,
-        builder: (sheetContext) {
-          return ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(sheetContext).size.height * 0.8,
-            ),
-            child: DiscoverShowEpisodesSheet(
-              showId: showId,
-              showTitle: lookup.collectionName ?? item.title,
-              episodes: lookup.episodes,
-              onEpisodeSelected: (episode) {
-                Navigator.of(sheetContext).pop();
-                _showEpisodeDetailSheetFromSearch(episode);
-              },
-              onPlayEpisode: (episode) {
-                Navigator.of(sheetContext).pop();
-                _playDiscoverEpisode(episode: episode, showId: showId);
-              },
-            ),
-          );
-        },
-      );
-    } catch (e) {
-      logger.AppLogger.debug('[Discover] Failed to show podcast episodes: $e');
-      _showErrorNotice(l10n.podcast_failed_load_episodes);
-    }
-  }
-
-  Future<void> _showEpisodeDetailSheet(PodcastDiscoverItem item) async {
-    final selection = await _resolveDiscoverEpisodeSelection(item);
-    if (selection == null || !mounted) return;
-
-    await showAdaptiveSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(sheetContext).size.height * 0.9,
-          ),
-          child: DiscoverEpisodeDetailSheet(
-            episode: selection.episode,
-            onPlay: () {
-              Navigator.of(sheetContext).pop();
-              _playDiscoverEpisode(
-                episode: selection.episode,
-                showId: selection.showId,
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showEpisodeDetailSheetFromSearch(
-      ITunesPodcastEpisodeResult episode) async {
-    await showAdaptiveSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(sheetContext).size.height * 0.9,
-          ),
-          child: DiscoverEpisodeDetailSheet(
-            episode: episode,
-            onPlay: () {
-              Navigator.of(sheetContext).pop();
-              _playDiscoverEpisode(episode: episode, showId: episode.collectionId);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  // Resolution helpers
-  int? _resolveShowIdForPodcast(PodcastDiscoverItem item) {
-    final searchService = ref.read(search.iTunesSearchServiceProvider);
-    return item.itunesId ??
-        searchService.extractShowIdFromApplePodcastUrl(item.url);
-  }
-
-  Future<_DiscoverEpisodeSelection?> _resolveDiscoverEpisodeSelection(
-      PodcastDiscoverItem item) async {
-    final l10n = context.l10n;
-    final country = ref.read(countrySelectorProvider).selectedCountry;
-    final searchService = ref.read(search.iTunesSearchServiceProvider);
-    final showId = searchService.extractShowIdFromApplePodcastUrl(item.url);
-    final episodeTrackId =
-        searchService.extractEpisodeIdFromApplePodcastUrl(item.url) ??
-        item.itunesId;
-
-    if (showId == null || episodeTrackId == null) {
-      _showErrorNotice(l10n.podcast_failed_load_episodes);
-      return null;
-    }
-
-    try {
-      final episode = await searchService.findEpisodeInLookup(
-        showId: showId,
-        episodeTrackId: episodeTrackId,
-        country: country,
-      );
-      if (episode == null) {
-        _showErrorNotice(l10n.podcast_failed_load_episodes);
-        return null;
-      }
-      return _DiscoverEpisodeSelection(showId: showId, episode: episode);
-    } catch (e) {
-      logger.AppLogger.debug('[Discover] Failed to resolve episode selection: $e');
-      _showErrorNotice(l10n.podcast_failed_load_episodes);
-      return null;
-    }
-  }
-
-  Future<ITunesPodcastEpisodeResult?> _resolveEpisodeForSearchResult(
-      ITunesPodcastEpisodeResult episode) async {
-    if (episode.resolvedAudioUrl?.isNotEmpty == true) return episode;
-    final country = ref.read(countrySelectorProvider).selectedCountry;
-    final searchService = ref.read(search.iTunesSearchServiceProvider);
-    try {
-      return await searchService.findEpisodeInLookup(
-        showId: episode.collectionId,
-        episodeTrackId: episode.trackId,
-        country: country,
-      );
-    } catch (e) {
-      logger.AppLogger.debug('[Search] Failed to resolve episode: $e');
-      return null;
-    }
-  }
-
-  Future<void> _playDiscoverEpisode({
-    required ITunesPodcastEpisodeResult episode,
-    required int showId,
-  }) async {
-    final audioUrl = episode.resolvedAudioUrl;
-    if (audioUrl == null || audioUrl.isEmpty) {
-      _showErrorNotice(context.l10n.podcast_player_no_audio);
-      return;
-    }
-
-    final now = DateTime.now();
-    final discoverEpisode = PodcastEpisodeModel(
-      id: episode.trackId,
-      subscriptionId: 0,
-      title: episode.trackName,
-      subscriptionTitle: episode.collectionName,
-      description: episode.description ?? episode.shortDescription,
-      audioUrl: audioUrl,
-      audioDuration: switch (episode.trackTimeMillis) {
-        null => null,
-        final millis => (millis / 1000).round(),
-      },
-      publishedAt: episode.releaseDate ?? now,
-      imageUrl: episode.artworkUrl600 ?? episode.artworkUrl100,
-      itemLink: episode.trackViewUrl,
-      metadata: {
-        'discover_preview': true,
-        'source': 'top_charts',
-        'show_id': showId,
-        'track_id': episode.trackId,
-      },
-      createdAt: now,
-    );
-
-    try {
-      await ref.read(audioPlayerProvider.notifier).playEpisode(discoverEpisode);
-    } catch (e) {
-      logger.AppLogger.debug('[Discover] Failed to play episode: $e');
-      _showErrorNotice(context.l10n.podcast_player_no_audio);
-    }
-  }
-
-  void _showErrorNotice(String message) {
-    if (!mounted) return;
-    showTopFloatingNotice(context, message: message, isError: true);
-  }
-
-  void _showSuccessNotice(String message) {
-    if (!mounted) return;
-    showTopFloatingNotice(context, message: message);
   }
 
   Future<void> _openCountrySelector(BuildContext context) async {
@@ -454,9 +185,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final content = hasSearched
         ? PodcastSearchResultsList(
             searchState: searchState,
-            onEpisodeTap: _handleEpisodeTap,
-            onEpisodePlay: _handleEpisodePlay,
-            onPodcastSubscribe: _handleSubscribeFromSearch,
+            onEpisodeTap: (e) =>
+                DiscoverInteractionHandler.handleEpisodeTap(ref, context, e),
+            onEpisodePlay: (e) =>
+                DiscoverInteractionHandler.handleEpisodePlay(ref, context, e),
+            onPodcastSubscribe: (r) =>
+                DiscoverInteractionHandler.subscribeFromSearch(ref, context, r),
             isDense: isDense,
           )
         : _buildDiscoverContent(context, discoverState, isDense);
@@ -537,9 +271,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: DiscoverChartsList(
               state: discoverState,
               scrollController: _discoverListScrollController,
-              onItemTap: _handleChartRowTap,
+              onItemTap: (item) =>
+                  DiscoverInteractionHandler.handleChartRowTap(ref, context, item),
               onItemSubscribe: _handleSubscribeFromChart,
-              onItemPlay: _playEpisodeFromChartRow,
+              onItemPlay: (item) =>
+                  DiscoverInteractionHandler.playEpisodeFromChartRow(ref, context, item),
               subscribingShowIds: _subscribingShowIds,
               subscribedShowIds: _subscribedShowIds,
               isDense: isDense,
@@ -569,14 +305,4 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       ),
     );
   }
-}
-
-class _DiscoverEpisodeSelection {
-  const _DiscoverEpisodeSelection({
-    required this.showId,
-    required this.episode,
-  });
-
-  final int showId;
-  final ITunesPodcastEpisodeResult episode;
 }
