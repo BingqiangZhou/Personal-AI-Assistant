@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 from typing import Any
+
+import aiofiles
 
 from app.core.exceptions import ValidationError
 from app.core.http_client import get_shared_http_session
@@ -223,32 +226,33 @@ class AIModelRuntimeService:
         base_delay = 1.0
         for attempt in range(max_retries):
             try:
-                with open(audio_file_path, "rb") as audio_file:
-                    data.add_field(
-                        "file",
-                        audio_file,
-                        filename=os.path.basename(audio_file_path),
-                        content_type="audio/mpeg",
-                    )
-                    async with session.post(
-                        api_endpoint,
-                        headers=headers,
-                        data=data,
-                        timeout=timeout,
-                    ) as response:
-                        if response.status != 200:
-                            error_text = await response.text()
-                            message = f"API error: {response.status} - {error_text}"
-                            if _is_retryable_http_status(response.status):
-                                raise RetryableModelError(message)
-                            raise ValidationError(message)
+                async with aiofiles.open(audio_file_path, "rb") as f:
+                    audio_content = await f.read()
+                data.add_field(
+                    "file",
+                    audio_content,
+                    filename=os.path.basename(audio_file_path),
+                    content_type="audio/mpeg",
+                )
+                async with session.post(
+                    api_endpoint,
+                    headers=headers,
+                    data=data,
+                    timeout=timeout,
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        message = f"API error: {response.status} - {error_text}"
+                        if _is_retryable_http_status(response.status):
+                            raise RetryableModelError(message)
+                        raise ValidationError(message)
 
-                        result = await response.json()
-                        if "text" not in result:
-                            raise Exception(
-                                "Invalid response format: missing 'text' field",
-                            )
-                        return result["text"].strip()
+                    result = await response.json()
+                    if "text" not in result:
+                        raise Exception(
+                            "Invalid response format: missing 'text' field",
+                        )
+                    return result["text"].strip()
             except (aiohttp.ClientError, TimeoutError, RetryableModelError) as exc:
                 if attempt >= max_retries - 1:
                     logger.exception(

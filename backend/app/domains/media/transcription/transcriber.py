@@ -62,17 +62,18 @@ class SiliconFlowTranscriber:
         data = aiohttp.FormData()
         data.add_field("model", model)
         try:
-            with open(chunk.file_path, "rb") as file_obj:
-                data.add_field(
-                    "file",
-                    file_obj,
-                    filename=os.path.basename(chunk.file_path),
-                    content_type="audio/mpeg",
-                )
-                async with self.session.post(self.api_url, data=data) as response:
-                    if response.status != 200:
-                        return response.status, None, await response.text()
-                    return response.status, await response.json(), None
+            async with aiofiles.open(chunk.file_path, "rb") as f:
+                file_content = await f.read()
+            data.add_field(
+                "file",
+                file_content,
+                filename=os.path.basename(chunk.file_path),
+                content_type="audio/mpeg",
+            )
+            async with self.session.post(self.api_url, data=data) as response:
+                if response.status != 200:
+                    return response.status, None, await response.text()
+                return response.status, await response.json(), None
         except Exception:
             logger.exception(
                 "Chunk %s upload request failed for %s",

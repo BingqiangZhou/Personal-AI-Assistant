@@ -4,6 +4,7 @@
 Provides storage information query and cache file cleanup functionality
 """
 
+import asyncio
 import logging
 import os
 import shutil
@@ -122,14 +123,18 @@ class StorageCleanupService:
 
         # 获取 storage 目录信息
         storage_path = settings.TRANSCRIPTION_STORAGE_DIR
-        storage_count, storage_size = self._get_directory_size(storage_path)
+        storage_count, storage_size = await asyncio.to_thread(
+            self._get_directory_size, storage_path,
+        )
 
         # 获取 temp 目录信息
         temp_path = settings.TRANSCRIPTION_TEMP_DIR
-        temp_count, temp_size = self._get_directory_size(temp_path)
+        temp_count, temp_size = await asyncio.to_thread(
+            self._get_directory_size, temp_path,
+        )
 
         # 获取磁盘使用情况
-        disk_info = self._get_disk_usage(storage_path)
+        disk_info = await asyncio.to_thread(self._get_disk_usage, storage_path)
 
         result = {
             "storage": {
@@ -336,11 +341,15 @@ class StorageCleanupService:
 
         # 清理 storage 目录
         storage_path = settings.TRANSCRIPTION_STORAGE_DIR
-        storage_result = self._cleanup_directory(storage_path, keep_days)
+        storage_result = await asyncio.to_thread(
+            self._cleanup_directory, storage_path, keep_days,
+        )
 
         # 清理 temp 目录
         temp_path = settings.TRANSCRIPTION_TEMP_DIR
-        temp_result = self._cleanup_directory(temp_path, keep_days)
+        temp_result = await asyncio.to_thread(
+            self._cleanup_directory, temp_path, keep_days,
+        )
 
         # 汇总结果
         total_deleted = storage_result["deleted_count"] + temp_result["deleted_count"]
