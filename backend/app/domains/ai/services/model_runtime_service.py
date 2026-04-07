@@ -82,7 +82,7 @@ class AIModelRuntimeService:
                 response_time_ms=(time.time() - started_at) * 1000,
                 result=result,
             )
-        except Exception as exc:
+        except (ValueError, RuntimeError, OSError) as exc:
             await self.repo.increment_usage(model_id, success=False)
             logger.error("Model test failed: %s", exc)
             return ModelTestResponse(
@@ -132,7 +132,7 @@ class AIModelRuntimeService:
                     model.priority,
                 )
                 return result, model
-            except Exception as exc:
+            except (RetryableModelError, ValidationError, OSError, ValueError, RuntimeError) as exc:
                 last_error = exc
                 await self.repo.increment_usage(model.id, success=False)
                 logger.warning(
@@ -276,7 +276,7 @@ class AIModelRuntimeService:
                 )
             except ValidationError:
                 raise
-            except Exception:
+            except (OSError, KeyError, TypeError, AttributeError):
                 logger.exception(
                     "Transcription request unexpected failure model=%s provider=%s audio_path=%s",
                     model.name,

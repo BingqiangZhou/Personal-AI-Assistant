@@ -344,7 +344,7 @@ class TranscriptionWorkflowService:
 
                 skipped_count += 1
                 skipped_reasons[action] = skipped_reasons.get(action, 0) + 1
-            except Exception:
+            except (ValueError, RuntimeError, OSError):
                 failed_count += 1
                 logger.exception(
                     "Failed to dispatch backlog transcription for episode %s",

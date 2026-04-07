@@ -615,7 +615,7 @@ class ReportOrchestrator(BaseOrchestrator):
                         service = DailyReportService(session, user_id=user_id)
                         await service.generate_daily_report(target_date=target_date)
                         return True
-                except Exception:
+                except (aiohttp.ClientError, TimeoutError, ValueError, RuntimeError, OSError):
                     logger.exception(
                         "Failed to generate daily report for user=%s",
                         user_id,

@@ -6,6 +6,8 @@ import asyncio
 import json
 import logging
 import time
+
+import aiohttp
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -88,7 +90,7 @@ class HighlightModelManager(BaseModelManager):
                     "processing_time": total_processing_time,
                     "tokens_used": total_tokens_used,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except (aiohttp.ClientError, TimeoutError, ValueError, ValidationError, RuntimeError, OSError) as exc:  # noqa: BLE001
                 last_error = exc
                 logger.warning(
                     "Highlight extraction failed with model %s: %s",
@@ -540,7 +542,7 @@ class HighlightExtractionService:
                         episode_id, str(exc)
                     )
                     return "failed"
-                except Exception as exc:
+                except (aiohttp.ClientError, TimeoutError, RuntimeError, OSError) as exc:
                     logger.exception(
                         "Failed to extract highlights for episode %s", episode_id
                     )

@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import orjson
+import redis.exceptions
 
 from app.core.redis import get_shared_redis
 
@@ -285,7 +286,7 @@ class TranscriptionStateManager:
                 )
             return False
 
-        except Exception as e:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError, OSError) as e:
             logger.error(f"Failed to acquire lock for episode {episode_id}: {e}")
             return False
 
@@ -334,7 +335,7 @@ class TranscriptionStateManager:
             )
             return True
 
-        except Exception as e:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError, OSError) as e:
             logger.error(f"Failed to release lock for episode {episode_id}: {e}")
             return False
 
@@ -351,7 +352,7 @@ class TranscriptionStateManager:
         try:
             owner_task_id, _, _ = await self._resolve_lock_owner(episode_id)
             return owner_task_id
-        except Exception:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError):
             return None
 
     # === Episode-to-Task Mapping ===
@@ -579,7 +580,7 @@ class TranscriptionStateManager:
                 f"[STATE] Cleared Redis state for task {task_id}, episode {episode_id}"
             )
 
-        except Exception as e:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError, OSError) as e:
             logger.error(f"Failed to clear state for task {task_id}: {e}")
 
     async def fail_task_state(
@@ -633,7 +634,7 @@ class TranscriptionStateManager:
             return await self.redis.sorted_set_cardinality(
                 self._active_task_index_key()
             )
-        except Exception as e:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError, OSError) as e:
             logger.error(f"Failed to get active tasks count: {e}")
             return 0
 
@@ -688,7 +689,7 @@ class TranscriptionStateManager:
 
             return cleaned
 
-        except Exception as e:
+        except (redis.exceptions.RedisError, orjson.JSONDecodeError, ValueError, TypeError, OSError) as e:
             logger.error(f"Failed to cleanup stale locks: {e}")
             return 0
 
