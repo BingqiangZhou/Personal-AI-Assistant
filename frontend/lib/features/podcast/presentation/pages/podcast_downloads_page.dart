@@ -242,19 +242,20 @@ class PodcastDownloadsPage extends ConsumerWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.only(
                 left: 8,
                 right: 8,
                 top: 8,
                 bottom: 100,
               ),
-              children: allTasks.map(
-                (task) => Padding(
+              itemCount: allTasks.length,
+              itemBuilder: (context, index) {
+                return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: _DownloadTaskCard(task: task),
-                ),
-              ).toList(),
+                  child: _DownloadTaskCard(task: allTasks[index]),
+                );
+              },
             ),
           ),
         ],
