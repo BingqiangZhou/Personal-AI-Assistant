@@ -5,6 +5,17 @@ import 'package:personal_ai_assistant/core/database/dao/playback_dao.dart';
 
 part 'app_database.g.dart';
 
+/// Download task status stored as an integer enum in the database.
+///
+/// Order matters: index values are written to SQLite and must never change.
+enum DownloadStatus {
+  pending,
+  downloading,
+  completed,
+  failed,
+  paused,
+}
+
 @DriftDatabase(
   tables: [DownloadTasks, PlaybackStates, EpisodesCache],
   daos: [DownloadDao, PlaybackDao, EpisodeCacheDao],
@@ -13,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -22,6 +33,18 @@ class AppDatabase extends _$AppDatabase {
         // Recreate episodes_cache with primary key on id
         await migrator.deleteTable('episodes_cache');
         await migrator.createTable(episodesCache);
+      }
+      if (from < 4) {
+        // Convert string status to integer enum
+        await customStatement(
+          "UPDATE download_tasks SET status = CASE "
+          "WHEN status = 'pending' THEN 0 "
+          "WHEN status = 'downloading' THEN 1 "
+          "WHEN status = 'completed' THEN 2 "
+          "WHEN status = 'failed' THEN 3 "
+          "WHEN status = 'paused' THEN 4 "
+          "ELSE 0 END",
+        );
       }
     },
   );
@@ -37,7 +60,7 @@ class DownloadTasks extends Table {
   IntColumn get episodeId => integer()();
   TextColumn get audioUrl => text()();
   TextColumn get localPath => text().nullable()();
-  TextColumn get status => text().withDefault(const Constant('pending'))();
+  IntColumn get status => intEnum<DownloadStatus>().withDefault(const Constant(0))();
   RealColumn get progress => real().withDefault(const Constant(0))();
   IntColumn get fileSize => integer().nullable()();
   DateTimeColumn get createdAt =>

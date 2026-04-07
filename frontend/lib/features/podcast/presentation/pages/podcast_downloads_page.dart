@@ -350,7 +350,7 @@ class _DownloadTaskCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                       ],
-                      if (task.status == 'downloading')
+                      if (task.status == DownloadStatus.downloading)
                         LinearProgressIndicator(value: task.progress)
                       else
                         Text(
@@ -385,8 +385,8 @@ class _DownloadTaskCard extends ConsumerWidget {
 
   IconData? _trailingIcon(DownloadTask task) {
     return switch (task.status) {
-      'failed' => Icons.refresh,
-      'downloading' || 'pending' => Icons.close,
+      DownloadStatus.failed => Icons.refresh,
+      DownloadStatus.downloading || DownloadStatus.pending => Icons.close,
       _ => null,
     };
   }
@@ -396,22 +396,22 @@ class _DownloadTaskCard extends ConsumerWidget {
     AudioDownloadService service,
   ) {
     return switch (task.status) {
-      'failed' => () => service.download(
+      DownloadStatus.failed => () => service.download(
             episodeId: task.episodeId,
             audioUrl: task.audioUrl,
           ),
-      'downloading' || 'pending' => () => service.cancel(task.episodeId),
+      DownloadStatus.downloading || DownloadStatus.pending => () => service.cancel(task.episodeId),
       _ => null,
     };
   }
 
   String _statusText(DownloadTask task, AppLocalizations l10n) {
     return switch (task.status) {
-      'completed' => l10n.download_button_downloaded,
-      'failed' => l10n.download_button_failed,
-      'pending' => l10n.download_button_download,
-      'downloading' => '${(task.progress * 100).toStringAsFixed(0)}%',
-      _ => task.status,
+      DownloadStatus.completed => l10n.download_button_downloaded,
+      DownloadStatus.failed => l10n.download_button_failed,
+      DownloadStatus.pending => l10n.download_button_download,
+      DownloadStatus.downloading => '${(task.progress * 100).toStringAsFixed(0)}%',
+      _ => task.status.name,
     };
   }
 }
@@ -425,7 +425,7 @@ class _StatusIcon extends StatelessWidget {
     final theme = Theme.of(context);
 
     return switch (task.status) {
-      'completed' => CircleAvatar(
+      DownloadStatus.completed => CircleAvatar(
           backgroundColor: theme.colorScheme.primaryContainer,
           child: Icon(
             Icons.download_done,
@@ -433,7 +433,7 @@ class _StatusIcon extends StatelessWidget {
             size: 20,
           ),
         ),
-      'failed' => CircleAvatar(
+      DownloadStatus.failed => CircleAvatar(
           backgroundColor: theme.colorScheme.errorContainer,
           child: Icon(
             Icons.error_outline,
@@ -443,7 +443,7 @@ class _StatusIcon extends StatelessWidget {
         ),
       _ => CircleAvatar(
           backgroundColor: theme.colorScheme.secondaryContainer,
-          child: task.status == 'downloading'
+          child: task.status == DownloadStatus.downloading
               ? SizedBox(
                   width: 20,
                   height: 20,

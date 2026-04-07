@@ -40,7 +40,7 @@ class DownloadDao extends DatabaseAccessor<AppDatabase>
   /// Get all completed downloads.
   Future<List<DownloadTask>> getAllCompleted() {
     return (select(downloadTasks)
-          ..where((t) => t.status.equals('completed')))
+          ..where((t) => t.status.equalsValue(DownloadStatus.completed)))
         .get();
   }
 
@@ -57,7 +57,7 @@ class DownloadDao extends DatabaseAccessor<AppDatabase>
           ..where((t) => t.id.equals(id)))
         .write(
       DownloadTasksCompanion(
-        status: const Value('completed'),
+        status: Value(DownloadStatus.completed),
         localPath: Value(localPath),
         progress: const Value(1),
         completedAt: Value(DateTime.now()),
@@ -69,7 +69,7 @@ class DownloadDao extends DatabaseAccessor<AppDatabase>
   Future<void> markFailed(int id) {
     return (update(downloadTasks)
           ..where((t) => t.id.equals(id)))
-        .write(const DownloadTasksCompanion(status: Value('failed')));
+        .write(DownloadTasksCompanion(status: Value(DownloadStatus.failed)));
   }
 
   /// Mark a download as pending (for retry).
@@ -78,7 +78,7 @@ class DownloadDao extends DatabaseAccessor<AppDatabase>
           ..where((t) => t.id.equals(id)))
         .write(
       const DownloadTasksCompanion(
-        status: Value('pending'),
+        status: Value(DownloadStatus.pending),
         progress: Value(0),
       ),
     );
@@ -99,7 +99,7 @@ class DownloadDao extends DatabaseAccessor<AppDatabase>
   /// Get the local file path for a completed download by episode ID.
   Future<String?> getLocalPathByEpisodeId(int episodeId) async {
     final task = await getByEpisodeId(episodeId);
-    if (task != null && task.status == 'completed') {
+    if (task != null && task.status == DownloadStatus.completed) {
       return task.localPath;
     }
     return null;

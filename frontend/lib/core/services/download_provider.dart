@@ -58,9 +58,12 @@ final groupedDownloadsProvider = Provider<GroupedDownloads>((ref) {
       [];
   return (
     active: tasks
-        .where((t) => t.status == 'pending' || t.status == 'downloading')
+        .where((t) =>
+            t.status == DownloadStatus.pending ||
+            t.status == DownloadStatus.downloading)
         .toList(),
-    failed: tasks.where((t) => t.status == 'failed').toList(),
-    completed: tasks.where((t) => t.status == 'completed').toList(),
+    failed: tasks.where((t) => t.status == DownloadStatus.failed).toList(),
+    completed:
+        tasks.where((t) => t.status == DownloadStatus.completed).toList(),
   );
 });

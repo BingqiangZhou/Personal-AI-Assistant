@@ -69,7 +69,7 @@ class AudioDownloadService {
 
     // Check existing task
     final existing = await _dao.getByEpisodeId(episodeId);
-    if (existing != null && existing.status == 'completed') {
+    if (existing != null && existing.status == DownloadStatus.completed) {
       logger.AppLogger.debug(
         '[Download] Episode $episodeId already downloaded: ${existing.localPath}',
       );
@@ -214,7 +214,7 @@ class AudioDownloadService {
   /// Get the local file path for a downloaded episode, or null if not available.
   Future<String?> getLocalPath(int episodeId) async {
     final task = await _dao.getByEpisodeId(episodeId);
-    if (task != null && task.status == 'completed' && task.localPath != null) {
+    if (task != null && task.status == DownloadStatus.completed && task.localPath != null) {
       final file = File(task.localPath!);
       if (await file.exists()) {
         return task.localPath;

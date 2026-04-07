@@ -55,16 +55,16 @@ class $DownloadTasksTable extends DownloadTasks
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
-  late final GeneratedColumn<String> status = GeneratedColumn<String>(
-    'status',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('pending'),
-  );
+  late final GeneratedColumnWithTypeConverter<DownloadStatus, int> status =
+      GeneratedColumn<int>(
+        'status',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      ).withConverter<DownloadStatus>($DownloadTasksTable.$converterstatus);
   static const VerificationMeta _progressMeta = const VerificationMeta(
     'progress',
   );
@@ -160,12 +160,6 @@ class $DownloadTasksTable extends DownloadTasks
         localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
       );
     }
-    if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
-    }
     if (data.containsKey('progress')) {
       context.handle(
         _progressMeta,
@@ -218,10 +212,12 @@ class $DownloadTasksTable extends DownloadTasks
         DriftSqlType.string,
         data['${effectivePrefix}local_path'],
       ),
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
+      status: $DownloadTasksTable.$converterstatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}status'],
+        )!,
+      ),
       progress: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}progress'],
@@ -245,6 +241,9 @@ class $DownloadTasksTable extends DownloadTasks
   $DownloadTasksTable createAlias(String alias) {
     return $DownloadTasksTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<DownloadStatus, int, int> $converterstatus =
+      const EnumIndexConverter<DownloadStatus>(DownloadStatus.values);
 }
 
 class DownloadTask extends DataClass implements Insertable<DownloadTask> {
@@ -252,7 +251,7 @@ class DownloadTask extends DataClass implements Insertable<DownloadTask> {
   final int episodeId;
   final String audioUrl;
   final String? localPath;
-  final String status;
+  final DownloadStatus status;
   final double progress;
   final int? fileSize;
   final DateTime createdAt;
@@ -277,7 +276,11 @@ class DownloadTask extends DataClass implements Insertable<DownloadTask> {
     if (!nullToAbsent || localPath != null) {
       map['local_path'] = Variable<String>(localPath);
     }
-    map['status'] = Variable<String>(status);
+    {
+      map['status'] = Variable<int>(
+        $DownloadTasksTable.$converterstatus.toSql(status),
+      );
+    }
     map['progress'] = Variable<double>(progress);
     if (!nullToAbsent || fileSize != null) {
       map['file_size'] = Variable<int>(fileSize);
@@ -319,7 +322,9 @@ class DownloadTask extends DataClass implements Insertable<DownloadTask> {
       episodeId: serializer.fromJson<int>(json['episodeId']),
       audioUrl: serializer.fromJson<String>(json['audioUrl']),
       localPath: serializer.fromJson<String?>(json['localPath']),
-      status: serializer.fromJson<String>(json['status']),
+      status: $DownloadTasksTable.$converterstatus.fromJson(
+        serializer.fromJson<int>(json['status']),
+      ),
       progress: serializer.fromJson<double>(json['progress']),
       fileSize: serializer.fromJson<int?>(json['fileSize']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -334,7 +339,9 @@ class DownloadTask extends DataClass implements Insertable<DownloadTask> {
       'episodeId': serializer.toJson<int>(episodeId),
       'audioUrl': serializer.toJson<String>(audioUrl),
       'localPath': serializer.toJson<String?>(localPath),
-      'status': serializer.toJson<String>(status),
+      'status': serializer.toJson<int>(
+        $DownloadTasksTable.$converterstatus.toJson(status),
+      ),
       'progress': serializer.toJson<double>(progress),
       'fileSize': serializer.toJson<int?>(fileSize),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -347,7 +354,7 @@ class DownloadTask extends DataClass implements Insertable<DownloadTask> {
     int? episodeId,
     String? audioUrl,
     Value<String?> localPath = const Value.absent(),
-    String? status,
+    DownloadStatus? status,
     double? progress,
     Value<int?> fileSize = const Value.absent(),
     DateTime? createdAt,
@@ -427,7 +434,7 @@ class DownloadTasksCompanion extends UpdateCompanion<DownloadTask> {
   final Value<int> episodeId;
   final Value<String> audioUrl;
   final Value<String?> localPath;
-  final Value<String> status;
+  final Value<DownloadStatus> status;
   final Value<double> progress;
   final Value<int?> fileSize;
   final Value<DateTime> createdAt;
@@ -460,7 +467,7 @@ class DownloadTasksCompanion extends UpdateCompanion<DownloadTask> {
     Expression<int>? episodeId,
     Expression<String>? audioUrl,
     Expression<String>? localPath,
-    Expression<String>? status,
+    Expression<int>? status,
     Expression<double>? progress,
     Expression<int>? fileSize,
     Expression<DateTime>? createdAt,
@@ -484,7 +491,7 @@ class DownloadTasksCompanion extends UpdateCompanion<DownloadTask> {
     Value<int>? episodeId,
     Value<String>? audioUrl,
     Value<String?>? localPath,
-    Value<String>? status,
+    Value<DownloadStatus>? status,
     Value<double>? progress,
     Value<int?>? fileSize,
     Value<DateTime>? createdAt,
@@ -519,7 +526,9 @@ class DownloadTasksCompanion extends UpdateCompanion<DownloadTask> {
       map['local_path'] = Variable<String>(localPath.value);
     }
     if (status.present) {
-      map['status'] = Variable<String>(status.value);
+      map['status'] = Variable<int>(
+        $DownloadTasksTable.$converterstatus.toSql(status.value),
+      );
     }
     if (progress.present) {
       map['progress'] = Variable<double>(progress.value);
@@ -1640,7 +1649,7 @@ typedef $$DownloadTasksTableCreateCompanionBuilder =
       required int episodeId,
       required String audioUrl,
       Value<String?> localPath,
-      Value<String> status,
+      Value<DownloadStatus> status,
       Value<double> progress,
       Value<int?> fileSize,
       Value<DateTime> createdAt,
@@ -1652,7 +1661,7 @@ typedef $$DownloadTasksTableUpdateCompanionBuilder =
       Value<int> episodeId,
       Value<String> audioUrl,
       Value<String?> localPath,
-      Value<String> status,
+      Value<DownloadStatus> status,
       Value<double> progress,
       Value<int?> fileSize,
       Value<DateTime> createdAt,
@@ -1688,9 +1697,10 @@ class $$DownloadTasksTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get status => $composableBuilder(
+  ColumnWithTypeConverterFilters<DownloadStatus, DownloadStatus, int>
+  get status => $composableBuilder(
     column: $table.status,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<double> get progress => $composableBuilder(
@@ -1743,7 +1753,7 @@ class $$DownloadTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get status => $composableBuilder(
+  ColumnOrderings<int> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
@@ -1790,7 +1800,7 @@ class $$DownloadTasksTableAnnotationComposer
   GeneratedColumn<String> get localPath =>
       $composableBuilder(column: $table.localPath, builder: (column) => column);
 
-  GeneratedColumn<String> get status =>
+  GeneratedColumnWithTypeConverter<DownloadStatus, int> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
   GeneratedColumn<double> get progress =>
@@ -1843,7 +1853,7 @@ class $$DownloadTasksTableTableManager
                 Value<int> episodeId = const Value.absent(),
                 Value<String> audioUrl = const Value.absent(),
                 Value<String?> localPath = const Value.absent(),
-                Value<String> status = const Value.absent(),
+                Value<DownloadStatus> status = const Value.absent(),
                 Value<double> progress = const Value.absent(),
                 Value<int?> fileSize = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -1865,7 +1875,7 @@ class $$DownloadTasksTableTableManager
                 required int episodeId,
                 required String audioUrl,
                 Value<String?> localPath = const Value.absent(),
-                Value<String> status = const Value.absent(),
+                Value<DownloadStatus> status = const Value.absent(),
                 Value<double> progress = const Value.absent(),
                 Value<int?> fileSize = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
