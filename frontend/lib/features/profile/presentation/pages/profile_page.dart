@@ -5,16 +5,15 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
-import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/theme/font_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
-import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/glass_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/profile/presentation/providers/profile_ui_providers.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/widgets/profile_activity_cards.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 import 'package:personal_ai_assistant/shared/widgets/server_config_dialog.dart';
@@ -29,68 +28,18 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  bool _notificationsEnabled = true;
-  String _appVersion = 'Loading...';
-
-  static const String _notificationsStorageKey =
-      'profile_notifications_enabled';
-
   @override
   void initState() {
     super.initState();
-    _loadVersion();
-    _loadNotificationPreference();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = ref.read(authProvider);
       if (authState.isAuthenticated) {
         // Force refresh after login to ensure fresh data from new server
         ref.read(profileStatsProvider.notifier).load(forceRefresh: true);
       }
+      // Load notification preference from storage
+      ref.read(notificationPreferenceProvider.notifier).load();
     });
-  }
-
-  Future<void> _loadNotificationPreference() async {
-    try {
-      final storage = ref.read(localStorageServiceProvider);
-      final saved = await storage.getBool(_notificationsStorageKey);
-      if (mounted && saved != null) {
-        setState(() {
-          _notificationsEnabled = saved;
-        });
-      }
-    } catch (e) {
-      logger.AppLogger.debug('Error loading notification preference: $e');
-    }
-  }
-
-  Future<void> _setNotificationPreference(bool value) async {
-    setState(() {
-      _notificationsEnabled = value;
-    });
-    try {
-      final storage = ref.read(localStorageServiceProvider);
-      await storage.saveBool(_notificationsStorageKey, value);
-    } catch (e) {
-      logger.AppLogger.debug('Error saving notification preference: $e');
-    }
-  }
-
-  Future<void> _loadVersion() async {
-    try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      if (mounted) {
-        setState(() {
-          _appVersion = 'v${packageInfo.version} (${packageInfo.buildNumber})';
-        });
-      }
-    } catch (e) {
-      logger.AppLogger.debug('Error loading version: $e');
-      if (mounted) {
-        setState(() {
-          _appVersion = 'Unknown';
-        });
-      }
-    }
   }
 
   double _dialogMaxWidth(BuildContext context) {
@@ -233,6 +182,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = context.l10n;
     final isMobile = context.isMobile;
     final theme = Theme.of(context);
+    final notificationsEnabled = ref.watch(notificationPreferenceProvider);
 
     final accountItems = <_SettingsItemConfig>[
       _SettingsItemConfig(
@@ -247,14 +197,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         subtitle: l10n.profile_notifications_subtitle,
         trailing: Switch(
           key: const Key('profile_notifications_switch'),
-          value: _notificationsEnabled,
+          value: notificationsEnabled,
           activeThumbColor: theme.colorScheme.surface,
           inactiveThumbColor: theme.colorScheme.surface,
           activeTrackColor: theme.colorScheme.onSurfaceVariant,
           inactiveTrackColor: theme.colorScheme.onSurfaceVariant.withValues(
             alpha: 0.30,
           ),
-          onChanged: _setNotificationPreference,
+          onChanged: (value) {
+            ref.read(notificationPreferenceProvider.notifier).setEnabled(value);
+          },
         ),
       ),
     ];
@@ -920,7 +872,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// Get version subtitle for display
   String _getVersionSubtitle() {
-    return _appVersion;
+    return ref.read(appVersionProvider);
   }
 
   void _showServerConfigDialog(BuildContext context) {
