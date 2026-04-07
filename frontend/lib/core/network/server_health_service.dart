@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/url_normalizer.dart';
 
 /// Connection status enum for server health check
 enum ConnectionStatus {
@@ -64,23 +65,10 @@ class ServerHealthService {
   static const String _healthEndpoint = '/api/v1/health';
 
   /// Normalize the base URL by:
-  /// 1. Trimming whitespace
-  /// 2. Removing trailing slashes
-  /// 3. Adding http:// scheme if missing
+  /// 1. Trimming whitespace and removing trailing slashes
+  /// 2. Adding http:// scheme if missing
   static String normalizeBaseUrl(String url) {
-    var normalized = url.trim();
-
-    // Remove trailing slashes
-    while (normalized.endsWith('/')) {
-      normalized = normalized.substring(0, normalized.length - 1);
-    }
-
-    // Add http:// scheme if missing
-    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-      normalized = 'http://$normalized';
-    }
-
-    return normalized;
+    return UrlNormalizer.ensureScheme(UrlNormalizer.trimTrailingSlashes(url));
   }
 
   /// Verify the server connection by sending a health check request

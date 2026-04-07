@@ -11,6 +11,7 @@ import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions
 import 'package:personal_ai_assistant/core/network/retry_interceptor.dart';
 import 'package:personal_ai_assistant/core/network/token_refresh_service.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/utils/url_normalizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 typedef SavedServerBaseUrlLoader = Future<String?> Function();
@@ -158,16 +159,9 @@ class DioClient {
     var savedBaseUrl =
         initialServerBaseUrl ?? config.AppConfig.serverBaseUrl;
 
-    // Normalize URL: remove trailing slashes
+    // Normalize URL: remove trailing slashes and API prefix
     if (savedBaseUrl.isNotEmpty) {
-      savedBaseUrl = savedBaseUrl.trim();
-      while (savedBaseUrl.endsWith('/')) {
-        savedBaseUrl = savedBaseUrl.substring(0, savedBaseUrl.length - 1);
-      }
-      // Remove /api/v1 suffix if present
-      if (savedBaseUrl.endsWith('/api/v1')) {
-        savedBaseUrl = savedBaseUrl.substring(0, savedBaseUrl.length - 7);
-      }
+      savedBaseUrl = UrlNormalizer.normalize(savedBaseUrl);
     }
 
     // No trailing slash — Retrofit paths start with '/', so trailing slash
@@ -209,15 +203,7 @@ class DioClient {
           ? loader()
           : _loadSavedBaseUrlFromSharedPrefs());
       if (savedUrl != null && savedUrl.isNotEmpty) {
-        var normalizedUrl = savedUrl.trim();
-        while (normalizedUrl.endsWith('/')) {
-          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 1);
-        }
-        if (normalizedUrl.endsWith('/api/v1')) {
-          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 7);
-        } else if (normalizedUrl.contains('/api/v1/')) {
-          normalizedUrl = normalizedUrl.replaceFirst('/api/v1/', '/');
-        }
+        final normalizedUrl = UrlNormalizer.normalize(savedUrl);
         // No trailing slash — Retrofit paths start with '/', concatenation
         // produces the correct URL without double slashes.
         updateBaseUrl('$normalizedUrl/api/v1');

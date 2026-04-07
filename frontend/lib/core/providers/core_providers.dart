@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/events/server_config_events.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
+import 'package:personal_ai_assistant/core/utils/url_normalizer.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
 import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
@@ -96,15 +97,7 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
 
     try {
       // Normalize URL
-      var normalizedUrl = newUrl.trim();
-      while (normalizedUrl.endsWith('/')) {
-        normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 1);
-      }
-
-      // Remove /api/v1 suffix if present (7 characters)
-      if (normalizedUrl.endsWith('/api/v1')) {
-        normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 7);
-      }
+      final normalizedUrl = UrlNormalizer.normalize(newUrl);
 
       // Clear all server data if URL changed and clearData is true
       if (clearData && oldUrl != normalizedUrl) {
