@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.43.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.43.0...v0.43.1) - 2026-04-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.43.1))
+
+### ⚙️ Miscellaneous Tasks
+
+- Optimize all services for 2GB total memory server ([8feb6de](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8feb6de835eef3c4bb0a59949214fa6881a65614))
+
+### 🎨 Styling
+
+- Reduce proxy_busy_buffers_size from 32k to 16k for performance optimization ([01f192f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/01f192f04cabb54cae5d692af4c998adef0ac24c))
+
+### 🐛 Bug Fixes
+
+- Resolve playback restore crash, profile version loading, and nginx config error ([0668877](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/06688778904bda9500faa8cc720587ce50da7e08))
+
+
+
 ## [0.43.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.42.0...v0.43.0) - 2026-04-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.43.0))
 
 ### ⚡ Performance
