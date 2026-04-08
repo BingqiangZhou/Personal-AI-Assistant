@@ -245,7 +245,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _SettingsItemConfig(
         icon: Icons.info_outline,
         title: l10n.version,
-        subtitle: _getVersionSubtitle(),
+        subtitle: ref.watch(appVersionProvider),
         trailing: const Icon(Icons.chevron_right),
         tileKey: const Key('profile_version_item'),
         onTap: () => _showAboutDialog(context),
@@ -869,11 +869,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         );
       },
     );
-  }
-
-  /// Get version subtitle for display
-  String _getVersionSubtitle() {
-    return ref.read(appVersionProvider);
   }
 
   void _showServerConfigDialog(BuildContext context) {

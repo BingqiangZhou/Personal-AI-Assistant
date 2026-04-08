@@ -74,7 +74,7 @@ class PlaybackHistoryLiteResponse extends Equatable {
   });
 
   factory PlaybackHistoryLiteResponse.fromJson(Map<String, dynamic> json) {
-    final episodesJson = json['episodes'] as List<dynamic>? ?? const [];
+    final episodesJson = json['items'] as List<dynamic>? ?? const [];
     return PlaybackHistoryLiteResponse(
       episodes: episodesJson
           .map(

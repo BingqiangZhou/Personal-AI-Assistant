@@ -282,6 +282,7 @@ class PodcastEpisodeListResponse extends Equatable {
 
   factory PodcastEpisodeListResponse.fromJson(Map<String, dynamic> json) =>
       _$PodcastEpisodeListResponseFromJson(json);
+  @JsonKey(name: 'items')
   final List<PodcastEpisodeModel> episodes;
   final int total;
   final int page;

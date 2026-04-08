@@ -95,7 +95,7 @@ Map<String, dynamic> _$PodcastEpisodeModelToJson(
 PodcastEpisodeListResponse _$PodcastEpisodeListResponseFromJson(
   Map<String, dynamic> json,
 ) => PodcastEpisodeListResponse(
-  episodes: (json['episodes'] as List<dynamic>)
+  episodes: (json['items'] as List<dynamic>)
       .map((e) => PodcastEpisodeModel.fromJson(e as Map<String, dynamic>))
       .toList(),
   total: (json['total'] as num).toInt(),
@@ -109,7 +109,7 @@ PodcastEpisodeListResponse _$PodcastEpisodeListResponseFromJson(
 Map<String, dynamic> _$PodcastEpisodeListResponseToJson(
   PodcastEpisodeListResponse instance,
 ) => <String, dynamic>{
-  'episodes': instance.episodes,
+  'items': instance.episodes,
   'total': instance.total,
   'page': instance.page,
   'size': instance.size,
