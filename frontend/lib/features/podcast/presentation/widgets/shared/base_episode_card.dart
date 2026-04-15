@@ -161,9 +161,8 @@ class BaseEpisodeCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(config.cornerRadius),
-          ),
-          child: Padding(
-            padding: config.cardPadding,
+            child: Padding(
+              padding: config.cardPadding,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

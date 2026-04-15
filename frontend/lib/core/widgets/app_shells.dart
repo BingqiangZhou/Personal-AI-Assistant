@@ -706,7 +706,6 @@ class ContentShell extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -768,7 +767,6 @@ class ProfileShell extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -868,7 +866,6 @@ class AuthShell extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }

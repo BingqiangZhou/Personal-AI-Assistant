@@ -386,8 +386,8 @@ class _HighlightListItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
+            padding: const EdgeInsets.all(12),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -437,6 +437,7 @@ class _HighlightListItem extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
