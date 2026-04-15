@@ -3,11 +3,11 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 
 /// ============================================================
-/// Arc + Linear Design System
+/// App Design System
 ///
 /// Design Philosophy:
-/// Dark base theme with colorful gradient accents (Arc-style)
-/// combined with Linear's precise typography and spacing.
+/// Dark base theme with colorful gradient accents
+/// combined with precise typography and spacing.
 /// ============================================================
 
 class AppColors {
@@ -37,13 +37,6 @@ class AppColors {
   static const Color lightOutline = Color(0xFFC7C7CC);
   static const Color lightOutlineVariant = Color(0xFFD1D1D6);
 
-  // Light theme card tier colors
-  static const Color lightSurfaceTierFill = Color(0x0A000000);
-  static const Color lightCardTierFill = Color(0x0F000000);
-  static const Color lightElevatedTierFill = Color(0x14000000);
-  static const Color lightSurfaceTierBorder = Color(0x0F000000);
-  static const Color lightCardTierBorder = Color(0x14000000);
-  static const Color lightElevatedTierBorder = Color(0x1A000000);
 
   // ============================================================
   // DARK THEME - 暗色主题
@@ -70,13 +63,6 @@ class AppColors {
   static const Color darkOutline = Color(0xFF48484A);
   static const Color darkOutlineVariant = Color(0xFF3A3A3C);
 
-  // Card tier colors (for dark theme)
-  static const Color surfaceTierFill = Color(0x0AFFFFFF); // rgba 0.04
-  static const Color cardTierFill = Color(0x0FFFFFFF); // rgba 0.06
-  static const Color elevatedTierFill = Color(0x14FFFFFF); // rgba 0.08
-  static const Color surfaceTierBorder = Color(0x0FFFFFFF); // rgba 0.06
-  static const Color cardTierBorder = Color(0x14FFFFFF); // rgba 0.08
-  static const Color elevatedTierBorder = Color(0x1AFFFFFF); // rgba 0.10
 
   // ============================================================
   // BRAND COLORS - 品牌色 (Apple HIG system tints)
@@ -193,7 +179,7 @@ class AppColors {
 
 /// ============================================================
 /// APP THEME EXTENSION
-/// Arc + Linear Theme Extension
+/// App Theme Extension
 /// ============================================================
 
 @immutable
@@ -213,8 +199,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.shadowLg,
     required this.chartColors,
     required this.aiPrimary, // Legacy AI accent token (kept for compatibility)
-    // Arc+Linear tier tokens
-    required this.surfaceTierFill, required this.cardTierFill, required this.elevatedTierFill, required this.surfaceTierBorder, required this.cardTierBorder, required this.elevatedTierBorder, required this.podcastGradientColors, // Legacy properties for backwards compatibility (non-nullable with defaults)
+    required this.podcastGradientColors, // Legacy properties for backwards compatibility (non-nullable with defaults)
     this.shellGradient,
   });
 
@@ -240,14 +225,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   // Legacy properties for backwards compatibility
   final Gradient? shellGradient;
   final Color aiPrimary; // Legacy AI accent token (kept for compatibility)
-
-  // Arc+Linear tier tokens
-  final Color surfaceTierFill;
-  final Color cardTierFill;
-  final Color elevatedTierFill;
-  final Color surfaceTierBorder;
-  final Color cardTierBorder;
-  final Color elevatedTierBorder;
   final List<List<Color>> podcastGradientColors;
 
   @override
@@ -267,12 +244,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     List<Color>? chartColors,
     Gradient? shellGradient,
     Color? aiPrimary,
-    Color? surfaceTierFill,
-    Color? cardTierFill,
-    Color? elevatedTierFill,
-    Color? surfaceTierBorder,
-    Color? cardTierBorder,
-    Color? elevatedTierBorder,
     List<List<Color>>? podcastGradientColors,
   }) {
     return AppThemeExtension(
@@ -291,12 +262,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       chartColors: chartColors ?? this.chartColors,
       shellGradient: shellGradient ?? this.shellGradient,
       aiPrimary: aiPrimary ?? this.aiPrimary,
-      surfaceTierFill: surfaceTierFill ?? this.surfaceTierFill,
-      cardTierFill: cardTierFill ?? this.cardTierFill,
-      elevatedTierFill: elevatedTierFill ?? this.elevatedTierFill,
-      surfaceTierBorder: surfaceTierBorder ?? this.surfaceTierBorder,
-      cardTierBorder: cardTierBorder ?? this.cardTierBorder,
-      elevatedTierBorder: elevatedTierBorder ?? this.elevatedTierBorder,
       podcastGradientColors:
           podcastGradientColors ?? this.podcastGradientColors,
     );
@@ -326,18 +291,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       shadowLg: BoxShadow.lerp(shadowLg, other.shadowLg, t)!,
       chartColors: other.chartColors,
       aiPrimary: Color.lerp(aiPrimary, other.aiPrimary, t)!,
-      // Arc+Linear tier tokens
-      surfaceTierFill:
-          Color.lerp(surfaceTierFill, other.surfaceTierFill, t)!,
-      cardTierFill: Color.lerp(cardTierFill, other.cardTierFill, t)!,
-      elevatedTierFill:
-          Color.lerp(elevatedTierFill, other.elevatedTierFill, t)!,
-      surfaceTierBorder:
-          Color.lerp(surfaceTierBorder, other.surfaceTierBorder, t)!,
-      cardTierBorder:
-          Color.lerp(cardTierBorder, other.cardTierBorder, t)!,
-      elevatedTierBorder:
-          Color.lerp(elevatedTierBorder, other.elevatedTierBorder, t)!,
       podcastGradientColors: other.podcastGradientColors,
     );
   }
@@ -375,13 +328,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
     aiPrimary: Color(0xFF5856D6), // systemIndigo
-    // Arc+Linear tier tokens — light
-    surfaceTierFill: AppColors.lightSurfaceTierFill,
-    cardTierFill: AppColors.lightCardTierFill,
-    elevatedTierFill: AppColors.lightElevatedTierFill,
-    surfaceTierBorder: AppColors.lightSurfaceTierBorder,
-    cardTierBorder: AppColors.lightCardTierBorder,
-    elevatedTierBorder: AppColors.lightElevatedTierBorder,
     podcastGradientColors: AppColors.podcastGradientColors,
   );
 
@@ -418,13 +364,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
     aiPrimary: Color(0xFFA5B4FC),
-    // Arc+Linear tier tokens — dark
-    surfaceTierFill: AppColors.surfaceTierFill,
-    cardTierFill: AppColors.cardTierFill,
-    elevatedTierFill: AppColors.elevatedTierFill,
-    surfaceTierBorder: AppColors.surfaceTierBorder,
-    cardTierBorder: AppColors.cardTierBorder,
-    elevatedTierBorder: AppColors.elevatedTierBorder,
     podcastGradientColors: AppColors.podcastGradientColors,
   );
 

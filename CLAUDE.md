@@ -42,9 +42,8 @@ backend/app/
 
 frontend/lib/
   core/
-    glass/          Arc+Linear design system (GlassBackground, GlassContainer, GlassTokens, SurfaceCard)
     database/       Drift ORM (AppDatabase, DownloadDao, PlaybackDao, EpisodeCacheDao)
-    theme/          AppTheme, AppColors (Arc+Linear tokens), ThemeProvider
+    theme/          AppTheme, AppColors (design tokens), ThemeProvider
     constants/      AppRadius, AppSpacing, Breakpoints, ScrollConstants
     widgets/        CustomAdaptiveNavigation (NOT flutter_adaptive_scaffold)
   features/        auth, podcast (largest), profile, settings, splash, home
@@ -63,7 +62,7 @@ frontend/lib/
 - **Material 3 only** (`useMaterial3: true`)
 - Use `CustomAdaptiveNavigation` + `Breakpoints` (NOT flutter_adaptive_scaffold)
 - Responsive: mobile <600 | tablet 600-1200 | desktop >=1200
-- **Arc+Linear design system**: `GlassContainer`/`SurfaceCard` for card surfaces. `GlassBackground` for page backgrounds. Theme tokens in `AppColors`
+- Theme tokens in `AppColors`
 - Run `dart run build_runner build` after modifying `@riverpod`, `@RestApi`, `@JsonSerializable`, or Drift files
 - i18n: Edit both `app_localizations_en.arb` and `app_localizations_zh.arb`, then `flutter gen-l10n`
 - Widget tests MANDATORY for all pages
