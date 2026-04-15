@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/glass/surface_card.dart';
-
 class SettingsSectionCard extends StatelessWidget {
   const SettingsSectionCard({
     required this.title, required this.children, super.key,
@@ -13,7 +11,7 @@ class SettingsSectionCard extends StatelessWidget {
   final List<Widget> children;
   final EdgeInsetsGeometry cardMargin;
 
-  /// Ignored when using SurfaceCard (retained for API compatibility).
+  /// Ignored (retained for API compatibility).
   final ShapeBorder? cardShape;
 
   @override
@@ -34,9 +32,14 @@ class SettingsSectionCard extends StatelessWidget {
         ),
         Padding(
           padding: cardMargin,
-          child: SurfaceCard(
-            borderRadius: 12,
-            padding: EdgeInsets.zero,
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
+              ),
+            ),
             child: Column(children: children),
           ),
         ),
