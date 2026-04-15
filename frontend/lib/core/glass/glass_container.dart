@@ -46,18 +46,19 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sigma = tier.sigma;
+    final glassTokens = GlassTokens.of(context);
+    final tierParams = glassTokens.paramsForTier(tier);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
         child: Container(
           decoration: BoxDecoration(
-            color: tier == GlassTier.overlay
-                ? const Color(0x0AFFFFFF) // rgba 0.04
-                : const Color(0x0FFFFFFF), // rgba 0.06
+            color: tierParams.fill,
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: const Color(0x0FFFFFFF), // rgba 0.06
+              color: tierParams.fill,
               width: 0.5,
             ),
           ),

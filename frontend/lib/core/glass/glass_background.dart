@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Glass Background Theme
 ///
-/// Defines the color palette for gradient orbs based on context:
-/// - podcast: indigo + violet + blue
-/// - home: blue + cyan + indigo
-/// - neutral: gray + slate + cool
+/// Defines the color palette for gradient orbs based on context.
+/// All themes now use identical gray orb colors for monochrome glass aesthetic.
 enum GlassBackgroundTheme {
   podcast,
   home,
@@ -85,33 +83,30 @@ class GlassBackground extends StatelessWidget {
     if (isDark) {
       // Deep, desaturated colors that blend into #0f0f1a background
       return const [
-        Color(0xFF1a1040), // deep indigo
-        Color(0xFF0f2030), // deep teal
-        Color(0xFF201020), // deep purple
+        Color(0xFF1a1a24), // cool gray
+        Color(0xFF181818), // neutral gray
+        Color(0xFF1c1c20), // blue-gray
       ];
     }
 
     switch (theme) {
       case GlassBackgroundTheme.podcast:
-        // Pale pastel indigo + violet + blue
         return const [
-          Color(0xFFE0E0F0), // pale indigo
-          Color(0xFFE8D8F8), // pale violet
-          Color(0xFFD8E4F8), // pale blue
+          Color(0xFFe0e0e0),
+          Color(0xFFd8d8dc),
+          Color(0xFFe4e4e4),
         ];
       case GlassBackgroundTheme.home:
-        // Pale pastel blue + cyan + indigo
         return const [
-          Color(0xFFD8E4F8), // pale blue
-          Color(0xFFD0F0F4), // pale cyan
-          Color(0xFFE0E0F0), // pale indigo
+          Color(0xFFe0e0e0),
+          Color(0xFFd8d8dc),
+          Color(0xFFe4e4e4),
         ];
       case GlassBackgroundTheme.neutral:
-        // Pale pastel gray + slate + cool
         return const [
-          Color(0xFFE0E0E4), // pale gray
-          Color(0xFFD8DCE0), // pale slate
-          Color(0xFFE4E4E8), // pale cool
+          Color(0xFFe0e0e0),
+          Color(0xFFd8d8dc),
+          Color(0xFFe4e4e4),
         ];
     }
   }

@@ -149,12 +149,12 @@ class AppColors {
   // GRADIENT PALETTE - 渐变色板 (Arc-style accents)
   // ============================================================
 
-  static const List<Color> coralColors = [Color(0xFFFF6B6B), Color(0xFFFF8E53)];
-  static const List<Color> violetColors = [Color(0xFF9B5DE5), Color(0xFF5B6BF0)];
-  static const List<Color> cyanColors = [Color(0xFF00C9A7), Color(0xFF00D4FF)];
-  static const List<Color> goldColors = [Color(0xFFFFC75F), Color(0xFFFFD93D)];
-  static const List<Color> roseColors = [Color(0xFFF15BB5), Color(0xFFFF6B6B)];
-  static const List<Color> skyColors = [Color(0xFF4CC9F0), Color(0xFF72EFDD)];
+  static const List<Color> coralColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
+  static const List<Color> violetColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
+  static const List<Color> cyanColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
+  static const List<Color> goldColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
+  static const List<Color> roseColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
+  static const List<Color> skyColors = [Color(0xFF2a2a2e), Color(0xFF3a3a40)];
 
   static const List<List<Color>> podcastGradientColors = [
     coralColors,
@@ -212,8 +212,8 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.shadowMd,
     required this.shadowLg,
     required this.chartColors,
-    required this.aiPrimary, // AI accent tokens
-    required this.aiBubbleUserColor, required this.aiBubbleAssistantColor, required this.aiChipColor, required this.aiHighlightSurfaceColor, required this.cosmicFilterActiveColor, // Arc+Linear tier tokens
+    required this.aiPrimary, // Legacy AI accent token (kept for compatibility)
+    // Arc+Linear tier tokens
     required this.surfaceTierFill, required this.cardTierFill, required this.elevatedTierFill, required this.surfaceTierBorder, required this.cardTierBorder, required this.elevatedTierBorder, required this.podcastGradientColors, // Legacy properties for backwards compatibility (non-nullable with defaults)
     this.shellGradient,
   });
@@ -239,14 +239,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
 
   // Legacy properties for backwards compatibility
   final Gradient? shellGradient;
-  final Color aiPrimary;
-
-  // AI accent tokens - using Apple system colors
-  final Color aiBubbleUserColor;
-  final Color aiBubbleAssistantColor;
-  final Color aiChipColor;
-  final Color aiHighlightSurfaceColor;
-  final Color cosmicFilterActiveColor;
+  final Color aiPrimary; // Legacy AI accent token (kept for compatibility)
 
   // Arc+Linear tier tokens
   final Color surfaceTierFill;
@@ -274,11 +267,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     List<Color>? chartColors,
     Gradient? shellGradient,
     Color? aiPrimary,
-    Color? aiBubbleUserColor,
-    Color? aiBubbleAssistantColor,
-    Color? aiChipColor,
-    Color? aiHighlightSurfaceColor,
-    Color? cosmicFilterActiveColor,
     Color? surfaceTierFill,
     Color? cardTierFill,
     Color? elevatedTierFill,
@@ -303,14 +291,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       chartColors: chartColors ?? this.chartColors,
       shellGradient: shellGradient ?? this.shellGradient,
       aiPrimary: aiPrimary ?? this.aiPrimary,
-      aiBubbleUserColor: aiBubbleUserColor ?? this.aiBubbleUserColor,
-      aiBubbleAssistantColor:
-          aiBubbleAssistantColor ?? this.aiBubbleAssistantColor,
-      aiChipColor: aiChipColor ?? this.aiChipColor,
-      aiHighlightSurfaceColor:
-          aiHighlightSurfaceColor ?? this.aiHighlightSurfaceColor,
-      cosmicFilterActiveColor:
-          cosmicFilterActiveColor ?? this.cosmicFilterActiveColor,
       surfaceTierFill: surfaceTierFill ?? this.surfaceTierFill,
       cardTierFill: cardTierFill ?? this.cardTierFill,
       elevatedTierFill: elevatedTierFill ?? this.elevatedTierFill,
@@ -346,15 +326,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       shadowLg: BoxShadow.lerp(shadowLg, other.shadowLg, t)!,
       chartColors: other.chartColors,
       aiPrimary: Color.lerp(aiPrimary, other.aiPrimary, t)!,
-      aiBubbleUserColor:
-          Color.lerp(aiBubbleUserColor, other.aiBubbleUserColor, t)!,
-      aiBubbleAssistantColor:
-          Color.lerp(aiBubbleAssistantColor, other.aiBubbleAssistantColor, t)!,
-      aiChipColor: Color.lerp(aiChipColor, other.aiChipColor, t)!,
-      aiHighlightSurfaceColor:
-          Color.lerp(aiHighlightSurfaceColor, other.aiHighlightSurfaceColor, t)!,
-      cosmicFilterActiveColor:
-          Color.lerp(cosmicFilterActiveColor, other.cosmicFilterActiveColor, t)!,
       // Arc+Linear tier tokens
       surfaceTierFill:
           Color.lerp(surfaceTierFill, other.surfaceTierFill, t)!,
@@ -404,12 +375,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
     aiPrimary: Color(0xFF5856D6), // systemIndigo
-    // AI accent tokens — light (Apple system colors)
-    aiBubbleUserColor: Color(0xFFFFF4D6), // light yellow
-    aiBubbleAssistantColor: Color(0xFFFFE5F0), // light pink
-    aiChipColor: Color(0xFFFFE8CC), // light orange
-    aiHighlightSurfaceColor: Color(0xFFFFF4D6), // light yellow surface
-    cosmicFilterActiveColor: Color(0xFFFF9500), // systemOrange light
     // Arc+Linear tier tokens — light
     surfaceTierFill: AppColors.lightSurfaceTierFill,
     cardTierFill: AppColors.lightCardTierFill,
@@ -453,12 +418,6 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     chartColors: AppColors.chartColors,
     // Legacy properties with fallback values
     aiPrimary: Color(0xFFA5B4FC),
-    // AI accent tokens — dark (Apple system colors)
-    aiBubbleUserColor: Color(0xFF3D2D00), // dark yellow
-    aiBubbleAssistantColor: Color(0xFF3D0014), // dark pink
-    aiChipColor: Color(0xFF3D1E00), // dark orange
-    aiHighlightSurfaceColor: Color(0xFF3D2D00), // dark yellow surface
-    cosmicFilterActiveColor: Color(0xFFFF9F0A), // systemOrange dark
     // Arc+Linear tier tokens — dark
     surfaceTierFill: AppColors.surfaceTierFill,
     cardTierFill: AppColors.cardTierFill,
