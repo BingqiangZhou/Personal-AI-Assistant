@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.45.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.44.0...v0.45.0) - 2026-04-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.45.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ios)* Add Podfile.lock to version control ([2043c39](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2043c396be756c6304e71441df0f94b342fe8e3d))
+
+### 🐛 Bug Fixes
+
+- Add missing const to EdgeInsets default parameter in base_episode_card ([cc02770](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cc02770c546a9fc263cf107ae49efdecc81acf2f))
+
+### 📚 Documentation
+
+- Add spacing system optimization design ([ff7d62a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ff7d62aaa36791c34d8d3561bbae1541598eadf7))
+
+### 🚜 Refactor
+
+- Replace hardcoded spacing with AppSpacing tokens in auth feature ([1449bd6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1449bd6ad55c650ab9a293bc4e9f0542069f369d))
+- Replace hardcoded spacing with AppSpacing tokens in core widgets ([02368e9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/02368e9b2e94f783b932b0d600262391455df27d))
+- Replace hardcoded spacing with AppSpacing tokens in home, splash, and shared ([ad8fa0c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ad8fa0c89f616680649a4d8da72679df966d588d))
+- Replace hardcoded spacing with AppSpacing tokens in profile and settings ([dad3994](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dad399490534615c8e26937be42e661bde1c58d9))
+- Replace hardcoded spacing with AppSpacing tokens in podcast feature ([a59f8df](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a59f8df23f76aa66b8a959f7b0cc7d93a05890d3))
+- Fix remaining hardcoded spacing in core widgets and profile pages ([91b66e8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/91b66e86137811d272ae90d99b3b4d2bdd7ebd3d))
+- *(ui)* Migrate AppSpacing to standard 4-point grid scale ([ba5f704](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ba5f70481709f621e44525a07a514f395b785877))
+
+
+
 ## [0.44.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.43.1...v0.44.0) - 2026-04-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.44.0))
 
 ### 🐛 Bug Fixes
