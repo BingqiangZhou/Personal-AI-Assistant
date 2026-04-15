@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -271,10 +272,10 @@ class AuthVerifyPage extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: SurfacePanel(
                 showBorder: false,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.mdLg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -285,7 +286,7 @@ class AuthVerifyPage extends ConsumerWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Status Display
                     Container(
@@ -294,7 +295,7 @@ class AuthVerifyPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Text(
                         status.message,
                         style: AppTheme.monoStyle(
@@ -304,32 +305,32 @@ class AuthVerifyPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.mdLg),
 
                     // Test Buttons
                     _TestButton(
                       text: '1. Check Backend Health',
                       onPressed: notifier.testBackendHealth,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
 
                     _TestButton(
                       text: '2. Register New User',
                       onPressed: notifier.testRegister,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
 
                     _TestButton(
                       text: '3. Login (Get Tokens)',
                       onPressed: notifier.testLogin,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
 
                     _TestButton(
                       text: '4. Get User Info (with Token)',
                       onPressed: notifier.testGetUser,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.mdLg),
 
                     // Instructions
                     _buildInstructions(context),
@@ -339,7 +340,6 @@ class AuthVerifyPage extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -354,7 +354,7 @@ class AuthVerifyPage extends ConsumerWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.smMd),
         Text(
           '1. Must run Backend Docker first (port 8000)',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -418,7 +418,7 @@ class _TestButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: AppRadius.mdLgRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.mdLg, horizontal: AppSpacing.mdLg),
             child: Text(
               text,
               style: AppTheme.monoStyle(

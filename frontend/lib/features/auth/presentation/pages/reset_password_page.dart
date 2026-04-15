@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -135,7 +136,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   onPressed: () => context.go('/login'),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 width: 80,
                 height: 80,
@@ -190,7 +191,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             },
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
 
           // Confirm Password field
           PasswordTextField(
@@ -213,7 +214,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             },
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
 
           // Password requirements
           RepaintBoundary(
@@ -229,7 +230,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                             fontWeight: FontWeight.w600,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     PasswordRequirementItem(
                       text: l10n.auth_password_requirement_min_length,
                       isValid: _hasMinLength(_passwordController.text),
@@ -252,12 +253,12 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
 
           // Reset button
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: AppSpacing.xl,
             child: FilledButton(
               key: const Key('reset_password_button'),
               onPressed: _submitResetPassword,
@@ -275,7 +276,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       children: [
         SizedBox(
           width: double.infinity,
-          height: 48,
+          height: AppSpacing.xl,
           child: FilledButton(
             key: const Key('go_to_login_button'),
             onPressed: () => context.go('/login'),

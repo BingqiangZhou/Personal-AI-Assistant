@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -143,7 +144,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   errorText: authState.fieldErrors?['username'],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.smMd),
 
                 // Email field
                 CustomTextField(
@@ -168,7 +169,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   errorText: authState.fieldErrors?['email'],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.smMd),
 
                 // Password field
                 Column(
@@ -205,14 +206,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       },
                       errorText: authState.fieldErrors?['password'],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
                       ),
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(AppSpacing.sm),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -226,7 +227,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.xs),
                           PasswordRequirementItem(
                             text: l10n.auth_password_too_short,
                             isValid: _passwordController.text.length >= 8,
@@ -255,7 +256,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.smMd),
 
                 // Confirm password field
                 PasswordTextField(
@@ -278,7 +279,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   },
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
 
                 // Remember me checkbox
                 Row(
@@ -300,7 +301,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
 
                 // Terms and conditions
                 Row(
@@ -361,7 +362,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Register button
                 SizedBox(
@@ -385,7 +386,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
 
                 // Sign in link
                 Row(
@@ -398,7 +399,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     GestureDetector(
                       onTap: () => context.go('/login'),
                       child: Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 class PasswordRequirementItem extends StatelessWidget {
@@ -24,7 +25,7 @@ class PasswordRequirementItem extends StatelessWidget {
                 ? validColor
                 : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,

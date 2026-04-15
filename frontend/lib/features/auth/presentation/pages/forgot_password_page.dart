@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -119,7 +120,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   onPressed: () => context.go('/login'),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 width: 80,
                 height: 80,
@@ -169,10 +170,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               return null;
             },
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: AppSpacing.xl,
             child: FilledButton(
               key: const Key('forgot_password_submit_button'),
               onPressed: _submitForgotPassword,
@@ -199,10 +200,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xl),
         SizedBox(
           width: double.infinity,
-          height: 48,
+          height: AppSpacing.xl,
           child: OutlinedButton(
             key: const Key('back_to_login_button'),
             onPressed: () => context.go('/login'),
@@ -211,7 +212,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         TextButton(
           key: const Key('resend_email_button'),
           onPressed: () {
