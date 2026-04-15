@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
-
-/// Show a dialog wrapped in [GlassContainer] for a glass effect.
-///
-/// This is the glass counterpart to [showAdaptiveSheet] for dialog surfaces.
-/// The builder's return value is automatically wrapped in a [GlassContainer].
+/// Show a dialog.
 ///
 /// Example:
 /// ```dart
@@ -20,7 +14,6 @@ Future<T?> showGlassDialog<T>({
   required Widget Function(BuildContext) builder,
   bool barrierDismissible = true,
   Color barrierColor = Colors.black54,
-  GlassTier tier = GlassTier.overlay,
   double borderRadius = 28,
   bool useRootNavigator = false,
 }) {
@@ -30,17 +23,18 @@ Future<T?> showGlassDialog<T>({
     barrierColor: barrierColor,
     useRootNavigator: useRootNavigator,
     builder: (dialogCtx) {
-      return GlassContainer(
-        tier: tier,
-        borderRadius: borderRadius,
-        padding: EdgeInsets.zero,
+      return Container(
+        decoration: BoxDecoration(
+          color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
         child: builder(dialogCtx),
       );
     },
   );
 }
 
-/// Show a simple confirmation dialog with glass effect.
+/// Show a simple confirmation dialog.
 ///
 /// Returns `true` if confirmed, `false` if cancelled, `null` if dismissed.
 ///
@@ -60,13 +54,11 @@ Future<bool?> showGlassConfirmationDialog({
   String? cancelText,
   String? confirmText,
   bool isDestructive = false,
-  GlassTier tier = GlassTier.overlay,
   double borderRadius = 28,
 }) {
   final theme = Theme.of(context);
   return showGlassDialog<bool>(
     context: context,
-    tier: tier,
     borderRadius: borderRadius,
     builder: (dialogCtx) {
       return Padding(

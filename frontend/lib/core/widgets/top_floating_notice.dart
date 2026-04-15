@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
 import 'package:personal_ai_assistant/core/providers/top_floating_notice_provider.dart';
 
 const double _topFloatingNoticeGap = 0;
@@ -61,11 +60,15 @@ void showTopFloatingNotice(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
-            child: GlassContainer(
+            child: Container(
               key: const Key('top_floating_notice'),
-              borderRadius: 12,
+              decoration: BoxDecoration(
+                color: isError
+                    ? theme.colorScheme.errorContainer
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              tint: isError ? theme.colorScheme.error.withValues(alpha: 0.08) : null,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

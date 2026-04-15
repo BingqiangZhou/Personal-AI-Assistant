@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/glass/glass_container.dart';
-import 'package:personal_ai_assistant/core/glass/glass_tokens.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 
 /// On desktop/tablet (width >= 600), shows a centred [Dialog] within the
 /// current navigator's content area.  On mobile shows a standard
 /// [showModalBottomSheet].
 ///
-/// Both variants wrap content in [GlassContainer] for a glass effect.
 /// Returns the value produced by the builder (if any).
 Future<T?> showAdaptiveSheet<T>({
   required BuildContext context,
@@ -30,7 +27,7 @@ Future<T?> showAdaptiveSheet<T>({
   final screenWidth = MediaQuery.of(resolvedContext).size.width;
 
   if (screenWidth >= 600) {
-    // Desktop / tablet -> centred dialog with glass container.
+    // Desktop / tablet -> centred dialog.
     return showDialog<T>(
       context: resolvedContext,
       barrierColor: Colors.black54,
@@ -42,10 +39,11 @@ Future<T?> showAdaptiveSheet<T>({
               maxWidth: desktopMaxWidth,
               maxHeight: size.height * desktopMaxHeightFraction,
             ),
-            child: GlassContainer(
-              tier: GlassTier.overlay,
-              borderRadius: 28,
-              padding: EdgeInsets.zero,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(28),
+              ),
               child: builder(dialogCtx),
             ),
           ),
@@ -54,7 +52,7 @@ Future<T?> showAdaptiveSheet<T>({
     );
   }
 
-  // Mobile -> bottom sheet with glass container.
+  // Mobile -> bottom sheet.
   return showModalBottomSheet<T>(
     context: resolvedContext,
     isScrollControlled: isScrollControlled,
@@ -66,10 +64,11 @@ Future<T?> showAdaptiveSheet<T>({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (sheetCtx) {
-      return GlassContainer(
-        tier: GlassTier.overlay,
-        borderRadius: 28,
-        padding: EdgeInsets.zero,
+      return Container(
+        decoration: BoxDecoration(
+          color: Theme.of(sheetCtx).colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
         child: builder(sheetCtx),
       );
     },
