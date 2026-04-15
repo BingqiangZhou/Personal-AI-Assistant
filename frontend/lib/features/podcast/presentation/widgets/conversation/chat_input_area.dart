@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// Input area for the conversation chat with a text field and send button.
 ///
@@ -26,13 +27,13 @@ class ChatInputArea extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
-    const gradient = LinearGradient(
-      colors: AppColors.violetColors,
+    final gradient = LinearGradient(
+      colors: [scheme.primary, scheme.primary.withOpacity(0.8)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
     return Container(
-      color: const Color(0xFF252540),
+      color: extension.cardTierFill,
       padding: const EdgeInsets.all(16),
       child: SafeArea(
       top: false,
@@ -44,7 +45,7 @@ class ChatInputArea extends StatelessWidget {
                 focusNode: focusNode,
                 enabled: isReady && hasSummary,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.darkOnBackground,
+                  color: scheme.onSurface,
                 ),
                 cursorColor: scheme.primary,
                 maxLines: null,
@@ -55,19 +56,19 @@ class ChatInputArea extends StatelessWidget {
                   hintText: !hasSummary
                       ? l10n.podcast_conversation_no_summary_hint
                       : l10n.podcast_conversation_send_hint,
-                  hintStyle: const TextStyle(color: AppColors.darkOnSurfaceMuted),
+                  hintStyle: TextStyle(color: scheme.onSurfaceVariant),
                   filled: true,
                   fillColor: Colors.transparent,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(extension.cardRadius),
-                    borderSide: const BorderSide(
-                      color: AppColors.darkBorder,
+                    borderSide: BorderSide(
+                      color: extension.surfaceTierBorder,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(extension.cardRadius),
-                    borderSide: const BorderSide(
-                      color: AppColors.darkBorder,
+                    borderSide: BorderSide(
+                      color: extension.surfaceTierBorder,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -92,7 +93,7 @@ class ChatInputArea extends StatelessWidget {
                 return Container(
                   decoration: BoxDecoration(
                     gradient: canSend ? gradient : null,
-                    color: canSend ? null : AppColors.darkSurfaceVariant,
+                    color: canSend ? null : extension.surfaceTierFill,
                     borderRadius: BorderRadius.circular(extension.cardRadius),
                   ),
                   child: IconButton(
@@ -104,15 +105,15 @@ class ChatInputArea extends StatelessWidget {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: canSend
-                                  ? AppColors.darkOnBackground
-                                  : AppColors.darkOnSurfaceMuted,
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant,
                             ),
                           )
                         : Icon(
                             Icons.send,
                             color: canSend
-                                ? AppColors.darkOnBackground
-                                : AppColors.darkOnSurfaceMuted,
+                                ? scheme.onSurface
+                                : scheme.onSurfaceVariant,
                           ),
                     padding: const EdgeInsets.all(12),
                   ),

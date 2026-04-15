@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 
 /// A single message bubble in the conversation chat.
@@ -173,12 +174,12 @@ class ChatMessageBubble extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Violet gradient left bar
+        // Primary gradient left bar
         Container(
           width: 3,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: AppColors.violetColors,
+            gradient: LinearGradient(
+              colors: [scheme.primary, scheme.primary.withOpacity(0.6)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// Empty state for the conversation chat when no messages exist yet.
 ///
@@ -42,14 +43,14 @@ class ChatEmptyState extends StatelessWidget {
             Text(
               l10n.podcast_conversation_empty_title,
               style: theme.textTheme.titleLarge?.copyWith(
-                color: AppColors.darkOnBackground,
+                color: scheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.podcast_conversation_empty_hint,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.darkOnSurfaceMuted,
+                color: scheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -90,7 +91,7 @@ class ChatEmptyState extends StatelessWidget {
                           ? '${summary.substring(0, 200)}...'
                           : summary,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.darkOnSurfaceMuted,
+                        color: scheme.onSurfaceVariant,
                         height: 1.5,
                       ),
                     ),
