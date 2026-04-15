@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.44.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.43.1...v0.44.0) - 2026-04-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.44.0))
+
+### 🐛 Bug Fixes
+
+- Rename glass dialog helper to app dialog helper ([47f80b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/47f80b56b436e3089b367f20abf73f1115ff014a))
+- Resolve syntax errors from glass removal ([32e96b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/32e96b557e6d810c71d4e060174a9b21b535c133))
+
+### 📚 Documentation
+
+- Add monochrome glass design spec ([2b1db77](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2b1db77cd8ef8505228fffd29c5a2cfa86c91aeb))
+- Add monochrome glass implementation plan ([945072b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/945072b7a218c03fbf7bc3797ca91e3d094e65c0))
+- Add remove glass effect design spec ([0b490ab](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0b490ab3e44b98ee3d46a801f438f2a6a67f20c1))
+- Add remove glass effect implementation plan ([5fc2269](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5fc2269c0b48d003da394f2034be2daf6c68ac35))
+
+### 🚜 Refactor
+
+- Podcast episode card monochrome gradient ([4faca0c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4faca0cc4837f8c142700004d0a0805a36063144))
+- Chat components monochrome — replace violetColors with primary, remove hardcoded dark-mode colors ([7b4e514](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7b4e514c090df6e811e42a23e5f4ae754e470c68))
+- Monochrome glass theme foundation — gray gradients, orbs, and theme-aware glass fills ([9e4112a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9e4112a38afbff752fbd191511f4dc00aec79d8b))
+- Mini player monochrome surface style — replace gradient with SurfaceCard, remove hardcoded whites ([55aa5fe](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/55aa5fe341b503ea536a0b93278bb71e989c48bd))
+- Update project configuration files and dependencies for iOS and macOS ([bf977b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bf977b5c0ac75b903ec3f51efa1fce09234c1676))
+- Remove glass from core shells and SurfacePanel ([897dd67](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/897dd6740fa8d9a02539610a74c8702cbd6e1041))
+- Remove SurfaceCard from settings and shared widgets ([152891c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/152891c744e5efcff726bcbecd7181ab01957e9a))
+- Remove glass from helper widgets (sheets, dialogs, notices) ([963ed36](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/963ed369aa79f8422f466549892e302098e2269a))
+- Remove SurfaceCard from podcast widgets ([e588ad5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e588ad57a20dc1d6eb0c007cf62c933c370ee41b))
+- Remove glass from auth, profile, and splash pages ([8a370ef](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8a370eff12597917060bbc8ab4d9e543f679c2bd))
+- Remove glass from podcast pages and widgets ([64b4443](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/64b4443030b94f75ba6c35003a772691b7b0a3a1))
+- Delete glass system, remove tier tokens, update docs ([6fe1280](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6fe128093593fc8ec829afb4f9b9e98c5ed6c85b))
+
+
+
 ## [0.43.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.43.0...v0.43.1) - 2026-04-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.43.1))
 
 ### ⚙️ Miscellaneous Tasks
