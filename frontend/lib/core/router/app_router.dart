@@ -35,7 +35,7 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
     RouteObserver<ModalRoute<dynamic>>();
 
-CustomTransitionPage<T> _buildPageWithTransition<T>({
+Page<T> _buildPageWithTransition<T>({
   required GoRouterState state,
   required Widget child,
 }) {
@@ -45,7 +45,7 @@ CustomTransitionPage<T> _buildPageWithTransition<T>({
   );
 }
 
-CustomTransitionPage<T> _buildModalPage<T>({
+Page<T> _buildModalPage<T>({
   required GoRouterState state,
   required Widget child,
 }) {

@@ -138,6 +138,9 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                 },
                 child: PageView(
                   controller: _pageController,
+                  physics: defaultTargetPlatform == TargetPlatform.iOS
+                      ? const NeverScrollableScrollPhysics()
+                      : null,
                   onPageChanged: (index) {
                     _updatePageState(() {
                       _selectedTabIndex = index;
