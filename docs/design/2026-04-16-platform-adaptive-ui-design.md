@@ -27,8 +27,8 @@ Layer 1: Flutter automatic (zero code changes)
 Layer 2: .adaptive() constructors (simple find-and-replace)
   Switch, Slider, Checkbox, Radio, CircularProgressIndicator, AlertDialog
 
-Layer 3: Custom helper layer (~8 helper files)
-  AppBar, buttons, dialogs, bottom sheets, page transitions, navigation bar, text field styling
+Layer 3: Custom helper layer (5 new helper files + theme adjustments)
+  AppBar, dialogs, bottom sheets, page transitions; buttons/inputs via theme
 ```
 
 ### File Structure
@@ -78,14 +78,15 @@ Create `adaptiveAppBar()` helper function:
 
 ```dart
 PreferredSizeWidget adaptiveAppBar(BuildContext context, {
-  required String title,
+  String? title,
+  Widget? titleWidget,
   List<Widget>? actions,
   Widget? leading,
   bool? centerTitle,
 }) {
   final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
   return AppBar(
-    title: Text(title),
+    title: titleWidget ?? (title != null ? Text(title) : null),
     elevation: isIOS ? 0 : null,
     scrolledUnderElevation: isIOS ? 0.1 : null,
     centerTitle: centerTitle ?? isIOS,
@@ -274,7 +275,7 @@ Desktop platforms (macOS, Windows, Linux):
 
 1. Button iOS styling via theme (automatic across all 48 files)
 2. TextField iOS styling via `inputDecorationTheme` (automatic)
-3. Optionally update key input files for iOS border style
+3. Update key input files with iOS-specific InputDecoration overrides where theme defaults are insufficient
 
 **Validation**: iOS buttons are flat, inputs have iOS-style borders.
 
