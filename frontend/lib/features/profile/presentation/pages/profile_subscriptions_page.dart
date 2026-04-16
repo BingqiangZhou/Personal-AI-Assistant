@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
-import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
-import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
@@ -90,89 +90,53 @@ class _ProfileSubscriptionsPageState
       backgroundColor: Colors.transparent,
       body: Material(
         color: Colors.transparent,
-        child: SafeArea(
-          bottom: false,
-          child: ResponsiveContainer(
-                maxWidth: 1480,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeaderPanel(context),
-                    const SizedBox(height: AppSpacing.smMd),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () => ref
-                            .read(podcastSubscriptionProvider.notifier)
-                            .refreshSubscriptions(),
-                        child: _buildBody(
-                          context,
-                          l10n,
-                          subscriptions: state.subscriptions,
-                          hasMore: state.hasMore,
-                          isLoading: state.isLoading,
-                          isLoadingMore: state.isLoadingMore,
-                          total: state.total,
-                          error: state.error,
-                        ),
-                      ),
-                    ),
-                  ],
+        child: ResponsiveContainer(
+          maxWidth: 1480,
+          alignment: Alignment.topCenter,
+          child: CustomScrollView(
+            slivers: [
+              AdaptiveSliverAppBar(
+                title: l10n.profile_subscriptions,
+                actions: [
+                  HeaderCapsuleActionButton(
+                    key: const Key('profile_subscriptions_action_add'),
+                    tooltip: l10n.podcast_add_podcast,
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        builder: (context) => const AddPodcastDialog(),
+                      );
+                    },
+                    icon: Icons.add,
+                    circular: true,
+                  ),
+                ],
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.smMd),
+              ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: RefreshIndicator(
+                  onRefresh: () => ref
+                      .read(podcastSubscriptionProvider.notifier)
+                      .refreshSubscriptions(),
+                  child: _buildBody(
+                    context,
+                    l10n,
+                    subscriptions: state.subscriptions,
+                    hasMore: state.hasMore,
+                    isLoading: state.isLoading,
+                    isLoadingMore: state.isLoadingMore,
+                    total: state.total,
+                    error: state.error,
+                  ),
                 ),
               ),
-            ),
-        ),
-    );
-  }
-
-  Widget _buildHeaderPanel(BuildContext context) {
-    final l10n = context.l10n;
-    final isMobile =
-        MediaQuery.sizeOf(context).width < Breakpoints.medium;
-    return CompactHeaderPanel(
-      title: l10n.profile_subscriptions,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildActionButton(
-            context,
-            key: const Key('profile_subscriptions_action_add'),
-            tooltip: l10n.podcast_add_podcast,
-            icon: Icons.add,
-            onPressed: () {
-              showAppDialog(
-                context: context,
-                builder: (context) => const AddPodcastDialog(),
-              );
-            },
+            ],
           ),
-          if (!isMobile) ...[
-            const SizedBox(width: AppSpacing.sm),
-            HeaderCapsuleActionButton(
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              icon: Icons.arrow_back_rounded,
-              onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-              circular: true,
-            ),
-          ],
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context, {
-    required Key key,
-    required String tooltip,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return HeaderCapsuleActionButton(
-      key: key,
-      tooltip: tooltip,
-      onPressed: onPressed,
-      icon: icon,
-      circular: true,
     );
   }
 

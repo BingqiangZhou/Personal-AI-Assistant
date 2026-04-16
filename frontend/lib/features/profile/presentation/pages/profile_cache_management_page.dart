@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
@@ -10,9 +9,10 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
-import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
@@ -428,37 +428,6 @@ class _ProfileCacheManagementPageState
     );
   }
 
-  Widget _buildHeaderPanel(BuildContext context) {
-    final l10n = context.l10n;
-    final isMobile = context.isMobile;
-
-    return CompactHeaderPanel(
-      key: const Key('cache_manage_header_panel'),
-      title: l10n.profile_cache_manage_title,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          HeaderCapsuleActionButton(
-            key: const Key('cache_manage_refresh_action'),
-            tooltip: l10n.refresh,
-            onPressed: _refresh,
-            icon: Icons.refresh_rounded,
-            circular: true,
-          ),
-          if (!isMobile) ...[
-            const SizedBox(width: AppSpacing.sm),
-            HeaderCapsuleActionButton(
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              icon: Icons.arrow_back_rounded,
-              onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-              circular: true,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildOverviewSection(
     BuildContext context, {
     required _MediaCacheStats stats,
@@ -786,40 +755,50 @@ class _ProfileCacheManagementPageState
       backgroundColor: Colors.transparent,
       body: Material(
         color: Colors.transparent,
-        child: SafeArea(
-          bottom: false,
-          child: ResponsiveContainer(
-                maxWidth: 1480,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeaderPanel(context),
-                    const SizedBox(height: AppSpacing.smMd),
-                    Expanded(
-                      child: FutureBuilder<_MediaCacheStats>(
-                        future: _statsFuture,
-                        builder: (context, snapshot) {
-                          final isLoading =
-                              snapshot.connectionState != ConnectionState.done;
-                          final stats = snapshot.data ?? _emptyStats;
+        child: ResponsiveContainer(
+          maxWidth: 1480,
+          alignment: Alignment.topCenter,
+          child: CustomScrollView(
+            slivers: [
+              AdaptiveSliverAppBar(
+                title: context.l10n.profile_cache_manage_title,
+                actions: [
+                  HeaderCapsuleActionButton(
+                    key: const Key('cache_manage_refresh_action'),
+                    tooltip: context.l10n.refresh,
+                    onPressed: _refresh,
+                    icon: Icons.refresh_rounded,
+                    circular: true,
+                  ),
+                ],
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.smMd),
+              ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: FutureBuilder<_MediaCacheStats>(
+                  future: _statsFuture,
+                  builder: (context, snapshot) {
+                    final isLoading =
+                        snapshot.connectionState != ConnectionState.done;
+                    final stats = snapshot.data ?? _emptyStats;
 
-                          return RefreshIndicator(
-                            onRefresh: _refresh,
-                            child: _buildContentPanel(
-                              context,
-                              stats: stats,
-                              isLoading: isLoading,
-                            ),
-                          );
-                        },
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: _buildContentPanel(
+                        context,
+                        stats: stats,
+                        isLoading: isLoading,
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
+          ),
         ),
-    );
+        ),
+      );
   }
 }

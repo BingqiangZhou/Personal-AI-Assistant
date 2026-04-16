@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
-import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
@@ -45,183 +45,169 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
       backgroundColor: Colors.transparent,
       body: Material(
         color: Colors.transparent,
-        child: SafeArea(
-          bottom: false,
-          child: ResponsiveContainer(
-                maxWidth: 1480,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeaderPanel(context, l10n),
-                    const SizedBox(height: AppSpacing.smMd),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () => ref
-                            .read(playbackHistoryLiteProvider.notifier)
-                            .load(forceRefresh: true),
-                        child: historyAsync.when(
-                          data: (response) {
-                            final episodes =
-                                response?.episodes ??
-                                const <PlaybackHistoryLiteItem>[];
+        child: ResponsiveContainer(
+          maxWidth: 1480,
+          alignment: Alignment.topCenter,
+          child: CustomScrollView(
+            slivers: [
+              AdaptiveSliverAppBar(
+                title: l10n.profile_viewed_title,
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.smMd),
+              ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: RefreshIndicator(
+                  onRefresh: () => ref
+                      .read(playbackHistoryLiteProvider.notifier)
+                      .load(forceRefresh: true),
+                  child: historyAsync.when(
+                    data: (response) {
+                      final episodes =
+                          response?.episodes ??
+                          const <PlaybackHistoryLiteItem>[];
 
-                            if (episodes.isEmpty) {
-                              return _buildPanelScaffold(
-                                context,
-                                title: l10n.profile_viewed_title,
-                                subtitle:
-                                    'Resume episodes and review recently played content.',
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.lg),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.history,
-                                          size: 56,
+                      if (episodes.isEmpty) {
+                        return _buildPanelScaffold(
+                          context,
+                          title: l10n.profile_viewed_title,
+                          subtitle:
+                              'Resume episodes and review recently played content.',
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.history,
+                                    size: 56,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  Text(
+                                    l10n.server_history_empty,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(
                                           color: Theme.of(
                                             context,
                                           ).colorScheme.onSurfaceVariant,
                                         ),
-                                        const SizedBox(height: AppSpacing.lg),
-                                        Text(
-                                          l10n.server_history_empty,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.onSurfaceVariant,
-                                              ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-
-                            return SurfacePanel(
-                              padding: EdgeInsets.zero,
-                              showBorder: false,
-                              borderRadius: appThemeOf(
-                                context,
-                              ).cardRadius,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      AppSpacing.mdLg,
-                                      AppSpacing.mdLg,
-                                      AppSpacing.mdLg,
-                                      AppSpacing.smMd,
-                                    ),
-                                    child: AppSectionHeader(
-                                      title: l10n.profile_viewed_title,
-                                      subtitle:
-                                          '${episodes.length} recently played episodes',
-                                      hideTitle: true,
-                                    ),
-                                  ),
-                                  Divider(
-                                    height: 1,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outlineVariant
-                                        .withValues(alpha: 0.45),
-                                  ),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      physics:
-                                          const AlwaysScrollableScrollPhysics(),
-                                      padding: EdgeInsets.zero,
-                                      itemCount: episodes.length,
-                                      itemBuilder: (context, index) {
-                                        final episode = episodes[index];
-                                        return _buildHistoryCard(
-                                          context,
-                                          episode,
-                                        );
-                                      },
-                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                          loading: () => _buildPanelScaffold(
-                            context,
-                            title: l10n.profile_viewed_title,
-                            subtitle:
-                                'Resume episodes and review recently played content.',
-                            child: LoadingStatusContent(
-                              key: const Key('profile_history_loading_content'),
-                              title: l10n.loading,
-                              spinnerSize: 28,
-                              gapAfterSpinner: 12,
                             ),
-                            bare: true,
                           ),
-                          error: (error, _) => _buildPanelScaffold(
-                            context,
-                            title: l10n.profile_viewed_title,
-                            subtitle:
-                                'Resume episodes and review recently played content.',
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppSpacing.lg),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      size: 56,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                    ),
-                                    const SizedBox(height: AppSpacing.lg),
-                                    Text(
-                                      error.toString(),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
+                        );
+                      }
+
+                      return SurfacePanel(
+                        padding: EdgeInsets.zero,
+                        showBorder: false,
+                        borderRadius: appThemeOf(
+                          context,
+                        ).cardRadius,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.mdLg,
+                                AppSpacing.mdLg,
+                                AppSpacing.mdLg,
+                                AppSpacing.smMd,
+                              ),
+                              child: AppSectionHeader(
+                                title: l10n.profile_viewed_title,
+                                subtitle:
+                                    '${episodes.length} recently played episodes',
+                                hideTitle: true,
                               ),
                             ),
+                            Divider(
+                              height: 1,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.45),
+                            ),
+                            Expanded(
+                              child: ListView.builder(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.zero,
+                                itemCount: episodes.length,
+                                itemBuilder: (context, index) {
+                                  final episode = episodes[index];
+                                  return _buildHistoryCard(
+                                    context,
+                                    episode,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    loading: () => _buildPanelScaffold(
+                      context,
+                      title: l10n.profile_viewed_title,
+                      subtitle:
+                          'Resume episodes and review recently played content.',
+                      child: LoadingStatusContent(
+                        key: const Key('profile_history_loading_content'),
+                        title: l10n.loading,
+                        spinnerSize: 28,
+                        gapAfterSpinner: 12,
+                      ),
+                      bare: true,
+                    ),
+                    error: (error, _) => _buildPanelScaffold(
+                      context,
+                      title: l10n.profile_viewed_title,
+                      subtitle:
+                          'Resume episodes and review recently played content.',
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 56,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              Text(
+                                error.toString(),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
+          ),
         ),
-    );
-  }
-
-  Widget _buildHeaderPanel(BuildContext context, AppLocalizations l10n) {
-    final isMobile = context.isMobile;
-    return CompactHeaderPanel(
-      title: l10n.profile_viewed_title,
-      trailing: isMobile
-          ? null
-          : HeaderCapsuleActionButton(
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              icon: Icons.arrow_back_rounded,
-              onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-              circular: true,
-            ),
-    );
+        ),
+      );
   }
 
   Widget _buildPanelScaffold(
