@@ -319,7 +319,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 22),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withOpacity(0.6),
+        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
         hintStyle: _withBody(
           textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -333,11 +333,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: AppRadius.mdLgRadius,
-          borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.mdLgRadius,
-          borderSide: BorderSide(color: scheme.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.mdLgRadius,
@@ -358,11 +358,11 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.8),
-        selectedColor: scheme.primary.withOpacity(0.15),
-        disabledColor: scheme.surfaceContainerHighest.withOpacity(0.5),
-        secondarySelectedColor: scheme.primary.withOpacity(0.18),
-        side: BorderSide(color: scheme.outline.withOpacity(0.15)),
+        backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.8),
+        selectedColor: scheme.primary.withValues(alpha: 0.15),
+        disabledColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        secondarySelectedColor: scheme.primary.withValues(alpha: 0.18),
+        side: BorderSide(color: scheme.outline.withValues(alpha: 0.15)),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         labelStyle: _withBody(
