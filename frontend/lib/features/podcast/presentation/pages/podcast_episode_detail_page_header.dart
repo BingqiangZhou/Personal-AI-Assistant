@@ -235,6 +235,8 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
               SizedBox(width: AppSpacing.sm),
               _buildQueueButton(),
               SizedBox(width: AppSpacing.sm),
+              _buildShareButton(episode),
+              SizedBox(width: AppSpacing.sm),
               _buildBackButton(),
             ],
           ),

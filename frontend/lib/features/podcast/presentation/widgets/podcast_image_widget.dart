@@ -208,85 +208,89 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
       provider = baseProvider;
     }
 
-    return Image(
-      image: provider,
-      width: widget.width,
-      height: widget.height,
-      fit: widget.fit,
-      gaplessPlayback: true,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(extension.buttonRadius),
-          ),
-          child: Center(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.4, end: 1),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value.clamp(0.0, 1.0),
-                  child: child,
-                );
-              },
-              child: Icon(
-                Icons.podcasts,
-                size: iconSize * 0.6,
-                color: theme.colorScheme.onSurfaceVariant
-                    .withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _handleImageError(error);
-          }
-        });
-
-        if (_retryCount > 0 || _useFallback) {
+    return RepaintBoundary(
+      child: Image(
+        image: provider,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        gaplessPlayback: true,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
           return Container(
             width: widget.width,
             height: widget.height,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.5,
-              ),
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(extension.buttonRadius),
             ),
-            child: Icon(
-              Icons.refresh,
-              size: iconSize * 0.5,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.4, end: 1),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value.clamp(0.0, 1.0),
+                    child: child,
+                  );
+                },
+                child: Icon(
+                  Icons.podcasts,
+                  size: iconSize * 0.6,
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withValues(alpha: 0.6),
+                ),
+              ),
             ),
           );
-        }
+        },
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _handleImageError(error);
+            }
+          });
 
-        return SizedBox(width: widget.width, height: widget.height);
-      },
+          if (_retryCount > 0 || _useFallback) {
+            return Container(
+              width: widget.width,
+              height: widget.height,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                borderRadius: BorderRadius.circular(extension.buttonRadius),
+              ),
+              child: Icon(
+                Icons.refresh,
+                size: iconSize * 0.5,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+            );
+          }
+
+          return SizedBox(width: widget.width, height: widget.height);
+        },
+      ),
     );
   }
 
   Widget _buildIconPlaceholder(Color color, double size, double radius) {
-    return Container(
-      width: widget.width,
-      height: widget.height,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Icon(
-        Icons.podcasts,
-        size: size,
-        color: color.withValues(alpha: 0.8),
+    return RepaintBoundary(
+      child: Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Icon(
+          Icons.podcasts,
+          size: size,
+          color: color.withValues(alpha: 0.8),
+        ),
       ),
     );
   }

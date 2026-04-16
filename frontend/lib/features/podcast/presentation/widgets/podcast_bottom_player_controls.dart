@@ -220,46 +220,48 @@ class _MiniPlayPauseButton extends ConsumerWidget {
     final transport = ref.watch(audioPlayPauseStateProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return IconButton(
-      key: key,
-      tooltip: transport.isPlaying
-          ? (l10n?.podcast_player_pause ?? 'Pause')
-          : (l10n?.podcast_player_play ?? 'Play'),
-      onPressed: () async {
-        AdaptiveHaptic.mediumImpact(context);
-        if (transport.isLoading) {
-          return;
-        }
-        if (transport.isPlaying) {
-          await ref.read(audioPlayerProvider.notifier).pause();
-        } else {
-          await ref.read(audioPlayerProvider.notifier).resume();
-        }
-      },
-      style: IconButton.styleFrom(
-        minimumSize: const Size(40, 40),
-        maximumSize: const Size(40, 40),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-        padding: EdgeInsets.zero,
-        foregroundColor: theme.colorScheme.onSurface,
-      ),
-      icon: transport.isLoading
-          ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator.adaptive(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onSurface),
+    return RepaintBoundary(
+      child: IconButton(
+        key: key,
+        tooltip: transport.isPlaying
+            ? (l10n?.podcast_player_pause ?? 'Pause')
+            : (l10n?.podcast_player_play ?? 'Play'),
+        onPressed: () async {
+          AdaptiveHaptic.mediumImpact(context);
+          if (transport.isLoading) {
+            return;
+          }
+          if (transport.isPlaying) {
+            await ref.read(audioPlayerProvider.notifier).pause();
+          } else {
+            await ref.read(audioPlayerProvider.notifier).resume();
+          }
+        },
+        style: IconButton.styleFrom(
+          minimumSize: const Size(40, 40),
+          maximumSize: const Size(40, 40),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          foregroundColor: theme.colorScheme.onSurface,
+        ),
+        icon: transport.isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator.adaptive(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onSurface),
+                ),
+              )
+            : Icon(
+                transport.isPlaying
+                    ? Icons.pause_circle_outline_rounded
+                    : Icons.play_circle_outline_rounded,
+                size: 28,
+                color: theme.colorScheme.onSurface,
               ),
-            )
-          : Icon(
-              transport.isPlaying
-                  ? Icons.pause_circle_outline_rounded
-                  : Icons.play_circle_outline_rounded,
-              size: 28,
-              color: theme.colorScheme.onSurface,
-            ),
+      ),
     );
   }
 }
@@ -290,15 +292,17 @@ class _MiniProgressText extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(audioMiniProgressProvider);
     final theme = Theme.of(context);
-    return Text(
-      key: const Key('podcast_bottom_player_mini_time'),
-      '${progress.formattedPosition} / ${progress.formattedDuration}',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        color: theme.colorScheme.onSurface,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+    return RepaintBoundary(
+      child: Text(
+        key: const Key('podcast_bottom_player_mini_time'),
+        '${progress.formattedPosition} / ${progress.formattedDuration}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
