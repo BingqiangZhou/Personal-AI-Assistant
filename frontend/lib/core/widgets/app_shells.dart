@@ -370,6 +370,10 @@ class _SurfacePanelState extends State<SurfacePanel> {
 
 
 /// CompactHeaderPanel - 紧凑头部面板
+///
+/// @deprecated Use [AdaptiveSliverAppBar] instead.
+/// This widget will be removed in a future version.
+@Deprecated('Use AdaptiveSliverAppBar instead')
 class CompactHeaderPanel extends StatelessWidget {
   const CompactHeaderPanel({
     required this.title, super.key,
