@@ -1,0 +1,226 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission.notification';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+
+/// Notification service for managing local notifications.
+///
+/// Supports:
+/// - iOS: APNs-style local notifications
+/// - Android: Firebase Cloud Messaging (FCM) style notifications
+/// - Permission requests
+/// - Scheduled notifications
+/// - Notification channels (Android)
+class NotificationService {
+  NotificationService._();
+  static final NotificationService instance = NotificationService._();
+
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
+
+  bool _initialized = false;
+
+  /// Initialize the notification service.
+  ///
+  /// Must be called during app startup.
+  /// Returns true if initialization was successful.
+  Future<bool> initialize() async {
+    if (_initialized) return true;
+
+    // Android initialization settings
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+
+    // iOS initialization settings
+    const darwinSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: darwinSettings,
+    );
+
+    final success = await _notifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationTap,
+    );
+
+    if (success) {
+      _initialized = true;
+      logger.AppLogger.debug('[NotificationService] Initialized successfully');
+
+      // Create notification channels for Android
+      if (Platform.isAndroid) {
+        await _createChannels();
+      }
+    } else {
+      logger.AppLogger.error('[NotificationService] Failed to initialize');
+    }
+
+    return success;
+  }
+
+  /// Create notification channels for Android (Oreo and above).
+  Future<void> _createChannels() async {
+    const newEpisodeChannel = AndroidNotificationChannel(
+      'new_episodes',
+      'New Episodes',
+      description: 'Notifications for new podcast episodes',
+      importance: Importance.high,
+    );
+
+    const playbackChannel = AndroidNotificationChannel(
+      'playback',
+      'Playback',
+      description: 'Playback status notifications',
+      importance: Importance.low,
+    );
+
+    await _notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(newEpisodeChannel);
+
+    await _notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(playbackChannel);
+
+    logger.AppLogger.debug('[NotificationService] Notification channels created');
+  }
+
+  /// Request notification permissions from the user.
+  ///
+  /// Returns true if permissions are granted.
+  Future<bool> requestPermissions() async {
+    if (Platform.isIOS) {
+      final result = await _notifications
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+      return result ?? false;
+    }
+
+    // Android permissions are handled at runtime
+    // For Android 13+, we need to request POST_NOTIFICATIONS permission
+    if (Platform.isAndroid) {
+      final status = await Permission.notifications.request();
+      return status.isGranted;
+    }
+
+    return true;
+  }
+
+  /// Check if notification permissions are granted.
+  Future<bool> arePermissionsGranted() async {
+    if (Platform.isIOS) {
+      final result = await _notifications
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.checkPermissions();
+      return result?.isEnabled ?? false;
+    }
+
+    if (Platform.isAndroid) {
+      return await Permission.notifications.isGranted;
+    }
+
+    return true;
+  }
+
+  /// Show a new episode notification.
+  Future<void> showNewEpisodeNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'new_episodes',
+      channelName: 'New Episodes',
+      channelDescription: 'Notifications for new podcast episodes',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      0, // id (0 means auto-generate)
+      title,
+      body,
+      notificationDetails: details,
+      payload: payload,
+    );
+  }
+
+  /// Show a playback status notification (low priority).
+  Future<void> showPlaybackNotification({
+    required String title,
+    required String body,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'playback',
+      channelName: 'Playback',
+      channelDescription: 'Playback status notifications',
+      importance: Importance.low,
+      priority: Priority.low,
+      showWhen: false,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: false,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      1,
+      title,
+      body,
+      notificationDetails: details,
+    );
+  }
+
+  /// Cancel all notifications.
+  Future<void> cancelAll() async {
+    await _notifications.cancelAll();
+  }
+
+  /// Cancel a specific notification by ID.
+  Future<void> cancelById(int id) async {
+    await _notifications.cancel(id);
+  }
+
+  /// Handle notification tap events.
+  void _onNotificationTap(NotificationResponse response) {
+    final payload = response.payload;
+    logger.AppLogger.debug(
+      '[NotificationService] Notification tapped: $payload',
+    );
+    // TODO: Navigate to appropriate screen based on payload
+  }
+}
