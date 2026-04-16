@@ -57,7 +57,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     final l10n = context.l10n;
     showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         backgroundColor: Colors.transparent,
         title: Text(l10n.error),
         content: Text(message),

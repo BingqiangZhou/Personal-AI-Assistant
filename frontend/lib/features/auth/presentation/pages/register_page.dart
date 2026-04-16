@@ -375,11 +375,20 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                            child: Builder(
+                              builder: (context) {
+                                final theme = Theme.of(context);
+                                return Theme(
+                                  data: theme.copyWith(
+                                    colorScheme: theme.colorScheme.copyWith(
+                                      primary: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  child: const CircularProgressIndicator.adaptive(
+                                    strokeWidth: 2,
+                                  ),
+                                );
+                              },
                             ),
                           )
                         : Text(l10n.auth_create_account),

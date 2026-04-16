@@ -158,7 +158,7 @@ class DiscoverChartRow extends StatelessWidget {
                         child: isSubscribing
                             ? const Padding(
                                 padding: EdgeInsets.all(AppSpacing.sm),
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                               )
                             : IconButton(
                                 key: Key('podcast_discover_subscribe_${item.itemId}'),

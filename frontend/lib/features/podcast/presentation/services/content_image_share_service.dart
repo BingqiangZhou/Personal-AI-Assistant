@@ -576,7 +576,7 @@ class ContentImageShareService {
                       const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(
+                        child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2.2,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             Colors.white,

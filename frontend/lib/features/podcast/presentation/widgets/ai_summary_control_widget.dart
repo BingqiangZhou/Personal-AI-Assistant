@@ -181,7 +181,7 @@ class _AISummaryControlWidgetState
               ? SizedBox(
                   width: isCompact ? 16 : 18,
                   height: isCompact ? 16 : 18,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
+                  child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
                 )
               : Icon(Icons.auto_awesome, size: isCompact ? 16 : 18),
           label: Text(
@@ -291,7 +291,7 @@ class _AISummaryControlWidgetState
                     ? SizedBox(
                         width: isCompact ? 16 : 18,
                         height: isCompact ? 16 : 18,
-                        child: const CircularProgressIndicator(strokeWidth: 2),
+                        child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
                       )
                     : Icon(Icons.refresh, size: isCompact ? 16 : 18),
                 label: Text(

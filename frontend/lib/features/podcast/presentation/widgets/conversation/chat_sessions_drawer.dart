@@ -84,7 +84,7 @@ class ChatSessionsDrawer extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator.adaptive()),
               error: (e, _) => Center(
                 child: Text(
                   AppLocalizations.of(context)?.error_prefix(e.toString()) ??

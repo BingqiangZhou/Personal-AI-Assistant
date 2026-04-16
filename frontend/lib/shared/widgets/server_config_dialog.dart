@@ -108,9 +108,9 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < Breakpoints.medium;
     final dialogWidth = isMobile ? screenWidth - AppSpacing.xxl : 500.0;
-    return AlertDialog(
+    return AlertDialog.adaptive(
       backgroundColor: Colors.transparent,
-      insetPadding: isMobile ? const EdgeInsets.all(AppSpacing.md) : null,
+      insetPadding: const EdgeInsets.all(AppSpacing.md),
       title: Text(l10n.backend_api_server_config),
       content: SizedBox(
         width: dialogWidth,
@@ -372,7 +372,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     // Show confirmation dialog for server switch
     final confirmed = await showAppDialog<bool>(
       context: dialogContext,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => AlertDialog.adaptive(
         backgroundColor: Colors.transparent,
         title: Text(l10n.profile_server_switch_title),
         content: Text(l10n.profile_server_switch_message),

@@ -197,7 +197,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         icon: Icons.notifications,
         title: l10n.profile_notifications,
         subtitle: l10n.profile_notifications_subtitle,
-        trailing: Switch(
+        trailing: Switch.adaptive(
           key: const Key('profile_notifications_switch'),
           value: notificationsEnabled,
           activeThumbColor: theme.colorScheme.surface,
@@ -437,7 +437,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Row(
@@ -516,7 +516,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context,
       builder: (dialogContext) {
         final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
-        return AlertDialog(
+        return AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Text(l10n.profile_security),
@@ -543,7 +543,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  trailing: const Switch(
+                  trailing: const Switch.adaptive(
                     value: false,
                     onChanged: null,
                   ),
@@ -587,7 +587,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            return AlertDialog(
+            return AlertDialog.adaptive(
               backgroundColor: Colors.transparent,
               insetPadding: ResponsiveDialogHelper.insetPadding(),
               title: Text(l10n.profile_password_change_title),
@@ -718,11 +718,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ? SizedBox(
                           width: AppSpacing.mdLg,
                           height: AppSpacing.mdLg,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(dialogContext)
-                                .colorScheme
-                                .onPrimary,
+                          child: Builder(
+                            builder: (context) {
+                              final theme = Theme.of(dialogContext);
+                              return Theme(
+                                data: theme.copyWith(
+                                  colorScheme: theme.colorScheme.copyWith(
+                                    primary: theme.colorScheme.onPrimary,
+                                  ),
+                                ),
+                                child: const CircularProgressIndicator.adaptive(
+                                  strokeWidth: 2,
+                                ),
+                              );
+                            },
                           ),
                         )
                       : Text(l10n.profile_send_reset_link),
@@ -745,7 +754,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             final l10n = dialogContext.l10n;
             final iconColor = ResponsiveDialogHelper.iconColor(dialogContext);
 
-            return AlertDialog(
+            return AlertDialog.adaptive(
               backgroundColor: Colors.transparent,
               insetPadding: ResponsiveDialogHelper.insetPadding(),
               title: Text(l10n.language),
@@ -821,7 +830,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           dialogContext,
           desktopMaxWidth: 400,
         );
-        return AlertDialog(
+        return AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Row(
@@ -889,7 +898,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
           title: Text(l10n.profile_logout_title),

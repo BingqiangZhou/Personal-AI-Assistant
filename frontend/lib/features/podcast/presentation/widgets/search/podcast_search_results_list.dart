@@ -29,7 +29,7 @@ class PodcastSearchResultsList extends ConsumerWidget {
     final l10n = context.l10n;
 
     if (searchState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
 
     if (searchState.error != null) {

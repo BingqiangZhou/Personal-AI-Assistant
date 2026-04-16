@@ -690,9 +690,9 @@ class _ManualUpdateCheckDialogState
     );
     final isMobile = context.isMobile;
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       backgroundColor: Colors.transparent,
-      insetPadding: isMobile ? ResponsiveDialogHelper.insetPadding() : null,
+      insetPadding: ResponsiveDialogHelper.insetPadding(),
       title: Text(l10n.update_check_updates),
       content: SizedBox(
         width: dialogWidth,

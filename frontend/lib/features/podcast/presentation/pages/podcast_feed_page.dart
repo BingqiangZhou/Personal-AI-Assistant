@@ -388,8 +388,14 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       if (!feedState.isLoadingMore) {
         return const SizedBox.shrink();
       }
-      final loader = CircularProgressIndicator(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      final theme = Theme.of(context);
+      final loader = Theme(
+        data: theme.copyWith(
+          colorScheme: theme.colorScheme.copyWith(
+            primary: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        child: const CircularProgressIndicator.adaptive(),
       );
       if (compact) {
         return Center(

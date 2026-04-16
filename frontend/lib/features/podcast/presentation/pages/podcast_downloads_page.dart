@@ -56,7 +56,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
                       );
                     },
                     loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                        const Center(child: CircularProgressIndicator.adaptive()),
                     error: (e, _) => Center(child: Text(e.toString())),
                   ),
                 ),
@@ -446,10 +446,16 @@ class _StatusIcon extends StatelessWidget {
               ? SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
-                    value: task.progress > 0 ? task.progress : null,
-                    strokeWidth: 2,
-                    color: theme.colorScheme.onSecondaryContainer,
+                  child: Theme(
+                    data: theme.copyWith(
+                      colorScheme: theme.colorScheme.copyWith(
+                        primary: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    child: CircularProgressIndicator.adaptive(
+                      value: task.progress > 0 ? task.progress : null,
+                      strokeWidth: 2,
+                    ),
                   ),
                 )
               : Icon(

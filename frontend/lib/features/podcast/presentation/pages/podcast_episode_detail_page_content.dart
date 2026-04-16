@@ -123,7 +123,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
+          const CircularProgressIndicator.adaptive(),
           const SizedBox(height: AppSpacing.md),
           Text(
             label,

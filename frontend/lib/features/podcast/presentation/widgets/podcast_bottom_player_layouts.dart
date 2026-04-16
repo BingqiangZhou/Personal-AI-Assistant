@@ -602,7 +602,7 @@ class _ExpandedProgressSectionState
               overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
               trackHeight: 3,
             ),
-            child: Slider(
+            child: Slider.adaptive(
               key: const Key('podcast_bottom_player_progress_slider'),
               value: effectivePositionMs.clamp(0, durationMs).toDouble(),
               max: durationMs.toDouble(),

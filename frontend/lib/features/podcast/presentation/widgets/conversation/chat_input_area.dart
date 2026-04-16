@@ -103,11 +103,17 @@ class ChatInputArea extends StatelessWidget {
                         ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: canSend
-                                  ? scheme.onSurface
-                                  : scheme.onSurfaceVariant,
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: scheme.copyWith(
+                                  primary: canSend
+                                      ? scheme.onSurface
+                                      : scheme.onSurfaceVariant,
+                                ),
+                              ),
+                              child: const CircularProgressIndicator.adaptive(
+                                strokeWidth: 2,
+                              ),
                             ),
                           )
                         : Icon(

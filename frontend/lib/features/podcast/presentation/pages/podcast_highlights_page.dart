@@ -282,9 +282,15 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
         child: SizedBox(
           width: 24,
           height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: theme.colorScheme.primary,
+          child: Theme(
+            data: theme.copyWith(
+              colorScheme: theme.colorScheme.copyWith(
+                primary: theme.colorScheme.primary,
+              ),
+            ),
+            child: const CircularProgressIndicator.adaptive(
+              strokeWidth: 2,
+            ),
           ),
         ),
       ),
@@ -644,9 +650,15 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
               SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onSurfaceVariant,
+                child: Theme(
+                  data: theme.copyWith(
+                    colorScheme: theme.colorScheme.copyWith(
+                      primary: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  child: const CircularProgressIndicator.adaptive(
+                    strokeWidth: 2,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),

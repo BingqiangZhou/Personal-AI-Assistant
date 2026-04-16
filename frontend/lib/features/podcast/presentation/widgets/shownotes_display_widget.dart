@@ -629,7 +629,7 @@ class ShownotesDisplayWidgetState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator.adaptive(),
           ],
         ),
       ),

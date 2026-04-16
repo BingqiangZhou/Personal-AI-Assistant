@@ -21,7 +21,7 @@ class LoadingWidget extends StatelessWidget {
     return SizedBox(
       width: size ?? AppSpacing.md,
       height: size ?? AppSpacing.md,
-      child: CircularProgressIndicator(
+      child: CircularProgressIndicator.adaptive(
         strokeWidth: strokeWidth,
         valueColor: AlwaysStoppedAnimation<Color>(resolvedColor),
       ),

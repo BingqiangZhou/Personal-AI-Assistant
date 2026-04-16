@@ -293,7 +293,7 @@ class _ProfileCacheManagementPageState
     showAppDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         backgroundColor: Colors.transparent,
         content: Row(
           mainAxisSize: MainAxisSize.min,
@@ -301,7 +301,7 @@ class _ProfileCacheManagementPageState
             const SizedBox(
               width: AppSpacing.mdLg,
               height: AppSpacing.mdLg,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
             ),
             const SizedBox(width: AppSpacing.md),
             Flexible(child: Text(l10n.profile_clearing_cache)),

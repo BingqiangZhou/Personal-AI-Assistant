@@ -343,7 +343,7 @@ class QueueListItem extends ConsumerWidget {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                         )
                       : const Icon(Icons.delete_outline),
                 ),
@@ -552,9 +552,15 @@ class QueueItemDownloadIndicator extends ConsumerWidget {
           'pending' || 'downloading' => SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: theme.colorScheme.primary,
+              child: Theme(
+                data: theme.copyWith(
+                  colorScheme: theme.colorScheme.copyWith(
+                    primary: theme.colorScheme.primary,
+                  ),
+                ),
+                child: const CircularProgressIndicator.adaptive(
+                  strokeWidth: 1.5,
+                ),
               ),
             ),
           'completed' => Icon(

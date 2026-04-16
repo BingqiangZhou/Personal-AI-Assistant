@@ -31,9 +31,20 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
                   ? SizedBox(
                       width: AppSpacing.mdLg,
                       height: AppSpacing.mdLg,
-                      child: CircularProgressIndicator.adaptive(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      child: Builder(
+                        builder: (context) {
+                          final theme = Theme.of(context);
+                          return Theme(
+                            data: theme.copyWith(
+                              colorScheme: theme.colorScheme.copyWith(
+                                primary: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            child: const CircularProgressIndicator.adaptive(
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
                       ),
                     )
                   : const Icon(Icons.refresh),
@@ -325,7 +336,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
     showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           title: Text(l10n.podcast_filter_episodes),
           content: Column(

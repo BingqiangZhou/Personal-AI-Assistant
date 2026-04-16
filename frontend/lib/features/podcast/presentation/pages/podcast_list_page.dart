@@ -242,7 +242,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     if (discoverState.isLoading &&
         discoverState.topShows.isEmpty &&
         discoverState.topEpisodes.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
 
     final error = discoverState.error;

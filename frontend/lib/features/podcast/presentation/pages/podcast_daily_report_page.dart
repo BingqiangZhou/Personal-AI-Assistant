@@ -169,7 +169,7 @@ class _PodcastDailyReportPageState
           ? const SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
             )
           : const Icon(Icons.refresh_rounded, size: 18),
       label: Text(
@@ -693,9 +693,15 @@ class _PodcastDailyReportPageState
               SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onSurfaceVariant,
+                child: Theme(
+                  data: theme.copyWith(
+                    colorScheme: theme.colorScheme.copyWith(
+                      primary: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  child: const CircularProgressIndicator.adaptive(
+                    strokeWidth: 2,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),

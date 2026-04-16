@@ -97,7 +97,7 @@ class DownloadButton extends ConsumerWidget {
           child: SizedBox(
             width: size,
             height: size,
-            child: const CircularProgressIndicator(strokeWidth: 2),
+            child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
           ),
         ),
       ),
@@ -198,10 +198,16 @@ class _StreamProgress extends ConsumerWidget {
               SizedBox(
                 width: size + 8,
                 height: size + 8,
-                child: CircularProgressIndicator(
-                  value: progress > 0 ? progress : null,
-                  strokeWidth: 2,
-                  color: theme.colorScheme.primary,
+                child: Theme(
+                  data: theme.copyWith(
+                    colorScheme: theme.colorScheme.copyWith(
+                      primary: theme.colorScheme.primary,
+                    ),
+                  ),
+                  child: CircularProgressIndicator.adaptive(
+                    value: progress > 0 ? progress : null,
+                    strokeWidth: 2,
+                  ),
                 ),
               ),
               Icon(

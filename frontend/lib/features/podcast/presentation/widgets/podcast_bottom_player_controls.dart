@@ -198,7 +198,7 @@ class _PlayPauseButtonLarge extends ConsumerWidget {
             ? const SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(strokeWidth: 3),
+                child: CircularProgressIndicator.adaptive(strokeWidth: 3),
               )
             : Icon(
                 transport.isPlaying ? Icons.pause_rounded : Icons.play_arrow,
@@ -245,7 +245,7 @@ class _MiniPlayPauseButton extends ConsumerWidget {
           ? SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(
+              child: CircularProgressIndicator.adaptive(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onSurface),
               ),

@@ -462,8 +462,18 @@ class _ProfileSubscriptionsPageState
       return Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: Builder(
+            builder: (context) {
+              final theme = Theme.of(context);
+              return Theme(
+                data: theme.copyWith(
+                  colorScheme: theme.colorScheme.copyWith(
+                    primary: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                child: const CircularProgressIndicator.adaptive(),
+              );
+            },
           ),
         ),
       );

@@ -223,9 +223,15 @@ class HeaderCapsuleActionButton extends StatelessWidget {
                   ? SizedBox(
                       width: resolvedIconSize,
                       height: resolvedIconSize,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.onSurfaceVariant,
+                      child: Theme(
+                        data: theme.copyWith(
+                          colorScheme: theme.colorScheme.copyWith(
+                            primary: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        child: const CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                        ),
                       ),
                     )
                   : Row(

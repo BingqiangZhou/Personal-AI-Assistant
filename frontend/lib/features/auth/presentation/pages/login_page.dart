@@ -260,9 +260,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                            child: Builder(
+                              builder: (context) {
+                                final theme = Theme.of(context);
+                                return Theme(
+                                  data: theme.copyWith(
+                                    colorScheme: theme.colorScheme.copyWith(
+                                      primary: theme.colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                  child: const CircularProgressIndicator.adaptive(
+                                    strokeWidth: 2,
+                                  ),
+                                );
+                              },
                             ),
                           )
                         : Text(l10n.auth_login),

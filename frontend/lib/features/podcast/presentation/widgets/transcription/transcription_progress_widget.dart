@@ -165,7 +165,7 @@ class ProcessingStateWidget extends StatelessWidget {
                           SizedBox(
                             width: progressIndicatorSize,
                             height: progressIndicatorSize,
-                            child: CircularProgressIndicator(
+                            child: CircularProgressIndicator.adaptive(
                               value: progress / 100,
                               strokeWidth: progressStrokeWidth,
                               backgroundColor: scheme.primary.withValues(

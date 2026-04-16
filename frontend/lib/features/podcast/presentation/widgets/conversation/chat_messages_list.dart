@@ -32,7 +32,7 @@ class ChatMessagesList extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
 
     if (hasError) {

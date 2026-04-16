@@ -63,7 +63,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
         child: SizedBox(
           width: AppSpacing.xl,
           height: AppSpacing.xl,
-          child: CircularProgressIndicator(
+          child: CircularProgressIndicator.adaptive(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,

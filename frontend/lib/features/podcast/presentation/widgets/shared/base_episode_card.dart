@@ -454,7 +454,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                   )
                 : const Icon(Icons.playlist_add, size: 18),
           ),
@@ -518,7 +518,7 @@ class BaseEpisodeCard extends StatelessWidget {
       return const SizedBox(
         width: 24,
         height: 24,
-        child: CircularProgressIndicator(strokeWidth: 2),
+        child: CircularProgressIndicator.adaptive(strokeWidth: 2),
       );
     }
 
