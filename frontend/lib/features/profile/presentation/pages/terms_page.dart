@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
-import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
-import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart'
+    show ResponsiveContainer;
 
 /// Static Terms of Service page.
 class TermsPage extends StatelessWidget {
@@ -19,93 +19,84 @@ class TermsPage extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Material(
         color: Colors.transparent,
-        child: SafeArea(
-          bottom: false,
-          child: ResponsiveContainer(
-                maxWidth: 720,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CompactHeaderPanel(
-                      title: l10n.terms_of_service_title,
-                      trailing: HeaderCapsuleActionButton(
-                        tooltip:
-                            MaterialLocalizations.of(context).backButtonTooltip,
-                        icon: Icons.arrow_back_rounded,
-                        onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-                        circular: true,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.smMd),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.mdLg,
-                          vertical: AppSpacing.sm,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.terms_of_service_title,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              l10n.terms_of_service_last_updated,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_acceptance,
-                              body: l10n.terms_section_acceptance_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_use,
-                              body: l10n.terms_section_use_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_ip,
-                              body: l10n.terms_section_ip_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_liability,
-                              body: l10n.terms_section_liability_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_changes,
-                              body: l10n.terms_section_changes_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_governing_law,
-                              body: l10n.terms_section_governing_law_body,
-                            ),
-                            _buildSection(
-                              context,
-                              title: l10n.terms_section_contact,
-                              body: l10n.terms_section_contact_body,
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                          ],
+        child: ResponsiveContainer(
+          maxWidth: 720,
+          alignment: Alignment.topCenter,
+          child: CustomScrollView(
+            slivers: [
+              AdaptiveSliverAppBar(
+                title: l10n.terms_of_service_title,
+              ),
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.smMd)),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.mdLg,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.terms_of_service_title,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.terms_of_service_last_updated,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_acceptance,
+                        body: l10n.terms_section_acceptance_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_use,
+                        body: l10n.terms_section_use_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_ip,
+                        body: l10n.terms_section_ip_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_liability,
+                        body: l10n.terms_section_liability_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_changes,
+                        body: l10n.terms_section_changes_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_governing_law,
+                        body: l10n.terms_section_governing_law_body,
+                      ),
+                      _buildSection(
+                        context,
+                        title: l10n.terms_section_contact,
+                        body: l10n.terms_section_contact_body,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
+          ),
         ),
+      ),
     );
   }
 
