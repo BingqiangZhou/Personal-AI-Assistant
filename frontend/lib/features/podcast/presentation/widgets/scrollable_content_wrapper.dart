@@ -61,7 +61,7 @@ class ScrollableContentWrapperState extends State<ScrollableContentWrapper>
     }
     switch (Theme.of(context).platform) {
       case TargetPlatform.android:
-        return const BouncingScrollPhysics();
+        return const ClampingScrollPhysics();
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:
         return const BouncingScrollPhysics();

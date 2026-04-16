@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
@@ -120,6 +121,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final isAuthenticated = next.isAuthenticated;
 
       if (isAuthenticated && !wasAuthenticated) {
+        AdaptiveHaptic.notificationSuccess(context);
         context.go('/feed');
       } else if (next.error != null && next.error != previous?.error) {
         // Only show snackbar for new errors

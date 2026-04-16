@@ -269,6 +269,8 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
         _buildQueueButton(),
         SizedBox(height: AppSpacing.sm),
         _buildDownloadButton(episode),
+        SizedBox(height: AppSpacing.sm),
+        _buildShareButton(episode),
       ],
     );
   }
@@ -690,6 +692,48 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
       padHours: false,
     );
   }
+  Widget _buildShareButton(PodcastEpisodeModel episode) {
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    return HeaderCapsuleActionButton(
+      tooltip: l10n.share ?? 'Share',
+      icon: Icons.adaptive.share,
+      onPressed: () => _shareEpisode(episode),
+      circular: true,
+      density: _isCompactPhoneLayout
+          ? HeaderCapsuleActionButtonDensity.compact
+          : HeaderCapsuleActionButtonDensity.regular,
+    );
+  }
+
+  Future<void> _shareEpisode(PodcastEpisodeModel episode) async {
+    AdaptiveHaptic.mediumImpact(context);
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+
+    // Generate a deep link to the episode
+    // For now, use the audio URL as the shareable link
+    // In production, this should be a proper deep link to the app
+    final podcastName = _resolvePodcastTitle(episode, l10n);
+    final shareUrl = episode.audioUrl;
+
+    try {
+      await AdaptiveShare.shareEpisode(
+        title: episode.title,
+        url: shareUrl,
+        podcastName: podcastName,
+        description: episode.description?.trim(),
+      );
+    } catch (error) {
+      if (mounted) {
+        showTopFloatingNotice(
+          context,
+          message: 'Failed to share: $error',
+          isError: true,
+          extraTopOffset: 72,
+        );
+      }
+    }
+  }
+
   Widget _buildDownloadButton(PodcastEpisodeModel episode) {
     return Consumer(
       builder: (context, ref, _) {

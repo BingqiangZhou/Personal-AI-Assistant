@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -45,6 +46,7 @@ class CustomAdaptiveNavigation extends ConsumerStatefulWidget {
 
 class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigation> {
   late final ValueNotifier<bool> _sidebarExpanded;
+  late final PageController _pageController;
 
   static const String _sidebarExpandedKey = 'sidebar_expanded';
 
@@ -53,6 +55,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
     super.initState();
     // Initialize sidebar state from SharedPreferences
     _sidebarExpanded = ValueNotifier<bool>(widget.desktopNavExpanded);
+    _pageController = PageController(initialPage: widget.selectedIndex);
     // ignore: discarded_futures
     _loadSidebarState();
   }
@@ -71,6 +74,14 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
     await prefs.setBool(_sidebarExpandedKey, _sidebarExpanded.value);
   }
 
+  void _handlePageChanged(int index) {
+    if (index != widget.selectedIndex) {
+      widget.onDestinationSelected?.call(index);
+      // Trigger haptic feedback on iOS
+      AdaptiveHaptic.lightImpact(context);
+    }
+  }
+
   @override
   void didUpdateWidget(covariant CustomAdaptiveNavigation oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -78,11 +89,18 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
     if (oldWidget.desktopNavExpanded != widget.desktopNavExpanded) {
       _sidebarExpanded.value = widget.desktopNavExpanded;
     }
+    // Sync PageController when selectedIndex changes externally (e.g., by GoRouter)
+    if (oldWidget.selectedIndex != widget.selectedIndex &&
+        _pageController.hasClients &&
+        widget.destinations.length > 1) {
+      _pageController.jumpToPage(widget.selectedIndex);
+    }
   }
 
   @override
   void dispose() {
     _sidebarExpanded.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -115,6 +133,11 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
         ? widget.bottomAccessoryBodyPadding
         : 0.0;
     final totalBottomReserve = dockReserve + accessoryBodyPadding + widget.globalOverlayBodyPadding;
+
+    // iOS: Use PageView for tab swipe gesture
+    final shouldUsePageView = PlatformHelper.isIOS(context) &&
+        widget.destinations.length > 1;
+
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -130,7 +153,14 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
                   padding: EdgeInsets.only(
                     bottom: totalBottomReserve,
                   ),
-                  child: widget.body ?? const SizedBox.shrink(),
+                  child: shouldUsePageView
+                      ? PageView(
+                          controller: _pageController,
+                          onPageChanged: _handlePageChanged,
+                          physics: const BouncingScrollPhysics(),
+                          children: _buildPageViewChildren(),
+                        )
+                      : (widget.body ?? const SizedBox.shrink()),
                 ),
               ),
               if (widget.floatingActionButton != null)
@@ -173,6 +203,19 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
           ),
         ],
       ),
+    );
+  }
+
+  /// Build PageView children for iOS tab swipe gesture.
+  /// Each page contains the same body content since the actual
+  /// tab content is managed by GoRouter's StatefulNavigationShell.
+  List<Widget> _buildPageViewChildren() {
+    // We create placeholder pages that all show the same body.
+    // The actual tab switching is handled by GoRouter, but
+    // PageView gives us the swipe gesture and haptic feedback.
+    return List<Widget>.generate(
+      widget.destinations.length,
+      (index) => widget.body ?? const SizedBox.shrink(),
     );
   }
 
@@ -591,7 +634,13 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
           final isSelected = index == widget.selectedIndex;
           return Expanded(
             child: GestureDetector(
-              onTap: () => widget.onDestinationSelected?.call(index),
+              onTap: () {
+                // Update PageController for iOS swipe gesture
+                if (_pageController.hasClients) {
+                  _pageController.jumpToPage(index);
+                }
+                widget.onDestinationSelected?.call(index);
+              },
               behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),

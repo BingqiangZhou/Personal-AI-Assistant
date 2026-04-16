@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/download_button.dart';
@@ -160,7 +161,10 @@ class BaseEpisodeCard extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
+            onTap: () {
+              AdaptiveHaptic.lightImpact(context);
+              onTap?.call();
+            },
             borderRadius: BorderRadius.circular(config.cornerRadius),
             child: Padding(
               padding: config.cardPadding,

@@ -145,7 +145,7 @@ Android：
 
 1. **图片缓存**：CachedNetworkImage 配置优化，内存缓存上限 100MB，磁盘缓存 200MB，预加载可视区域外 ±2 项缩略图
 2. **列表懒加载**：`ListView.builder` + const 构造函数 + 稳定 Key（episodeId/podcastId 而非 index），避免 NestedScrollView 嵌套过深
-3. **Widget 重建控制**：使用 `Selector` / `select()` 精确订阅状态，`RepaintEdge` 隔离播放器控件重绘区域
+3. **Widget 重建控制**：使用 `Selector` / `select()` 精确订阅状态，`RepaintBoundary` 隔离播放器控件重绘区域
 4. **Sliver 优化**：`CupertinoSliverNavigationBar` 替代 SliverAppBar 减少 layer 复杂度，`SliverPersistentHeader` 做粘性分组头
 
 ### 内存管理

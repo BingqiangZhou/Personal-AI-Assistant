@@ -150,6 +150,7 @@ class _SkipButton extends ConsumerWidget {
       tooltip: tooltip,
       iconSize: 30,
       onPressed: () {
+        AdaptiveHaptic.lightImpact(context);
         // Use ref.read to avoid rebuilding on every progress tick (500ms).
         // Position is only needed at tap time, not reactively.
         final progress = ref.read(audioMiniProgressProvider);
@@ -185,6 +186,7 @@ class _PlayPauseButtonLarge extends ConsumerWidget {
             ? (l10n?.podcast_player_pause ?? 'Pause')
             : (l10n?.podcast_player_play ?? 'Play'),
         onPressed: () async {
+          AdaptiveHaptic.mediumImpact(context);
           if (transport.isLoading) {
             return;
           }
@@ -224,6 +226,7 @@ class _MiniPlayPauseButton extends ConsumerWidget {
           ? (l10n?.podcast_player_pause ?? 'Pause')
           : (l10n?.podcast_player_play ?? 'Play'),
       onPressed: () async {
+        AdaptiveHaptic.mediumImpact(context);
         if (transport.isLoading) {
           return;
         }
