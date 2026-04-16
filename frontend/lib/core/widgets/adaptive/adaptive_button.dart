@@ -1,0 +1,114 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
+
+/// Button style variants for [AdaptiveButton].
+enum AdaptiveButtonStyle {
+  filled,
+  text,
+  outlined,
+}
+
+/// Adaptive button.
+///
+/// iOS: [CupertinoButton] with appropriate styling.
+/// Android: Material [ElevatedButton], [TextButton], or [OutlinedButton].
+class AdaptiveButton extends StatelessWidget {
+  const AdaptiveButton({
+    required this.onPressed,
+    required this.child,
+    super.key,
+    this.style = AdaptiveButtonStyle.filled,
+    this.padding,
+    this.isLoading = false,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget child;
+  final AdaptiveButtonStyle style;
+  final EdgeInsetsGeometry? padding;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    if (PlatformHelper.isIOS(context)) {
+      return _buildCupertino(context);
+    }
+    return _buildMaterial(context);
+  }
+
+  Widget _buildCupertino(BuildContext context) {
+    final theme = Theme.of(context);
+    final effectiveChild = isLoading
+        ? CupertinoActivityIndicator(
+            color: style == AdaptiveButtonStyle.filled
+                ? CupertinoColors.white
+                : theme.colorScheme.primary,
+          )
+        : child;
+
+    switch (style) {
+      case AdaptiveButtonStyle.filled:
+        return CupertinoButton(
+          onPressed: isLoading ? null : onPressed,
+          color: theme.colorScheme.primary,
+          padding: padding ??
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: effectiveChild,
+        );
+      case AdaptiveButtonStyle.text:
+        return CupertinoButton(
+          onPressed: isLoading ? null : onPressed,
+          padding: padding ??
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: effectiveChild,
+        );
+      case AdaptiveButtonStyle.outlined:
+        return CupertinoButton(
+          onPressed: isLoading ? null : onPressed,
+          padding: padding ??
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: effectiveChild,
+        );
+    }
+  }
+
+  Widget _buildMaterial(BuildContext context) {
+    final effectiveChild = isLoading
+        ? SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator.adaptive(
+              strokeWidth: 2,
+            ),
+          )
+        : child;
+
+    switch (style) {
+      case AdaptiveButtonStyle.filled:
+        return ElevatedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            padding: padding,
+          ),
+          child: effectiveChild,
+        );
+      case AdaptiveButtonStyle.text:
+        return TextButton(
+          onPressed: isLoading ? null : onPressed,
+          style: TextButton.styleFrom(
+            padding: padding,
+          ),
+          child: effectiveChild,
+        );
+      case AdaptiveButtonStyle.outlined:
+        return OutlinedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: padding,
+          ),
+          child: effectiveChild,
+        );
+    }
+  }
+}

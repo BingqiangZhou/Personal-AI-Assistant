@@ -169,6 +169,8 @@ class AppTheme {
       scheme.onSurfaceVariant,
       isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
     );
+    // Unified color scheme: only brightness matters, form factor (radii/shadows)
+    // still differs per platform via the extension.
     final extension = isIOS
         ? (isDark ? AppThemeExtension.darkIOS : AppThemeExtension.lightIOS)
         : (isDark ? AppThemeExtension.dark : AppThemeExtension.light);
