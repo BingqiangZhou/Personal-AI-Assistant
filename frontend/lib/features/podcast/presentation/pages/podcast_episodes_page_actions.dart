@@ -134,6 +134,7 @@ extension _PodcastEpisodesPageActions on _PodcastEpisodesPageState {
   }
 
   Future<void> _playAndOpenEpisodeDetail(PodcastEpisodeModel episode) async {
+    AdaptiveHaptic.mediumImpact(context);
     await ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode);
     if (!mounted) return;
     context.push('/podcast/episode/detail/${episode.id}');

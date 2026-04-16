@@ -219,6 +219,41 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
 
   Widget _buildFilterChips() {
     final l10n = context.l10n;
+    if (Platform.isIOS) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _buildPillButton(l10n.podcast_filter_all, _selectedFilter == 'all', () {
+            _applyViewState(() {
+              _selectedFilter = 'all';
+            });
+            _refreshEpisodes();
+          }),
+          const SizedBox(width: AppSpacing.sm),
+          _buildPillButton(l10n.podcast_filter_unplayed, _selectedFilter == 'unplayed', () {
+            _applyViewState(() {
+              _selectedFilter = 'unplayed';
+            });
+            _refreshEpisodes();
+          }),
+          const SizedBox(width: AppSpacing.sm),
+          _buildPillButton(l10n.podcast_filter_played, _selectedFilter == 'played', () {
+            _applyViewState(() {
+              _selectedFilter = 'played';
+            });
+            _refreshEpisodes();
+          }),
+          const SizedBox(width: AppSpacing.sm),
+          _buildPillButton(l10n.podcast_filter_with_summary, _showOnlyWithSummary, () {
+            _applyViewState(() {
+              _showOnlyWithSummary = !_showOnlyWithSummary;
+            });
+            _refreshEpisodes();
+          }),
+        ],
+      );
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
@@ -273,8 +308,42 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
     );
   }
 
+  Widget _buildPillButton(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CupertinoColors.activeBlue
+              : CupertinoColors.systemGrey5,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? CupertinoColors.white
+                : CupertinoColors.label,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMoreMenu() {
     final l10n = context.l10n;
+    if (Platform.isIOS) {
+      return IconButton(
+        icon: Icon(
+          Icons.adaptive.more,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+        onPressed: () => _showIOSMoreMenu(l10n),
+        tooltip: 'More',
+      );
+    }
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.adaptive.more,
@@ -293,6 +362,35 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
           child: Text(l10n.podcast_mark_all_unplayed),
         ),
       ],
+    );
+  }
+
+  void _showIOSMoreMenu(AppLocalizations l10n) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (popupContext) => CupertinoActionSheet(
+        title: Text(l10n.podcast_episodes),
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text(l10n.podcast_mark_all_played),
+            onPressed: () {
+              Navigator.of(popupContext).pop();
+              // TODO: Implement
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text(l10n.podcast_mark_all_unplayed),
+            onPressed: () {
+              Navigator.of(popupContext).pop();
+              // TODO: Implement
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(popupContext).pop(),
+          child: Text(l10n.cancel),
+        ),
+      ),
     );
   }
 
@@ -345,46 +443,56 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
             children: [
               Text(l10n.podcast_playback_status),
               const SizedBox(height: AppSpacing.sm),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'all',
-                    label: Text(l10n.podcast_all_episodes),
-                  ),
-                  ButtonSegment(
-                    value: 'unplayed',
-                    label: Text(l10n.podcast_unplayed_only),
-                  ),
-                  ButtonSegment(
-                    value: 'played',
-                    label: Text(l10n.podcast_played_only),
-                  ),
-                ],
-                selected: {_selectedFilter},
-                onSelectionChanged: (selection) {
+              AdaptiveSegmentedControl<String>(
+                segments: {
+                  'all': Text(l10n.podcast_all_episodes),
+                  'unplayed': Text(l10n.podcast_unplayed_only),
+                  'played': Text(l10n.podcast_played_only),
+                },
+                selected: _selectedFilter,
+                onChanged: (value) {
                   setDialogState(() {
-                    _selectedFilter = selection.first;
+                    _selectedFilter = value;
                   });
                 },
               ),
               const SizedBox(height: AppSpacing.md),
-              CheckboxListTile(
-                title: Text(l10n.podcast_only_with_summary),
-                value: _showOnlyWithSummary,
-                onChanged: (value) {
-                  setDialogState(() {
-                    _showOnlyWithSummary = value!;
-                  });
-                },
-              ),
+              if (Platform.isIOS)
+                AdaptiveListTile(
+                  leading: const CupertinoSwitch(
+                    value: false,
+                    onChanged: null,
+                  ),
+                  title: Text(l10n.podcast_only_with_summary),
+                  trailing: CupertinoSwitch(
+                    value: _showOnlyWithSummary,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _showOnlyWithSummary = value;
+                      });
+                    },
+                  ),
+                )
+              else
+                CheckboxListTile(
+                  title: Text(l10n.podcast_only_with_summary),
+                  value: _showOnlyWithSummary,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      _showOnlyWithSummary = value!;
+                    });
+                  },
+                ),
             ],
           ),
           actions: [
-            TextButton(
+            AdaptiveButton(
+              style: AdaptiveButtonStyle.text,
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l10n.cancel),
             ),
-            TextButton(
+            AdaptiveButton(
+              style: AdaptiveButtonStyle.text,
               onPressed: () {
                 Navigator.of(context).pop();
                 _applyViewState(() {});
