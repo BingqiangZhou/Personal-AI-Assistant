@@ -2,6 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// Creates a platform-adaptive page transition.
+///
+/// Uses `defaultTargetPlatform` instead of `Theme.of(context).platform`
+/// because this function is called during route construction where no
+/// [BuildContext] is available. This matches GoRouter's own pattern.
 Page<T> adaptivePageTransition<T>({
   required Widget child,
   required ValueKey<String> pageKey,

@@ -1,68 +1,65 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 
 /// Adaptive haptic feedback that provides platform-aware vibration.
 ///
-/// iOS uses native HapticFeedback API.
-/// Android uses light vibration or skips haptic (Android vibration requires permissions).
+/// Uses Flutter's HapticFeedback API which works on both iOS and Android.
+/// Desktop platforms silently ignore haptic calls.
 class AdaptiveHaptic {
   AdaptiveHaptic._();
 
   /// Light impact feedback for subtle interactions.
   ///
   /// Use for: tab switching, list item taps, slider movements.
-  static void lightImpact(BuildContext context) {
-    if (!Platform.isIOS) return;
+  static void lightImpact() {
     try {
       HapticFeedback.lightImpact();
-    } catch (_) {
-      // Silently ignore haptic errors
+    } catch (e) {
+      debugPrint('[AdaptiveHaptic] lightImpact failed: $e');
     }
   }
 
   /// Medium impact feedback for confirmations.
   ///
   /// Use for: like/favorite actions, download completion, successful operations.
-  static void mediumImpact(BuildContext context) {
-    if (!Platform.isIOS) return;
+  static void mediumImpact() {
     try {
       HapticFeedback.mediumImpact();
-    } catch (_) {
-      // Silently ignore haptic errors
+    } catch (e) {
+      debugPrint('[AdaptiveHaptic] mediumImpact failed: $e');
     }
   }
 
   /// Heavy impact feedback for important actions.
   ///
   /// Use for: delete actions, major confirmations.
-  static void heavyImpact(BuildContext context) {
-    if (!Platform.isIOS) return;
+  static void heavyImpact() {
     try {
       HapticFeedback.heavyImpact();
-    } catch (_) {
-      // Silently ignore haptic errors
+    } catch (e) {
+      debugPrint('[AdaptiveHaptic] heavyImpact failed: $e');
     }
   }
 
   /// Selection click feedback for precise interactions.
   ///
   /// Use for: slider tick marks, picker selections.
-  static void selectionClick(BuildContext context) {
-    if (!Platform.isIOS) return;
+  static void selectionClick() {
     try {
       HapticFeedback.selectionClick();
-    } catch (_) {
-      // Silently ignore haptic errors
+    } catch (e) {
+      debugPrint('[AdaptiveHaptic] selectionClick failed: $e');
     }
   }
 
   /// Notification success feedback.
   ///
   /// Use for: login success, subscription confirmations.
-  static void notificationSuccess(BuildContext context) {
-    if (!Platform.isIOS) return;
-    // Fallback to medium impact for success notifications
-    mediumImpact(context);
+  static void notificationSuccess() {
+    try {
+      HapticFeedback.successNotification();
+    } catch (e) {
+      debugPrint('[AdaptiveHaptic] notificationSuccess failed: $e');
+    }
   }
 }

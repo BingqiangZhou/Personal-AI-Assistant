@@ -12,24 +12,24 @@ void main() {
               return Column(
                 children: [
                   ElevatedButton(
-                    onPressed: () => AdaptiveHaptic.lightImpact(context),
-                    child: Text('light'),
+                    onPressed: () => AdaptiveHaptic.lightImpact(),
+                    child: const Text('light'),
                   ),
                   ElevatedButton(
-                    onPressed: () => AdaptiveHaptic.mediumImpact(context),
-                    child: Text('medium'),
+                    onPressed: () => AdaptiveHaptic.mediumImpact(),
+                    child: const Text('medium'),
                   ),
                   ElevatedButton(
-                    onPressed: () => AdaptiveHaptic.heavyImpact(context),
-                    child: Text('heavy'),
+                    onPressed: () => AdaptiveHaptic.heavyImpact(),
+                    child: const Text('heavy'),
                   ),
                   ElevatedButton(
-                    onPressed: () => AdaptiveHaptic.selectionClick(context),
-                    child: Text('selection'),
+                    onPressed: () => AdaptiveHaptic.selectionClick(),
+                    child: const Text('selection'),
                   ),
                   ElevatedButton(
-                    onPressed: () => AdaptiveHaptic.notificationSuccess(context),
-                    child: Text('success'),
+                    onPressed: () => AdaptiveHaptic.notificationSuccess(),
+                    child: const Text('success'),
                   ),
                 ],
               );
