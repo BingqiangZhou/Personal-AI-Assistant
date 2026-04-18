@@ -91,8 +91,8 @@ class DownloadButton extends ConsumerWidget {
         };
       },
       loading: () => SizedBox(
-        width: size + 16,
-        height: size + 16,
+        width: size + 8,
+        height: size + 4,
         child: Center(
           child: SizedBox(
             width: size,
@@ -158,10 +158,10 @@ class _IconButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       constraints: BoxConstraints(
-        minWidth: size + 16,
-        minHeight: size + 16,
+        minWidth: size + 8,
+        minHeight: size,
       ),
-      padding: EdgeInsets.all(context.spacing.xs),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
     );
   }
 }
@@ -190,8 +190,8 @@ class _StreamProgress extends ConsumerWidget {
         message:
             '${(progress * 100).toStringAsFixed(0)}% — ${context.l10n.download_button_cancel}',
         child: SizedBox(
-          width: size + 16,
-          height: size + 16,
+          width: size + 8,
+          height: size + 4,
           child: Stack(
             alignment: Alignment.center,
             children: [
