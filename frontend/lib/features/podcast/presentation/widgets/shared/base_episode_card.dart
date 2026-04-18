@@ -152,7 +152,7 @@ class BaseEpisodeCard extends StatelessWidget {
       context.spacing.md,
       isMobile ? context.spacing.sm : context.spacing.md,
       context.spacing.md,
-      isMobile ? context.spacing.sm : context.spacing.md,
+      isMobile ? context.spacing.xs : context.spacing.md,
     );
 
     final cardContent = Container(
@@ -392,7 +392,7 @@ class BaseEpisodeCard extends StatelessWidget {
               : theme.textTheme.bodySmall)
           ?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
-            height: isMobile ? 1.35 : null,
+            height: isMobile ? 1.3 : null,
           ),
       maxLines: config.dense ? 2 : config.descriptionMaxLines,
       overflow: TextOverflow.ellipsis,
