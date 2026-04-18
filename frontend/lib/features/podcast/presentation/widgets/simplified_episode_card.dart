@@ -10,9 +10,9 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shar
 
 /// Simplified episode card without podcast image and name (for episodes list page)
 class SimplifiedEpisodeCard extends ConsumerWidget {
-
   const SimplifiedEpisodeCard({
-    required this.episode, super.key,
+    required this.episode,
+    super.key,
     this.onTap,
     this.onPlay,
     this.onAddToQueue,
@@ -26,8 +26,7 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMobile =
-        MediaQuery.sizeOf(context).width < Breakpoints.medium;
+    final isMobile = MediaQuery.sizeOf(context).width < Breakpoints.medium;
 
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
@@ -41,14 +40,19 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
           showImage: false,
           dense: isMobile,
           cardMargin: isMobile
-              ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.sm)
+              ? EdgeInsets.symmetric(
+                  horizontal: context.spacing.xs,
+                  vertical: context.spacing.xs,
+                )
               : EdgeInsets.zero,
           showDate: true,
           date: episode.publishedAt,
           showDuration: true,
           formattedDuration: episode.formattedDuration,
           showDescription: displayDescription.isNotEmpty,
-          description: displayDescription.isNotEmpty ? displayDescription : null,
+          description: displayDescription.isNotEmpty
+              ? displayDescription
+              : null,
           descriptionMaxLines: isMobile ? 2 : 4,
           showQueueButton: true,
           isAddingToQueue: isAddingToQueue,
