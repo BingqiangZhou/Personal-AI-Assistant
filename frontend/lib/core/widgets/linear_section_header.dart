@@ -83,9 +83,10 @@ class LinearSectionHeader extends StatelessWidget {
   }
 
   Widget _buildDisplay(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final effectivePadding = padding ?? EdgeInsets.symmetric(
       horizontal: context.spacing.mdLg,
-      vertical: context.spacing.md,
+      vertical: isMobile ? context.spacing.smMd : context.spacing.md,
     );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;

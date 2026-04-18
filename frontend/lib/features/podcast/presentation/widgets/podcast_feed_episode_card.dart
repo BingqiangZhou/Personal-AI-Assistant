@@ -41,7 +41,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         imageIconSize: coverIconSize,
         dense: compact,
         cardMargin: compact
-            ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.sm)
+            ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.xs)
             : null,
         showSubscriptionBadge: true,
         subscriptionBadgeText:

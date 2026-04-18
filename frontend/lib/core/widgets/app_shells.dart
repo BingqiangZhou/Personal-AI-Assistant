@@ -303,7 +303,7 @@ class HeaderCapsuleActionButton extends StatelessWidget {
 class SurfacePanel extends StatefulWidget {
   const SurfacePanel({
     required this.child, super.key,
-    this.padding = const EdgeInsets.all(AppSpacing.md),
+    this.padding,
     this.margin,
     this.borderRadius,
     this.backgroundColor,
@@ -312,7 +312,7 @@ class SurfacePanel extends StatefulWidget {
   });
 
   final Widget child;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double? borderRadius;
   final Color? backgroundColor;
@@ -330,10 +330,13 @@ class _SurfacePanelState extends State<SurfacePanel> {
   Widget build(BuildContext context) {
     final extension = appThemeOf(context);
     final radius = widget.borderRadius ?? extension.cardRadius;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final effectivePadding = widget.padding ??
+        EdgeInsets.all(isMobile ? AppSpacing.smMd : AppSpacing.md);
 
     final panel = Container(
       margin: widget.margin,
-      padding: widget.padding,
+      padding: effectivePadding,
       decoration: BoxDecoration(
         color: widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(radius),

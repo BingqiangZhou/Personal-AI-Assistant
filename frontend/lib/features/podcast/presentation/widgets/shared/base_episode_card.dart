@@ -147,11 +147,12 @@ class BaseEpisodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final effectivePadding = config.cardPadding ?? EdgeInsets.fromLTRB(
       context.spacing.md,
+      isMobile ? context.spacing.smMd : context.spacing.md,
       context.spacing.md,
-      context.spacing.md,
-      context.spacing.md,
+      isMobile ? context.spacing.smMd : context.spacing.md,
     );
 
     final cardContent = Container(

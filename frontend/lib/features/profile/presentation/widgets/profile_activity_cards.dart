@@ -69,7 +69,7 @@ class ProfileActivityCards extends ConsumerWidget {
             showChevron: true,
             cardKey: const Key('profile_subscriptions_card'),
           ),
-          SizedBox(height: context.spacing.md),
+          SizedBox(height: context.spacing.smMd),
           _buildActivityCard(
             context,
             icon: Icons.podcasts,
@@ -77,7 +77,7 @@ class ProfileActivityCards extends ConsumerWidget {
             value: episodeCount,
             color: scheme.secondary,
           ),
-          SizedBox(height: context.spacing.md),
+          SizedBox(height: context.spacing.smMd),
           _buildActivityCard(
             context,
             icon: Icons.auto_awesome,
@@ -85,7 +85,7 @@ class ProfileActivityCards extends ConsumerWidget {
             value: summaryCount,
             color: scheme.secondary,
           ),
-          SizedBox(height: context.spacing.md),
+          SizedBox(height: context.spacing.smMd),
           _buildActivityCard(
             context,
             icon: Icons.history,
@@ -96,7 +96,7 @@ class ProfileActivityCards extends ConsumerWidget {
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
           ),
-          SizedBox(height: context.spacing.md),
+          SizedBox(height: context.spacing.smMd),
           _buildActivityCard(
             context,
             icon: Icons.summarize_outlined,

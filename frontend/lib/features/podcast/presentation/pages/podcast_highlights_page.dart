@@ -135,7 +135,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                 title: l10n.podcast_highlights_title,
                 actions: [_buildCalendarButton(context)],
               ),
-              SliverToBoxAdapter(child: SizedBox(height: context.spacing.smMd)),
+              SliverToBoxAdapter(child: SizedBox(height: context.spacing.xs)),
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _buildHighlightsPanel(context),
