@@ -150,9 +150,9 @@ class BaseEpisodeCard extends StatelessWidget {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     final effectivePadding = config.cardPadding ?? EdgeInsets.fromLTRB(
       context.spacing.md,
-      isMobile ? context.spacing.sm : context.spacing.md,
-      context.spacing.md,
       isMobile ? context.spacing.xs : context.spacing.md,
+      context.spacing.md,
+      isMobile ? 0 : context.spacing.xxs,
     );
 
     final cardContent = Container(
@@ -184,9 +184,8 @@ class BaseEpisodeCard extends StatelessWidget {
                   if (config.showDescription &&
                       config.description != null &&
                       config.description!.isNotEmpty) ...[
-                    SizedBox(height: isMobile ? context.spacing.xxs : context.spacing.sm),
+                    SizedBox(height: isMobile ? 0 : context.spacing.xs),
                     Flexible(child: _buildDescription(context, theme)),
-                    if (!isMobile) SizedBox(height: context.spacing.xxs),
                   ] else if (config.showDescription) ...[
                     SizedBox(height: context.spacing.xxs),
                   ],
@@ -288,7 +287,7 @@ class BaseEpisodeCard extends StatelessWidget {
       children: [
         if (config.showImage && config.imageUrl != null) ...[
           _buildImage(context, theme),
-          SizedBox(width: isMobile ? context.spacing.smMd : context.spacing.md),
+          SizedBox(width: isMobile ? context.spacing.sm : context.spacing.md),
         ],
         Expanded(
           child: Column(
@@ -302,7 +301,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (subtitle != null) ...[
-                SizedBox(height: context.spacing.xxs),
+                SizedBox(height: isMobile ? 0 : context.spacing.xxs),
                 Text(
                   subtitle!,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -313,7 +312,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 ),
               ],
               if (subtitle2 != null) ...[
-                SizedBox(height: context.spacing.xxs),
+                SizedBox(height: isMobile ? 0 : context.spacing.xxs),
                 Text(
                   subtitle2!,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -366,19 +365,19 @@ class BaseEpisodeCard extends StatelessWidget {
 
   Widget _buildPlayButton(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final iconSize = config.dense ? 22.0 : (isMobile ? 24.0 : 26.0);
     return IconButton(
       tooltip: l10n.podcast_play,
       onPressed: onPlay,
-      icon: Icon(
-        config.dense
-            ? Icons.play_circle_outline
-            : Icons.play_circle_outline,
-        size: config.dense ? 22 : 26,
-      ),
-      iconSize: config.dense ? 22 : 26,
+      icon: Icon(Icons.play_circle_outline, size: iconSize),
+      iconSize: iconSize,
       color: theme.colorScheme.onSurfaceVariant,
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      constraints: BoxConstraints(
+        minWidth: isMobile ? 32.0 : 36.0,
+        minHeight: isMobile ? 32.0 : 36.0,
+      ),
     );
   }
 
@@ -392,25 +391,22 @@ class BaseEpisodeCard extends StatelessWidget {
               : theme.textTheme.bodySmall)
           ?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
-            height: isMobile ? 1.3 : null,
+            height: 1.2,
           ),
       maxLines: config.dense ? 2 : config.descriptionMaxLines,
       overflow: TextOverflow.ellipsis,
-      textHeightBehavior: isMobile
-          ? const TextHeightBehavior(applyHeightToLastDescent: false)
-          : null,
+      textHeightBehavior: const TextHeightBehavior(applyHeightToLastDescent: false),
     );
   }
 
   Widget _buildMetaActionRow(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Row(
       children: [
         Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FittedBox(
+          child: FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Row(
@@ -442,16 +438,14 @@ class BaseEpisodeCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        SizedBox(width: context.spacing.smMd),
         if (config.showDownloadButton &&
             config.episodeId != null &&
             config.audioUrl != null &&
-            config.audioUrl!.isNotEmpty) ...[
+            config.audioUrl!.isNotEmpty)
           DownloadButton(
             episodeId: config.episodeId!,
             audioUrl: config.audioUrl!,
-            size: config.dense ? 16 : 18,
+            size: (config.dense ? 13 : isMobile ? 14 : 18),
             title: config.episodeTitle,
             subscriptionTitle: config.subscriptionTitle,
             imageUrl: config.imageUrl,
@@ -460,22 +454,20 @@ class BaseEpisodeCard extends StatelessWidget {
             audioDuration: config.audioDuration,
             publishedAt: config.publishedAt,
           ),
-          SizedBox(width: context.spacing.xs),
-        ],
         if (config.showQueueButton)
           IconButton(
             tooltip: config.isAddingToQueue
                 ? l10n.podcast_adding
                 : l10n.podcast_add_to_queue,
             onPressed: config.isAddingToQueue ? null : onAddToQueue,
-            style: EpisodeCardUtils.compactIconButtonStyle(theme),
+            style: EpisodeCardUtils.compactIconButtonStyle(theme, isMobile: isMobile),
             icon: config.isAddingToQueue
                 ? const SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                   )
-                : const Icon(Icons.playlist_add, size: 18),
+                : const Icon(Icons.playlist_add, size: 16),
           ),
         if (config.showSubscribeAction) ...[
           SizedBox(width: context.spacing.smMd),
@@ -489,15 +481,15 @@ class BaseEpisodeCard extends StatelessWidget {
     final badgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
     final badgeTextColor = theme.colorScheme.surface;
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: config.dense ? 140 : 170),
+      constraints: BoxConstraints(maxWidth: config.dense ? 130 : 170),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: config.dense ? 8 : 10,
-          vertical: config.dense ? 2 : 3,
+          horizontal: config.dense ? 6 : 10,
+          vertical: config.dense ? 1 : 3,
         ),
         decoration: BoxDecoration(
           color: badgeBackgroundColor,
-          borderRadius: BorderRadius.circular(config.dense ? 10 : 12),
+          borderRadius: BorderRadius.circular(config.dense ? 8 : 12),
         ),
         child: Text(
           config.subscriptionBadgeText ?? '',
@@ -546,10 +538,10 @@ class BaseEpisodeCard extends StatelessWidget {
       child: IconButton(
         onPressed: onSubscribe,
         icon: const Icon(Icons.add_circle_outline),
-        iconSize: 24,
+        iconSize: 22,
         color: theme.colorScheme.onSurfaceVariant,
         padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
       ),
     );
   }
