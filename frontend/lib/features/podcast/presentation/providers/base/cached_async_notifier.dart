@@ -79,18 +79,24 @@ abstract class CachedAsyncNotifier<T> extends AsyncNotifier<T> {
       try {
         final data = await fetcher();
         _lastFetchTime = clock.now();
-        state = AsyncValue.data(data);
+        if (!_isDisposed) {
+          state = AsyncValue.data(data);
+        }
         return data;
       } catch (error, stackTrace) {
         if (onError != null) {
           onError(error, stackTrace);
         }
         if (previousData == null) {
-          state = AsyncValue.error(error, stackTrace);
+          if (!_isDisposed) {
+            state = AsyncValue.error(error, stackTrace);
+          }
         } else {
           // Briefly emit error so UI can react (e.g. show toast), then
           // schedule fallback to stale data on the next microtask.
-          state = AsyncValue.error(error, stackTrace);
+          if (!_isDisposed) {
+            state = AsyncValue.error(error, stackTrace);
+          }
           Future.microtask(() {
             if (!_isDisposed) {
               state = AsyncValue.data(previousData);

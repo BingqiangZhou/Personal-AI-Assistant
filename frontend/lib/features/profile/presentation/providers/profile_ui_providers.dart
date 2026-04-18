@@ -8,9 +8,12 @@ class NotificationPreferenceNotifier extends Notifier<bool> {
   static const String _storageKey = 'profile_notifications_enabled';
 
   @override
-  bool build() => true;
+  bool build() {
+    _loadFromStorage();
+    return true;
+  }
 
-  Future<void> load() async {
+  Future<void> _loadFromStorage() async {
     try {
       final storage = ref.read(localStorageServiceProvider);
       final saved = await storage.getBool(_storageKey);

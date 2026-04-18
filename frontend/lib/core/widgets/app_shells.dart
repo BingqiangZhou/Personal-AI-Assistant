@@ -773,6 +773,9 @@ class ProfileShell extends StatelessWidget {
             child: child,
           ),
         ),
+        const SliverPadding(
+          padding: EdgeInsets.only(bottom: 120),
+        ),
       ];
 
       return Material(

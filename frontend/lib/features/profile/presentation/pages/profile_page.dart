@@ -44,8 +44,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         // Force refresh after login to ensure fresh data from new server
         ref.read(profileStatsProvider.notifier).load(forceRefresh: true);
       }
-      // Load notification preference from storage
-      ref.read(notificationPreferenceProvider.notifier).load();
     });
   }
 

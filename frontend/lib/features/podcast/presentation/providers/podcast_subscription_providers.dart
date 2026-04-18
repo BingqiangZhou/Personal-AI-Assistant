@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,7 +68,6 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
       );
     } catch (error) {
       state = state.copyWith(isLoading: false, error: error.toString());
-      rethrow;
     } finally {
       _isLoadingSubscriptions = false;
     }
@@ -166,9 +166,9 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         total: state.total > 0 ? state.total - 1 : 0,
       );
     } catch (error) {
-      // Revert: reload from server on failure
-      await refreshSubscriptions();
-      rethrow;
+      // Revert: reload from server on failure (fire-and-forget to avoid nested throw)
+      state = state.copyWith(error: error.toString());
+      unawaited(refreshSubscriptions());
     }
   }
 
@@ -204,8 +204,9 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
       return response;
     } catch (error) {
       logger.AppLogger.debug('[Error] Bulk delete failed: $error');
-      // Revert: reload from server on failure
-      await refreshSubscriptions();
+      // Revert: reload from server on failure (fire-and-forget to avoid nested throw)
+      state = state.copyWith(error: error.toString());
+      unawaited(refreshSubscriptions());
       rethrow;
     }
   }
@@ -243,7 +244,8 @@ final subscribedNormalizedFeedUrlsProvider = Provider<Set<String>>((ref) {
   );
   return UnmodifiableSetView(
     subscriptions
-        .map((sub) => PodcastUrlUtils.normalizeFeedUrl(sub.sourceUrl))
+        .where((sub) => sub.sourceUrl != null)
+        .map((sub) => PodcastUrlUtils.normalizeFeedUrl(sub.sourceUrl!))
         .toSet(),
   );
 });
