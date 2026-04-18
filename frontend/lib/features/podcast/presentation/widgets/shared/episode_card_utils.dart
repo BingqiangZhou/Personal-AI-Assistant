@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 
@@ -18,15 +19,17 @@ class EpisodeCardUtils {
   /// Creates a compact icon button style suitable for episode action buttons.
   ///
   /// This style is optimized for dense layouts with:
-  /// - Fixed 28x28 size
+  /// - Configurable compact size
   /// - Shrinkwrap tap target
   /// - Compact visual density
   /// - Zero padding
-  static ButtonStyle compactIconButtonStyle(ThemeData theme, {bool isMobile = false}) {
-    const size = 16.0;
+  static ButtonStyle compactIconButtonStyle(
+    ThemeData theme, {
+    double buttonSize = 16.0,
+  }) {
     return IconButton.styleFrom(
-      minimumSize: Size(size, size),
-      maximumSize: Size(size, size),
+      minimumSize: Size(buttonSize, buttonSize),
+      maximumSize: Size(buttonSize, buttonSize),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
@@ -40,8 +43,9 @@ class EpisodeCardUtils {
   static Widget buildDateMetadata({
     required DateTime date,
     required ThemeData theme,
+    TextStyle? textStyle,
     double iconSize = 13,
-    double spacing = 3,
+    double spacing = AppSpacing.xxs,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -54,9 +58,11 @@ class EpisodeCardUtils {
         SizedBox(width: spacing),
         Text(
           formatDate(date),
-          style: AppTheme.metaSmall(
-            theme.colorScheme.onSurfaceVariant,
-          ).copyWith(fontWeight: FontWeight.w400),
+          style:
+              textStyle ??
+              AppTheme.metaSmall(
+                theme.colorScheme.onSurfaceVariant,
+              ).copyWith(fontWeight: FontWeight.w400),
         ),
       ],
     );
@@ -68,8 +74,9 @@ class EpisodeCardUtils {
   static Widget buildDurationMetadata({
     required String formattedDuration,
     required ThemeData theme,
+    TextStyle? textStyle,
     double iconSize = 13,
-    double spacing = 3,
+    double spacing = AppSpacing.xxs,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -82,9 +89,11 @@ class EpisodeCardUtils {
         SizedBox(width: spacing),
         Text(
           formattedDuration,
-          style: AppTheme.metaSmall(
-            theme.colorScheme.onSurfaceVariant,
-          ).copyWith(fontWeight: FontWeight.w400),
+          style:
+              textStyle ??
+              AppTheme.metaSmall(
+                theme.colorScheme.onSurfaceVariant,
+              ).copyWith(fontWeight: FontWeight.w400),
         ),
       ],
     );
