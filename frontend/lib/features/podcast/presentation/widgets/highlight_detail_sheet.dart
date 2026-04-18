@@ -57,37 +57,38 @@ class _HighlightDetailContent extends StatelessWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(context.spacing.mdLg),
+        padding: EdgeInsets.all(context.spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Quote section
             _buildQuoteSection(context),
-            SizedBox(height: context.spacing.mdLg),
+            SizedBox(height: context.spacing.md),
 
             // Overall score badge
             _buildOverallScoreBadge(context),
-            SizedBox(height: context.spacing.mdLg),
+            SizedBox(height: context.spacing.md),
 
             // Three-dimensional scores
             HighlightScoreIndicator(
               insightScore: highlight.insightScore,
               noveltyScore: highlight.noveltyScore,
               actionabilityScore: highlight.actionabilityScore,
+              isDense: true,
             ),
-            SizedBox(height: context.spacing.mdLg),
+            SizedBox(height: context.spacing.md),
 
             // Topic tags
             if (highlight.topicTags.isNotEmpty) ...[
               _buildTopicTags(context),
-              SizedBox(height: context.spacing.mdLg),
+              SizedBox(height: context.spacing.md),
             ],
 
             // Episode source
             if (highlight.episodeTitle.isNotEmpty) ...[
               _buildEpisodeSource(context),
-              SizedBox(height: context.spacing.mdLg),
+              SizedBox(height: context.spacing.md),
             ],
 
             // Actions
@@ -125,7 +126,7 @@ class _HighlightDetailContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(context.spacing.md),
+      padding: EdgeInsets.all(context.spacing.smMd),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.withValues(alpha: 0.15),
         borderRadius: AppRadius.lgRadius,

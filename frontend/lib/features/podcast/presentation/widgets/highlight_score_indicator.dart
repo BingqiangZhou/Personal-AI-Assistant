@@ -61,7 +61,7 @@ class HighlightScoreIndicator extends StatelessWidget {
           scoreWidth: scoreWidth,
           theme: theme,
         ),
-        SizedBox(height: isDense ? 4 : 6),
+        SizedBox(height: isDense ? 3 : 6),
         _ScoreRow(
           label: l10n.podcast_highlights_novelty,
           score: noveltyScore,
@@ -71,7 +71,7 @@ class HighlightScoreIndicator extends StatelessWidget {
           scoreWidth: scoreWidth,
           theme: theme,
         ),
-        SizedBox(height: isDense ? 4 : 6),
+        SizedBox(height: isDense ? 3 : 6),
         _ScoreRow(
           label: l10n.podcast_highlights_actionability,
           score: actionabilityScore,
