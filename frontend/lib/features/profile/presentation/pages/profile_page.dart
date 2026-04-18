@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,7 +55,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   EdgeInsetsGeometry _profileCardMargin(BuildContext context) =>
       context.isMobile
-      ? const EdgeInsets.symmetric(horizontal: 4)
+      ? EdgeInsets.symmetric(horizontal: context.spacing.xs)
       : EdgeInsets.zero;
 
   ShapeBorder? _profileCardShape(BuildContext context) {
@@ -76,19 +75,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final theme = Theme.of(context);
     final compactProfileLayout = MediaQuery.sizeOf(context).height < 700;
 
-    return ProfileShell(
+    return ContentShell(
       title: l10n.profile,
       subtitle: '',
       roundedViewport: true,
       trailing: _buildUserMenu(context, user, theme, l10n),
-      summary: const SizedBox.shrink(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ProfileActivityCards(),
-          SizedBox(height: compactProfileLayout ? AppSpacing.sm : AppSpacing.md),
-          _buildSettingsContent(context),
-        ],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ProfileActivityCards(),
+            SizedBox(height: compactProfileLayout ? context.spacing.sm : context.spacing.md),
+            _buildSettingsContent(context),
+          ],
+        ),
       ),
     );
   }
@@ -184,15 +185,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             l10n.profile_account_settings,
             accountItems,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.spacing.lg),
           preferencesSection,
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.spacing.lg),
           _buildSettingsSectionFromConfigs(
             context,
             l10n.profile_support_section,
             supportItems,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.spacing.lg),
           _buildSettingsSectionFromConfigs(context, l10n.about, aboutItems),
         ],
       );
@@ -209,17 +210,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 accountItems,
               ),
             ),
-            const SizedBox(width: AppSpacing.lg),
+            SizedBox(width: context.spacing.lg),
             Expanded(child: preferencesSection),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: context.spacing.lg),
         _buildSettingsSectionFromConfigs(
           context,
           l10n.profile_support_section,
           supportItems,
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: context.spacing.lg),
         _buildSettingsSectionFromConfigs(context, l10n.about, aboutItems),
       ],
     );
@@ -362,7 +363,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           title: Row(
             children: [
               const Icon(Icons.edit_note),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: context.spacing.sm),
               Text(l10n.profile_edit_profile),
             ],
           ),
@@ -376,15 +377,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   placeholder: l10n.profile_name,
                   enabled: false,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 AdaptiveTextField(
                   controller: TextEditingController(text: user?.email ?? ''),
                   placeholder: l10n.profile_email_field,
                   enabled: false,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(context.spacing.lg),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     borderRadius: AppRadius.mdLgRadius,
@@ -398,7 +399,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             .colorScheme
                             .onSurfaceVariant,
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(width: context.spacing.md),
                       Expanded(
                         child: Text(
                           l10n.profile_edit_coming_soon_subtitle,
@@ -532,7 +533,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(height: context.spacing.lg),
                       AdaptiveTextField(
                         controller: newPasswordController,
                         obscureText: true,
@@ -555,7 +556,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(height: context.spacing.lg),
                       AdaptiveTextField(
                         controller: confirmPasswordController,
                         obscureText: true,
@@ -638,8 +639,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         },
                   child: isChanging
                       ? SizedBox(
-                          width: AppSpacing.mdLg,
-                          height: AppSpacing.mdLg,
+                          width: dialogContext.spacing.mdLg,
+                          height: dialogContext.spacing.mdLg,
                           child: Builder(
                             builder: (context) {
                               final theme = Theme.of(dialogContext);
@@ -700,7 +701,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       }
                     },
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: context.spacing.md),
                   Text(
                     l10n.languageFollowSystem,
                     style: Theme.of(
@@ -742,7 +743,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           title: Row(
             children: [
               Icon(Icons.psychology, size: 48, color: iconColor),
-              const SizedBox(width: AppSpacing.smMd),
+              SizedBox(width: context.spacing.smMd),
               Expanded(child: Text(l10n.appTitle)),
             ],
           ),
@@ -758,14 +759,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     dialogContext,
                   ).textTheme.bodyLarge?.copyWith(color: iconColor),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.spacing.xs),
                 Text(
                   l10n.build_label(packageInfo.buildNumber),
                   style: Theme.of(
                     dialogContext,
                   ).textTheme.bodyLarge?.copyWith(color: iconColor),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.spacing.sm),
                 Text(
                   l10n.profile_about_subtitle,
                   style: Theme.of(
@@ -853,135 +854,39 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
 
-    if (Platform.isIOS) {
-      return GestureDetector(
-        onTap: () {
-          AdaptiveHaptic.lightImpact(context);
-          _showIOSUserMenu(context, user, l10n);
-        },
-        child: avatar,
-      );
-    }
-
-    return PopupMenuButton<String>(
+    return GestureDetector(
       key: const Key('profile_user_menu_button'),
-      onSelected: (value) {
-        if (value == 'edit') {
-          _showEditProfileDialog(context);
-        } else if (value == 'logout') {
-          _showLogoutDialog(context);
-        }
+      onTap: () {
+        AdaptiveHaptic.lightImpact();
+        _showUserMenu(context, user, l10n);
       },
-      offset: const Offset(0, AppSpacing.xxl),
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.xlRadius),
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          enabled: false,
-          child: Row(
-            children: [
-              Icon(
-                Icons.person_outline,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  user?.displayName ?? l10n.profile_guest_user,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          enabled: false,
-          child: Row(
-            children: [
-              Icon(
-                Icons.email_outlined,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  user?.email ?? l10n.profile_please_login,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem<String>(
-          value: 'edit',
-          key: const Key('profile_user_menu_item_edit'),
-          child: Row(
-            children: [
-              const Icon(Icons.edit_note, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Text(l10n.profile_edit_profile),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'logout',
-          key: const Key('profile_user_menu_item_logout'),
-          child: Row(
-            children: [
-              Icon(
-                Icons.logout,
-                size: 20,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                l10n.logout,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-          ),
-        ),
-      ],
       child: avatar,
     );
   }
 
-  void _showIOSUserMenu(
+  void _showUserMenu(
     BuildContext context,
     User? user,
     AppLocalizations l10n,
   ) {
-    showCupertinoModalPopup<void>(
+    showAdaptiveActionSheet(
       context: context,
-      builder: (popupContext) => CupertinoActionSheet(
-        title: Text(user?.displayName ?? l10n.profile_guest_user),
-        message: Text(user?.email ?? l10n.profile_please_login),
-        actions: [
-          CupertinoActionSheetAction(
-            key: const Key('profile_user_menu_item_edit'),
-            onPressed: () {
-              Navigator.of(popupContext).pop();
-              _showEditProfileDialog(context);
-            },
-            child: Text(l10n.profile_edit_profile),
-          ),
-          CupertinoActionSheetAction(
-            key: const Key('profile_user_menu_item_logout'),
-            onPressed: () {
-              Navigator.of(popupContext).pop();
-              _showLogoutDialog(context);
-            },
-            isDestructiveAction: true,
-            child: Text(l10n.logout),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.of(popupContext).pop(),
-          child: Text(l10n.cancel),
+      title: Text(user?.displayName ?? l10n.profile_guest_user),
+      message: Text(user?.email ?? l10n.profile_please_login),
+      actions: [
+        AdaptiveActionSheetAction(
+          key: const Key('profile_user_menu_item_edit'),
+          onPressed: () => _showEditProfileDialog(context),
+          child: Text(l10n.profile_edit_profile),
         ),
-      ),
+        AdaptiveActionSheetAction(
+          key: const Key('profile_user_menu_item_logout'),
+          onPressed: () => _showLogoutDialog(context),
+          isDestructive: true,
+          child: Text(l10n.logout),
+        ),
+      ],
+      cancelWidget: Text(l10n.cancel),
     );
   }
 }

@@ -44,7 +44,7 @@ class SearchModeToggle extends StatelessWidget {
             height: toggleHeight - 4,
             onTap: () => onTabSelected(search.PodcastSearchMode.episodes),
           ),
-          const SizedBox(width: 2),
+          SizedBox(width: context.spacing.xxs),
           _TabPill(
             key: const Key('podcast_discover_tab_podcasts'),
             label: l10n.podcast_title,
@@ -105,12 +105,12 @@ class _TabPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(height / 2),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: 13, color: foregroundColor),
-                const SizedBox(width: AppSpacing.xs),
+                SizedBox(width: context.spacing.xs),
                 Text(label, style: labelStyle),
               ],
             ),

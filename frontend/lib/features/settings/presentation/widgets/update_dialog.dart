@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +6,7 @@ import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
@@ -117,13 +116,15 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       desktopMaxWidth: 500,
     );
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       backgroundColor: Colors.transparent,
-      insetPadding: isMobile ? ResponsiveDialogHelper.insetPadding() : null,
+      insetPadding: isMobile
+          ? ResponsiveDialogHelper.insetPadding()
+          : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       title: Row(
         children: [
-          Icon(Icons.system_update_alt, color: palette.accent, size: AppSpacing.xl),
-          const SizedBox(width: AppSpacing.smMd),
+          Icon(Icons.system_update_alt, color: palette.accent, size: context.spacing.xl),
+          SizedBox(width: context.spacing.smMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +151,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
             children: [
               // Release info
               _buildReleaseInfo(context),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: context.spacing.lg),
 
               // Release notes
               _buildReleaseNotes(context),
@@ -168,6 +169,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   List<Widget> _buildDesktopActions(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
     final palette = _UpdateDialogPalette.of(theme);
+    final spacing = context.spacing;
     return [
       // Use Row to control alignment
       Row(
@@ -187,7 +189,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
             child: Text(l10n.update_later),
           ),
 
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: spacing.sm),
 
           // Download button (primary action) — disabled when no platform asset
           Flexible(
@@ -197,8 +199,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   : () => _handleDownload(context),
               icon: _isDownloading
                   ? SizedBox(
-                      width: AppSpacing.lg,
-                      height: AppSpacing.lg,
+                      width: spacing.lg,
+                      height: spacing.lg,
                       child: CircularProgressIndicator.adaptive(
                         strokeWidth: 2,
                       ),
@@ -225,6 +227,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   List<Widget> _buildMobileActions(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
     final palette = _UpdateDialogPalette.of(theme);
+    final spacing = context.spacing;
     return [
       SizedBox(
         width: double.infinity,
@@ -238,8 +241,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   : () => _handleDownload(context),
               icon: _isDownloading
                   ? SizedBox(
-                      width: AppSpacing.lg,
-                      height: AppSpacing.lg,
+                      width: spacing.lg,
+                      height: spacing.lg,
                       child: CircularProgressIndicator.adaptive(
                         strokeWidth: 2,
                       ),
@@ -254,10 +257,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
               style: FilledButton.styleFrom(
                 backgroundColor: palette.accent,
                 foregroundColor: palette.accentOn,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: EdgeInsets.symmetric(vertical: spacing.smMd),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: spacing.sm),
             Row(
               children: [
                 Expanded(
@@ -269,11 +272,11 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                       style: AppTheme.caption(),
                     ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: EdgeInsets.symmetric(vertical: spacing.sm),
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: spacing.sm),
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -294,9 +297,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final palette = _UpdateDialogPalette.of(theme);
     final isMobile = context.isMobile;
     final asset = _platformAsset;
+    final spacing = context.spacing;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(spacing.smMd),
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: AppRadius.mdLgRadius,
@@ -308,7 +312,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           Row(
             children: [
               Icon(Icons.info_outline, size: 18, color: palette.accent),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: spacing.sm),
               Expanded(
                 child: Text(
                   l10n.update_latest_version,
@@ -352,7 +356,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   ],
                 ),
                 if (asset != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: spacing.xs),
                   Row(
                     children: [
                       Icon(
@@ -391,7 +395,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   ),
                 ),
                 if (asset != null) ...[
-                  const SizedBox(width: AppSpacing.lg),
+                  SizedBox(width: spacing.lg),
                   Icon(
                     Icons.file_download,
                     size: 14,
@@ -429,10 +433,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
             Text(l10n.update_release_notes, style: theme.textTheme.labelMedium),
           ],
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.spacing.sm),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(context.spacing.smMd),
           decoration: BoxDecoration(
             color: Colors.transparent,
             borderRadius: AppRadius.mdLgRadius,
@@ -564,7 +568,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
-      } else if (Platform.isAndroid &&
+      } else if (PlatformHelper.isAndroid(context) &&
           AppUpdateService.supportsBackgroundDownload) {
         // Use native background download on Android
         final service = ref.read(appUpdateServiceProvider);
@@ -746,7 +750,7 @@ class _ManualUpdateCheckDialogState
               strokeWidth: 3,
             ),
           ),
-          const SizedBox(height: AppSpacing.mdLg),
+          SizedBox(height: context.spacing.mdLg),
           Text(l10n.update_checking, style: theme.textTheme.bodyLarge),
         ],
       );
@@ -757,9 +761,9 @@ class _ManualUpdateCheckDialogState
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.error_outline, size: 56, color: palette.errorIcon),
-          const SizedBox(height: AppSpacing.mdLg),
+          SizedBox(height: context.spacing.mdLg),
           Text(l10n.update_check_failed, style: theme.textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           Text(
             state.error!,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -853,7 +857,7 @@ void showUpdateAvailableSnackBar({
       content: Row(
         children: [
           const Icon(Icons.system_update_alt, size: 20),
-          const SizedBox(width: AppSpacing.smMd),
+          SizedBox(width: context.spacing.smMd),
           Expanded(
             child: Text(
               '${l10n.update_new_version_available}: v${release.version}',

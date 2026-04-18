@@ -24,7 +24,7 @@ class StatusBadge extends StatelessWidget {
       label: label,
       container: true,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: 6),
         decoration: BoxDecoration(
           color: resolvedColor.withValues(alpha: 0.1),
           borderRadius: AppRadius.smRadius,
@@ -35,7 +35,7 @@ class StatusBadge extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, size: 14, color: resolvedColor),
-              const SizedBox(width: AppSpacing.xs),
+              SizedBox(width: context.spacing.xs),
             ],
             Text(
               label,
@@ -77,7 +77,7 @@ class AppSectionHeader extends StatelessWidget {
             children: [
               if (!hideTitle) Text(title, style: theme.textTheme.titleLarge),
               if (subtitle != null) ...[
-                if (!hideTitle) const SizedBox(height: AppSpacing.xs),
+                if (!hideTitle) SizedBox(height: context.spacing.xs),
                 Text(
                   subtitle!,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -88,7 +88,7 @@ class AppSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) ...[const SizedBox(width: AppSpacing.md), trailing!],
+        if (trailing != null) ...[SizedBox(width: context.spacing.md), trailing!],
       ],
     );
   }
@@ -172,15 +172,15 @@ class HeaderCapsuleActionButton extends StatelessWidget {
             iconOnlyCircular
                 ? EdgeInsets.zero
                 : EdgeInsets.symmetric(
-                    horizontal: showLabel ? AppSpacing.smMd : AppSpacing.md,
-                    vertical: showLabel ? AppSpacing.smMd : AppSpacing.smMd,
+                    horizontal: showLabel ? context.spacing.smMd : context.spacing.md,
+                    vertical: showLabel ? context.spacing.smMd : context.spacing.smMd,
                   ),
           HeaderCapsuleActionButtonDensity.compact =>
             iconOnlyCircular
                 ? EdgeInsets.zero
                 : EdgeInsets.symmetric(
-                    horizontal: showLabel ? AppSpacing.smMd : AppSpacing.smMd,
-                    vertical: showLabel ? AppSpacing.sm : AppSpacing.smMd,
+                    horizontal: showLabel ? context.spacing.smMd : context.spacing.smMd,
+                    vertical: showLabel ? context.spacing.sm : context.spacing.smMd,
                   ),
           HeaderCapsuleActionButtonDensity.iconOnly => EdgeInsets.zero,
         };
@@ -191,10 +191,10 @@ class HeaderCapsuleActionButton extends StatelessWidget {
       HeaderCapsuleActionButtonDensity.iconOnly => 36.0,
     };
 
-    // Border radius: pill shape for surfaceNeutral, fixed 10.0 for primaryTinted
+    // Border radius: pill shape for surfaceNeutral, fixed for primaryTinted
     final borderRadius = isSurfaceNeutral
-        ? (iconOnlyCircular ? iconOnlySize / 2 : 18.0)
-        : 10.0;
+        ? (iconOnlyCircular ? iconOnlySize / 2 : AppRadius.chip)
+        : AppRadius.buttonValue;
 
     final button = Material(
       color: isSurfaceNeutral
@@ -247,7 +247,7 @@ class HeaderCapsuleActionButton extends StatelessWidget {
                           ),
                         ),
                         if (showLabel) ...[
-                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(width: context.spacing.sm),
                           DefaultTextStyle(
                             style: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
                               fontSize: density == HeaderCapsuleActionButtonDensity.compact
@@ -469,7 +469,7 @@ class _HeroHeaderState extends State<HeroHeader> {
     return SizedBox(
       key: widget.key,
       child: SurfacePanel(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+        padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.md, context.spacing.md, context.spacing.md),
         borderRadius: extension.cardRadius,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,7 +479,7 @@ class _HeroHeaderState extends State<HeroHeader> {
               children: [
                 if (widget.leading != null) ...[
                   widget.leading!,
-                  const SizedBox(width: AppSpacing.smMd),
+                  SizedBox(width: context.spacing.smMd),
                 ],
                 Expanded(
                   child: Column(
@@ -498,7 +498,7 @@ class _HeroHeaderState extends State<HeroHeader> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        SizedBox(height: context.spacing.xs),
                       ],
                       _StaggeredFadeIn(
                         delay: const Duration(milliseconds: 50),
@@ -512,7 +512,7 @@ class _HeroHeaderState extends State<HeroHeader> {
                         ),
                       ),
                       if (hasSubtitle) ...[
-                        const SizedBox(height: 3),
+                        SizedBox(height: context.spacing.xs),
                         _StaggeredFadeIn(
                           delay: const Duration(milliseconds: 100),
                           animated: _animated,
@@ -533,14 +533,14 @@ class _HeroHeaderState extends State<HeroHeader> {
                   ),
                 ),
                 if (widget.trailing != null) ...[
-                  const SizedBox(width: AppSpacing.smMd),
+                  SizedBox(width: context.spacing.smMd),
                   Align(alignment: Alignment.topCenter, child: widget.trailing),
                 ],
               ],
             ),
             if (widget.badges.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(spacing: AppSpacing.sm, runSpacing: AppSpacing.sm, children: widget.badges),
+              SizedBox(height: context.spacing.sm),
+              Wrap(spacing: context.spacing.sm, runSpacing: context.spacing.sm, children: widget.badges),
             ],
           ],
         ),
@@ -626,7 +626,7 @@ class AppEmptyState extends StatelessWidget {
 
     return Center(
       child: SurfacePanel(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: EdgeInsets.all(context.spacing.xxl),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
@@ -641,14 +641,14 @@ class AppEmptyState extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 36, color: scheme.primary),
               ),
-              const SizedBox(height: AppSpacing.mdLg),
+              SizedBox(height: context.spacing.mdLg),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
                 Text(
                   subtitle!,
                   textAlign: TextAlign.center,
@@ -657,7 +657,7 @@ class AppEmptyState extends StatelessWidget {
                   ),
                 ),
               ],
-              if (action != null) ...[const SizedBox(height: AppSpacing.lg), action!],
+              if (action != null) ...[SizedBox(height: context.spacing.lg), action!],
             ],
           ),
         ),
@@ -694,40 +694,7 @@ class ContentShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final extension = appThemeOf(context);
 
-    // iOS: Use CupertinoSliverNavigationBar for native large-title feel
-    if (PlatformHelper.isIOS(context)) {
-      return Material(
-        color: Colors.transparent,
-        child: _ShellViewport(
-          enabled: roundedViewport,
-          clipKey: const Key('content_shell_viewport_clip'),
-          borderRadius: extension.cardRadius,
-          child: ResponsiveContainer(
-            maxWidth: maxWidth ?? extension.contentMaxWidth,
-            child: CustomScrollView(
-              slivers: [
-                CupertinoSliverNavigationBar(
-                  largeTitle: Text(title),
-                  trailing: trailing,
-                  leading: leading,
-                  backgroundColor:
-                      CupertinoColors.systemBackground.withValues(alpha: 0.85),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(height: headerSpacing),
-                ),
-                SliverFillRemaining(
-                  hasScrollBody: true,
-                  child: child,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Android/desktop: existing HeroHeader + Column layout
+    // Unified layout: HeroHeader + Column for consistent rounded corners
     return Material(
       color: Colors.transparent,
       child: _ShellViewport(
@@ -778,7 +745,7 @@ class ProfileShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
     final showSummary = summary is! SizedBox;
-    final topSectionSpacing = isMobile ? AppSpacing.lg : AppSpacing.md;
+    final topSectionSpacing = isMobile ? context.spacing.lg : context.spacing.md;
     final extension = appThemeOf(context);
 
     // iOS: Use CupertinoSliverNavigationBar for native large-title feel
@@ -793,13 +760,13 @@ class ProfileShell extends StatelessWidget {
         if (showSummary) ...[
           SliverToBoxAdapter(child: SizedBox(height: topSectionSpacing)),
           SliverToBoxAdapter(child: summary),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+          SliverToBoxAdapter(child: SizedBox(height: context.spacing.md)),
         ],
         if (!showSummary)
           SliverToBoxAdapter(child: SizedBox(height: topSectionSpacing)),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+            padding: EdgeInsets.only(bottom: context.spacing.xl),
             child: child,
           ),
         ),
@@ -839,12 +806,12 @@ class ProfileShell extends StatelessWidget {
                 if (showSummary) ...[
                   SizedBox(height: topSectionSpacing),
                   summary,
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: context.spacing.md),
                 ],
                 if (!showSummary) SizedBox(height: topSectionSpacing),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    padding: EdgeInsets.only(bottom: context.spacing.xl),
                     child: child,
                   ),
                 ),
@@ -908,8 +875,8 @@ class AuthShell extends StatelessWidget {
           child: Center(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
-                horizontal: width < Breakpoints.medium ? AppSpacing.lg : AppSpacing.xl,
-                vertical: AppSpacing.xl,
+                horizontal: width < Breakpoints.medium ? context.spacing.lg : context.spacing.xl,
+                vertical: context.spacing.xl,
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
@@ -917,10 +884,10 @@ class AuthShell extends StatelessWidget {
                   children: [
                     if (header != null) ...[
                       header!,
-                      const SizedBox(height: AppSpacing.mdLg),
+                      SizedBox(height: context.spacing.mdLg),
                     ],
                     SurfacePanel(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.xl),
+                      padding: EdgeInsets.fromLTRB(context.spacing.xl, context.spacing.xl, context.spacing.xl, context.spacing.xl),
                       borderRadius: extension.cardRadius,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -930,19 +897,19 @@ class AuthShell extends StatelessWidget {
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           if (subtitle.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.smMd),
+                            SizedBox(height: context.spacing.smMd),
                             Text(
                               subtitle,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
-                          const SizedBox(height: AppSpacing.xl),
+                          SizedBox(height: context.spacing.xl),
                           child,
                         ],
                       ),
                     ),
                     if (footer != null) ...[
-                      const SizedBox(height: AppSpacing.mdLg),
+                      SizedBox(height: context.spacing.mdLg),
                       footer!,
                     ],
                   ],

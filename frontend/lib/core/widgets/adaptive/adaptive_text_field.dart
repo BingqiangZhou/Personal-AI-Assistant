@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 
 /// Adaptive text field.
 ///
@@ -24,6 +27,9 @@ class AdaptiveTextField extends StatefulWidget {
     this.autofocus = false,
     this.validator,
     this.formFieldKey,
+    this.autofillHints,
+    this.prefix,
+    this.suffix,
   });
 
   final TextEditingController? controller;
@@ -41,6 +47,9 @@ class AdaptiveTextField extends StatefulWidget {
   final bool autofocus;
   final String? Function(String?)? validator;
   final GlobalKey<FormFieldState<String>>? formFieldKey;
+  final Iterable<String>? autofillHints;
+  final Widget? prefix;
+  final Widget? suffix;
 
   @override
   State<AdaptiveTextField> createState() => _AdaptiveTextFieldState();
@@ -88,10 +97,13 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
         keyboardType: widget.keyboardType,
         textInputAction: widget.textInputAction,
         autofocus: widget.autofocus,
-        padding: const EdgeInsets.all(12),
+        autofillHints: widget.autofillHints,
+        prefix: widget.prefix,
+        suffix: widget.suffix,
+        padding: EdgeInsets.all(context.spacing.smMd),
         decoration: BoxDecoration(
           color: CupertinoColors.tertiarySystemFill,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(appThemeOf(context).buttonRadius),
         ),
       );
 
@@ -106,9 +118,9 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
               padding: const EdgeInsets.only(left: 12, top: 4),
               child: Text(
                 _errorText!,
-                style: const TextStyle(
-                  color: CupertinoColors.systemRed,
-                  fontSize: 12,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: Theme.of(context).textTheme.bodySmall?.fontSize ?? 12,
                 ),
               ),
             ),
@@ -131,6 +143,7 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
         keyboardType: widget.keyboardType,
         textInputAction: widget.textInputAction,
         autofocus: widget.autofocus,
+        autofillHints: widget.autofillHints,
         validator: widget.validator,
         decoration: widget.decoration ??
             InputDecoration(
@@ -151,6 +164,7 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       autofocus: widget.autofocus,
+      autofillHints: widget.autofillHints,
       decoration: widget.decoration ??
           InputDecoration(
             hintText: widget.placeholder,

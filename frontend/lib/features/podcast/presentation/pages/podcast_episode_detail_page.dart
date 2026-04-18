@@ -15,8 +15,10 @@ import 'package:personal_ai_assistant/core/services/download_provider.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
-import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_segmented_control.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/html_sanitizer.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
@@ -286,6 +288,20 @@ class _PodcastEpisodeDetailPageState
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(episodeDetail?.title ?? ''),
+            centerTitle: true,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            actions: [
+              if (episodeDetail != null)
+                IconButton(
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  tooltip: AppLocalizations.of(context)?.podcast_tab_chat ?? 'Chat',
+                  onPressed: _openChatDrawer,
+                ),
+            ],
+          ),
           endDrawerEnableOpenDragGesture: false,
           endDrawer: episodeDetail == null
               ? null
@@ -377,7 +393,7 @@ class _PodcastEpisodeDetailPageState
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.lgXlRadius,
         ),
         child: InkWell(
           onTap: _scrollToTop,

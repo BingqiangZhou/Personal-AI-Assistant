@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -69,7 +69,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.spacing.md),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -84,7 +84,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: Icon(Icons.transcribe, size: 40, color: accentColor),
             ),
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Title
             Text(
@@ -95,7 +95,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
 
             // Description
             Text(
@@ -107,7 +107,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: context.spacing.lg),
 
             // Start button with enhanced feedback
             SizedBox(
@@ -115,16 +115,16 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: AdaptiveButton(
                 onPressed: () => _startTranscriptionWithFeedback(ref, context),
                 icon: const Icon(Icons.play_arrow),
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.smMd),
+                padding: EdgeInsets.symmetric(vertical: context.spacing.smMd),
                 child: Text(l10n.transcription_start_button),
               ),
             ),
 
-            const SizedBox(height: AppSpacing.smMd),
+            SizedBox(height: context.spacing.smMd),
 
             // Auto-start info text
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.sm),
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(ext.buttonRadius),
@@ -137,7 +137,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     size: 14,
                     color: scheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: context.spacing.sm),
                   Flexible(
                     child: Text(
                       l10n.transcription_auto_hint,

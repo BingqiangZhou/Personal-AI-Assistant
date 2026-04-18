@@ -4,6 +4,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/debounce.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/linear_section_header.dart';
@@ -157,7 +158,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.spacing.md),
             child: CountrySelectorDropdown(
               onCountryChanged: (country) {
                 _resetDiscoverListScroll();
@@ -226,7 +227,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 searchMode: searchMode,
                 isDense: isDense,
               ),
-              SizedBox(height: useCompactShell ? AppSpacing.smMd : AppSpacing.md),
+              SizedBox(height: useCompactShell ? context.spacing.smMd : context.spacing.md),
               Expanded(child: Material(color: Colors.transparent, child: content)),
             ],
           ),
@@ -260,14 +261,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           onCategorySelected: _handleDiscoverCategorySelected,
           isDense: isDense,
         ),
-        SizedBox(height: isDense ? AppSpacing.sm : AppSpacing.md),
+        SizedBox(height: isDense ? context.spacing.sm : context.spacing.md),
         LinearSectionHeader.label(
           l10n.podcast_discover_browse_by_category,
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xs),
+          padding: EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.xs),
         ),
-        SizedBox(height: isDense ? AppSpacing.smMd : AppSpacing.sm),
+        SizedBox(height: isDense ? context.spacing.smMd : context.spacing.sm),
         Expanded(
-          child: RefreshIndicator(
+          child: AdaptiveRefreshIndicator(
             onRefresh: () => ref.read(podcastDiscoverProvider.notifier).refresh(),
             child: DiscoverChartsList(
               state: discoverState,
@@ -293,9 +294,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.error_outline, size: 44),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           Text(error),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           FilledButton.icon(
             onPressed: () =>
                 ref.read(podcastDiscoverProvider.notifier).loadInitialData(),

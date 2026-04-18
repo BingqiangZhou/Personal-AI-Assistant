@@ -134,7 +134,7 @@ class _MiniDockBody extends ConsumerWidget {
         ),
         borderRadius: AppRadius.lgRadius,
       ),
-      padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.smMd, AppSpacing.sm),
+      padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.sm, context.spacing.smMd, context.spacing.sm),
       child: Row(
         children: [
           Semantics(
@@ -150,7 +150,7 @@ class _MiniDockBody extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: context.spacing.md),
           Expanded(
             child: Semantics(
               button: true,
@@ -172,10 +172,10 @@ class _MiniDockBody extends ConsumerWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
-                      fontSize: 14,
+                      fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: context.spacing.xs),
                   // Isolate progress repaints (500ms ticks) from the rest of the dock.
                   RepaintBoundary(
                     child: Row(
@@ -186,7 +186,7 @@ class _MiniDockBody extends ConsumerWidget {
                             child: const _MiniProgressIndicator(),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: context.spacing.sm),
                         const _MiniProgressText(),
                       ],
                     ),
@@ -196,11 +196,11 @@ class _MiniDockBody extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           const _MiniPlayPauseButton(
             key: Key('podcast_bottom_player_mini_play_pause'),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           // Queue button: isolated Consumer so the dock body does not
           // rebuild when queue-sheet state changes.
           Consumer(
@@ -332,7 +332,7 @@ class _ExpandedPanelContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.md, AppSpacing.md),
+      padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.md),
       child: Column(
         key: showPrimaryKeys
             ? const Key('podcast_bottom_player_expanded')
@@ -360,13 +360,13 @@ class _ExpandedPanelContent extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           _ExpandedHeader(episode: episode),
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           _ExpandedHero(episode: episode),
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           const _ExpandedProgressSection(),
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           const RepaintBoundary(
             child: _TransportRow(),
           ),
@@ -434,7 +434,7 @@ class _ExpandedHero extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.smMd),
+        SizedBox(width: context.spacing.smMd),
         Expanded(
           child: GestureDetector(
             key: const Key('podcast_bottom_player_expanded_title'),
@@ -489,7 +489,7 @@ class _ExpandedHero extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: titleStyle,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(height: context.spacing.sm),
                       Text(
                         key: const Key('podcast_bottom_player_expanded_meta'),
                         _buildEpisodeMetaLine(episode),

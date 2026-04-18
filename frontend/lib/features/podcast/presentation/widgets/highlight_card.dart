@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -34,11 +34,11 @@ class HighlightCard extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadius.xxlCardRadius,
         child: Container(
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: AppRadius.xxlCardRadius,
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
@@ -60,14 +60,14 @@ class HighlightCard extends ConsumerWidget {
                 _buildCompactQuote(context, theme),
               ],
               // 分数和收藏按钮放在原文下面
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               _buildHeader(context, theme),
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               _buildScoresSection(context, theme),
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               _buildMetadataSection(context, theme),
               if (highlight.topicTags.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
                 _buildTopicTags(context, theme),
               ],
             ],
@@ -94,7 +94,7 @@ class HighlightCard extends ConsumerWidget {
     final scoreColor = _getScoreColor(context, score);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
       decoration: BoxDecoration(
         color: scoreColor.withValues(alpha: 0.12),
         borderRadius: AppRadius.pillRadius,
@@ -108,7 +108,7 @@ class HighlightCard extends ConsumerWidget {
             size: 14,
             color: scoreColor,
           ),
-          const SizedBox(width: AppSpacing.xs),
+          SizedBox(width: context.spacing.xs),
           Text(
             scoreText,
             style: theme.textTheme.labelMedium?.copyWith(
@@ -150,7 +150,7 @@ class HighlightCard extends ConsumerWidget {
     final l10n = context.l10n;
     return RepaintBoundary(
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.smMd),
+        padding: EdgeInsets.all(context.spacing.smMd),
         decoration: BoxDecoration(
           color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
           borderRadius: AppRadius.lgRadius,
@@ -168,7 +168,7 @@ class HighlightCard extends ConsumerWidget {
                   size: 16,
                   color: theme.colorScheme.primary,
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: context.spacing.sm),
                 Text(
                   l10n.podcast_highlights_original_quote,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -178,7 +178,7 @@ class HighlightCard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
             Text(
               highlight.originalText,
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -222,7 +222,7 @@ class HighlightCard extends ConsumerWidget {
           size: 13,
           color: theme.colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         Expanded(
           child: Text(
             highlight.episodeTitle,
@@ -252,7 +252,7 @@ class HighlightCard extends ConsumerWidget {
             ),
           ),
           visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           backgroundColor: theme.colorScheme.secondaryContainer.withValues(
             alpha: 0.4,

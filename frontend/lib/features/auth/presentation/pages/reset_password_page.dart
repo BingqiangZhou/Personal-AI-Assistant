@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
@@ -117,8 +118,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       }
     });
 
-    return Scaffold(
-      body: LoadingOverlay(
+    return AdaptiveScaffold(
+      child: LoadingOverlay(
         isLoading: isLoading,
         child: AuthShell(
           title: _passwordReset
@@ -136,7 +137,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   onPressed: () => context.go('/login'),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               Container(
                 width: 80,
                 height: 80,
@@ -175,6 +176,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             controller: _passwordController,
             label: l10n.auth_new_password,
             obscureText: _obscurePassword,
+            autofillHints: const [AutofillHints.newPassword],
             onToggleVisibility: () {
               setState(() {
                 _obscurePassword = !_obscurePassword;
@@ -191,13 +193,14 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             },
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
 
           // Confirm Password field
           PasswordTextField(
             controller: _confirmPasswordController,
             label: l10n.auth_confirm_password,
             obscureText: _obscureConfirmPassword,
+            autofillHints: const [AutofillHints.newPassword],
             onToggleVisibility: () {
               setState(() {
                 _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -214,7 +217,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             },
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.spacing.lg),
 
           // Password requirements
           RepaintBoundary(
@@ -230,7 +233,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                             fontWeight: FontWeight.w600,
                           ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
                     PasswordRequirementItem(
                       text: l10n.auth_password_requirement_min_length,
                       isValid: _hasMinLength(_passwordController.text),
@@ -253,12 +256,12 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: context.spacing.xl),
 
           // Reset button
           SizedBox(
             width: double.infinity,
-            height: AppSpacing.xl,
+            height: context.spacing.xl,
             child: FilledButton(
               key: const Key('reset_password_button'),
               onPressed: _submitResetPassword,
@@ -276,7 +279,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       children: [
         SizedBox(
           width: double.infinity,
-          height: AppSpacing.xl,
+          height: context.spacing.xl,
           child: FilledButton(
             key: const Key('go_to_login_button'),
             onPressed: () => context.go('/login'),

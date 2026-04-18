@@ -124,7 +124,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
         mainAxisSize: MainAxisSize.min,
         children: [
           const CircularProgressIndicator.adaptive(),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -263,7 +263,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
           hasTranscript: canManageSummary,
           compact: compact,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.spacing.md),
         if (summaryState.isLoading &&
             !summaryState.hasSummary &&
             sanitizedEpisodeSummary.isEmpty)
@@ -302,7 +302,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
         if (summaryState.isLoading &&
             (summaryState.hasSummary ||
                 sanitizedEpisodeSummary.isNotEmpty)) ...[
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           const LinearProgressIndicator(),
         ],
       ],
@@ -349,7 +349,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.smMd, AppSpacing.sm),
+                padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.smMd, context.spacing.sm),
                 child: Row(
                   children: [
                     Expanded(

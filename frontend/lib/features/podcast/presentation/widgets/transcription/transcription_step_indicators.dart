@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/transcription/transcription_step_mapper.dart';
 
@@ -61,9 +61,9 @@ class TranscriptionStatusStepIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (step) {
       case 1:
-        return const Icon(Icons.download, size: 16, color: Colors.blue);
+        return const Icon(Icons.download, size: 16, color: AppColors.primary);
       case 2:
-        return const Icon(Icons.transform, size: 16, color: Colors.orange);
+        return const Icon(Icons.transform, size: 16, color: AppColors.warning);
       case 3:
         return const Icon(Icons.content_cut, size: 16, color: Colors.purple);
       case 4:
@@ -71,7 +71,7 @@ class TranscriptionStatusStepIcon extends StatelessWidget {
       case 5:
         return const Icon(Icons.merge_type, size: 16, color: Colors.green);
       default:
-        return const Icon(Icons.pending, size: 16, color: Colors.grey);
+        return const Icon(Icons.pending, size: 16, color: AppColors.lightOnSurfaceMuted);
     }
   }
 }
@@ -91,7 +91,7 @@ class _ConnectorLine extends StatelessWidget {
           width: 16,
           color: highlighted
               ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
-              : Colors.grey.withValues(alpha: 0.2),
+              : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
     );
@@ -131,7 +131,7 @@ class _TranscriptionStepIndicator extends StatelessWidget {
             color: iconColor,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        SizedBox(height: context.spacing.xs),
         Text(
           label,
           style: AppTheme.navLabel(
@@ -151,7 +151,7 @@ class _TranscriptionStepIndicator extends StatelessWidget {
   ) {
     switch (status) {
       case TranscriptionStepStatus.completed:
-        return (Colors.green, Colors.green.withValues(alpha: 0.1));
+        return (AppColors.success, AppColors.success.withValues(alpha: 0.1));
       case TranscriptionStepStatus.current:
         return (
           Theme.of(context).colorScheme.primary,

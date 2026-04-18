@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
@@ -28,7 +27,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         key: const Key('discover_episode_detail_sheet'),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.smMd, AppSpacing.smMd, AppSpacing.smMd, AppSpacing.smMd),
+        padding: EdgeInsets.fromLTRB(context.spacing.smMd, context.spacing.smMd, context.spacing.smMd, context.spacing.smMd),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -46,7 +45,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +59,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
+                      SizedBox(height: context.spacing.xs),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -77,7 +76,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 2),
+                                SizedBox(height: context.spacing.xxs),
                                 Text(
                                   _buildMetaText(episode),
                                   style: theme.textTheme.bodySmall?.copyWith(
@@ -90,7 +89,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(width: context.spacing.sm),
                           Align(
                             child: IconButton(
                               key: const Key('discover_episode_detail_play_button'),
@@ -115,7 +114,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
               ],
             ),
             if (description.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               Text(description, style: theme.textTheme.bodyMedium),
             ],
           ],

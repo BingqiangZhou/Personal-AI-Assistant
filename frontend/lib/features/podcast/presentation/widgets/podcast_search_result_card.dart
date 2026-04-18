@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
@@ -59,7 +61,7 @@ class PodcastSearchResultCard extends StatelessWidget {
             horizontal: cardHorizontalPadding,
             vertical: cardVerticalPadding,
           ),
-          cornerRadius: kPodcastRowCardCornerRadius,
+          cornerRadius: AppRadius.itemValue,
           titleMaxLines: 1,
           showPlayButton: false,
           showSubscribeAction: true,
@@ -70,22 +72,22 @@ class PodcastSearchResultCard extends StatelessWidget {
         subtitle: result.artistName ?? l10n.podcast_unknown_author,
         onTap: () => onSubscribe?.call(result),
         onSubscribe: () => onSubscribe?.call(result),
-        additionalMetadata: _buildGenreMetadata(l10n, theme),
+        additionalMetadata: _buildGenreMetadata(context, l10n, theme),
       ),
     );
   }
 
-  List<Widget> _buildGenreMetadata(AppLocalizations l10n, ThemeData theme) {
+  List<Widget> _buildGenreMetadata(BuildContext context, AppLocalizations l10n, ThemeData theme) {
     final widgets = <Widget>[];
     if (result.primaryGenreName != null) {
       widgets.addAll([
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         Icon(
           Icons.category,
           size: 14,
           color: theme.colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: AppSpacing.xs),
+        SizedBox(width: context.spacing.xs),
         Flexible(
           child: Text(
             result.primaryGenreName!,
@@ -100,13 +102,13 @@ class PodcastSearchResultCard extends StatelessWidget {
       ]);
     }
     widgets.addAll([
-      const SizedBox(width: AppSpacing.sm),
+      SizedBox(width: context.spacing.sm),
       Icon(
         Icons.podcasts,
         size: 14,
         color: theme.colorScheme.onSurfaceVariant,
       ),
-      const SizedBox(width: AppSpacing.xs),
+      SizedBox(width: context.spacing.xs),
       Text(
         '${result.trackCount ?? 0} ${l10n.podcast_episodes}',
         style: theme.textTheme.bodySmall?.copyWith(

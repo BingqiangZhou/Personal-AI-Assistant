@@ -10,6 +10,7 @@ import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -298,12 +299,12 @@ class _ProfileCacheManagementPageState
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: AppSpacing.mdLg,
-              height: AppSpacing.mdLg,
-              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+            SizedBox(
+              width: context.spacing.mdLg,
+              height: context.spacing.mdLg,
+              child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: context.spacing.md),
             Flexible(child: Text(l10n.profile_clearing_cache)),
           ],
         ),
@@ -356,7 +357,7 @@ class _ProfileCacheManagementPageState
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildLegendDot(color, key: dotKey),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -439,7 +440,7 @@ class _ProfileCacheManagementPageState
       padding: _contentHorizontalPadding(context),
       child: Container(
         key: const Key('cache_manage_overview_section'),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.smMd),
+        padding: EdgeInsets.fromLTRB(context.spacing.lg, context.spacing.lg, context.spacing.lg, context.spacing.smMd),
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: AppRadius.xlRadius,
@@ -457,7 +458,7 @@ class _ProfileCacheManagementPageState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -467,9 +468,9 @@ class _ProfileCacheManagementPageState
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: context.spacing.sm),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: EdgeInsets.only(bottom: context.spacing.sm),
                   child: Text(
                     'MB',
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -480,7 +481,7 @@ class _ProfileCacheManagementPageState
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: context.spacing.xs),
             Text(
               AppLocalizations.of(
                 context,
@@ -490,17 +491,17 @@ class _ProfileCacheManagementPageState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
             _buildSegmentBar(
               imagesBytes: stats.images.bytes,
               audioBytes: stats.audio.bytes,
               otherBytes: stats.other.bytes,
               palette: palette,
             ),
-            const SizedBox(height: AppSpacing.smMd),
+            SizedBox(height: context.spacing.smMd),
             Wrap(
-              spacing: AppSpacing.lg,
-              runSpacing: AppSpacing.sm,
+              spacing: context.spacing.lg,
+              runSpacing: context.spacing.sm,
               children: [
                 _buildLegendItem(
                   palette.images,
@@ -545,22 +546,22 @@ class _ProfileCacheManagementPageState
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+          borderRadius: BorderRadius.circular(AppRadius.itemValue),
           border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
         ),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.smMd, AppSpacing.sm, AppSpacing.sm, AppSpacing.sm),
+        padding: EdgeInsets.fromLTRB(context.spacing.smMd, context.spacing.sm, context.spacing.sm, context.spacing.sm),
       child: Row(
           children: [
             Container(
-              width: AppSpacing.xl,
-              height: AppSpacing.xl,
+              width: context.spacing.xl,
+              height: context.spacing.xl,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: AppRadius.mdLgRadius,
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: context.spacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,11 +579,11 @@ class _ProfileCacheManagementPageState
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(width: context.spacing.sm),
                       _buildLegendDot(color),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: context.spacing.xs),
                   Text(
                     l10n.profile_cache_manage_item_count(stats.count),
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -592,14 +593,14 @@ class _ProfileCacheManagementPageState
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.spacing.sm),
             Text(
               _formatMB(stats.bytes),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(width: AppSpacing.smMd),
+            SizedBox(width: context.spacing.smMd),
             HeaderCapsuleActionButton(
               key: Key('cache_manage_clean_${category.name}'),
               tooltip: l10n.profile_cache_manage_clean,
@@ -634,10 +635,10 @@ class _ProfileCacheManagementPageState
           Expanded(
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.mdLg, AppSpacing.lg, AppSpacing.mdLg),
+              padding: EdgeInsets.fromLTRB(context.spacing.lg, context.spacing.mdLg, context.spacing.lg, context.spacing.mdLg),
               children: [
                 _buildOverviewSection(context, stats: stats, palette: palette),
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
                 Padding(
                   padding: _contentHorizontalPadding(context),
                   child: Text(
@@ -649,7 +650,7 @@ class _ProfileCacheManagementPageState
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.spacing.sm),
                 _buildDetailRow(
                   context: context,
                   category: _CacheCategory.images,
@@ -677,12 +678,12 @@ class _ProfileCacheManagementPageState
                   stats: stats.other,
                   onClean: () => _deleteCategory(stats, _CacheCategory.other),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.spacing.md),
                 Padding(
                   padding: _contentHorizontalPadding(context),
                   child: Container(
                     key: const Key('cache_manage_notice_box'),
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+                    padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.md, context.spacing.md, context.spacing.md),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.onSurfaceVariant.withValues(
                         alpha: theme.brightness == Brightness.dark
@@ -698,7 +699,7 @@ class _ProfileCacheManagementPageState
                           key: const Key('cache_manage_notice_icon'),
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: context.spacing.sm),
                         Expanded(
                           child: Text(
                             l10n.profile_cache_manage_notice,
@@ -711,13 +712,13 @@ class _ProfileCacheManagementPageState
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     _contentHorizontalInset(context),
                     0,
                     _contentHorizontalInset(context),
-                    AppSpacing.xs,
+                    context.spacing.xs,
                   ),
                   child: SizedBox(
                     width: double.infinity,
@@ -733,7 +734,7 @@ class _ProfileCacheManagementPageState
                       style: FilledButton.styleFrom(
                         backgroundColor: palette.deepCleanBackground,
                         foregroundColor: palette.deepCleanForeground,
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                        padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
                         textStyle: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -772,8 +773,8 @@ class _ProfileCacheManagementPageState
                   ),
                 ],
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.smMd),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.spacing.smMd),
               ),
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -784,7 +785,7 @@ class _ProfileCacheManagementPageState
                         snapshot.connectionState != ConnectionState.done;
                     final stats = snapshot.data ?? _emptyStats;
 
-                    return RefreshIndicator(
+                    return AdaptiveRefreshIndicator(
                       onRefresh: _refresh,
                       child: _buildContentPanel(
                         context,

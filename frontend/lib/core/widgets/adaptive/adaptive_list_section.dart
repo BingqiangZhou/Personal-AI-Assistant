@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 
 /// Adaptive list section container.
@@ -27,22 +28,22 @@ class AdaptiveListSection extends StatelessWidget {
         header: header != null ? Text(header!) : null,
         footer: footer != null ? Text(footer!) : null,
         margin: margin ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.sm),
         children: children,
       );
     }
 
     final theme = Theme.of(context);
     return Card(
-      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: margin ?? EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.sm),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (header != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.xs),
                 child: Text(
                   header!,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -53,7 +54,7 @@ class AdaptiveListSection extends StatelessWidget {
             ...children,
             if (footer != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.xs, context.spacing.md, context.spacing.smMd),
                 child: Text(
                   footer!,
                   style: theme.textTheme.bodySmall?.copyWith(

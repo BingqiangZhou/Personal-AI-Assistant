@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -12,7 +12,6 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
@@ -99,7 +98,7 @@ class _QueueListState extends ConsumerState<QueueList> {
 
     return ReorderableListView.builder(
       scrollController: _scrollController,
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.md, AppSpacing.mdLg),
+      padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.mdLg),
       itemExtent: ScrollConstants.queueItemExtent,
       cacheExtent: ScrollConstants.defaultCacheExtent,
       buildDefaultDragHandles: false,
@@ -284,7 +283,7 @@ class QueueListItem extends ConsumerWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.smMd, AppSpacing.sm, AppSpacing.sm, AppSpacing.sm),
+            padding: EdgeInsets.fromLTRB(context.spacing.smMd, context.spacing.sm, context.spacing.sm, context.spacing.sm),
             child: Row(
               children: [
                 Container(
@@ -305,11 +304,11 @@ class QueueListItem extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 RepaintBoundary(
                   child: QueueItemCover(item: item, isCurrent: isCurrent, size: 42),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,12 +322,12 @@ class QueueListItem extends ConsumerWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
+                      SizedBox(height: context.spacing.xs),
                       if (isCurrent) CurrentQueueSubtitle(item: item) else StaticQueueSubtitle(item: item),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: context.spacing.sm),
                 QueueItemDownloadIndicator(episodeId: item.episodeId),
                 IconButton(
                   key: Key('queue_item_remove_${item.episodeId}'),
@@ -440,7 +439,7 @@ class QueueItemCover extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(kPodcastRowCardImageRadius),
+              borderRadius: BorderRadius.circular(AppRadius.itemValue),
               child: imageUrl != null && imageUrl.isNotEmpty
                   ? PodcastImageWidget(
                       imageUrl: imageUrl,

@@ -1,0 +1,120 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
+
+/// An action for [showAdaptiveActionSheet].
+class AdaptiveActionSheetAction {
+  const AdaptiveActionSheetAction({
+    required this.child,
+    this.onPressed,
+    this.isDestructive = false,
+    this.key,
+  });
+
+  final Widget child;
+  final VoidCallback? onPressed;
+  final bool isDestructive;
+  final Key? key;
+}
+
+/// Shows a platform-adaptive action sheet.
+///
+/// iOS: [CupertinoActionSheet] presented via [showCupertinoModalPopup].
+/// Android: [showModalBottomSheet] with a list of action tiles.
+Future<void> showAdaptiveActionSheet({
+  required BuildContext context,
+  required List<AdaptiveActionSheetAction> actions,
+  Widget? title,
+  Widget? message,
+  Widget? cancelWidget,
+}) {
+  if (PlatformHelper.isIOS(context)) {
+    return showCupertinoModalPopup<void>(
+      context: context,
+      builder: (popupContext) => CupertinoActionSheet(
+        title: title,
+        message: message,
+        actions: actions.map((action) {
+          return CupertinoActionSheetAction(
+            key: action.key,
+            onPressed: () {
+              Navigator.of(popupContext).pop();
+              action.onPressed?.call();
+            },
+            isDestructiveAction: action.isDestructive,
+            child: action.child,
+          );
+        }).toList(),
+        cancelButton: cancelWidget != null
+            ? CupertinoActionSheetAction(
+                onPressed: () => Navigator.of(popupContext).pop(),
+                child: cancelWidget,
+              )
+            : null,
+      ),
+    );
+  }
+
+  return showModalBottomSheet<void>(
+    context: context,
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (title != null || message != null)
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.md, context.spacing.md, context.spacing.sm),
+                child: Column(
+                  children: [
+                    if (title != null)
+                      DefaultTextStyle(
+                        style: Theme.of(context).textTheme.titleMedium!,
+                        child: title,
+                      ),
+                    if (message != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: context.spacing.xs),
+                        child: DefaultTextStyle(
+                          style: Theme.of(context).textTheme.bodyMedium!,
+                          child: message,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ...actions.map((action) {
+              return ListTile(
+                key: action.key,
+                title: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    color: action.isDestructive
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                  ),
+                  child: action.child,
+                ),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  action.onPressed?.call();
+                },
+              );
+            }),
+            if (cancelWidget != null)
+              ListTile(
+                title: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  child: cancelWidget,
+                ),
+                onTap: () => Navigator.of(sheetContext).pop(),
+              ),
+          ],
+        ),
+      );
+    },
+  );
+}

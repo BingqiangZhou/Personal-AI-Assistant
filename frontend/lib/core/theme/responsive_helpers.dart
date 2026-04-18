@@ -12,11 +12,11 @@ class ResponsiveHelpers {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < Breakpoints.medium) {
-      return const EdgeInsets.all(AppSpacing.md); // mobile
+      return EdgeInsets.all(AppSpacingData.compact.md); // mobile
     } else if (screenWidth < Breakpoints.mediumLarge) {
-      return const EdgeInsets.all(AppSpacing.lg); // tablet
+      return EdgeInsets.all(AppSpacingData.standard.lg); // tablet
     } else {
-      return const EdgeInsets.all(AppSpacing.xl); // desktop
+      return EdgeInsets.all(AppSpacingData.standard.xl); // desktop
     }
   }
 
@@ -27,11 +27,11 @@ class ResponsiveHelpers {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < Breakpoints.medium) {
-      return const EdgeInsets.symmetric(horizontal: AppSpacing.md); // mobile
+      return EdgeInsets.symmetric(horizontal: AppSpacingData.compact.md); // mobile
     } else if (screenWidth < Breakpoints.mediumLarge) {
-      return const EdgeInsets.symmetric(horizontal: AppSpacing.lg); // tablet
+      return EdgeInsets.symmetric(horizontal: AppSpacingData.standard.lg); // tablet
     } else {
-      return const EdgeInsets.symmetric(horizontal: AppSpacing.xl); // desktop
+      return EdgeInsets.symmetric(horizontal: AppSpacingData.standard.xl); // desktop
     }
   }
 
@@ -40,11 +40,11 @@ class ResponsiveHelpers {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     if (screenWidth < Breakpoints.medium) {
-      return const EdgeInsets.symmetric(vertical: AppSpacing.sm); // mobile
+      return EdgeInsets.symmetric(vertical: AppSpacingData.compact.sm); // mobile
     } else if (screenWidth < Breakpoints.mediumLarge) {
-      return const EdgeInsets.symmetric(vertical: AppSpacing.smMd); // tablet
+      return EdgeInsets.symmetric(vertical: AppSpacingData.standard.smMd); // tablet
     } else {
-      return const EdgeInsets.symmetric(vertical: AppSpacing.md); // desktop
+      return EdgeInsets.symmetric(vertical: AppSpacingData.standard.md); // desktop
     }
   }
 

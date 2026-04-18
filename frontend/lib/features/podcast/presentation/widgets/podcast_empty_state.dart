@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 class PodcastEmptyState extends StatelessWidget {
@@ -30,7 +29,7 @@ class PodcastEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 64, color: scheme.onSurfaceVariant),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
             Text(
               title,
               style:
@@ -41,7 +40,7 @@ class PodcastEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               Text(
                 subtitle!,
                 style:

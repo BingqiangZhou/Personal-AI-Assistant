@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -56,18 +57,18 @@ class _HighlightDetailContent extends StatelessWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSpacing.mdLg),
+        padding: EdgeInsets.all(context.spacing.mdLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Quote section
             _buildQuoteSection(context),
-            const SizedBox(height: AppSpacing.mdLg),
+            SizedBox(height: context.spacing.mdLg),
 
             // Overall score badge
             _buildOverallScoreBadge(context),
-            const SizedBox(height: AppSpacing.mdLg),
+            SizedBox(height: context.spacing.mdLg),
 
             // Three-dimensional scores
             HighlightScoreIndicator(
@@ -75,18 +76,18 @@ class _HighlightDetailContent extends StatelessWidget {
               noveltyScore: highlight.noveltyScore,
               actionabilityScore: highlight.actionabilityScore,
             ),
-            const SizedBox(height: AppSpacing.mdLg),
+            SizedBox(height: context.spacing.mdLg),
 
             // Topic tags
             if (highlight.topicTags.isNotEmpty) ...[
               _buildTopicTags(context),
-              const SizedBox(height: AppSpacing.mdLg),
+              SizedBox(height: context.spacing.mdLg),
             ],
 
             // Episode source
             if (highlight.episodeTitle.isNotEmpty) ...[
               _buildEpisodeSource(context),
-              const SizedBox(height: AppSpacing.mdLg),
+              SizedBox(height: context.spacing.mdLg),
             ],
 
             // Actions
@@ -124,7 +125,7 @@ class _HighlightDetailContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.withValues(alpha: 0.15),
         borderRadius: AppRadius.lgRadius,
@@ -140,7 +141,7 @@ class _HighlightDetailContent extends StatelessWidget {
             size: 20,
             color: scheme.primary.withValues(alpha: 0.6),
           ),
-          const SizedBox(width: AppSpacing.smMd),
+          SizedBox(width: context.spacing.smMd),
           Expanded(
             child: SelectableText(
               highlight.originalText,
@@ -168,7 +169,7 @@ class _HighlightDetailContent extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smMd),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.smMd),
       decoration: BoxDecoration(
         color: scoreColor.withValues(alpha: 0.12),
         borderRadius: AppRadius.xlRadius,
@@ -184,7 +185,7 @@ class _HighlightDetailContent extends StatelessWidget {
             size: 18,
             color: scoreColor,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           Text(
             l10n.podcast_highlights_overall_score(highlight.overallScore),
             style: theme.textTheme.titleMedium?.copyWith(
@@ -211,13 +212,13 @@ class _HighlightDetailContent extends StatelessWidget {
             color: scheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.spacing.sm),
         Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
+          spacing: context.spacing.sm,
+          runSpacing: context.spacing.sm,
           children: highlight.topicTags.map((tag) {
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.sm),
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(appThemeOf(context).pillRadius),
@@ -245,7 +246,7 @@ class _HighlightDetailContent extends StatelessWidget {
     final extension = appThemeOf(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.smMd),
+      padding: EdgeInsets.all(context.spacing.smMd),
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(extension.itemRadius),
@@ -257,7 +258,7 @@ class _HighlightDetailContent extends StatelessWidget {
             size: 16,
             color: scheme.onSurfaceVariant,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +312,7 @@ class _MultipleHighlightsContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, 0),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, 0),
             child: Text(
               l10n.podcast_highlights_multiple_count(highlights.length),
               style: theme.textTheme.titleMedium?.copyWith(
@@ -319,11 +320,11 @@ class _MultipleHighlightsContent extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           Flexible(
             child: ListView.builder(
               shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
               itemCount: highlights.length,
               itemBuilder: (context, index) {
                 final highlight = highlights[index];
@@ -375,11 +376,11 @@ class _HighlightListItem extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdLgRadius,
           border: Border.all(
             color: scheme.outlineVariant.withValues(alpha: 0.15),
           ),
@@ -387,16 +388,16 @@ class _HighlightListItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.smMd),
+            padding: EdgeInsets.all(context.spacing.smMd),
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.sm,
+                      vertical: context.spacing.xs,
                     ),
                     decoration: BoxDecoration(
                       color: scoreColor.withValues(alpha: 0.12),
@@ -406,7 +407,7 @@ class _HighlightListItem extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.star, size: 12, color: scoreColor),
-                        const SizedBox(width: AppSpacing.xs),
+                        SizedBox(width: context.spacing.xs),
                         Text(
                           highlight.overallScore.toStringAsFixed(1),
                           style: theme.textTheme.labelSmall?.copyWith(
@@ -426,7 +427,7 @@ class _HighlightListItem extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               Text(
                 highlight.originalText,
                 style: theme.textTheme.bodyMedium?.copyWith(

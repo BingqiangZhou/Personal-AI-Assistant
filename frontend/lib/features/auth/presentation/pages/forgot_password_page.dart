@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
@@ -99,8 +100,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final successTitle =
         l10n?.auth_reset_email_sent ?? _fallbackResetEmailSent;
 
-    return Scaffold(
-      body: LoadingOverlay(
+    return AdaptiveScaffold(
+      child: LoadingOverlay(
         isLoading: isLoading,
         child: AuthShell(
           title: _emailSent ? successTitle : forgotTitle,
@@ -120,7 +121,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   onPressed: () => context.go('/login'),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               Container(
                 width: 80,
                 height: 80,
@@ -159,6 +160,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             label: l10n?.auth_email ?? _fallbackEmailLabel,
             keyboardType: TextInputType.emailAddress,
             prefixIcon: const Icon(Icons.email_outlined),
+            autofillHints: const [AutofillHints.email],
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return l10n?.auth_enter_email ?? _fallbackEnterEmail;
@@ -170,10 +172,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               return null;
             },
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: context.spacing.xl),
           SizedBox(
             width: double.infinity,
-            height: AppSpacing.xl,
+            height: context.spacing.xl,
             child: FilledButton(
               key: const Key('forgot_password_submit_button'),
               onPressed: _submitForgotPassword,
@@ -200,10 +202,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: AppSpacing.xl),
+        SizedBox(height: context.spacing.xl),
         SizedBox(
           width: double.infinity,
-          height: AppSpacing.xl,
+          height: context.spacing.xl,
           child: OutlinedButton(
             key: const Key('back_to_login_button'),
             onPressed: () => context.go('/login'),
@@ -212,7 +214,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.spacing.md),
         TextButton(
           key: const Key('resend_email_button'),
           onPressed: () {

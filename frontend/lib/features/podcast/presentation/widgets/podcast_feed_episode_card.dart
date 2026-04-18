@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
@@ -42,7 +41,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
         imageIconSize: coverIconSize,
         dense: compact,
         cardMargin: compact
-            ? const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm)
+            ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.sm)
             : null,
         showSubscriptionBadge: true,
         subscriptionBadgeText:

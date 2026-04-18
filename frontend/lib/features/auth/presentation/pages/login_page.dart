@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +7,6 @@ import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
-import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -125,7 +122,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final isAuthenticated = next.isAuthenticated;
 
       if (isAuthenticated && !wasAuthenticated) {
-        AdaptiveHaptic.notificationSuccess(context);
+        AdaptiveHaptic.notificationSuccess();
         context.go('/feed');
       } else if (next.error != null && next.error != previous?.error) {
         // Only show snackbar for new errors
@@ -155,7 +152,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               StatusBadge(
                 label: l10n.auth_brand_name,
                 icon: Icons.auto_awesome,
@@ -164,7 +161,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
           child: Form(
             key: _formKey,
-            child: Column(
+            child: AutofillGroup(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 CustomTextField(
@@ -172,6 +170,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   label: l10n.auth_email,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
+                  autofillHints: const [AutofillHints.username, AutofillHints.email],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return l10n.auth_enter_email;
@@ -184,11 +183,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.spacing.md),
                 PasswordTextField(
                   controller: _passwordController,
                   label: l10n.auth_password,
                   obscureText: _obscurePassword,
+                  autofillHints: const [AutofillHints.password],
                   onToggleVisibility: () {
                     setState(() {
                       _obscurePassword = !_obscurePassword;
@@ -204,56 +204,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.spacing.md),
                 Row(
                   children: [
-                    if (Platform.isIOS)
-                      CupertinoSwitch(
-                        value: _rememberMe,
-                        onChanged: (value) async {
-                          setState(() {
-                            _rememberMe = value;
-                          });
-                          if (!_rememberMe) {
-                            await _secureStorage.delete(
-                              key: AppConstants.savedUsernameKey,
-                            );
-                          }
-                        },
-                      )
-                    else
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          checkColor: Colors.white,
-                          side: BorderSide(
-                            color: _rememberMe
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            width: 2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppRadius.xsRadius,
-                          ),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          onChanged: (value) async {
-                            setState(() {
-                              _rememberMe = value ?? false;
-                            });
-                            if (!_rememberMe) {
-                              await _secureStorage.delete(
-                                key: AppConstants.savedUsernameKey,
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                    const SizedBox(width: AppSpacing.sm),
+                    AdaptiveSwitch(
+                      value: _rememberMe,
+                      onChanged: (value) async {
+                        setState(() {
+                          _rememberMe = value;
+                        });
+                        if (!_rememberMe) {
+                          await _secureStorage.delete(
+                            key: AppConstants.savedUsernameKey,
+                          );
+                        }
+                      },
+                    ),
+                    SizedBox(width: context.spacing.sm),
                     Flexible(
                       child: Text(
                         l10n.auth_remember_me,
@@ -271,7 +238,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 AdaptiveButton(
                   key: const Key('login_button'),
                   style: AdaptiveButtonStyle.filled,
@@ -279,7 +246,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   isLoading: isLoading,
                   child: Text(l10n.auth_login),
                 ),
-                const SizedBox(height: AppSpacing.mdLg),
+                SizedBox(height: context.spacing.mdLg),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -297,6 +264,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ],
                 ),
               ],
+            ),
             ),
           ),
         ),

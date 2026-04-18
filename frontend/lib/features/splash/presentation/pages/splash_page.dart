@@ -61,8 +61,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     return Scaffold(
       body: Center(
         child: SizedBox(
-          width: AppSpacing.xl,
-          height: AppSpacing.xl,
+          width: context.spacing.xl,
+          height: context.spacing.xl,
           child: CircularProgressIndicator.adaptive(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(

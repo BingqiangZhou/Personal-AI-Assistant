@@ -34,7 +34,7 @@ class AdaptiveCheckboxListTile extends StatelessWidget {
         trailing: CupertinoCheckbox(
           value: value ?? false,
           onChanged: onChanged,
-          activeColor: CupertinoColors.systemGreen.resolveFrom(context),
+          activeColor: Theme.of(context).colorScheme.primary,
         ),
         onTap: () => onChanged?.call(!(value ?? false)),
       );

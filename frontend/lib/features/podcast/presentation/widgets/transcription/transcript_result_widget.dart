@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -39,7 +39,7 @@ class CompletedStateWidget extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.spacing.md),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -54,7 +54,7 @@ class CompletedStateWidget extends StatelessWidget {
               child: Icon(Icons.check_circle, size: 40, color: scheme.tertiary),
             ),
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Title
             Text(
@@ -65,7 +65,7 @@ class CompletedStateWidget extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
 
             // Description
             Text(
@@ -77,11 +77,11 @@ class CompletedStateWidget extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Stats
             Container(
-              padding: const EdgeInsets.all(AppSpacing.smMd),
+              padding: EdgeInsets.all(context.spacing.smMd),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(ext.buttonRadius),
@@ -125,7 +125,7 @@ class CompletedStateWidget extends StatelessWidget {
             ),
 
             if (completedAt != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               Text(
                 AppLocalizations.of(
                   context,
@@ -136,7 +136,7 @@ class CompletedStateWidget extends StatelessWidget {
               ),
             ],
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Actions
             Row(
@@ -151,7 +151,7 @@ class CompletedStateWidget extends StatelessWidget {
                       )!.podcast_transcription_delete,
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.smMd),
+                      padding: EdgeInsets.symmetric(vertical: context.spacing.smMd),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(ext.buttonRadius),
                       ),
@@ -162,7 +162,7 @@ class CompletedStateWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onView,
@@ -171,7 +171,7 @@ class CompletedStateWidget extends StatelessWidget {
                       context.l10n.transcription_view_button,
                     ),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.smMd),
+                      padding: EdgeInsets.symmetric(vertical: context.spacing.smMd),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(ext.buttonRadius),
                       ),
@@ -220,7 +220,7 @@ class FailedStateWidget extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.spacing.md),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -235,7 +235,7 @@ class FailedStateWidget extends StatelessWidget {
               child: Icon(Icons.error_outline, size: 40, color: scheme.error),
             ),
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Title
             Text(
@@ -246,7 +246,7 @@ class FailedStateWidget extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
 
             // Friendly error message
             Text(
@@ -258,11 +258,11 @@ class FailedStateWidget extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.smMd),
+            SizedBox(height: context.spacing.smMd),
 
             // Suggestion
             Container(
-              padding: const EdgeInsets.all(AppSpacing.smMd),
+              padding: EdgeInsets.all(context.spacing.smMd),
               decoration: BoxDecoration(
                 color: scheme.tertiary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(ext.buttonRadius),
@@ -275,7 +275,7 @@ class FailedStateWidget extends StatelessWidget {
                     size: 16,
                     color: scheme.tertiary,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: context.spacing.sm),
                   Expanded(
                     child: Text(
                       suggestion,
@@ -287,7 +287,7 @@ class FailedStateWidget extends StatelessWidget {
             ),
 
             if (errorMessage != friendlyMessage) ...[
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               // Technical details (expandable)
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
@@ -299,7 +299,7 @@ class FailedStateWidget extends StatelessWidget {
                 ),
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    padding: EdgeInsets.all(context.spacing.sm),
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(ext.buttonRadius),
@@ -316,7 +316,7 @@ class FailedStateWidget extends StatelessWidget {
               ),
             ],
 
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
 
             // Action buttons
             Row(
@@ -329,14 +329,14 @@ class FailedStateWidget extends StatelessWidget {
                       context.l10n.podcast_transcription_clear,
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.smMd),
+                      padding: EdgeInsets.symmetric(vertical: context.spacing.smMd),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(ext.buttonRadius),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onRetry,
@@ -345,7 +345,7 @@ class FailedStateWidget extends StatelessWidget {
                       context.l10n.transcription_retry_button,
                     ),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.smMd),
+                      padding: EdgeInsets.symmetric(vertical: context.spacing.smMd),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(ext.buttonRadius),
                       ),
@@ -448,7 +448,7 @@ Widget _buildStatItem(
   return Column(
     children: [
       Icon(icon, size: 20, color: scheme.primary),
-      const SizedBox(height: AppSpacing.xs),
+      SizedBox(height: context.spacing.xs),
       Text(
         value,
         style: theme.textTheme.titleMedium?.copyWith(

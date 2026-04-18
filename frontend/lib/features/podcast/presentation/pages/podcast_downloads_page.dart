@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/database/app_database.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -50,7 +51,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
                 title: l10n.downloads_page_title,
                 actions: [if (deleteButton != null) deleteButton],
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.smMd)),
+              SliverToBoxAdapter(child: SizedBox(height: context.spacing.smMd)),
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: asyncDownloads.when(
@@ -113,7 +114,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, 18, AppSpacing.mdLg, 14),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, 18, context.spacing.mdLg, 14),
             child: AppSectionHeader(
               title: l10n.downloads_page_title,
               subtitle: l10n.downloads_empty,
@@ -126,14 +127,14 @@ class PodcastDownloadsPage extends ConsumerWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.mdLg),
+              padding: EdgeInsets.all(context.spacing.mdLg),
               child: Container(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: AppRadius.xxlCardRadius,
                   border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15)),
                 ),
-                padding: const EdgeInsets.all(AppSpacing.md), // ~mdLg context-specific
+                padding: EdgeInsets.all(context.spacing.md), // ~mdLg context-specific
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -143,7 +144,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
                         size: 48,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(height: AppSpacing.smMd),
+                      SizedBox(height: context.spacing.smMd),
                       Text(
                         l10n.downloads_empty_subtitle,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -187,7 +188,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, 18, AppSpacing.mdLg, 14),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, 18, context.spacing.mdLg, 14),
             child: AppSectionHeader(
               title: l10n.downloads_page_title,
               subtitle: l10n.downloads_items(totalDownloads),
@@ -200,16 +201,16 @@ class PodcastDownloadsPage extends ConsumerWidget {
           ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.only(
-                left: AppSpacing.sm,
-                right: AppSpacing.sm,
-                top: AppSpacing.sm,
+              padding: EdgeInsets.only(
+                left: context.spacing.sm,
+                right: context.spacing.sm,
+                top: context.spacing.sm,
                 bottom: 100,
               ),
               itemCount: allTasks.length,
               itemBuilder: (context, index) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: EdgeInsets.only(bottom: context.spacing.sm),
                   child: _DownloadTaskCard(task: allTasks[index]),
                 );
               },
@@ -250,15 +251,15 @@ class _DownloadTaskCard extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: AppRadius.xxlCardRadius,
           onTap: () {},
           child: Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: AppRadius.xxlCardRadius,
               border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15)),
             ),
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 14, AppSpacing.smMd, 14),
+            padding: EdgeInsets.fromLTRB(context.spacing.md, 14, context.spacing.smMd, 14),
             child: Row(
               children: [
                 // Leading image or status icon
@@ -276,7 +277,7 @@ class _DownloadTaskCard extends ConsumerWidget {
                   )
                 else
                   _StatusIcon(task: task),
-                const SizedBox(width: AppSpacing.md), // icon-size, not spacing
+                SizedBox(width: context.spacing.md), // icon-size, not spacing
                 // Title and subtitle
                 Expanded(
                   child: Column(
@@ -290,7 +291,7 @@ class _DownloadTaskCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
+                      SizedBox(height: context.spacing.xs),
                       if (podcastTitle != null) ...[
                         Text(
                           podcastTitle,
@@ -300,7 +301,7 @@ class _DownloadTaskCard extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: AppSpacing.xs / 2),
+                        SizedBox(height: context.spacing.xs / 2),
                       ],
                       if (task.status == DownloadStatus.downloading)
                         LinearProgressIndicator(value: task.progress)
@@ -316,7 +317,7 @@ class _DownloadTaskCard extends ConsumerWidget {
                 ),
                 // Trailing action
                 if (_trailingIcon(task) != null) ...[
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: context.spacing.sm),
                   SizedBox(
                     width: 32,
                     height: 32,

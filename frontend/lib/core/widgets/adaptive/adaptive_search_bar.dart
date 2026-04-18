@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 
 /// Adaptive search bar.
 ///
 /// iOS: [CupertinoSearchTextField] with rounded gray background.
-/// Android: Material [SearchBar] with pill shape.
-class AdaptiveSearchBar extends StatelessWidget {
+/// Android: Material [TextField] with search decoration and pill shape,
+/// since [SearchBar] does not expose `onSubmitted`.
+class AdaptiveSearchBar extends StatefulWidget {
   const AdaptiveSearchBar({
     super.key,
     this.controller,
@@ -25,27 +28,59 @@ class AdaptiveSearchBar extends StatelessWidget {
   final FocusNode? focusNode;
 
   @override
+  State<AdaptiveSearchBar> createState() => _AdaptiveSearchBarState();
+}
+
+class _AdaptiveSearchBarState extends State<AdaptiveSearchBar> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? TextEditingController();
+    _focusNode = widget.focusNode ?? FocusNode();
+  }
+
+  @override
+  void dispose() {
+    // Only dispose controllers we created.
+    if (widget.controller == null) _controller.dispose();
+    if (widget.focusNode == null) _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (PlatformHelper.isIOS(context)) {
       return CupertinoSearchTextField(
-        controller: controller,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        placeholder: placeholder,
-        autofocus: autofocus,
-        focusNode: focusNode,
+        controller: _controller,
+        onChanged: widget.onChanged,
+        onSubmitted: widget.onSubmitted,
+        placeholder: widget.placeholder,
+        autofocus: widget.autofocus,
+        focusNode: _focusNode,
         style: CupertinoTheme.of(context).textTheme.textStyle,
       );
     }
 
-    return SearchBar(
-      controller: controller,
-      onChanged: onChanged,
-      hintText: placeholder,
-      autoFocus: autofocus,
-      focusNode: focusNode,
-      padding: const WidgetStatePropertyAll(
-        EdgeInsets.symmetric(horizontal: 16),
+    // Material: use TextField with SearchBar-like styling so we can
+    // support onSubmitted (which SearchBar does not expose).
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
+      autofocus: widget.autofocus,
+      decoration: InputDecoration(
+        hintText: widget.placeholder,
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+        border: OutlineInputBorder(
+          borderRadius: AppRadius.xxlRadius,
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }

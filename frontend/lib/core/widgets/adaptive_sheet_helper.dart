@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 
@@ -36,7 +37,7 @@ Future<T?> showAdaptiveSheet<T>({
         return Container(
           decoration: BoxDecoration(
             color: CupertinoColors.systemBackground.resolveFrom(sheetCtx),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.mdLg)),
           ),
           child: SafeArea(child: builder(sheetCtx)),
         );
@@ -60,7 +61,7 @@ Future<T?> showAdaptiveSheet<T>({
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadius.xxl),
               ),
               child: builder(dialogCtx),
             ),
@@ -79,13 +80,13 @@ Future<T?> showAdaptiveSheet<T>({
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
     ),
     builder: (sheetCtx) {
       return Container(
         decoration: BoxDecoration(
           color: Theme.of(sheetCtx).colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
         ),
         child: builder(sheetCtx),
       );

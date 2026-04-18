@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -268,8 +268,8 @@ class TranscriptDisplayWidgetState
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smMd),
-      margin: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.smMd),
+      margin: EdgeInsets.fromLTRB(context.spacing.md, 0, context.spacing.md, context.spacing.sm),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(extension.itemRadius),
@@ -284,7 +284,7 @@ class TranscriptDisplayWidgetState
             size: 20,
             color: scheme.primary,
           ),
-          const SizedBox(width: AppSpacing.smMd),
+          SizedBox(width: context.spacing.smMd),
           Expanded(
             child: Text(
               l10n.podcast_highlights_extract_hint,
@@ -293,14 +293,14 @@ class TranscriptDisplayWidgetState
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           TextButton.icon(
             onPressed: _extractHighlights,
             icon: const Icon(Icons.auto_awesome, size: 16),
             label: Text(l10n.podcast_highlights_extract_action),
             style: TextButton.styleFrom(
               foregroundColor: scheme.primary,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.sm),
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
             ),
           ),
         ],
@@ -334,7 +334,7 @@ class TranscriptDisplayWidgetState
     final selectedCount = _selectedTranscriptSegments.length;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.sm),
       color: scheme.primaryContainer.withValues(alpha: 0.35),
       child: Row(
         children: [
@@ -365,7 +365,7 @@ class TranscriptDisplayWidgetState
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border(
@@ -419,7 +419,7 @@ class TranscriptDisplayWidgetState
     final l10n = context.l10n;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.sm),
       child: AdaptiveSegmentedControl<TranscriptViewMode>(
         selected: _viewMode,
         onChanged: (value) {
@@ -430,7 +430,7 @@ class TranscriptDisplayWidgetState
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.auto_awesome_outlined, size: 18),
-              const SizedBox(width: 4),
+              SizedBox(width: context.spacing.xs),
               Text(l10n.podcast_transcript_view_highlights),
             ],
           ),
@@ -438,7 +438,7 @@ class TranscriptDisplayWidgetState
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.article_outlined, size: 18),
-              const SizedBox(width: 4),
+              SizedBox(width: context.spacing.xs),
               Text(l10n.podcast_transcript_view_full),
             ],
           ),
@@ -464,7 +464,7 @@ class TranscriptDisplayWidgetState
 
     return ListView.builder(
       controller: _highlightsScrollController,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       itemCount: sortedHighlights.length,
       cacheExtent: 500,
       itemBuilder: (context, index) {
@@ -499,14 +499,14 @@ class TranscriptDisplayWidgetState
             size: 64,
             color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           Text(
             l10n.podcast_highlights_empty_title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: scheme.onSurface,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           Text(
             l10n.podcast_highlights_empty_subtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -541,7 +541,7 @@ class TranscriptDisplayWidgetState
                     controller: _fullTranscriptScrollController,
                     itemCount: segments.length,
                     cacheExtent: 500,
-                    separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.smMd),
+                    separatorBuilder: (context, index) => SizedBox(height: context.spacing.smMd),
                     itemBuilder: (context, index) {
                       return RepaintBoundary(
                         key: ValueKey('transcript_segment_${segments[index].hashCode}'),
@@ -556,7 +556,6 @@ class TranscriptDisplayWidgetState
     );
   }
 
-
   Widget _buildNormalSegment(
     BuildContext context,
     String sentence,
@@ -568,7 +567,7 @@ class TranscriptDisplayWidgetState
     final selectionKey = 'full_$index';
     final isSelected = _selectedTranscriptSegments.containsKey(selectionKey);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.smMd),
+      padding: EdgeInsets.all(context.spacing.smMd),
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(appThemeOf(context).itemRadius),
@@ -647,7 +646,7 @@ class TranscriptDisplayWidgetState
               size: 64,
               color: scheme.onSurfaceVariant,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
             Text(
               l10n.podcast_transcript_no_match,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -660,7 +659,7 @@ class TranscriptDisplayWidgetState
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       child: ListView.builder(
         controller: _fullTranscriptScrollController,
         itemCount: _searchResults.length,
@@ -691,7 +690,7 @@ class TranscriptDisplayWidgetState
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(AppSpacing.smMd),
+      padding: EdgeInsets.all(context.spacing.smMd),
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(appThemeOf(context).itemRadius),
@@ -724,7 +723,7 @@ class TranscriptDisplayWidgetState
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
+          SizedBox(height: context.spacing.xs),
           // Highlighted text
           SelectableText.rich(
             highlightedText,
@@ -852,7 +851,7 @@ class FormattedTranscriptWidget extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       child: ListView.builder(
         itemCount: segments.length,
         cacheExtent: 500,
@@ -960,7 +959,7 @@ class FormattedTranscriptWidget extends ConsumerWidget {
                     ),
                   ),
                 if (segment.speaker != null && segment.timestamp != null)
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: context.spacing.sm),
                 if (segment.timestamp != null)
                   Text(
                     segment.timestamp!,
@@ -971,7 +970,7 @@ class FormattedTranscriptWidget extends ConsumerWidget {
               ],
             ),
           if (segment.speaker != null || segment.timestamp != null)
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
           // Text content
           SelectableText(
             segment.text,

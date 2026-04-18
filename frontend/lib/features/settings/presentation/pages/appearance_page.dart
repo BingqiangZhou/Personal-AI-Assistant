@@ -29,11 +29,11 @@ class AppearancePage extends ConsumerWidget {
         title: l10n.appearance_theme_section,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.smMd,
-              AppSpacing.lg,
-              AppSpacing.xs,
+            padding: EdgeInsets.fromLTRB(
+              context.spacing.lg,
+              context.spacing.smMd,
+              context.spacing.lg,
+              context.spacing.xs,
             ),
             child: Text(
               l10n.theme_mode_subtitle,
@@ -41,11 +41,11 @@ class AppearancePage extends ConsumerWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.lg,
+            padding: EdgeInsets.fromLTRB(
+              context.spacing.lg,
+              context.spacing.sm,
+              context.spacing.lg,
+              context.spacing.lg,
             ),
             child: _ThemeModeSelector(),
           ),
@@ -79,21 +79,21 @@ class _ThemeModeSelector extends ConsumerWidget {
         kThemeModeSystem: Row(
           children: [
             const Icon(Icons.brightness_auto, size: 16),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.sm),
             Text(l10n.theme_mode_follow_system),
           ],
         ),
         kThemeModeLight: Row(
           children: [
             const Icon(Icons.light_mode, size: 16),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.sm),
             Text(l10n.theme_mode_light),
           ],
         ),
         kThemeModeDark: Row(
           children: [
             const Icon(Icons.dark_mode, size: 16),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.sm),
             Text(l10n.theme_mode_dark),
           ],
         ),

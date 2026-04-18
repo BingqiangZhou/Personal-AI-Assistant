@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/providers/top_floating_notice_provider.dart';
 
@@ -50,8 +51,8 @@ void showTopFloatingNotice(
 
   final entry = OverlayEntry(
     builder: (_) => Positioned(
-      left: AppSpacing.md,
-      right: AppSpacing.md,
+      left: context.spacing.md,
+      right: context.spacing.md,
       top:
           topInset +
           effectiveTopBarHeight +
@@ -67,14 +68,14 @@ void showTopFloatingNotice(
                 color: isError
                     ? theme.colorScheme.errorContainer
                     : theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdLgRadius,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smMd),
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.smMd),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(icon, size: 18, color: foregroundColor),
-                  const SizedBox(width: AppSpacing.smMd),
+                  SizedBox(width: context.spacing.smMd),
                   Expanded(
                     child: Text(
                       message,

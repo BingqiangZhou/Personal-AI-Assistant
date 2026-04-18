@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -83,7 +83,7 @@ class ChatMessageBubble extends StatelessWidget {
     AppThemeExtension extension,
   ) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -95,7 +95,7 @@ class ChatMessageBubble extends StatelessWidget {
                 size: 14,
                 color: scheme.onSurface,
               ),
-              const SizedBox(width: AppSpacing.xs),
+              SizedBox(width: context.spacing.xs),
               Text(
                 roleLabel,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -104,7 +104,7 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
               ),
               if (isSelectMode) ...[
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Icon(
                   isSelected
                       ? Icons.check_circle
@@ -115,7 +115,7 @@ class ChatMessageBubble extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: AppSpacing.smMd),
+          SizedBox(height: context.spacing.smMd),
           if (isSelectMode) Text(
                   message.content,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -180,7 +180,7 @@ class ChatMessageBubble extends StatelessWidget {
           width: 3,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [scheme.primary, scheme.primary.withOpacity(0.6)],
+              colors: [scheme.primary, scheme.primary.withValues(alpha: 0.6)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -192,7 +192,7 @@ class ChatMessageBubble extends StatelessWidget {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -204,7 +204,7 @@ class ChatMessageBubble extends StatelessWidget {
                       size: 14,
                       color: scheme.onSurface,
                     ),
-                    const SizedBox(width: AppSpacing.xs),
+                    SizedBox(width: context.spacing.xs),
                     Text(
                       roleLabel,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -213,7 +213,7 @@ class ChatMessageBubble extends StatelessWidget {
                       ),
                     ),
                     if (isSelectMode) ...[
-                      const SizedBox(width: AppSpacing.smMd),
+                      SizedBox(width: context.spacing.smMd),
                       Icon(
                         isSelected
                             ? Icons.check_circle
@@ -224,7 +224,7 @@ class ChatMessageBubble extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
                 if (isSelectMode) Text(
                         message.content,
                         style: theme.textTheme.bodyMedium?.copyWith(

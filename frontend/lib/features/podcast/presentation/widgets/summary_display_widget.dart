@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
 
@@ -103,7 +103,7 @@ class SummaryDisplayWidgetState
             label: Text(l10n.podcast_share_all_content),
           ),
         ),
-        const SizedBox(height: AppSpacing.smMd),
+        SizedBox(height: context.spacing.smMd),
         // Markdown content with selection support
         SelectionArea(
           onSelectionChanged: (selectedContent) {

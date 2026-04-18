@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -31,7 +32,7 @@ class EpisodeCardConfig {
     this.descriptionMaxLines = 4,
     this.dense = false,
     this.cardMargin,
-    this.cardPadding = const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+    this.cardPadding,
     this.cornerRadius = 12.0,
     this.showPlayButton = true,
     this.showQueueButton = false,
@@ -73,7 +74,7 @@ class EpisodeCardConfig {
   final int descriptionMaxLines;
   final bool dense;
   final EdgeInsetsGeometry? cardMargin;
-  final EdgeInsetsGeometry cardPadding;
+  final EdgeInsetsGeometry? cardPadding;
   final double cornerRadius;
   final bool showPlayButton;
   final bool showQueueButton;
@@ -146,6 +147,12 @@ class BaseEpisodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final effectivePadding = config.cardPadding ?? EdgeInsets.fromLTRB(
+      context.spacing.md,
+      context.spacing.md,
+      context.spacing.md,
+      context.spacing.md,
+    );
 
     final cardContent = Container(
       decoration: BoxDecoration(
@@ -162,12 +169,12 @@ class BaseEpisodeCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              AdaptiveHaptic.lightImpact(context);
+              AdaptiveHaptic.lightImpact();
               onTap?.call();
             },
             borderRadius: BorderRadius.circular(config.cornerRadius),
             child: Padding(
-              padding: config.cardPadding,
+              padding: effectivePadding,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,11 +183,11 @@ class BaseEpisodeCard extends StatelessWidget {
                   if (config.showDescription &&
                       config.description != null &&
                       config.description!.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
                     Flexible(child: _buildDescription(context, theme)),
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: context.spacing.xs),
                   ] else if (config.showDescription) ...[
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: context.spacing.xs),
                   ],
                   if (_hasMetaOrActions)
                     _buildMetaActionRow(context, theme),
@@ -279,7 +286,7 @@ class BaseEpisodeCard extends StatelessWidget {
       children: [
         if (config.showImage && config.imageUrl != null) ...[
           _buildImage(context, theme),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: context.spacing.md),
         ],
         Expanded(
           child: Column(
@@ -293,7 +300,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.spacing.xs),
                 Text(
                   subtitle!,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -304,7 +311,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 ),
               ],
               if (subtitle2 != null) ...[
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.spacing.xs),
                 Text(
                   subtitle2!,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -317,7 +324,7 @@ class BaseEpisodeCard extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         if (trailingWidget != null)
           trailingWidget!
         else if (config.showPlayButton)
@@ -405,7 +412,7 @@ class BaseEpisodeCard extends StatelessWidget {
                     _buildSubscriptionBadge(theme),
                   if (config.showSubscriptionBadge &&
                       (config.showDate || config.showDuration))
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: context.spacing.sm),
                   if (config.showDate && config.date != null)
                     EpisodeCardUtils.buildDateMetadata(
                       date: config.date!,
@@ -413,7 +420,7 @@ class BaseEpisodeCard extends StatelessWidget {
                       spacing: config.dense ? 3 : 2,
                     ),
                   if (config.showDate && config.showDuration)
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: context.spacing.sm),
                   if (config.showDuration &&
                       config.formattedDuration != null)
                     EpisodeCardUtils.buildDurationMetadata(
@@ -428,7 +435,7 @@ class BaseEpisodeCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.smMd),
+        SizedBox(width: context.spacing.smMd),
         if (config.showDownloadButton &&
             config.episodeId != null &&
             config.audioUrl != null &&
@@ -445,7 +452,7 @@ class BaseEpisodeCard extends StatelessWidget {
             audioDuration: config.audioDuration,
             publishedAt: config.publishedAt,
           ),
-          const SizedBox(width: AppSpacing.xs),
+          SizedBox(width: context.spacing.xs),
         ],
         if (config.showQueueButton)
           IconButton(
@@ -463,7 +470,7 @@ class BaseEpisodeCard extends StatelessWidget {
                 : const Icon(Icons.playlist_add, size: 18),
           ),
         if (config.showSubscribeAction) ...[
-          const SizedBox(width: AppSpacing.smMd),
+          SizedBox(width: context.spacing.smMd),
           _buildSubscribeAction(context, theme),
         ],
       ],
@@ -504,7 +511,7 @@ class BaseEpisodeCard extends StatelessWidget {
       return Tooltip(
         message: l10n.podcast_subscribed,
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.smMd),
+          padding: EdgeInsets.all(context.spacing.smMd),
           decoration: BoxDecoration(
             color: theme.colorScheme.primaryContainer,
             borderRadius: AppRadius.xsRadius,

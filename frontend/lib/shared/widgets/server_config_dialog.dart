@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
@@ -41,7 +41,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
 
   /// Get local server URL based on platform
   String get _localServerUrl {
-    if (Platform.isAndroid) {
+    if (PlatformHelper.isAndroid(context)) {
       return 'http://10.0.2.2:8000';
     }
     return 'http://localhost:8000';
@@ -107,25 +107,34 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     final l10n = context.l10n;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < Breakpoints.medium;
-    final dialogWidth = isMobile ? screenWidth - AppSpacing.xxl : 500.0;
-    return AlertDialog.adaptive(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(AppSpacing.md),
-      title: Text(l10n.backend_api_server_config),
-      content: SizedBox(
+    final dialogWidth = isMobile ? screenWidth - context.spacing.xxl : 500.0;
+    final scheme = Theme.of(context).colorScheme;
+    final isIOS = PlatformHelper.isIOS(context);
+
+    final dialogChild = Material(
+      color: isIOS ? scheme.surface : scheme.surfaceContainerHigh,
+      borderRadius: isIOS ? BorderRadius.circular(14.0) : AppRadius.xlRadius,
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
         width: dialogWidth,
-        // FIX: Wrap in SingleChildScrollView to prevent overflow when keyboard is shown
         child: SingleChildScrollView(
+          padding: EdgeInsets.all(context.spacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Connection status row (icon and text in same row) - width matches TextField
+              // Title
+              Text(
+                l10n.backend_api_server_config,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              SizedBox(height: context.spacing.md),
+              // Connection status row
               SizedBox(
                 width: double.infinity,
                 child: _buildConnectionStatusPanel(),
               ),
-              const SizedBox(height: AppSpacing.smMd),
+              SizedBox(height: context.spacing.smMd),
               TextField(
                 controller: _serverUrlController,
                 decoration: InputDecoration(
@@ -153,29 +162,25 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                 ),
                 onChanged: _onServerUrlChanged,
               ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Description note (below input, above history)
+              SizedBox(height: context.spacing.sm),
               Text(
                 l10n.backend_api_description,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Server history list
+              SizedBox(height: context.spacing.sm),
               if (_serverHistory.isNotEmpty) ...[
                 Text(
                   l10n.server_history_title,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.spacing.xs),
                 Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
+                  spacing: context.spacing.sm,
+                  runSpacing: context.spacing.sm,
                   children: _serverHistory.map((url) {
                     return InputChip(
                       label: Text(url, style: Theme.of(context).textTheme.labelSmall),
@@ -184,22 +189,20 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                         _onServerUrlChanged(url);
                       },
                       labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: scheme.onSurface,
                       ),
                       backgroundColor: Colors.transparent,
                       side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                        color: scheme.outlineVariant,
                       ),
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
               ],
-              // Action buttons
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Local server button
                   OutlinedButton.icon(
                     onPressed: () {
                       _serverUrlController.text = _localServerUrl;
@@ -214,8 +217,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                     icon: const Icon(Icons.computer, size: 16),
                     label: Text(l10n.use_local_url),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  // Cancel and Save buttons
+                  SizedBox(height: context.spacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -223,7 +225,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(l10n.cancel),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(width: context.spacing.sm),
                       TextButton(
                         onPressed: _connectionStatus == ConnectionStatus.success
                             ? () => _saveServerConfig(context)
@@ -238,7 +240,19 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
           ),
         ),
       ),
-      actions: const [],
+    );
+
+    if (isIOS) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(context.spacing.md),
+        child: dialogChild,
+      );
+    }
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.all(context.spacing.md),
+      child: dialogChild,
     );
   }
 
@@ -273,7 +287,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: 10),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.08),
         borderRadius: AppRadius.smRadius,
@@ -283,7 +297,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(statusIcon, color: statusColor, size: 16),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           Text(
             statusText,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -293,7 +307,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
           ),
           if (_connectionMessage != null &&
               _connectionStatus != ConnectionStatus.failed) ...[
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.spacing.sm),
             Flexible(
               child: Text(
                 _connectionMessage!,
@@ -400,16 +414,16 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
         canPop: false,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+            padding: EdgeInsets.all(ctx.spacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(
-                  width: AppSpacing.md,
-                  height: AppSpacing.md,
+                SizedBox(
+                  width: ctx.spacing.md,
+                  height: ctx.spacing.md,
                   child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: ctx.spacing.lg),
                 Text(l10n.profile_server_switch_clearing),
               ],
             ),

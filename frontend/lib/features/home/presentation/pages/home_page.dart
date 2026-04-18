@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/providers/route_provider.dart';
 import 'package:personal_ai_assistant/core/router/app_router.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -174,6 +174,7 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
     final currentRoute = ref.watch(currentRouteProvider);
     final isHomeShellPlayerRoute =
         currentRoute.isNotEmpty && isHomeShellRoute(currentRoute);
+    final isDesktop = PlatformHelper.isDesktop(context);
 
     if (isHomeShellPlayerRoute) {
       _syncPlayerHostOverride(_buildPlayerHostOverride());
@@ -183,10 +184,11 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
       onTogglePlayPause: _togglePlayPause,
       onSeekBackward: _seekBackward,
       onSeekForward: _seekForward,
-      onVolumeUp: _isDesktop ? _volumeUp : null,
-      onVolumeDown: _isDesktop ? _volumeDown : null,
-      onNextEpisode: _isDesktop ? _nextEpisode : null,
-      onPreviousEpisode: _isDesktop ? _previousEpisode : null,
+      onVolumeUp: isDesktop ? _volumeUp : null,
+      onVolumeDown: isDesktop ? _volumeDown : null,
+      onNextEpisode: isDesktop ? _nextEpisode : null,
+      onPreviousEpisode: isDesktop ? _previousEpisode : null,
+      onTabSwitch: isDesktop ? _handleNavigation : null,
       child: CustomAdaptiveNavigation(
         key: const ValueKey('home_custom_adaptive_navigation'),
         destinations: _buildDestinations(context),
@@ -247,9 +249,6 @@ class _HomeShellWidgetState extends ConsumerState<HomeShellWidget>
     final newPosition = (playerState.position + 30000).clamp(0, playerState.duration);
     notifier.seekTo(newPosition);
   }
-
-  static bool get _isDesktop =>
-      Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
   void _volumeUp() {
     ref.read(audioHandlerProvider).volumeUp();

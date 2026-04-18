@@ -11,7 +11,7 @@ class SkeletonBox extends StatelessWidget {
     super.key,
     this.width,
     this.height = 14,
-    this.borderRadius = 4,
+    this.borderRadius = AppRadius.xs,
   });
 
   final double? width;
@@ -71,19 +71,19 @@ class EpisodeCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final padding = compact
-        ? const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.smMd)
-        : const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.md, AppSpacing.smMd);
+        ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.smMd)
+        : EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.smMd);
     final titleFont = compact
         ? theme.textTheme.titleSmall
         : theme.textTheme.titleMedium;
     final titleFontSize = titleFont?.fontSize ?? 14;
     final titleHeight = titleFont?.height ?? 1.0;
     final coverSize = 2 * (titleFontSize * titleHeight);
-    const coverRadius = 8.0;
+    const coverRadius = AppRadius.sm;
 
     return ShimmerLoading(
       child: Card(
-        margin: cardMargin ?? (compact ? const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.smMd) : null),
+        margin: cardMargin ?? (compact ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.smMd) : null),
         shape: AppRadius.mdLgShape,
         child: Padding(
           padding: padding,
@@ -98,13 +98,13 @@ class EpisodeCardSkeleton extends StatelessWidget {
                     height: coverSize,
                     borderRadius: coverRadius,
                   ),
-                  const SizedBox(width: AppSpacing.smMd),
+                  SizedBox(width: context.spacing.smMd),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SkeletonBox(height: titleFontSize + 2, width: double.infinity),
-                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(height: context.spacing.sm),
                         SkeletonBox(height: titleFontSize + 2, width: compact ? 120 : 180),
                       ],
                     ),
@@ -112,20 +112,20 @@ class EpisodeCardSkeleton extends StatelessWidget {
                 ],
               ),
               if (showDescription) ...[
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.spacing.sm),
                 const SkeletonBox(height: 12, width: double.infinity),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.spacing.xs),
                 SkeletonBox(height: 12, width: compact ? 200 : 280),
               ],
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.spacing.sm),
               // Meta row
-              const Row(
+              Row(
                 children: [
-                  SkeletonBox(height: 10, width: 60, borderRadius: 6),
-                  SizedBox(width: AppSpacing.sm),
-                  SkeletonBox(height: 10, width: 40, borderRadius: 6),
-                  Spacer(),
-                  SkeletonCircle(size: 20),
+                  const SkeletonBox(height: 10, width: 60, borderRadius: AppRadius.xs),
+                  SizedBox(width: context.spacing.sm),
+                  const SkeletonBox(height: 10, width: 40, borderRadius: AppRadius.xs),
+                  const Spacer(),
+                  const SkeletonCircle(size: 20),
                 ],
               ),
             ],
@@ -153,7 +153,7 @@ class SkeletonCardList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
       itemCount: itemCount,
       itemBuilder: (context, index) => EpisodeCardSkeleton(
         compact: compact,
@@ -179,11 +179,11 @@ class SkeletonCardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.sm,
+        crossAxisSpacing: context.spacing.sm,
+        mainAxisSpacing: context.spacing.sm,
         childAspectRatio: childAspectRatio,
       ),
       itemCount: itemCount,

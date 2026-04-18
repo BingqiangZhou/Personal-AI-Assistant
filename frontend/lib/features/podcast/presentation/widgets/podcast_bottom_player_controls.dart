@@ -20,7 +20,7 @@ class _TransportRow extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         // Skip/play-pause: static buttons — no progress watch.
         const RepaintBoundary(
           child: _SkipButton(
@@ -30,11 +30,11 @@ class _TransportRow extends StatelessWidget {
             tooltipLocalizationKey: _TooltipKey.rewind10,
           ),
         ),
-        const SizedBox(width: AppSpacing.smMd),
+        SizedBox(width: context.spacing.smMd),
         const RepaintBoundary(
           child: _PlayPauseButtonLarge(),
         ),
-        const SizedBox(width: AppSpacing.smMd),
+        SizedBox(width: context.spacing.smMd),
         const RepaintBoundary(
           child: _SkipButton(
             keyValue: 'podcast_bottom_player_forward_30',
@@ -43,7 +43,7 @@ class _TransportRow extends StatelessWidget {
             tooltipLocalizationKey: _TooltipKey.forward30,
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         // Queue button: isolated Consumer — only rebuilds when sheet state changes.
         Consumer(
           builder: (context, ref, _) {
@@ -81,7 +81,7 @@ class _PlaybackSpeedChip extends StatelessWidget {
         borderRadius: AppRadius.lgRadius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.sm),
+          padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
           child: Text(
             formatPlaybackSpeed(speed),
             style: theme.textTheme.labelMedium?.copyWith(
@@ -150,7 +150,7 @@ class _SkipButton extends ConsumerWidget {
       tooltip: tooltip,
       iconSize: 30,
       onPressed: () {
-        AdaptiveHaptic.lightImpact(context);
+        AdaptiveHaptic.lightImpact();
         // Use ref.read to avoid rebuilding on every progress tick (500ms).
         // Position is only needed at tap time, not reactively.
         final progress = ref.read(audioMiniProgressProvider);
@@ -186,7 +186,7 @@ class _PlayPauseButtonLarge extends ConsumerWidget {
             ? (l10n?.podcast_player_pause ?? 'Pause')
             : (l10n?.podcast_player_play ?? 'Play'),
         onPressed: () async {
-          AdaptiveHaptic.mediumImpact(context);
+          AdaptiveHaptic.mediumImpact();
           if (transport.isLoading) {
             return;
           }
@@ -227,7 +227,7 @@ class _MiniPlayPauseButton extends ConsumerWidget {
             ? (l10n?.podcast_player_pause ?? 'Pause')
             : (l10n?.podcast_player_play ?? 'Play'),
         onPressed: () async {
-          AdaptiveHaptic.mediumImpact(context);
+          AdaptiveHaptic.mediumImpact();
           if (transport.isLoading) {
             return;
           }
@@ -300,7 +300,7 @@ class _MiniProgressText extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: theme.colorScheme.onSurface,
-          fontSize: 11,
+          fontSize: theme.textTheme.labelSmall?.fontSize ?? 11,
           fontWeight: FontWeight.w600,
         ),
       ),

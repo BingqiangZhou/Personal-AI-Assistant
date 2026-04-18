@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
@@ -66,13 +66,13 @@ class _CountrySelectorDropdownState
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 标题
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.xs),
             child: Text(
               l10n.podcast_country_label,
               style: theme.textTheme.headlineSmall?.copyWith(
@@ -88,8 +88,8 @@ class _CountrySelectorDropdownState
             height: MediaQuery.sizeOf(context).height * 0.5,
             child: ListView.separated(
               itemCount: PodcastCountry.values.length,
-              padding: const EdgeInsets.fromLTRB(AppSpacing.smMd, AppSpacing.sm, AppSpacing.smMd, AppSpacing.mdLg),
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+              padding: EdgeInsets.fromLTRB(context.spacing.smMd, context.spacing.sm, context.spacing.smMd, context.spacing.mdLg),
+              separatorBuilder: (_, _) => SizedBox(height: context.spacing.sm),
               itemBuilder: (context, index) {
                 final country = PodcastCountry.values[index];
                 final isSelected = country == selectedCountry;
@@ -133,7 +133,7 @@ class _CountrySelectorDropdownState
             borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.smMd, AppSpacing.smMd, AppSpacing.smMd, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.smMd, context.spacing.smMd, context.spacing.smMd, context.spacing.smMd),
             child: Row(
               children: [
                 SizedBox(
@@ -146,7 +146,7 @@ class _CountrySelectorDropdownState
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.smMd),
+                SizedBox(width: context.spacing.smMd),
                 Expanded(
                   child: Text(
                     _getCountryName(country, context.l10n),
@@ -158,7 +158,7 @@ class _CountrySelectorDropdownState
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: context.spacing.sm),
                 if (isSelected)
                   Icon(
                     Icons.check_circle,

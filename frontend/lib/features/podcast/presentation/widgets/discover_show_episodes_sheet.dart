@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
@@ -27,7 +26,7 @@ class DiscoverShowEpisodesSheet extends StatelessWidget {
     return SafeArea(
       child: Padding(
         key: const Key('discover_show_episodes_sheet'),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.md, AppSpacing.md),
+        padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,14 +39,14 @@ class DiscoverShowEpisodesSheet extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
             Text(
               '${episodes.length} ${l10n.podcast_episodes}',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: AppSpacing.smMd),
+            SizedBox(height: context.spacing.smMd),
             Flexible(
               child: episodes.isEmpty
                   ? Center(

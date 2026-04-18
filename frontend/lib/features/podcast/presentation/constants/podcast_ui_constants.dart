@@ -1,4 +1,4 @@
-const double kPodcastMiniCornerRadius = 8;
+// Radius constants migrated to AppRadius tokens
 const double kPodcastMiniPlayerHeight = 56;
 const double kPodcastMiniPlayerBodyReserve = 64;
 const double kPodcastGlobalPlayerMobileDockHeight = 60;
@@ -8,8 +8,6 @@ const double kPodcastGlobalPlayerDesktopBottomOffset = 12;
 const double kPodcastEpisodeDetailDesktopRailWidth = 320;
 
 // Shared row-card style for subscription list and search results.
-const double kPodcastRowCardCornerRadius = 8;
-const double kPodcastRowCardImageRadius = 8;
 const double kPodcastRowCardImageSize = 56;
 const double kPodcastRowCardHorizontalPadding = 10;
 const double kPodcastRowCardVerticalPadding = 8;

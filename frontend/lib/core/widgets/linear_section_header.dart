@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// A Linear-style section header with title and optional trailing widget.
 ///
@@ -19,7 +20,7 @@ class LinearSectionHeader extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.titleSize = 48,
-    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.mdLg, vertical: AppSpacing.md),
+    this.padding,
   }) : _isLabel = false;
 
   /// Small uppercase label variant — the Linear design pattern.
@@ -33,7 +34,7 @@ class LinearSectionHeader extends StatelessWidget {
     this.title, {
     super.key,
     this.trailing,
-    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.mdLg, vertical: AppSpacing.smMd),
+    this.padding,
   })  : subtitle = null,
         titleSize = 48,
         _isLabel = true;
@@ -42,7 +43,7 @@ class LinearSectionHeader extends StatelessWidget {
   final String? subtitle;
   final Widget? trailing;
   final double titleSize;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final bool _isLabel;
 
   @override
@@ -54,23 +55,24 @@ class LinearSectionHeader extends StatelessWidget {
   }
 
   Widget _buildLabel(BuildContext context) {
+    final effectivePadding = padding ?? EdgeInsets.symmetric(
+      horizontal: context.spacing.mdLg,
+      vertical: context.spacing.smMd,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mutedColor =
         isDark ? AppColors.darkOnSurfaceMuted : AppColors.lightOnSurfaceMuted;
 
     return Padding(
-      padding: padding,
+      padding: effectivePadding,
       child: Row(
         children: [
           Expanded(
             child: Text(
               title.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
+              style: AppTheme.metaSmall(mutedColor).copyWith(
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
-                color: mutedColor,
-                height: 1.4,
               ),
             ),
           ),
@@ -81,11 +83,15 @@ class LinearSectionHeader extends StatelessWidget {
   }
 
   Widget _buildDisplay(BuildContext context) {
+    final effectivePadding = padding ?? EdgeInsets.symmetric(
+      horizontal: context.spacing.mdLg,
+      vertical: context.spacing.md,
+    );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
     return Padding(
-      padding: padding,
+      padding: effectivePadding,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
@@ -105,7 +111,7 @@ class LinearSectionHeader extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: context.spacing.xs),
                   Text(
                     subtitle!,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -137,27 +143,31 @@ class LinearSubsectionHeader extends StatelessWidget {
     this.leading,
     this.trailing,
     this.titleSize = 24,
-    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.mdLg, vertical: AppSpacing.smMd),
+    this.padding,
   });
 
   final String title;
   final Widget? leading;
   final Widget? trailing;
   final double titleSize;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
+    final effectivePadding = padding ?? EdgeInsets.symmetric(
+      horizontal: context.spacing.mdLg,
+      vertical: context.spacing.smMd,
+    );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
     return Padding(
-      padding: padding,
+      padding: effectivePadding,
       child: Row(
         children: [
           if (leading != null) ...[
             leading!,
-            const SizedBox(width: AppSpacing.smMd),
+            SizedBox(width: context.spacing.smMd),
           ],
           Expanded(
             child: Text(

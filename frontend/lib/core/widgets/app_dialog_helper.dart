@@ -98,7 +98,7 @@ Future<bool?> showAppConfirmationDialog({
     context: context,
     builder: (dialogCtx) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(context.spacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -106,14 +106,14 @@ Future<bool?> showAppConfirmationDialog({
               title,
               style: theme.textTheme.headlineSmall,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
             Text(
               message,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: context.spacing.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -121,7 +121,7 @@ Future<bool?> showAppConfirmationDialog({
                   onPressed: () => Navigator.of(dialogCtx).pop(false),
                   child: Text(cancelText ?? 'Cancel'),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: context.spacing.sm),
                 TextButton(
                   onPressed: () => Navigator.of(dialogCtx).pop(true),
                   style: isDestructive

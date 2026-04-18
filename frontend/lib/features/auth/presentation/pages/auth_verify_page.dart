@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -22,7 +23,7 @@ class _VerifyStatus {
 
   static const initial = _VerifyStatus(
     message: 'Ready to test...',
-    color: Colors.grey,
+    color: AppColors.lightOnSurfaceMuted,
   );
 
   _VerifyStatus copyWith({String? message, Color? color}) =>
@@ -52,7 +53,7 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
   Future<void> testBackendHealth() async {
     state = const _VerifyStatus(
       message: 'Testing backend connectivity...',
-      color: Colors.blue,
+      color: AppColors.primary,
     );
 
     try {
@@ -68,20 +69,20 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
       } else {
         state = _VerifyStatus(
           message: 'Backend responded with status: ${response.statusCode}',
-          color: Colors.orange,
+          color: AppColors.warning,
         );
       }
     } on DioException catch (e) {
       state = _VerifyStatus(
         message:
             'Failed to connect: ${e.message ?? e.type.toString()}\n\nMake sure backend Docker is running on port 8000',
-        color: Colors.red,
+        color: AppColors.error,
       );
     } catch (e) {
       state = _VerifyStatus(
         message:
             'Failed to connect: $e\n\nMake sure backend Docker is running on port 8000',
-        color: Colors.red,
+        color: AppColors.error,
       );
     }
   }
@@ -89,7 +90,7 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
   Future<void> testRegister() async {
     state = const _VerifyStatus(
       message: 'Testing registration...',
-      color: Colors.blue,
+      color: AppColors.primary,
     );
 
     try {
@@ -115,37 +116,37 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
       } else if (response.statusCode == 409) {
         state = const _VerifyStatus(
           message: 'Email already exists (this is OK for repeat tests)',
-          color: Colors.orange,
+          color: AppColors.warning,
         );
       } else {
         state = _VerifyStatus(
           message: 'Registration failed: ${data['detail'] ?? response.data}',
-          color: Colors.red,
+          color: AppColors.error,
         );
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
         state = const _VerifyStatus(
           message: 'Email already exists (this is OK for repeat tests)',
-          color: Colors.orange,
+          color: AppColors.warning,
         );
       } else {
         final data = e.response?.data;
         state = _VerifyStatus(
           message:
               'Registration failed: ${data is Map ? (data['detail'] ?? data) : e.message}',
-          color: Colors.red,
+          color: AppColors.error,
         );
       }
     } catch (e) {
-      state = _VerifyStatus(message: 'Error: $e', color: Colors.red);
+      state = _VerifyStatus(message: 'Error: $e', color: AppColors.error);
     }
   }
 
   Future<void> testLogin() async {
     state = const _VerifyStatus(
       message: 'Testing login...',
-      color: Colors.blue,
+      color: AppColors.primary,
     );
 
     try {
@@ -172,7 +173,7 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
         final data = response.data;
         state = _VerifyStatus(
           message: 'Login failed: $data',
-          color: Colors.red,
+          color: AppColors.error,
         );
       }
     } on DioException catch (e) {
@@ -180,17 +181,17 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
       state = _VerifyStatus(
         message:
             'Login failed: ${data is Map ? (data['detail'] ?? data) : e.message}',
-        color: Colors.red,
+        color: AppColors.error,
       );
     } catch (e) {
-      state = _VerifyStatus(message: 'Error: $e', color: Colors.red);
+      state = _VerifyStatus(message: 'Error: $e', color: AppColors.error);
     }
   }
 
   Future<void> testGetUser() async {
     state = const _VerifyStatus(
       message: 'Getting user info (needs login first)...',
-      color: Colors.blue,
+      color: AppColors.primary,
     );
 
     try {
@@ -206,7 +207,7 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
       if (loginResp.statusCode != 200) {
         state = const _VerifyStatus(
           message: 'Need to login first. Login failed.',
-          color: Colors.red,
+          color: AppColors.error,
         );
         return;
       }
@@ -233,16 +234,16 @@ class AuthVerifyNotifier extends Notifier<_VerifyStatus> {
       } else {
         state = _VerifyStatus(
           message: 'Get user failed: ${userResp.statusCode}',
-          color: Colors.red,
+          color: AppColors.error,
         );
       }
     } on DioException catch (e) {
       state = _VerifyStatus(
         message: 'Error: ${e.message ?? e.type.toString()}',
-        color: Colors.red,
+        color: AppColors.error,
       );
     } catch (e) {
-      state = _VerifyStatus(message: 'Error: $e', color: Colors.red);
+      state = _VerifyStatus(message: 'Error: $e', color: AppColors.error);
     }
   }
 }
@@ -267,15 +268,15 @@ class AuthVerifyPage extends ConsumerWidget {
     final status = ref.watch(authVerifyProvider);
     final notifier = ref.read(authVerifyProvider.notifier);
 
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
+      child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.spacing.md),
             child: SurfacePanel(
                 showBorder: false,
-                padding: const EdgeInsets.all(AppSpacing.mdLg),
+                padding: EdgeInsets.all(context.spacing.mdLg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -286,16 +287,16 @@ class AuthVerifyPage extends ConsumerWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: context.spacing.md),
 
                     // Status Display
                     Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadius.mdLgRadius,
                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
                       ),
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.all(context.spacing.md),
                       child: Text(
                         status.message,
                         style: AppTheme.monoStyle(
@@ -305,32 +306,32 @@ class AuthVerifyPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.mdLg),
+                    SizedBox(height: context.spacing.mdLg),
 
                     // Test Buttons
                     _TestButton(
                       text: '1. Check Backend Health',
                       onPressed: notifier.testBackendHealth,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
 
                     _TestButton(
                       text: '2. Register New User',
                       onPressed: notifier.testRegister,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
 
                     _TestButton(
                       text: '3. Login (Get Tokens)',
                       onPressed: notifier.testLogin,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
 
                     _TestButton(
                       text: '4. Get User Info (with Token)',
                       onPressed: notifier.testGetUser,
                     ),
-                    const SizedBox(height: AppSpacing.mdLg),
+                    SizedBox(height: context.spacing.mdLg),
 
                     // Instructions
                     _buildInstructions(context),
@@ -354,7 +355,7 @@ class AuthVerifyPage extends ConsumerWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
-        const SizedBox(height: AppSpacing.smMd),
+        SizedBox(height: context.spacing.smMd),
         Text(
           '1. Must run Backend Docker first (port 8000)',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -409,7 +410,7 @@ class _TestButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdLgRadius,
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
       ),
       child: Material(
@@ -418,7 +419,7 @@ class _TestButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: AppRadius.mdLgRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.mdLg, horizontal: AppSpacing.mdLg),
+            padding: EdgeInsets.symmetric(vertical: context.spacing.mdLg, horizontal: context.spacing.mdLg),
             child: Text(
               text,
               style: AppTheme.monoStyle(

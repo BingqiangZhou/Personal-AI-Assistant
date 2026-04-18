@@ -79,11 +79,11 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     if (isWide) {
       return SurfacePanel(
         key: key,
-        padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.mdLg, AppSpacing.md, AppSpacing.mdLg),
+        padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.mdLg, context.spacing.md, context.spacing.mdLg),
         child: Row(
           children: [
             _buildHeroArtwork(episode, isWide: true),
-            SizedBox(width: AppSpacing.mdLg),
+            SizedBox(width: context.spacing.mdLg),
             Expanded(
               child: Column(
                 key: const Key('podcast_episode_detail_wide_hero_content'),
@@ -92,8 +92,8 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                 children: [
                   Wrap(
                     key: const Key('podcast_episode_detail_hero_metadata_row'),
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.smMd,
+                    spacing: context.spacing.sm,
+                    runSpacing: context.spacing.smMd,
                     children: metadata.whereType<Widget>().toList(
                       growable: false,
                     ),
@@ -101,7 +101,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                 ],
               ),
             ),
-            SizedBox(width: AppSpacing.mdLg),
+            SizedBox(width: context.spacing.mdLg),
             _buildWideHeaderActionColumn(episode, l10n),
           ],
         ),
@@ -109,53 +109,50 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     }
 
     final mobileMetadata = _buildCompactHeaderMetadataText(
-      podcastTitle: _resolvePodcastTitle(episode, l10n),
       publishedAt: episode.publishedAt,
       durationMilliseconds: episode.audioDuration == null
           ? null
           : episode.audioDuration! * 1000,
     );
 
-    return SurfacePanel(
+    return Row(
       key: key,
-      padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.smMd, AppSpacing.md, AppSpacing.smMd),
-      child: SizedBox(
-        key: const Key('podcast_episode_detail_mobile_hero_body'),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeroArtwork(episode, isWide: false),
-            SizedBox(width: AppSpacing.smMd),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    mobileMetadata,
-                    key: const Key(
-                      'podcast_episode_detail_mobile_hero_metadata',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.1,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (episode.itemLink case final link? when link.trim().isNotEmpty) ...[
-                    SizedBox(height: AppSpacing.smMd),
-                    _buildMobileSourceLinkAction(episode, l10n),
-                  ],
-                ],
+      children: [
+        _buildHeroArtwork(episode, isWide: false),
+        SizedBox(width: context.spacing.smMd),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                mobileMetadata,
+                key: const Key(
+                  'podcast_episode_detail_mobile_hero_metadata',
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.3,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(width: AppSpacing.sm),
-            _buildMobileHeroActionColumn(episode, l10n),
-          ],
+            ],
+          ),
         ),
-      ),
+        SizedBox(width: context.spacing.xs),
+        _buildQueueButton(),
+        SizedBox(width: context.spacing.xs),
+        _buildDownloadButton(episode),
+        SizedBox(width: context.spacing.xs),
+        _buildShareButton(episode),
+        if (episode.itemLink != null &&
+            episode.itemLink!.trim().isNotEmpty) ...[
+          SizedBox(width: context.spacing.xs),
+          _buildSourceLinkIconButton(episode, l10n),
+        ],
+      ],
     );
   }
 
@@ -163,7 +160,8 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     PodcastEpisodeModel episode, {
     required bool isWide,
   }) {
-    final size = isWide ? 76.0 : 56.0;
+    final size = isWide ? 76.0 : 44.0;
+    final borderRadius = BorderRadius.circular(isWide ? 18 : 10);
     final artwork = Container(
       key: Key(
         isWide
@@ -171,7 +169,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
             : 'podcast_episode_detail_mobile_hero_artwork',
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isWide ? 18 : 16),
+        borderRadius: borderRadius,
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).shadowColor.withValues(alpha: 0.12),
@@ -181,7 +179,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(isWide ? 18 : 16),
+        borderRadius: borderRadius,
         child: PodcastImageWidget(
           imageUrl: episode.imageUrl,
           fallbackImageUrl: episode.subscriptionImageUrl,
@@ -194,7 +192,38 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
 
     return Hero(
       tag: 'episode_cover_${episode.id}',
-      child: artwork,
+      child: GestureDetector(
+        onTap: () => unawaited(_playOrResumeFromDetail(episode)),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            artwork,
+            Consumer(
+              builder: (context, ref, _) {
+                final playStateInfo = ref.watch(audioEpisodePlayStateProvider);
+                final isPlaying = playStateInfo.currentEpisodeId == episode.id &&
+                    playStateInfo.isPlaying;
+                return Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: borderRadius,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isPlaying
+                        ? Icons.graphic_eq_rounded
+                        : Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: size * 0.4,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,46 +241,22 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildDownloadButton(episode),
-              SizedBox(width: AppSpacing.sm),
+              SizedBox(width: context.spacing.sm),
               _buildQueueButton(),
-              SizedBox(width: AppSpacing.sm),
+              SizedBox(width: context.spacing.sm),
               _buildShareButton(episode),
             ],
           ),
-          SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           _buildPlayButton(
             episode,
             l10n,
             compact: false,
             density: HeaderCapsuleActionButtonDensity.compact,
-            padding: EdgeInsets.symmetric(horizontal: 7, vertical: AppSpacing.xs),
+            padding: EdgeInsets.symmetric(horizontal: 7, vertical: context.spacing.xs),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMobileHeroActionColumn(
-    PodcastEpisodeModel episode,
-    AppLocalizations l10n,
-  ) {
-    return Column(
-      key: const Key('podcast_episode_detail_mobile_hero_actions'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildPlayButton(
-          episode,
-          l10n,
-          compact: true,
-          density: HeaderCapsuleActionButtonDensity.iconOnly,
-        ),
-        SizedBox(height: AppSpacing.sm),
-        _buildQueueButton(),
-        SizedBox(height: AppSpacing.sm),
-        _buildDownloadButton(episode),
-        SizedBox(height: AppSpacing.sm),
-        _buildShareButton(episode),
-      ],
     );
   }
 
@@ -319,15 +324,15 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                   ),
                 )
               : Padding(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 9,
-                    vertical: AppSpacing.xs,
+                    vertical: context.spacing.xs,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(icon, size: 13, color: resolvedColor),
-                      SizedBox(width: AppSpacing.xs),
+                      SizedBox(width: context.spacing.xs),
                       Text(
                         label,
                         style: Theme.of(context).textTheme.labelMedium
@@ -345,11 +350,10 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
   }
 
   String _buildCompactHeaderMetadataText({
-    required String podcastTitle,
     required DateTime publishedAt,
     required int? durationMilliseconds,
   }) {
-    final segments = <String>[podcastTitle, EpisodeCardUtils.formatDate(publishedAt)];
+    final segments = <String>[EpisodeCardUtils.formatDate(publishedAt)];
     if (durationMilliseconds != null) {
       segments.add(_formatDurationLabel(durationMilliseconds));
     }
@@ -438,6 +442,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     required bool compact,
     HeaderCapsuleActionButtonDensity? density,
     EdgeInsetsGeometry? padding,
+    HeaderCapsuleActionButtonStyle? style,
   }) {
     return Consumer(
       builder: (context, ref, _) {
@@ -480,6 +485,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
           icon: icon,
           density: effectiveDensity,
           padding: padding,
+          style: style ?? HeaderCapsuleActionButtonStyle.surfaceNeutral,
           label: showLabel ? Text(buttonText) : null,
           onPressed: () {
             unawaited(_playOrResumeFromDetail(episode));
@@ -605,50 +611,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     );
   }
 
-  Widget _buildMobileSourceLinkAction(
-    PodcastEpisodeModel episode,
-    AppLocalizations l10n,
-  ) {
-    final theme = Theme.of(context);
-    final extension = appThemeOf(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: const Key('podcast_episode_detail_source_button'),
-        borderRadius: BorderRadius.circular(extension.itemRadius),
-        onTap: () {
-          unawaited(_launchEpisodeSource(episode));
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.link_rounded,
-                size: 13,
-                color: theme.colorScheme.secondary,
-              ),
-              SizedBox(width: AppSpacing.xs),
-              Text(
-                l10n.podcast_source,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.secondary,
-                  fontWeight: FontWeight.w700,
-                  decoration: TextDecoration.underline,
-                  decorationColor: theme.colorScheme.secondary.withValues(
-                    alpha: 0.8,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   String _formatPlaybackProgress(int milliseconds) {
     return _formatDurationLabel(milliseconds.clamp(0, 1 << 31));
   }
@@ -671,8 +633,23 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     );
   }
 
+  Widget _buildSourceLinkIconButton(
+    PodcastEpisodeModel episode,
+    AppLocalizations l10n,
+  ) {
+    return HeaderCapsuleActionButton(
+      tooltip: l10n.podcast_source,
+      icon: Icons.link_rounded,
+      onPressed: () => unawaited(_launchEpisodeSource(episode)),
+      circular: true,
+      density: _isCompactPhoneLayout
+          ? HeaderCapsuleActionButtonDensity.compact
+          : HeaderCapsuleActionButtonDensity.regular,
+    );
+  }
+
   Future<void> _shareEpisode(PodcastEpisodeModel episode) async {
-    AdaptiveHaptic.mediumImpact(context);
+    AdaptiveHaptic.mediumImpact();
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
 
     // Generate a deep link to the episode

@@ -19,8 +19,8 @@ class LoadingWidget extends StatelessWidget {
     final resolvedColor =
         color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return SizedBox(
-      width: size ?? AppSpacing.md,
-      height: size ?? AppSpacing.md,
+      width: size ?? context.spacing.md,
+      height: size ?? context.spacing.md,
       child: CircularProgressIndicator.adaptive(
         strokeWidth: strokeWidth,
         valueColor: AlwaysStoppedAnimation<Color>(resolvedColor),
@@ -113,7 +113,7 @@ class LoadingOverlay extends StatelessWidget {
             color: scheme.scrim.withValues(alpha: 0.5),
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
                 child: LoadingStatusContent(
                   key: const Key('loading_overlay_content'),
                   subtitle: loadingText,

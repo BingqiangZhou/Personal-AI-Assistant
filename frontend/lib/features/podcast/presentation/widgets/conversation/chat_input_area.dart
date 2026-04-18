@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_text_field.dart';
 
 /// Input area for the conversation chat with a text field and send button.
 ///
@@ -29,30 +30,28 @@ class ChatInputArea extends StatelessWidget {
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
     final gradient = LinearGradient(
-      colors: [scheme.primary, scheme.primary.withOpacity(0.8)],
+      colors: [scheme.primary, scheme.primary.withValues(alpha: 0.8)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
     return Container(
       color: scheme.surfaceContainerLow,
-      padding: EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.spacing.md),
       child: SafeArea(
       top: false,
       child: Row(
           children: [
             Expanded(
-              child: TextField(
+              child: AdaptiveTextField(
                 controller: controller,
                 focusNode: focusNode,
                 enabled: isReady && hasSummary,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurface,
-                ),
-                cursorColor: scheme.primary,
                 maxLines: null,
-                minLines: 1,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
+                placeholder: !hasSummary
+                    ? l10n.podcast_conversation_no_summary_hint
+                    : l10n.podcast_conversation_send_hint,
                 decoration: InputDecoration(
                   hintText: !hasSummary
                       ? l10n.podcast_conversation_no_summary_hint
@@ -79,14 +78,14 @@ class ChatInputArea extends StatelessWidget {
                       width: 2,
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.mdLg,
-                    vertical: AppSpacing.md,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.mdLg,
+                    vertical: context.spacing.md,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.spacing.sm),
             ValueListenableBuilder<String>(
               valueListenable: inputTextNotifier,
               builder: (context, inputText, child) {
@@ -122,7 +121,7 @@ class ChatInputArea extends StatelessWidget {
                                 ? scheme.onSurface
                                 : scheme.onSurfaceVariant,
                           ),
-                    padding: const EdgeInsets.all(AppSpacing.smMd),
+                    padding: EdgeInsets.all(context.spacing.smMd),
                   ),
                 );
               },

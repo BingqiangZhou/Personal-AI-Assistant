@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_switch.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/pages/login_page.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/pages/register_page.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/widgets/password_text_field.dart';
@@ -94,33 +95,33 @@ void main() {
       expect(find.byIcon(Icons.visibility_off), findsOneWidget);
     });
 
-    testWidgets('Remember me checkbox functionality', (tester) async {
+    testWidgets('Remember me switch functionality', (tester) async {
       await tester.pumpWidget(testAppWithRouter(router: _router('/login')));
       await tester.pumpAndSettle();
 
-      final rememberCheckbox = find.byType(Checkbox);
+      final rememberSwitch = find.byType(AdaptiveSwitch);
 
       // Should be unchecked initially
-      expect(tester.widget<Checkbox>(rememberCheckbox).value, isFalse);
+      expect(tester.widget<AdaptiveSwitch>(rememberSwitch).value, isFalse);
 
-      // Check the checkbox
-      await tapAndSettle(tester, rememberCheckbox);
+      // Toggle the switch
+      await tapAndSettle(tester, rememberSwitch);
 
-      expect(tester.widget<Checkbox>(rememberCheckbox).value, isTrue);
+      expect(tester.widget<AdaptiveSwitch>(rememberSwitch).value, isTrue);
 
-      // Uncheck the checkbox
-      await tapAndSettle(tester, rememberCheckbox);
+      // Toggle back
+      await tapAndSettle(tester, rememberSwitch);
 
-      expect(tester.widget<Checkbox>(rememberCheckbox).value, isFalse);
+      expect(tester.widget<AdaptiveSwitch>(rememberSwitch).value, isFalse);
     });
 
-    testWidgets('Register page has terms checkbox', (tester) async {
+    testWidgets('Register page has terms switch', (tester) async {
       await tester.pumpWidget(testAppWithRouter(router: _router('/register')));
       await tester.pumpAndSettle();
 
-      // Find checkboxes (terms checkbox)
-      final checkboxes = find.byType(Checkbox);
-      expect(checkboxes, findsWidgets);
+      // Find switches (terms switch)
+      final switches = find.byType(AdaptiveSwitch);
+      expect(switches, findsWidgets);
     });
   });
 }

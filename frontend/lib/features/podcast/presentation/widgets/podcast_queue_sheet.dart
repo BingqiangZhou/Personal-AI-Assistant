@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive_sheet_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -172,7 +173,7 @@ class _QueuePanel extends StatelessWidget {
             onRefresh: onRefresh,
           ),
           Expanded(
-            child: RefreshIndicator(onRefresh: onRefresh, child: body),
+            child: AdaptiveRefreshIndicator(onRefresh: onRefresh, child: body),
           ),
         ],
       ),

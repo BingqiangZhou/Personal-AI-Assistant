@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 
 /// Adaptive dismissible with platform-specific swipe actions.
 ///
@@ -42,6 +44,10 @@ class AdaptiveDismissible extends StatelessWidget {
               }
               return false; // Don't actually dismiss, just trigger action
             },
+        dismissThresholds: const {
+          DismissDirection.endToStart: 0.5,
+          DismissDirection.startToEnd: 0.5,
+        },
         background: _buildSecondaryBackground(context),
         secondaryBackground: _buildDeleteBackground(context),
         child: child,
@@ -63,22 +69,19 @@ class AdaptiveDismissible extends StatelessWidget {
   }
 
   Widget _buildDeleteBackground(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       color: CupertinoColors.systemRed,
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 20),
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(CupertinoIcons.delete, color: CupertinoColors.white),
-          SizedBox(height: 2),
+          const Icon(CupertinoIcons.delete, color: CupertinoColors.white),
+          const SizedBox(height: 2),
           Text(
-            '删除',
-            style: TextStyle(
-              color: CupertinoColors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
+            l10n?.delete ?? 'Delete',
+            style: AppTheme.metaSmall(CupertinoColors.white),
           ),
         ],
       ),
@@ -86,8 +89,9 @@ class AdaptiveDismissible extends StatelessWidget {
   }
 
   Widget _buildSecondaryBackground(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final color = secondaryActionColor ?? CupertinoColors.activeBlue;
-    final label = secondaryActionLabel ?? '更多';
+    final label = secondaryActionLabel ?? l10n?.more ?? 'More';
     return Container(
       color: color,
       alignment: Alignment.centerLeft,
@@ -99,11 +103,7 @@ class AdaptiveDismissible extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: CupertinoColors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTheme.metaSmall(CupertinoColors.white),
           ),
         ],
       ),

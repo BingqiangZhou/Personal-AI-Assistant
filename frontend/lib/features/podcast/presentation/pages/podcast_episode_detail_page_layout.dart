@@ -7,46 +7,21 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
   ) {
     return LayoutBuilder(
       builder: (context, layoutConstraints) {
-        return CustomScrollView(
-          slivers: [
-            AdaptiveSliverAppBar(
-              title: episode.title,
-            ),
-            SliverToBoxAdapter(
-              child: _buildLayoutContent(context, episode, layoutConstraints),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildLayoutContent(
-    BuildContext context,
-    PodcastEpisodeModel episode,
-    BoxConstraints layoutConstraints,
-  ) {
-    final isWideScreen =
-        layoutConstraints.maxWidth >
+        final isWideScreen = layoutConstraints.maxWidth >
             _PodcastEpisodeDetailPageState._wideLayoutBreakpoint;
-    final outerPadding = EdgeInsets.fromLTRB(
-      layoutConstraints.maxWidth < Breakpoints.medium ? 16 : 20,
-      layoutConstraints.maxWidth < Breakpoints.medium ? 12 : 16,
-      layoutConstraints.maxWidth < Breakpoints.medium ? 16 : 20,
-      16,
-    );
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const SizedBox(),
-        Padding(
-          padding: outerPadding,
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: layoutConstraints.maxWidth < Breakpoints.medium
+                ? context.spacing.md
+                : context.spacing.mdLg,
+            vertical: context.spacing.smMd,
+          ),
           child: isWideScreen
               ? _buildWideLayout(context, episode)
               : _buildMobileLayout(episode),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -72,13 +47,13 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                 return Column(
                   children: [
                     _buildAnimatedHeader(episode),
-                    const SizedBox(height: AppSpacing.smMd),
+                    SizedBox(height: context.spacing.smMd),
                   ],
                 );
               },
             ),
-            _buildTopButtonBar(isWide: true),
-            const SizedBox(height: AppSpacing.smMd),
+            _buildTabSelector(),
+            SizedBox(height: context.spacing.smMd),
             Expanded(
               child: Stack(
                 children: [
@@ -132,13 +107,13 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
             return Column(
               children: [
                 _buildHeader(episode),
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
               ],
             );
           },
         ),
-        _buildTopButtonBar(isWide: false),
-        const SizedBox(height: AppSpacing.smMd),
+        _buildTabSelector(),
+        SizedBox(height: context.spacing.smMd),
         Expanded(
           child: Stack(
             children: [

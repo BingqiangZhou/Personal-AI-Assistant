@@ -9,6 +9,7 @@ class PasswordTextField extends StatelessWidget {
     this.errorText,
     this.onChanged,
     this.toggleButtonKey,
+    this.autofillHints,
   });
 
   final TextEditingController controller;
@@ -19,6 +20,7 @@ class PasswordTextField extends StatelessWidget {
   final String? errorText;
   final ValueChanged<String>? onChanged;
   final Key? toggleButtonKey;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class PasswordTextField extends StatelessWidget {
       onChanged: onChanged,
       validator: validator,
       errorText: errorText,
+      autofillHints: autofillHints,
     );
   }
 }

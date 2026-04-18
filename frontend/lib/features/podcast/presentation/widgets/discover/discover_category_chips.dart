@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 
@@ -29,7 +31,7 @@ class DiscoverCategoryChips extends StatelessWidget {
     return SingleChildScrollView(
       key: const Key('podcast_discover_category_chips'),
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.xs + AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs + context.spacing.xs),
       child: Row(
         children: [
           for (var index = 0; index < chipItems.length; index++) ...[
@@ -55,7 +57,7 @@ class DiscoverCategoryChips extends StatelessWidget {
                 ),
               );
             }(),
-            if (index != chipItems.length - 1) const SizedBox(width: AppSpacing.sm),
+            if (index != chipItems.length - 1) SizedBox(width: context.spacing.sm),
           ],
         ],
       ),
@@ -111,7 +113,7 @@ class _CategoryChip extends StatelessWidget {
         side: selected
             ? BorderSide(color: selectedBackgroundColor)
             : BorderSide.none,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.chipRadius),
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
           color: selected
@@ -120,7 +122,7 @@ class _CategoryChip extends StatelessWidget {
         ),
         selectedColor: selectedBackgroundColor,
         backgroundColor: Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.sm),
       ),
     );
   }

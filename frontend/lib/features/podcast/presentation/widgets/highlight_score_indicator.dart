@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
@@ -30,15 +29,15 @@ class HighlightScoreIndicator extends StatelessWidget {
   static const double _denseScoreWidth = 24;
 
   Color _getInsightColor(BuildContext context) {
-    return AppColors.primary;
+    return Theme.of(context).colorScheme.primary;
   }
 
   Color _getNoveltyColor(BuildContext context) {
-    return AppColors.accentWarm;
+    return appThemeOf(context).warmAccent;
   }
 
   Color _getActionabilityColor(BuildContext context) {
-    return AppColors.accentCoral;
+    return appThemeOf(context).coralAccent;
   }
 
   @override
@@ -122,7 +121,7 @@ class _ScoreRow extends StatelessWidget {
             ).copyWith(fontWeight: FontWeight.w400),
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         Expanded(
           child: LinearProgressIndicator(
             value: clampedScore / 10.0,
@@ -134,7 +133,7 @@ class _ScoreRow extends StatelessWidget {
             borderRadius: AppRadius.pillRadius,
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.spacing.sm),
         SizedBox(
           width: scoreWidth,
           child: Text(

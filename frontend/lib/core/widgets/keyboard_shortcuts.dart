@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 
 /// Provides keyboard shortcuts for media playback on desktop platforms.
 ///
@@ -21,6 +22,7 @@ class PlaybackShortcuts extends StatelessWidget {
     this.onVolumeDown,
     this.onNextEpisode,
     this.onPreviousEpisode,
+    this.onTabSwitch,
     this.enabled = true,
   });
 
@@ -32,10 +34,13 @@ class PlaybackShortcuts extends StatelessWidget {
   final VoidCallback? onVolumeDown;
   final VoidCallback? onNextEpisode;
   final VoidCallback? onPreviousEpisode;
+  final void Function(int index)? onTabSwitch;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    // Skip registering shortcuts on mobile platforms — they have no physical keyboard.
+    if (!PlatformHelper.isDesktop(context)) return child;
     if (!enabled) return child;
 
     return Shortcuts(
@@ -58,6 +63,21 @@ class PlaybackShortcuts extends StatelessWidget {
             const _NextEpisodeIntent(),
         LogicalKeySet(LogicalKeyboardKey.mediaTrackPrevious):
             const _PreviousEpisodeIntent(),
+        // Tab switching shortcuts: Ctrl/Cmd + 1/2/3
+        if (onTabSwitch != null) ...{
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit1):
+              const _TabSwitch0Intent(),
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit2):
+              const _TabSwitch1Intent(),
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit3):
+              const _TabSwitch2Intent(),
+          LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.digit1):
+              const _TabSwitch0Intent(),
+          LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.digit2):
+              const _TabSwitch1Intent(),
+          LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.digit3):
+              const _TabSwitch2Intent(),
+        },
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
@@ -72,6 +92,11 @@ class PlaybackShortcuts extends StatelessWidget {
             _NextEpisodeIntent: _CallbackAction(onNextEpisode!),
           if (onPreviousEpisode != null)
             _PreviousEpisodeIntent: _CallbackAction(onPreviousEpisode!),
+          if (onTabSwitch != null) ...{
+            _TabSwitch0Intent: _CallbackAction(() => onTabSwitch!(0)),
+            _TabSwitch1Intent: _CallbackAction(() => onTabSwitch!(1)),
+            _TabSwitch2Intent: _CallbackAction(() => onTabSwitch!(2)),
+          },
         },
         child: child,
       ),
@@ -105,6 +130,18 @@ class _NextEpisodeIntent extends Intent {
 
 class _PreviousEpisodeIntent extends Intent {
   const _PreviousEpisodeIntent();
+}
+
+class _TabSwitch0Intent extends Intent {
+  const _TabSwitch0Intent();
+}
+
+class _TabSwitch1Intent extends Intent {
+  const _TabSwitch1Intent();
+}
+
+class _TabSwitch2Intent extends Intent {
+  const _TabSwitch2Intent();
 }
 
 class _CallbackAction extends Action<Intent> {

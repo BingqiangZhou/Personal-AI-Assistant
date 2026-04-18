@@ -18,6 +18,7 @@ class CustomTextField extends StatelessWidget {
     this.enabled = true,
     this.maxLines = 1,
     this.maxLength,
+    this.autofillHints,
   });
   final TextEditingController controller;
   final String? label;
@@ -33,6 +34,7 @@ class CustomTextField extends StatelessWidget {
   final bool enabled;
   final int? maxLines;
   final int? maxLength;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,7 @@ class CustomTextField extends StatelessWidget {
             label!,
             style: Theme.of(context).textTheme.labelLarge,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
         ],
         TextFormField(
           controller: controller,
@@ -56,6 +58,7 @@ class CustomTextField extends StatelessWidget {
           onChanged: onChanged,
           onFieldSubmitted: onSubmitted,
           validator: validator,
+          autofillHints: autofillHints,
           decoration: InputDecoration(
             hintText: hint,
             errorText: errorText,

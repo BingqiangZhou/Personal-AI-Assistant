@@ -18,7 +18,7 @@ class ProfileActivityCards extends ConsumerWidget {
 
   EdgeInsetsGeometry _cardMargin(BuildContext context) {
     if (context.isMobile) {
-      return const EdgeInsets.symmetric(horizontal: AppSpacing.xs);
+      return EdgeInsets.symmetric(horizontal: context.spacing.xs);
     }
     return EdgeInsets.zero;
   }
@@ -69,7 +69,7 @@ class ProfileActivityCards extends ConsumerWidget {
             showChevron: true,
             cardKey: const Key('profile_subscriptions_card'),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           _buildActivityCard(
             context,
             icon: Icons.podcasts,
@@ -77,7 +77,7 @@ class ProfileActivityCards extends ConsumerWidget {
             value: episodeCount,
             color: scheme.secondary,
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           _buildActivityCard(
             context,
             icon: Icons.auto_awesome,
@@ -85,7 +85,7 @@ class ProfileActivityCards extends ConsumerWidget {
             value: summaryCount,
             color: scheme.secondary,
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           _buildActivityCard(
             context,
             icon: Icons.history,
@@ -96,7 +96,7 @@ class ProfileActivityCards extends ConsumerWidget {
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           _buildActivityCard(
             context,
             icon: Icons.summarize_outlined,
@@ -108,7 +108,7 @@ class ProfileActivityCards extends ConsumerWidget {
             showChevron: true,
             cardKey: const Key('profile_daily_report_card'),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.spacing.md),
           _buildActivityCard(
             context,
             icon: Icons.lightbulb_outline,
@@ -127,7 +127,7 @@ class ProfileActivityCards extends ConsumerWidget {
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final columns = maxWidth >= 1000 ? 4 : 2;
-        final cardWidth = (maxWidth - (columns - 1) * AppSpacing.lg) / columns;
+        final cardWidth = (maxWidth - (columns - 1) * context.spacing.lg) / columns;
 
         final cards = <Widget>[
           _buildActivityCard(
@@ -188,8 +188,8 @@ class ProfileActivityCards extends ConsumerWidget {
         ];
 
         return Wrap(
-          spacing: AppSpacing.lg,
-          runSpacing: AppSpacing.lg,
+          spacing: context.spacing.lg,
+          runSpacing: context.spacing.lg,
           children: [
             for (final card in cards) SizedBox(width: cardWidth, child: card),
           ],
@@ -224,15 +224,15 @@ class ProfileActivityCards extends ConsumerWidget {
           child: Row(
             children: [
               Container(
-                width: AppSpacing.xl,
-                height: AppSpacing.xl,
+                width: context.spacing.xl,
+                height: context.spacing.xl,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: AppRadius.mdRadius,
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: context.spacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +243,7 @@ class ProfileActivityCards extends ConsumerWidget {
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
                     Text(
                       value,
                       style: theme.textTheme.headlineSmall

@@ -27,14 +27,14 @@ class PrivacyPage extends StatelessWidget {
               AdaptiveSliverAppBar(
                 title: l10n.privacy_policy_title,
               ),
-              const SliverToBoxAdapter(
-                  child: SizedBox(height: AppSpacing.smMd)),
+              SliverToBoxAdapter(
+                  child: SizedBox(height: context.spacing.smMd)),
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.mdLg,
-                    vertical: AppSpacing.sm,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.mdLg,
+                    vertical: context.spacing.sm,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,14 +45,14 @@ class PrivacyPage extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(height: context.spacing.sm),
                       Text(
                         l10n.privacy_policy_last_updated,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(height: context.spacing.lg),
                       _buildSection(
                         context,
                         title: l10n.privacy_section_intro,
@@ -98,7 +98,7 @@ class PrivacyPage extends StatelessWidget {
                         title: l10n.privacy_section_contact,
                         body: l10n.privacy_section_contact_body,
                       ),
-                      const SizedBox(height: AppSpacing.xl),
+                      SizedBox(height: context.spacing.xl),
                     ],
                   ),
                 ),
@@ -117,7 +117,7 @@ class PrivacyPage extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.mdLg),
+      padding: EdgeInsets.only(bottom: context.spacing.mdLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -127,7 +127,7 @@ class PrivacyPage extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           Text(
             body,
             style: theme.textTheme.bodyMedium?.copyWith(

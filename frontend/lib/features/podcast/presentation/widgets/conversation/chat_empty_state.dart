@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -23,7 +23,7 @@ class ChatEmptyState extends StatelessWidget {
     final ext = appThemeOf(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(context.spacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -40,14 +40,14 @@ class ChatEmptyState extends StatelessWidget {
                 color: scheme.primary,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.spacing.md),
             Text(
               l10n.podcast_conversation_empty_title,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: scheme.onSurface,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: context.spacing.sm),
             Text(
               l10n.podcast_conversation_empty_hint,
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -55,10 +55,10 @@ class ChatEmptyState extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: context.spacing.lg),
             if (aiSummary case final summary? when summary.isNotEmpty)
               Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: EdgeInsets.all(context.spacing.md),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(ext.cardRadius),
@@ -76,7 +76,7 @@ class ChatEmptyState extends StatelessWidget {
                           size: 16,
                           color: scheme.primary,
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: context.spacing.sm),
                         Text(
                           l10n.podcast_filter_with_summary,
                           style: theme.textTheme.labelMedium?.copyWith(
@@ -86,7 +86,7 @@ class ChatEmptyState extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: context.spacing.sm),
                     Text(
                       summary.length > 200
                           ? '${summary.substring(0, 200)}...'

@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -11,6 +10,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
@@ -164,12 +164,12 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           SliverToBoxAdapter(
             child: MediaQuery.sizeOf(context).width >= 700
                 ? Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
                     child: _buildFilterChips(),
                   )
                 : const SizedBox.shrink(),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+          SliverToBoxAdapter(child: SizedBox(height: context.spacing.sm)),
           SliverFillRemaining(
             hasScrollBody: false,
             child: episodesState.isLoading && episodesState.episodes.isEmpty
@@ -178,7 +178,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     ? _buildErrorState(episodesState.error!)
                     : episodesState.episodes.isEmpty
                         ? _buildEmptyState()
-                        : RefreshIndicator(
+                        : AdaptiveRefreshIndicator(
                             onRefresh: _refreshEpisodes,
                             child: _buildEpisodesScrollable(episodesState),
                           ),

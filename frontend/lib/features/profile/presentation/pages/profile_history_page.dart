@@ -9,6 +9,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
@@ -53,12 +54,12 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
               AdaptiveSliverAppBar(
                 title: l10n.profile_viewed_title,
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.smMd),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.spacing.smMd),
               ),
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: RefreshIndicator(
+                child: AdaptiveRefreshIndicator(
                   onRefresh: () => ref
                       .read(playbackHistoryLiteProvider.notifier)
                       .load(forceRefresh: true),
@@ -76,7 +77,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                               'Resume episodes and review recently played content.',
                           child: Center(
                             child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              padding: EdgeInsets.all(context.spacing.lg),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -87,7 +88,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                       context,
                                     ).colorScheme.onSurfaceVariant,
                                   ),
-                                  const SizedBox(height: AppSpacing.lg),
+                                  SizedBox(height: context.spacing.lg),
                                   Text(
                                     l10n.server_history_empty,
                                     style: Theme.of(context)
@@ -117,11 +118,11 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppSpacing.mdLg,
-                                AppSpacing.mdLg,
-                                AppSpacing.mdLg,
-                                AppSpacing.smMd,
+                              padding: EdgeInsets.fromLTRB(
+                                context.spacing.mdLg,
+                                context.spacing.mdLg,
+                                context.spacing.mdLg,
+                                context.spacing.smMd,
                               ),
                               child: AppSectionHeader(
                                 title: l10n.profile_viewed_title,
@@ -176,7 +177,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                           'Resume episodes and review recently played content.',
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          padding: EdgeInsets.all(context.spacing.lg),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -187,7 +188,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                   context,
                                 ).colorScheme.error,
                               ),
-                              const SizedBox(height: AppSpacing.lg),
+                              SizedBox(height: context.spacing.lg),
                               Text(
                                 error.toString(),
                                 style: Theme.of(
@@ -222,7 +223,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Expanded(child: Center(child: child)),
@@ -238,7 +239,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Divider(
@@ -262,14 +263,14 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+          borderRadius: BorderRadius.circular(AppRadius.itemValue),
           border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => context.push('/podcast/episode/detail/${episode.id}'),
-            borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+            borderRadius: BorderRadius.circular(AppRadius.itemValue),
             child: SizedBox(
               key: ValueKey('profile_history_card_content_${episode.id}'),
               height: kPodcastRowCardTargetHeight,
@@ -282,14 +283,14 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(
-                        kPodcastRowCardImageRadius,
+                        AppRadius.itemValue,
                       ),
                       child: PodcastImageWidget(
                         imageUrl: episode.imageUrl,
                         fallbackImageUrl: episode.subscriptionImageUrl,
                         width: kPodcastRowCardImageSize,
                         height: kPodcastRowCardImageSize,
-                        iconSize: AppSpacing.lg,
+                        iconSize: context.spacing.lg,
                         iconColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
@@ -303,7 +304,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                             key: ValueKey(
                               'profile_history_title_box_${episode.id}',
                             ),
-                            height: AppSpacing.mdLg + AppSpacing.md + AppSpacing.xs,
+                            height: context.spacing.mdLg + context.spacing.md + context.spacing.xs,
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -317,8 +318,8 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                       fontWeight: FontWeight.w700,
                                       height: 1.15,
                                     ),
-                                strutStyle: const StrutStyle(
-                                  fontSize: 13,
+                                strutStyle: StrutStyle(
+                                  fontSize: Theme.of(context).textTheme.bodySmall?.fontSize ?? 13,
                                   height: 1.15,
                                   forceStrutHeight: true,
                                 ),
@@ -329,7 +330,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                           ),
                           SizedBox(
                             key: const Key('profile_history_meta_row'),
-                            height: AppSpacing.mdLg,
+                            height: context.spacing.mdLg,
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: FittedBox(
@@ -346,9 +347,9 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                         key: const Key(
                                           'profile_history_meta_podcast',
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.sm,
-                                          vertical: AppSpacing.xs,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: context.spacing.sm,
+                                          vertical: context.spacing.xs,
                                         ),
                                         decoration: BoxDecoration(
                                           color: Theme.of(
@@ -372,7 +373,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.sm),
+                                    SizedBox(width: context.spacing.sm),
                                     Icon(
                                       Icons.calendar_today_outlined,
                                       size: 13,
@@ -380,7 +381,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                     ),
-                                    const SizedBox(width: 3),
+                                    SizedBox(width: context.spacing.xs),
                                     Text(
                                       _formatPlayedAt(episode.lastPlayedAt),
                                       style: AppTheme.metaSmall(
@@ -389,7 +390,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                             ).colorScheme.onSurfaceVariant,
                                           ),
                                     ),
-                                    const SizedBox(width: AppSpacing.sm),
+                                    SizedBox(width: context.spacing.sm),
                                     Icon(
                                       Icons.schedule,
                                       size: 13,
@@ -397,7 +398,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                     ),
-                                    const SizedBox(width: 3),
+                                    SizedBox(width: context.spacing.xs),
                                     Text(
                                       _buildProgressText(context, episode),
                                       style: AppTheme.metaSmall(

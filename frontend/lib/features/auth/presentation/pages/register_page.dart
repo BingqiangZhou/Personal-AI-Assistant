@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -93,7 +91,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       final isAuthenticated = next.isAuthenticated;
 
       if (isAuthenticated && !wasAuthenticated) {
-        AdaptiveHaptic.notificationSuccess(context);
+        AdaptiveHaptic.notificationSuccess();
         context.go('/feed');
       } else if (next.error != null &&
           next.error != previous?.error &&
@@ -125,7 +123,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
           child: Form(
             key: _formKey,
-            child: Column(
+            child: AutofillGroup(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Username field
@@ -133,6 +132,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   controller: _usernameController,
                   label: l10n.auth_full_name,
                   prefixIcon: const Icon(Icons.person_outline),
+                  autofillHints: const [AutofillHints.newUsername],
                   onChanged: (value) {
                     _clearFieldErrors();
                     setState(() {});
@@ -149,7 +149,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   errorText: authState.fieldErrors?['username'],
                 ),
 
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
 
                 // Email field
                 CustomTextField(
@@ -157,6 +157,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   label: l10n.auth_email,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
+                  autofillHints: const [AutofillHints.email],
                   onChanged: (value) {
                     _clearFieldErrors();
                     setState(() {});
@@ -174,7 +175,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   errorText: authState.fieldErrors?['email'],
                 ),
 
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
 
                 // Password field
                 Column(
@@ -184,6 +185,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       controller: _passwordController,
                       label: l10n.auth_password,
                       obscureText: _obscurePassword,
+                      autofillHints: const [AutofillHints.newPassword],
                       toggleButtonKey: const Key('password_visibility_toggle'),
                       onToggleVisibility: () {
                         setState(() {
@@ -211,14 +213,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       },
                       errorText: authState.fieldErrors?['password'],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: context.spacing.xs),
                     Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.smRadius,
                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
                       ),
-                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      padding: EdgeInsets.all(context.spacing.sm),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -232,7 +234,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
+                          SizedBox(height: context.spacing.xs),
                           PasswordRequirementItem(
                             text: l10n.auth_password_too_short,
                             isValid: _passwordController.text.length >= 8,
@@ -261,13 +263,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
 
-                const SizedBox(height: AppSpacing.smMd),
+                SizedBox(height: context.spacing.smMd),
 
                 // Confirm password field
                 PasswordTextField(
                   controller: _confirmPasswordController,
                   label: l10n.auth_confirm_password,
                   obscureText: _obscureConfirmPassword,
+                  autofillHints: const [AutofillHints.newPassword],
                   onToggleVisibility: () {
                     setState(() {
                       _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -284,66 +287,41 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   },
                 ),
 
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.spacing.md),
 
                 // Remember me checkbox
                 Row(
                   children: [
-                    if (Platform.isIOS)
-                      CupertinoSwitch(
-                        value: _rememberMe,
-                        onChanged: (value) async {
-                          setState(() {
-                            _rememberMe = value;
-                          });
-                          if (!_rememberMe) {
-                            await _secureStorage.delete(
-                              key: AppConstants.savedUsernameKey,
-                            );
-                          }
-                        },
-                      )
-                    else
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) async {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                          if (!_rememberMe) {
-                            await _secureStorage.delete(
-                              key: AppConstants.savedUsernameKey,
-                            );
-                          }
-                        },
-                      ),
+                    AdaptiveSwitch(
+                      value: _rememberMe,
+                      onChanged: (value) async {
+                        setState(() {
+                          _rememberMe = value;
+                        });
+                        if (!_rememberMe) {
+                          await _secureStorage.delete(
+                            key: AppConstants.savedUsernameKey,
+                          );
+                        }
+                      },
+                    ),
                     Text(l10n.auth_remember_me),
                   ],
                 ),
 
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.spacing.sm),
 
                 // Terms and conditions
                 Row(
                   children: [
-                    if (Platform.isIOS)
-                      CupertinoSwitch(
-                        value: _agreeToTerms,
-                        onChanged: (value) {
-                          setState(() {
-                            _agreeToTerms = value;
-                          });
-                        },
-                      )
-                    else
-                      Checkbox(
-                        value: _agreeToTerms,
-                        onChanged: (value) {
-                          setState(() {
-                            _agreeToTerms = value ?? false;
-                          });
-                        },
-                      ),
+                    AdaptiveSwitch(
+                      value: _agreeToTerms,
+                      onChanged: (value) {
+                        setState(() {
+                          _agreeToTerms = value;
+                        });
+                      },
+                    ),
                     Expanded(
                       child: Text.rich(
                         TextSpan(
@@ -392,7 +370,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
 
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
 
                 // Register button
                 AdaptiveButton(
@@ -403,7 +381,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   child: Text(l10n.auth_create_account),
                 ),
 
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.spacing.md),
 
                 // Sign in link
                 Row(
@@ -416,7 +394,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
+                    SizedBox(width: context.spacing.xs),
                     AdaptiveButton(
                       style: AdaptiveButtonStyle.text,
                       onPressed: () => context.go('/login'),
@@ -430,6 +408,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ],
                 ),
               ],
+            ),
             ),
           ),
         ),

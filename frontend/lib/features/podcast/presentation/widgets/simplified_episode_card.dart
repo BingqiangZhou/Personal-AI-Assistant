@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
@@ -41,7 +41,7 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
           showImage: false,
           dense: isMobile,
           cardMargin: isMobile
-              ? const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm)
+              ? EdgeInsets.symmetric(horizontal: context.spacing.xs, vertical: context.spacing.sm)
               : EdgeInsets.zero,
           showDate: true,
           date: episode.publishedAt,

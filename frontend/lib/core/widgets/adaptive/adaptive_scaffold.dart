@@ -14,8 +14,8 @@ class AdaptiveScaffold extends StatelessWidget {
     this.floatingActionButton,
   });
 
-  /// Navigation bar. On iOS, pass a CupertinoNavigationBar or null.
-  /// On Android, pass an AppBar or null.
+  /// Navigation bar. On iOS, expects a [CupertinoNavigationBar].
+  /// On other platforms, expects an [AppBar] (PreferredSizeWidget).
   final Widget? navigationBar;
 
   /// Page body content.
@@ -27,25 +27,31 @@ class AdaptiveScaffold extends StatelessWidget {
   /// Whether to resize when the keyboard appears.
   final bool? resizeToAvoidBottomInset;
 
-  /// Bottom navigation bar (Android only meaningful, iOS can use it too).
+  /// Bottom navigation bar. Ignored on iOS CupertinoPageScaffold.
   final Widget? bottomNavigationBar;
 
-  /// Floating action button (Android-specific concept, ignored on iOS).
+  /// Floating action button. Ignored on iOS CupertinoPageScaffold.
   final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
     if (PlatformHelper.isIOS(context)) {
+      final cupertinoNav = navigationBar is CupertinoNavigationBar
+          ? navigationBar as CupertinoNavigationBar?
+          : null;
       return CupertinoPageScaffold(
-        navigationBar: navigationBar as CupertinoNavigationBar?,
+        navigationBar: cupertinoNav,
         child: child ?? const SizedBox.shrink(),
         backgroundColor: backgroundColor,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset ?? true,
       );
     }
 
+    final appBar = navigationBar is PreferredSizeWidget
+        ? navigationBar as PreferredSizeWidget?
+        : null;
     return Scaffold(
-      appBar: navigationBar as PreferredSizeWidget?,
+      appBar: appBar,
       body: child,
       backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset ?? true,

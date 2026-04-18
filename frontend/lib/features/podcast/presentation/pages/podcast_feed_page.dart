@@ -7,6 +7,7 @@ import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/text_processing_cache.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
@@ -89,7 +90,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildDailyReportEntryTile(context, compact: false, heroStyle: true),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.spacing.sm),
           HeaderCapsuleActionButton(
             tooltip: l10n.profile_subscriptions,
             onPressed: () {
@@ -190,8 +191,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 PodcastNavigation.goToDailyReport(context, source: 'library'),
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: compact ? AppSpacing.md : AppSpacing.md,
-                vertical: compact ? AppSpacing.smMd : AppSpacing.md,
+                horizontal: compact ? context.spacing.md : context.spacing.md,
+                vertical: compact ? context.spacing.smMd : context.spacing.md,
               ),
               child: Row(
                 children: [
@@ -199,7 +200,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     Icons.summarize_outlined,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: context.spacing.md),
                   Flexible(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -214,7 +215,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: context.spacing.xxs),
                         Text(
                           l10n.podcast_daily_report_entry_subtitle,
                           maxLines: compact ? 1 : 2,
@@ -226,7 +227,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: context.spacing.sm),
                   Icon(
                     Icons.chevron_right,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -310,7 +311,7 @@ class _FeedContent extends ConsumerWidget {
           return _buildEmptyFeed(context, mobile: isMobile, ref: ref);
         }
 
-        return RefreshIndicator(
+        return AdaptiveRefreshIndicator(
           onRefresh: () => ref
               .read(podcastFeedProvider.notifier)
               .refreshFeed(fastReturn: true),
@@ -331,16 +332,16 @@ class _FeedContent extends ConsumerWidget {
     required WidgetRef ref,
   }) {
     final l10n = context.l10n;
-    return RefreshIndicator(
+    return AdaptiveRefreshIndicator(
       onRefresh: () async {
         await ref
             .read(podcastFeedProvider.notifier)
             .refreshFeed(fastReturn: true);
       },
       child: ListView(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
         children: [
-          const SizedBox(height: AppSpacing.xxl - AppSpacing.md),
+          SizedBox(height: context.spacing.xxl - context.spacing.md),
           Center(
             child: Column(
               children: [
@@ -349,7 +350,7 @@ class _FeedContent extends ConsumerWidget {
                   size: 64,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: context.spacing.xl),
                 Text(
                   l10n.podcast_no_episodes_found,
                   style: Theme.of(context).textTheme.titleLarge,
@@ -375,7 +376,7 @@ class _FeedContent extends ConsumerWidget {
     if (isMobile) {
       return ListView.builder(
         controller: scrollController,
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
         cacheExtent: ScrollConstants.largeListCacheExtent,
         itemCount: itemCount,
         itemBuilder: (context, index) =>
@@ -385,7 +386,7 @@ class _FeedContent extends ConsumerWidget {
 
     final crossAxisCount =
         screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
-    const spacing = AppSpacing.smMd;
+    final spacing = context.spacing.smMd;
     final availableWidth = screenWidth - (crossAxisCount - 1) * spacing;
     final cardWidth = availableWidth / crossAxisCount;
     const desktopCardHeight = 172.0;
@@ -393,7 +394,7 @@ class _FeedContent extends ConsumerWidget {
 
     return GridView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: spacing,
@@ -429,7 +430,7 @@ class _FeedContent extends ConsumerWidget {
       if (compact) {
         return Center(
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.sm),
+            padding: EdgeInsets.all(context.spacing.sm),
             child: loader,
           ),
         );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
@@ -33,7 +33,7 @@ class DiscoverChartsList extends ConsumerWidget {
       key: const Key('podcast_discover_list'),
       controller: scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(bottom: isDense ? AppSpacing.md : AppSpacing.md),
+      padding: EdgeInsets.only(bottom: isDense ? context.spacing.md : context.spacing.md),
       cacheExtent: ScrollConstants.largeListCacheExtent,
       itemCount: visibleItems.isEmpty
           ? 1
@@ -43,14 +43,14 @@ class DiscoverChartsList extends ConsumerWidget {
       itemBuilder: (context, index) {
         if (visibleItems.isEmpty) {
           return Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+            padding: EdgeInsets.symmetric(vertical: context.spacing.md),
             child: Center(child: Text(l10n.podcast_discover_no_chart_data)),
           );
         }
 
         if (index >= visibleItems.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: context.spacing.md),
             child: Center(
               child: SizedBox(
                 width: 20,

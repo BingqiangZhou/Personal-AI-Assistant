@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
-import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -42,7 +43,7 @@ class ChatHeader extends ConsumerWidget {
     final availableModelsAsync = ref.watch(availableModelsProvider);
     final extension = appThemeOf(context);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md, vertical: context.spacing.md),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border(
@@ -60,7 +61,7 @@ class ChatHeader extends ConsumerWidget {
                 child: Row(
                   children: [
                     const Icon(Icons.chat_bubble_outline),
-                    const SizedBox(width: AppSpacing.smMd),
+                    SizedBox(width: context.spacing.smMd),
                     Flexible(
                       child: Text(
                         l10n.podcast_conversation_title,
@@ -92,14 +93,14 @@ class ChatHeader extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.spacing.sm),
           Row(
             children: [
               availableModelsAsync.when(
                 data: (models) {
                   if (models.length <= 1) return const SizedBox.shrink();
                   return Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    padding: EdgeInsets.only(right: context.spacing.sm),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(
                         maxWidth: modelSelectorMaxWidth,
@@ -223,7 +224,7 @@ class _ModelSelectorState extends State<_ModelSelector> {
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm, vertical: 2),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(extension.itemRadius),
@@ -279,10 +280,10 @@ class _ModelSelectorState extends State<_ModelSelector> {
                   ),
                   if (model.isDefault)
                     Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.sm),
+                      padding: EdgeInsets.only(left: context.spacing.sm),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.spacing.xs,
                           vertical: 1,
                         ),
                         decoration: BoxDecoration(

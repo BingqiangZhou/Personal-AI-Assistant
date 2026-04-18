@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 class SettingsSectionCard extends StatelessWidget {
@@ -22,7 +23,7 @@ class SettingsSectionCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.sm),
+          padding: EdgeInsets.only(top: context.spacing.sm, bottom: context.spacing.sm),
           child: Text(
             title,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -36,7 +37,7 @@ class SettingsSectionCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadius.mdLgRadius,
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
               ),

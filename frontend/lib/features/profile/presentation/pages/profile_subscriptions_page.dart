@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
@@ -112,12 +114,12 @@ class _ProfileSubscriptionsPageState
                   ),
                 ],
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.smMd),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.spacing.smMd),
               ),
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: RefreshIndicator(
+                child: AdaptiveRefreshIndicator(
                   onRefresh: () => ref
                       .read(podcastSubscriptionProvider.notifier)
                       .refreshSubscriptions(),
@@ -172,7 +174,7 @@ class _ProfileSubscriptionsPageState
         subtitle: l10n.profile_subscriptions_subtitle,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(context.spacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -181,7 +183,7 @@ class _ProfileSubscriptionsPageState
                   size: 56,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 Text(
                   error,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -203,7 +205,7 @@ class _ProfileSubscriptionsPageState
         subtitle: l10n.profile_subscriptions_subtitle,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(context.spacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -212,14 +214,14 @@ class _ProfileSubscriptionsPageState
                   size: 56,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: context.spacing.lg),
                 Text(
                   l10n.podcast_no_subscriptions,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.spacing.sm),
                 Text(
                   l10n.feed_no_subscriptions_hint,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -242,7 +244,7 @@ class _ProfileSubscriptionsPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(
               title: l10n.profile_subscriptions,
               subtitle: l10n.profile_subscriptions_count(total),
@@ -294,7 +296,7 @@ class _ProfileSubscriptionsPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Expanded(child: Center(child: child)),
@@ -310,7 +312,7 @@ class _ProfileSubscriptionsPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.mdLg, AppSpacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Divider(
@@ -335,7 +337,7 @@ class _ProfileSubscriptionsPageState
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+          borderRadius: BorderRadius.circular(AppRadius.itemValue),
           border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
         ),
         child: Material(
@@ -347,7 +349,7 @@ class _ProfileSubscriptionsPageState
                 extra: subscription,
               );
             },
-            borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+            borderRadius: BorderRadius.circular(AppRadius.itemValue),
             child: SizedBox(
             key: ValueKey('profile_subscription_card_content_${subscription.id}'),
             height: kPodcastRowCardTargetHeight,
@@ -360,7 +362,7 @@ class _ProfileSubscriptionsPageState
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(
-                      kPodcastRowCardImageRadius,
+                      AppRadius.itemValue,
                     ),
                     child: PodcastImageWidget(
                       imageUrl: subscription.imageUrl,
@@ -384,7 +386,7 @@ class _ProfileSubscriptionsPageState
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        SizedBox(height: context.spacing.xs),
                         Text(
                           subscription.description != null
                               ? EpisodeDescriptionHelper.stripHtmlTags(
@@ -424,7 +426,7 @@ class _ProfileSubscriptionsPageState
   ) {
     if (isLoadingMore) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(context.spacing.lg),
         child: Center(
           child: Builder(
             builder: (context) {
@@ -445,7 +447,7 @@ class _ProfileSubscriptionsPageState
 
     if (!hasMore) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(context.spacing.lg),
         child: Center(
           child: Text(
             '${l10n.profile_subscriptions}: $total',

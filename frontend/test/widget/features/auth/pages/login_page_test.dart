@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_switch.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/pages/login_page.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 
@@ -51,8 +52,8 @@ void main() {
       expect(find.byKey(const Key('login_button')), findsOneWidget);
       // Check for email field
       expect(find.byType(TextField), findsNWidgets(2)); // Email and Password
-      // Check for remember me checkbox
-      expect(find.byType(Checkbox), findsOneWidget);
+      // Check for remember me switch
+      expect(find.byType(AdaptiveSwitch), findsOneWidget);
       // Check for app logo image
       expect(find.byType(Image), findsOneWidget);
     });
@@ -76,11 +77,11 @@ void main() {
       expect(find.byKey(const Key('login_button')), findsOneWidget);
     });
 
-    testWidgets('has checkbox for remember me', (tester) async {
+    testWidgets('has switch for remember me', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byType(Checkbox), findsOneWidget);
+      expect(find.byType(AdaptiveSwitch), findsOneWidget);
     });
 
     testWidgets('has text input fields for email and password', (tester) async {

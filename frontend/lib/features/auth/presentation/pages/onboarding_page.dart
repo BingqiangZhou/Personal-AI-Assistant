@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/onboarding_provider.dart';
@@ -62,7 +62,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               Align(
                 alignment: Alignment.topRight,
                 child: Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm, right: AppSpacing.sm),
+                  padding: EdgeInsets.only(top: context.spacing.sm, right: context.spacing.sm),
                   child: AdaptiveButton(
                     style: AdaptiveButtonStyle.text,
                     onPressed: _completeOnboarding,
@@ -80,7 +80,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: Platform.isIOS
+                  physics: PlatformHelper.isIOS(context)
                       ? const BouncingScrollPhysics()
                       : null,
                   onPageChanged: (page) {
@@ -127,7 +127,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
               // Bottom section: dot indicators + action button
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xxl),
+                padding: EdgeInsets.fromLTRB(context.spacing.lg, context.spacing.md, context.spacing.lg, context.spacing.xxl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -138,7 +138,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         final isActive = _currentPage == index;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                          margin: EdgeInsets.symmetric(horizontal: context.spacing.xs),
                           width: isActive ? 24 : 8,
                           height: 8,
                           decoration: BoxDecoration(
@@ -150,7 +150,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         );
                       }),
                     ),
-                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(height: context.spacing.xl),
 
                     // Action button
                     AdaptiveButton(
@@ -202,7 +202,7 @@ class _OnboardingScreen extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -220,7 +220,7 @@ class _OnboardingScreen extends StatelessWidget {
               color: iconColor,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.spacing.xxl),
 
           // Title
           Text(
@@ -234,7 +234,7 @@ class _OnboardingScreen extends StatelessWidget {
 
           // Subtitle (optional, used for welcome screen)
           if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.smMd),
+            SizedBox(height: context.spacing.smMd),
             Text(
               subtitle!,
               textAlign: TextAlign.center,
@@ -245,7 +245,7 @@ class _OnboardingScreen extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: AppSpacing.mdLg),
+          SizedBox(height: context.spacing.mdLg),
 
           // Body
           Text(
