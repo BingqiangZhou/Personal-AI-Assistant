@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,14 +39,18 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       if (!mounted) {
         return;
       }
-      ref.read(podcastFeedProvider.notifier).loadInitialFeed().whenComplete(() {
-        if (!mounted) {
-          return;
-        }
-        setState(() {
-          _awaitingInitialFeed = false;
-        });
-      });
+      unawaited(
+        ref.read(podcastFeedProvider.notifier).loadInitialFeed().whenComplete(
+          () {
+            if (!mounted) {
+              return;
+            }
+            setState(() {
+              _awaitingInitialFeed = false;
+            });
+          },
+        ),
+      );
     });
   }
 
@@ -68,7 +74,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     if (isLoadingMore || !hasMore) {
       return;
     }
-    ref.read(podcastFeedProvider.notifier).loadMoreFeed();
+    unawaited(ref.read(podcastFeedProvider.notifier).loadMoreFeed());
   }
 
   @override
@@ -94,7 +100,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           HeaderCapsuleActionButton(
             tooltip: l10n.profile_subscriptions,
             onPressed: () {
-              context.push('/profile/subscriptions');
+              unawaited(context.push('/profile/subscriptions'));
             },
             icon: Icons.subscriptions_outlined,
             circular: true,
@@ -130,7 +136,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           extraTopOffset: 64,
         );
       }
-    } catch (error) {
+    } on Object catch (error) {
       if (mounted) {
         final l10n = context.l10n;
         showTopFloatingNotice(
@@ -295,7 +301,7 @@ class _FeedContent extends ConsumerWidget {
         subtitle: feedState.error,
         action: FilledButton(
           onPressed: () {
-            ref.read(podcastFeedProvider.notifier).loadInitialFeed();
+            unawaited(ref.read(podcastFeedProvider.notifier).loadInitialFeed());
           },
           child: Text(l10n.podcast_retry),
         ),
@@ -339,7 +345,7 @@ class _FeedContent extends ConsumerWidget {
             .refreshFeed(fastReturn: true);
       },
       child: ListView(
-        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
+        padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
         children: [
           SizedBox(height: context.spacing.xxl - context.spacing.md),
           Center(
@@ -370,13 +376,12 @@ class _FeedContent extends ConsumerWidget {
     required double screenWidth,
   }) {
     final isMobile = screenWidth < Breakpoints.medium;
-    final itemCount =
-        feedState.episodes.length + (feedState.hasMore ? 1 : 0);
+    final itemCount = feedState.episodes.length + (feedState.hasMore ? 1 : 0);
 
     if (isMobile) {
       return ListView.builder(
         controller: scrollController,
-        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
+        padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
         cacheExtent: ScrollConstants.largeListCacheExtent,
         itemCount: itemCount,
         itemBuilder: (context, index) =>
@@ -384,9 +389,8 @@ class _FeedContent extends ConsumerWidget {
       );
     }
 
-    final crossAxisCount =
-        screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
-    final spacing = context.spacing.smMd;
+    final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
+    final spacing = context.spacing.sm;
     final availableWidth = screenWidth - (crossAxisCount - 1) * spacing;
     final cardWidth = availableWidth / crossAxisCount;
     const desktopCardHeight = 172.0;
@@ -394,7 +398,7 @@ class _FeedContent extends ConsumerWidget {
 
     return GridView.builder(
       controller: scrollController,
-      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: spacing,
@@ -439,12 +443,15 @@ class _FeedContent extends ConsumerWidget {
     }
 
     final episode = feedState.episodes[index];
-    final displayDescription =
-        TextProcessingCache.getCachedDescription(episode.description);
+    final displayDescription = TextProcessingCache.getCachedDescription(
+      episode.description,
+    );
     final isAddingToQueue = addingEpisodeIds.contains(episode.id);
 
     void playAndOpenDetail() {
-      ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode);
+      unawaited(
+        ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode),
+      );
       PodcastNavigation.goToEpisodeDetail(
         context,
         episodeId: episode.id,
