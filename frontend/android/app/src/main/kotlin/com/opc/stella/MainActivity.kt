@@ -1,8 +1,9 @@
-package com.example.personal_ai_assistant
+package com.opc.stella
 
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.NonNull
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -12,7 +13,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 class MainActivity : AudioServiceActivity() {
     companion object {
         private const val TAG = "MainActivity"
-        private const val CHANNEL = "com.example.personal_ai_assistant/app_update"
+        private const val CHANNEL = "com.opc.stella/app_update"
     }
 
     private var methodChannel: MethodChannel? = null
@@ -69,6 +70,7 @@ class MainActivity : AudioServiceActivity() {
                 splashScreenView.remove()
             }
         }
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
     }
 

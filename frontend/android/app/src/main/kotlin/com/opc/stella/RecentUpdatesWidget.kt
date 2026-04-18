@@ -1,4 +1,4 @@
-package com.example.personal_ai_assistant
+package com.opc.stella
 
 import android.content.Context
 import android.view.View

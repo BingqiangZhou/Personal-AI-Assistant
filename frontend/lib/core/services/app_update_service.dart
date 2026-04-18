@@ -20,7 +20,7 @@ class AppUpdateService {
   }
 
   static const MethodChannel _channel = MethodChannel(
-    'com.example.personal_ai_assistant/app_update',
+    'com.opc.stella/app_update',
   );
 
   /// Get current app version
@@ -55,7 +55,7 @@ class AppUpdateService {
   static String getCurrentVersionSync() {
     // Note: This is a fallback. The actual version should be fetched asynchronously
     // This is kept for compatibility with existing code that needs sync access
-    return '0.0.2'; // Update this when publishing new releases
+    return '0.0.0'; // Fallback sentinel — async getCurrentVersion() should be used
   }
 
   /// Get current platform name

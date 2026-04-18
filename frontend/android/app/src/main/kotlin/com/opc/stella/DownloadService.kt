@@ -1,4 +1,4 @@
-package com.example.personal_ai_assistant
+package com.opc.stella
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -37,7 +37,7 @@ class DownloadService : Service() {
         const val EXTRA_FILE_NAME = "file_name"
 
         // Actions
-        const val ACTION_CANCEL = "com.example.personal_ai_assistant.DOWNLOAD_CANCEL"
+        const val ACTION_CANCEL = "com.opc.stella.DOWNLOAD_CANCEL"
 
         // Progress
         private const val UPDATE_INTERVAL = 500L // Update notification every 500ms

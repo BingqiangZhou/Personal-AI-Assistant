@@ -8,35 +8,12 @@
 -keep class io.flutter.view.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
--keep class com.google.firebase.** { *; }
 -dontwarn io.flutter.embedding.**
 
-# Retrofit
--dontwarn retrofit2.**
--keep class retrofit2.** { *; }
+# Keep generic signature attributes (used by various libraries)
 -keepattributes Signature
 -keepattributes Exceptions
-
-# OkHttp
--dontwarn okhttp3.**
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
-
-# Okio
--dontwarn okio.**
--keep class okio.** { *; }
-
-# Gson
--keepattributes Signature
 -keepattributes *Annotation*
--dontwarn sun.misc.**
--keep class * extends com.google.gson.TypeAdapter
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
-
-# Riverpod
--keep class androidx.compose.** { *; }
 
 # Audio service
 -keep class com.ryanheise.audioservice.** { *; }
