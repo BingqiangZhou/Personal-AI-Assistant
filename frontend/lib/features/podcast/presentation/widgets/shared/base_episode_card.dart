@@ -184,9 +184,9 @@ class BaseEpisodeCard extends StatelessWidget {
                   if (config.showDescription &&
                       config.description != null &&
                       config.description!.isNotEmpty) ...[
-                    SizedBox(height: isMobile ? context.spacing.xs : context.spacing.sm),
+                    SizedBox(height: isMobile ? context.spacing.xxs : context.spacing.sm),
                     Flexible(child: _buildDescription(context, theme)),
-                    SizedBox(height: context.spacing.xxs),
+                    if (!isMobile) SizedBox(height: context.spacing.xxs),
                   ] else if (config.showDescription) ...[
                     SizedBox(height: context.spacing.xxs),
                   ],
