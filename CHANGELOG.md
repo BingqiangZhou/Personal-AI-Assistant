@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.49.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.48.0...v0.49.0) - 2026-04-19 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.49.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ci)* Upgrade GitHub Actions to Node.js 24 runtime ([30cf3f8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/30cf3f8e23bab03510121b2f165a4ac5b5e5ab67))
+
+### 🎨 Styling
+
+- *(podcast)* Improve discover search input and mode toggle prominence ([d694c4a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d694c4aece343e70ee643cd131d06e4a26118f8c))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Add horizontal padding to discover category chips ([37aaedf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/37aaedf801674eab622d776c81374b362f32d52e))
+- *(android)* Fix widget API signature and enableEdgeToEdge build errors ([1b821b4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1b821b450730886cab42833e8ebd19d144ad9525))
+- *(android)* Remove broken enableEdgeToEdge call and suppress Java 8 warnings ([a07d6f2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a07d6f232ee4f248d76340888d933b0b337fd1e6))
+- *(test)* Update 38 failing frontend tests to match current widget tree ([b217233](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b217233246d01cfa6154c5916076f62cf520981a))
+
+### 📚 Documentation
+
+- Update README.md and CLAUDE.md with accurate project structure ([6ba09b3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6ba09b31c1e45e940b63737a1c97bb73f9fe5126))
+
+### 🚀 Features
+
+- *(podcast)* Add responsive grid layout and skeleton loading to discover page ([30260a1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/30260a178474f099074c637e9527f4d253aec086))
+
+### 🚜 Refactor
+
+- *(podcast)* Add card container styling and compact layout to discover chart rows ([0fcba38](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0fcba3862a3cdf8d96d3618d70b1702e12d4a45a))
+- *(frontend)* Unify spacing with AppSpacing token system ([145199f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/145199f889dcdcf1d229063d65a962c95de35ca7))
+
+
+
 ## [0.48.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.47.0...v0.48.0) - 2026-04-19 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.48.0))
 
 ### ⚡ Performance
