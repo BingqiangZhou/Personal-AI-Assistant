@@ -492,17 +492,19 @@ class _PodcastDailyReportPageState
         );
       },
       transitionBuilder: (dialogContext, animation, secondaryAnimation, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        return FadeTransition(
-          opacity: curved,
-          child: ScaleTransition(
-            alignment: Alignment.topRight,
-            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
-            child: child,
-          ),
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, _) {
+            final curvedValue = Curves.easeOutCubic.transform(animation.value);
+            return Opacity(
+              opacity: curvedValue,
+              child: Transform.scale(
+                scale: 0.96 + 0.04 * curvedValue,
+                alignment: Alignment.topRight,
+                child: child,
+              ),
+            );
+          },
         );
       },
     );
