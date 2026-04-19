@@ -104,7 +104,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       icon: Icons.auto_awesome_rounded,
                       iconBackgroundColor: isDark
                           ? AppColors.accentWarmDark.withValues(alpha: 0.15)
-                          : const Color(0xFFFEF3C7),
+                          : AppColors.warmYellowSurface,
                       iconColor: isDark
                           ? AppColors.accentWarmDark
                           : AppColors.accentWarm,
@@ -115,7 +115,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       icon: Icons.chat_bubble_rounded,
                       iconBackgroundColor: isDark
                           ? AppColors.accentCoralLight.withValues(alpha: 0.15)
-                          : const Color(0xFFFCE7F3),
+                          : AppColors.warmPinkSurface,
                       iconColor: isDark
                           ? AppColors.accentCoralLight
                           : AppColors.accentCoral,

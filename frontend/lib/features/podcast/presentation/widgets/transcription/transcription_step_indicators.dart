@@ -134,6 +134,8 @@ class _TranscriptionStepIndicator extends StatelessWidget {
         SizedBox(height: context.spacing.xs),
         Text(
           label,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
           style: AppTheme.navLabel(
             iconColor,
             weight: status == TranscriptionStepStatus.current

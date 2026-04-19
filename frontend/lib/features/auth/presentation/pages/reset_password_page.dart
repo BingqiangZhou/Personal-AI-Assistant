@@ -102,8 +102,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (!isLoading &&

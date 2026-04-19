@@ -557,7 +557,7 @@ class ContentImageShareService {
       builder: (_) {
         return Stack(
           children: [
-            const ModalBarrier(dismissible: false, color: Color(0x4D000000)),
+            const ModalBarrier(dismissible: false, color: Color(0x30000000)),
             Center(
               child: Material(
                 color: Colors.transparent,

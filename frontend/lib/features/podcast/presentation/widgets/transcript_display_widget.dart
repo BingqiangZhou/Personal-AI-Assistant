@@ -401,7 +401,7 @@ class TranscriptDisplayWidgetState
                           )
                         : null,
                     decoration: BoxDecoration(
-                      color: CupertinoColors.tertiarySystemFill,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: AppRadius.xxlRadius,
                     ),
                     padding: EdgeInsets.symmetric(

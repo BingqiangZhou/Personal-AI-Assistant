@@ -367,6 +367,7 @@ class _AISummaryControlWidgetState
       ),
       child: DropdownButtonFormField<SummaryModelInfo>(
         initialValue: _selectedModel,
+        isExpanded: true,
         decoration: InputDecoration(
           labelText: l10n.podcast_ai_model,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(extension.cardRadius)),
@@ -380,7 +381,12 @@ class _AISummaryControlWidgetState
             value: model,
             child: Row(
               children: [
-                Text(model.displayName),
+                Flexible(
+                  child: Text(
+                    model.displayName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (model.isDefault)
                   Padding(
                     padding: EdgeInsetsDirectional.only(start: context.spacing.sm),

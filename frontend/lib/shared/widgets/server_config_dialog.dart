@@ -190,7 +190,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
               if (isIOS) ...[
                 Container(
                   decoration: BoxDecoration(
-                    color: CupertinoColors.tertiarySystemFill,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius:
                         BorderRadius.circular(appThemeOf(context).buttonRadius),
                   ),

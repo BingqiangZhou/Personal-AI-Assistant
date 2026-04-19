@@ -77,6 +77,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 
   Widget _buildMaterial(BuildContext context) {
+    final inputTheme = Theme.of(context).inputDecorationTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -100,17 +101,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
             suffixIcon: widget.suffixIcon,
             filled: true,
             fillColor: enabled
-                ? Theme.of(context).inputDecorationTheme.fillColor
+                ? inputTheme.fillColor
                 : Theme.of(context).disabledColor.withValues(alpha: 0.12),
-            border: Theme.of(context).inputDecorationTheme.border,
-            enabledBorder:
-                Theme.of(context).inputDecorationTheme.enabledBorder,
-            focusedBorder:
-                Theme.of(context).inputDecorationTheme.focusedBorder,
-            errorBorder: Theme.of(context).inputDecorationTheme.errorBorder,
-            contentPadding:
-                Theme.of(context).inputDecorationTheme.contentPadding,
-            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle,
+            border: inputTheme.border,
+            enabledBorder: inputTheme.enabledBorder,
+            focusedBorder: inputTheme.focusedBorder,
+            errorBorder: inputTheme.errorBorder,
+            contentPadding: inputTheme.contentPadding,
+            hintStyle: inputTheme.hintStyle,
           ),
         ),
       ],
@@ -164,8 +162,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           : null,
       decoration: BoxDecoration(
         color: widget.enabled
-            ? CupertinoColors.tertiarySystemFill
-            : CupertinoColors.quaternarySystemFill,
+            ? Theme.of(context).colorScheme.surfaceContainerHighest
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius:
             BorderRadius.circular(appThemeOf(context).buttonRadius),
       ),

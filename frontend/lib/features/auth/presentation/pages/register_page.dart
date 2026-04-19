@@ -81,8 +81,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
+    final fieldErrors = ref.watch(authProvider.select((s) => s.fieldErrors));
 
     // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
@@ -146,7 +146,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     }
                     return null;
                   },
-                  errorText: authState.fieldErrors?['username'],
+                  errorText: fieldErrors?['username'],
                 ),
 
                 SizedBox(height: context.spacing.smMd),
@@ -173,7 +173,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     }
                     return null;
                   },
-                  errorText: authState.fieldErrors?['email'],
+                  errorText: fieldErrors?['email'],
                 ),
 
                 SizedBox(height: context.spacing.smMd),
@@ -213,7 +213,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         }
                         return null;
                       },
-                      errorText: authState.fieldErrors?['password'],
+                      errorText: fieldErrors?['password'],
                     ),
                     SizedBox(height: context.spacing.xs),
                     Container(

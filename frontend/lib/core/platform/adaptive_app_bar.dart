@@ -12,7 +12,7 @@ PreferredSizeWidget adaptiveAppBar(
 }) {
   final isIOS = PlatformHelper.isApple(context);
   return AppBar(
-    title: titleWidget ?? (title != null ? Text(title) : null),
+    title: titleWidget ?? (title != null ? Text(title, overflow: TextOverflow.ellipsis) : null),
     elevation: 0,
     scrolledUnderElevation: isIOS ? 0.1 : 0,
     centerTitle: centerTitle ?? isIOS,

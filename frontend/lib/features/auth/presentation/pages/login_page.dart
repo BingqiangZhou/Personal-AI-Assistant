@@ -108,8 +108,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
 
     // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {

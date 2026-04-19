@@ -79,7 +79,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
     }
 
     return SliverAppBar(
-      title: Text(title),
+      title: Text(title, overflow: TextOverflow.ellipsis),
       actions: actions,
       leading: leading,
       floating: true,

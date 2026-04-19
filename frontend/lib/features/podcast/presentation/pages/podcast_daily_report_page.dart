@@ -2,14 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:personal_ai_assistant/core/constants/app_durations.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
-import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
-import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -19,10 +16,9 @@ import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/calendar_panel_helper.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/calendar_panel_dialog.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/episode_card_utils.dart';
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 class PodcastDailyReportPage extends ConsumerStatefulWidget {
   const PodcastDailyReportPage({super.key, this.initialDate});
@@ -503,290 +499,43 @@ class _PodcastDailyReportPageState
   }
 
   Future<void> _showCalendarPanel() async {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final horizontalPadding =
-        screenWidth < Breakpoints.medium ? 12.0 : 16.0;
-
-    await showGeneralDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.12),
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      transitionDuration: AppDurations.entranceFast,
-      pageBuilder: (dialogContext, animation, secondaryAnimation) {
-        final maxPanelWidth = (screenWidth - horizontalPadding * 2)
-            .clamp(0.0, CalendarPanelHelper.maxPanelWidth)
-            ;
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: CalendarPanelHelper.dialogTopOffset,
-                left: horizontalPadding,
-                right: horizontalPadding,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxPanelWidth),
-                child: Material(
-                  color: Colors.transparent,
-                  child: SurfacePanel(
-                    key: const Key('daily_report_calendar_panel'),
-                    padding: EdgeInsets.all(context.spacing.md),
-                    borderRadius: CalendarPanelHelper.panelBorderRadius,
-                    child: Consumer(
-                      builder: (panelContext, panelRef, _) {
-                        return _buildCalendarPanelContent(
-                          panelContext,
-                          panelRef,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (dialogContext, animation, secondaryAnimation, child) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, _) {
-            final curvedValue = Curves.easeOutCubic.transform(animation.value);
-            return Opacity(
-              opacity: curvedValue,
-              child: Transform.scale(
-                scale: 0.96 + 0.04 * curvedValue,
-                alignment: Alignment.topRight,
-                child: child,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildCalendarPanelContent(BuildContext context, WidgetRef panelRef) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final reportDatesAsync = panelRef.watch(dailyReportDatesProvider);
-    final selectedDate = panelRef.watch(selectedDailyReportDateProvider);
+    final reportDatesAsync = ref.read(dailyReportDatesProvider);
+    final selectedDate = ref.read(selectedDailyReportDateProvider);
     final reportDateKeys = <String>{
       for (final item
           in reportDatesAsync.value?.dates ??
               const <PodcastDailyReportDateItem>[])
         EpisodeCardUtils.formatDate(item.reportDate),
     };
-    final now = _toDateOnly(DateTime.now());
-    final displayFocusedDay = _focusedCalendarDay.isAfter(now)
-        ? now
-        : _focusedCalendarDay;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.podcast_daily_report_dates,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        SizedBox(height: context.spacing.smMd),
-        SizedBox(
-          key: const Key('daily_report_calendar'),
-          height: CalendarPanelHelper.calendarHeight,
-          child: TableCalendar<bool>(
-            firstDay: DateTime(2000),
-            lastDay: now,
-            focusedDay: displayFocusedDay,
-            availableCalendarFormats: {CalendarFormat.month: context.l10n.calendar_month_format},
-            rowHeight: CalendarPanelHelper.calendarRowHeight,
-            daysOfWeekHeight: CalendarPanelHelper.calendarDaysOfWeekHeight,
-            headerStyle: HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-              leftChevronIcon: Icon(
-                Icons.chevron_left_rounded,
-                color: theme.colorScheme.onSurface,
-              ),
-              rightChevronIcon: Icon(
-                Icons.chevron_right_rounded,
-                color: theme.colorScheme.onSurface,
-              ),
-              titleTextStyle:
-                  theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ) ??
-                  AppTheme.metaSmall().copyWith(fontWeight: FontWeight.w700),
-            ),
-            daysOfWeekStyle: DaysOfWeekStyle(
-              weekdayStyle:
-                  theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ) ??
-                  AppTheme.metaSmall(theme.colorScheme.onSurfaceVariant),
-              weekendStyle:
-                  theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ) ??
-                  AppTheme.metaSmall(theme.colorScheme.onSurfaceVariant),
-            ),
-            selectedDayPredicate: (day) => _isSameDate(day, selectedDate),
-            enabledDayPredicate: (day) {
-              final normalizedDay = _toDateOnly(day);
-              return !normalizedDay.isAfter(now);
-            },
-            eventLoader: (day) {
-              final hasReport = reportDateKeys.contains(EpisodeCardUtils.formatDate(day));
-              return hasReport ? const [true] : const [];
-            },
-            onDaySelected: (pickedDay, focusedDay) {
-              unawaited(
-                _handleCalendarDaySelectedFromPanel(
-                  panelContext: context,
-                  pickedDay: pickedDay,
-                  focusedDay: focusedDay,
-                ),
-              );
-            },
-            onPageChanged: (focusedDay) {
-              final normalizedFocused = _toDateOnly(focusedDay);
-              setState(() {
-                _focusedCalendarDay = normalizedFocused;
-              });
-              unawaited(
-                panelRef
-                    .read(dailyReportDatesProvider.notifier)
-                    .ensureMonthCoverage(normalizedFocused),
-              );
-            },
-            calendarBuilders: CalendarBuilders<bool>(
-              defaultBuilder: (context, day, _) => _buildCalendarDayCell(
-                context,
-                day,
-                selectedDate: selectedDate,
-              ),
-              outsideBuilder: (context, day, _) => _buildCalendarDayCell(
-                context,
-                day,
-                selectedDate: selectedDate,
-                isOutside: true,
-              ),
-              disabledBuilder: (context, day, _) => _buildCalendarDayCell(
-                context,
-                day,
-                selectedDate: selectedDate,
-                isDisabled: true,
-              ),
-              todayBuilder: (context, day, _) => _buildCalendarDayCell(
-                context,
-                day,
-                selectedDate: selectedDate,
-                isToday: true,
-              ),
-              selectedBuilder: (context, day, _) => _buildCalendarDayCell(
-                context,
-                day,
-                selectedDate: selectedDate,
-                isSelected: true,
-              ),
-              markerBuilder: (context, day, events) {
-                if (events.isEmpty) {
-                  return null;
-                }
-                final isSelected = _isSameDate(day, selectedDate);
-                final markerColor = isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.primary;
-                return Positioned(
-                  key: Key('daily_report_calendar_marker_${EpisodeCardUtils.formatDate(day)}'),
-                  bottom: CalendarPanelHelper.markerBottomOffset,
-                  child: Container(
-                    width: CalendarPanelHelper.markerDotSize,
-                    height: CalendarPanelHelper.markerDotSize,
-                    decoration: BoxDecoration(
-                      color: markerColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        if (reportDatesAsync.isLoading && reportDatesAsync.value == null) ...[
-          SizedBox(height: context.spacing.smMd),
-          Row(
-            children: [
-              SizedBox(
-                width: CalendarPanelHelper.loadingSpinnerSize,
-                height: CalendarPanelHelper.loadingSpinnerSize,
-                child: Theme(
-                  data: theme.copyWith(
-                    colorScheme: theme.colorScheme.copyWith(
-                      primary: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  child: const CircularProgressIndicator.adaptive(
-                    strokeWidth: 2,
-                  ),
-                ),
-              ),
-              SizedBox(width: context.spacing.sm),
-              Expanded(
-                child: Text(
-                  l10n.podcast_daily_report_loading,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Future<void> _handleCalendarDaySelectedFromPanel({
-    required BuildContext panelContext,
-    required DateTime pickedDay,
-    required DateTime focusedDay,
-  }) async {
-    await _handleCalendarDaySelected(
-      pickedDay: pickedDay,
-      focusedDay: focusedDay,
-    );
-    if (!panelContext.mounted) {
-      return;
-    }
-    final navigator = Navigator.of(panelContext);
-    if (navigator.canPop()) {
-      navigator.pop();
-    }
-  }
-
-  Widget _buildCalendarDayCell(
-    BuildContext context,
-    DateTime day, {
-    required DateTime? selectedDate,
-    bool isSelected = false,
-    bool isToday = false,
-    bool isOutside = false,
-    bool isDisabled = false,
-  }) {
-    return CalendarPanelHelper.buildCalendarDayCell(
-      context,
-      day,
+    await showCalendarPanelDialog(
+      context: context,
+      titleText: l10n.podcast_daily_report_dates,
+      dateKeys: reportDateKeys,
       selectedDate: selectedDate,
-      keyPrefix: 'daily_report_calendar_day',
-      isSelected: isSelected,
-      isToday: isToday,
-      isOutside: isOutside,
-      isDisabled: isDisabled,
+      focusedDay: _focusedCalendarDay,
+      calendarKey: 'daily_report_calendar',
+      isLoadingDates: reportDatesAsync.isLoading && reportDatesAsync.value == null,
+      loadingText: l10n.podcast_daily_report_loading,
+      onDaySelected: (pickedDay, focusedDay) {
+        unawaited(
+          _handleCalendarDaySelected(
+            pickedDay: pickedDay,
+            focusedDay: focusedDay,
+          ),
+        );
+      },
+      onPageChanged: (focusedDay) {
+        setState(() {
+          _focusedCalendarDay = focusedDay;
+        });
+        unawaited(
+          ref
+              .read(dailyReportDatesProvider.notifier)
+              .ensureMonthCoverage(focusedDay),
+        );
+      },
     );
   }
 
@@ -864,15 +613,6 @@ class _PodcastDailyReportPageState
         });
       }
     }
-  }
-
-  bool _isSameDate(DateTime? left, DateTime? right) {
-    if (left == null || right == null) {
-      return false;
-    }
-    final l = _toDateOnly(left);
-    final r = _toDateOnly(right);
-    return l.year == r.year && l.month == r.month && l.day == r.day;
   }
 
   DateTime _resolveInitialDate(DateTime? rawValue) {

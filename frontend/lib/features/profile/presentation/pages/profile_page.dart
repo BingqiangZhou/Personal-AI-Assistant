@@ -83,8 +83,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
+    final user = ref.watch(authProvider.select((s) => s.user));
     final theme = Theme.of(context);
     final compactProfileLayout = MediaQuery.sizeOf(context).height < 700;
 

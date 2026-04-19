@@ -81,6 +81,8 @@ class AppColors {
   static const Color accentWarmDark = Color(0xFFFF9F0A); // systemOrange dark
   static const Color accentCoral = Color(0xFFFF2D55); // systemPink light
   static const Color accentCoralLight = Color(0xFFFF375F); // systemPink dark
+  static const Color warmYellowSurface = Color(0xFFFEF3C7);
+  static const Color warmPinkSurface = Color(0xFFFCE7F3);
 
   // AI-specific accent tokens - using Apple system colors
   static const Color aiBubbleUser = Color(0xFFFFCC00); // systemYellow light

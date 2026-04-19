@@ -92,8 +92,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
 
     final forgotTitle =
         l10n?.auth_forgot_password ?? _fallbackForgotPasswordTitle;
