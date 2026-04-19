@@ -273,7 +273,7 @@ class _HighlightDetailContent extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xxs),
                 ],
                 Text(
                   highlight.episodeTitle,

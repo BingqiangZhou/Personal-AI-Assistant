@@ -31,7 +31,7 @@ class SearchModeToggle extends StatelessWidget {
     return Container(
       key: const Key('podcast_discover_tab_selector'),
       height: toggleHeight,
-      padding: const EdgeInsets.all(2),
+      padding: EdgeInsets.all(context.spacing.xxs),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(toggleHeight / 2),

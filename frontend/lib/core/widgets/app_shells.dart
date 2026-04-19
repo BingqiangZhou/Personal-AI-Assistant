@@ -24,7 +24,7 @@ class StatusBadge extends StatelessWidget {
       label: label,
       container: true,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.xsSm),
         decoration: BoxDecoration(
           color: resolvedColor.withValues(alpha: 0.1),
           borderRadius: AppRadius.smRadius,

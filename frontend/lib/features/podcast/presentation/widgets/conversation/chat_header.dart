@@ -224,7 +224,7 @@ class _ModelSelectorState extends State<_ModelSelector> {
     final scheme = theme.colorScheme;
     final extension = appThemeOf(context);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm, vertical: context.spacing.xxs),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(extension.itemRadius),

@@ -73,7 +73,7 @@ Future<bool?> showAppConfirmationDialog({
       context: context,
       builder: (dialogCtx) => CupertinoAlertDialog(
         title: Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: Text(title),
         ),
         content: Text(message),

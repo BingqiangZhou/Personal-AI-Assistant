@@ -164,7 +164,7 @@ class _QueueListState extends ConsumerState<QueueList> {
             queueOperation.episodeId == item.episodeId;
         return Padding(
           key: ValueKey(item.episodeId),
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: EdgeInsets.only(bottom: context.spacing.xsSm),
           child: QueueListItem(
             item: item,
             index: index,

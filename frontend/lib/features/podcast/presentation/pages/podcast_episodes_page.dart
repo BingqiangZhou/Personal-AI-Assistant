@@ -156,7 +156,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                   AdaptiveSliverAppBar(
                     title: widget.podcastTitle ?? l10n.podcast_episodes,
                     leading: Padding(
-                      padding: const EdgeInsets.only(left: 4),
+                      padding: EdgeInsets.only(left: context.spacing.xs),
                       child: _buildHeaderCover(fallbackSubscriptionImageUrl),
                     ),
                     actions: _buildHeaderActions(l10n),

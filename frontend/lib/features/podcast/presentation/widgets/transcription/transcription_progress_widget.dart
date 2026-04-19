@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
@@ -41,7 +42,7 @@ class PendingStateWidget extends StatelessWidget {
                 maxWidth: isLargeScreen ? 600 : double.infinity,
               ),
               child: Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                padding: EdgeInsets.all(isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +62,7 @@ class PendingStateWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: isSmallScreen ? 12 : 16),
+                    SizedBox(height: isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
 
                     // Title - 响应式字体大小
                     Text(
@@ -73,7 +74,7 @@ class PendingStateWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: isSmallScreen ? 6 : 8),
+                    SizedBox(height: isSmallScreen ? AppSpacing.xsSm : AppSpacing.sm),
 
                     // Description - 响应式字体大小
                     Text(
@@ -143,7 +144,7 @@ class ProcessingStateWidget extends StatelessWidget {
                 maxWidth: isLargeScreen ? 700 : double.infinity,
               ),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                padding: EdgeInsets.all(isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -201,13 +202,13 @@ class ProcessingStateWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: isSmallScreen ? 16 : 20),
+                    SizedBox(height: isSmallScreen ? AppSpacing.md : AppSpacing.mdLg),
 
                     // Current status with icon - 响应式字体大小
                     Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isSmallScreen ? 12 : 16,
-                        vertical: isSmallScreen ? 8 : 10,
+                        horizontal: isSmallScreen ? AppSpacing.smMd : AppSpacing.md,
+                        vertical: isSmallScreen ? AppSpacing.sm : AppSpacing.smLg,
                       ),
                       decoration: BoxDecoration(
                         color: scheme.primaryContainer.withValues(alpha: 0.3),
@@ -217,7 +218,7 @@ class ProcessingStateWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TranscriptionStatusStepIcon(step: currentStep),
-                          SizedBox(width: isSmallScreen ? 6 : 8),
+                          SizedBox(width: isSmallScreen ? AppSpacing.xsSm : AppSpacing.sm),
                           Flexible(
                             child: Text(
                               statusText,
@@ -233,7 +234,7 @@ class ProcessingStateWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: isSmallScreen ? 16 : 20),
+                    SizedBox(height: isSmallScreen ? AppSpacing.md : AppSpacing.mdLg),
 
                     // Step indicators
                     TranscriptionStepIndicators(
@@ -262,7 +263,7 @@ class ProcessingStateWidget extends StatelessWidget {
                       ],
                     ),
 
-                    SizedBox(height: isSmallScreen ? 12 : 16),
+                    SizedBox(height: isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
 
                     // Progress bar
                     ClipRRect(
@@ -277,9 +278,9 @@ class ProcessingStateWidget extends StatelessWidget {
 
                     // Debug info (if available)
                     if (transcription.debugMessage case final debugMsg?) ...[
-                      SizedBox(height: isSmallScreen ? 12 : 16),
+                      SizedBox(height: isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
                       Container(
-                        padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                        padding: EdgeInsets.all(isSmallScreen ? AppSpacing.sm : AppSpacing.smLg),
                         decoration: BoxDecoration(
                           color: scheme.surface,
                           borderRadius: BorderRadius.circular(ext.buttonRadius),
@@ -294,7 +295,7 @@ class ProcessingStateWidget extends StatelessWidget {
                               size: isSmallScreen ? 12 : 14,
                               color: scheme.secondary,
                             ),
-                            SizedBox(width: isSmallScreen ? 6 : 8),
+                            SizedBox(width: isSmallScreen ? AppSpacing.xsSm : AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 debugMsg,
@@ -314,7 +315,7 @@ class ProcessingStateWidget extends StatelessWidget {
                     // Additional info
                     if (transcription.wordCount != null ||
                         transcription.durationSeconds != null) ...[
-                      SizedBox(height: isSmallScreen ? 10 : 12),
+                      SizedBox(height: isSmallScreen ? AppSpacing.smLg : AppSpacing.smMd),
                       Builder(
                         builder: (context) {
                           final wordCount = transcription.wordCount;
@@ -340,7 +341,7 @@ class ProcessingStateWidget extends StatelessWidget {
                                 ),
                               ],
                               if (wordCount != null && durationSeconds != null)
-                                SizedBox(width: isSmallScreen ? 12 : 16),
+                                SizedBox(width: isSmallScreen ? AppSpacing.smMd : AppSpacing.md),
                               if (wordCount != null) ...[
                                 Icon(
                                   Icons.text_fields,

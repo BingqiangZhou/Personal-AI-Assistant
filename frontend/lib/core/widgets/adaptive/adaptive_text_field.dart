@@ -113,9 +113,9 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
           mainAxisSize: MainAxisSize.min,
           children: [
             cupertinoField,
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Padding(
-              padding: const EdgeInsets.only(left: 12, top: 4),
+              padding: const EdgeInsets.only(left: AppSpacing.smMd, top: AppSpacing.xs),
               child: Text(
                 _errorText!,
                 style: TextStyle(

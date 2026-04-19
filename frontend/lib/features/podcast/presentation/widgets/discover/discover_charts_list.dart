@@ -111,8 +111,8 @@ class DiscoverChartsList extends ConsumerWidget {
     }
 
     if (index >= visibleItems.length) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Center(
           child: SizedBox(
             width: 20,

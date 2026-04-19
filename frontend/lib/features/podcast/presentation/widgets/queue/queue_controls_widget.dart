@@ -56,7 +56,7 @@ class QueueHeader extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            padding: EdgeInsets.only(top: context.spacing.xs, bottom: context.spacing.xs),
             child: Row(
               children: [
                 Expanded(

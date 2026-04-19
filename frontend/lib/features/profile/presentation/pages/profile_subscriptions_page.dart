@@ -446,9 +446,9 @@ class _ProfileSubscriptionsPageState
             key: ValueKey('profile_subscription_card_content_${subscription.id}'),
             height: kPodcastRowCardTargetHeight,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: kPodcastRowCardHorizontalPadding,
-                vertical: 6,
+                vertical: context.spacing.xsSm,
               ),
               child: Row(
                 children: [

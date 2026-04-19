@@ -60,10 +60,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (context.isMobile) {
       return EdgeInsets.symmetric(
         horizontal: context.spacing.xs,
-        vertical: 16,
+        vertical: context.spacing.md,
       );
     }
-    return const EdgeInsets.all(16);
+    return EdgeInsets.all(context.spacing.md);
   }
 
   EdgeInsetsGeometry _profileCardMargin(BuildContext context) =>
@@ -393,7 +393,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(24, isIOS ? 20 : 24, 24, isIOS ? 8 : 16),
+            padding: EdgeInsets.fromLTRB(context.spacing.lg, isIOS ? AppSpacing.mdLg : AppSpacing.lg, context.spacing.lg, isIOS ? AppSpacing.sm : AppSpacing.md),
             child: Align(
               alignment: isIOS ? Alignment.center : Alignment.centerLeft,
               child: DefaultTextStyle(
@@ -408,7 +408,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
+            padding: EdgeInsets.fromLTRB(context.spacing.lg, 0, context.spacing.lg, context.spacing.md),
             child: Align(
               alignment: isIOS ? Alignment.center : Alignment.centerLeft,
               child: DefaultTextStyle(
@@ -435,7 +435,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               )
             else
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.smMd, context.spacing.md, context.spacing.smMd),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: actions,

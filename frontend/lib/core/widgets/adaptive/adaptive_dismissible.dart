@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -61,7 +62,7 @@ class AdaptiveDismissible extends StatelessWidget {
       background: Container(
         color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
+        padding: const EdgeInsets.only(right: AppSpacing.mdLg),
         child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onError),
       ),
       child: child,
@@ -73,12 +74,12 @@ class AdaptiveDismissible extends StatelessWidget {
     return Container(
       color: CupertinoColors.systemRed,
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 20),
+      padding: const EdgeInsets.only(right: AppSpacing.mdLg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(CupertinoIcons.delete, color: CupertinoColors.white),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             l10n?.delete ?? 'Delete',
             style: AppTheme.metaSmall(CupertinoColors.white),
@@ -95,12 +96,12 @@ class AdaptiveDismissible extends StatelessWidget {
     return Container(
       color: color,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 20),
+      padding: const EdgeInsets.only(left: AppSpacing.mdLg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(CupertinoIcons.ellipsis, color: CupertinoColors.white),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             label,
             style: AppTheme.metaSmall(CupertinoColors.white),

@@ -89,7 +89,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
 
     return ScrollableContentWrapper(
       key: _summaryKey,
-      padding: EdgeInsets.all(isCompact ? 14 : 18),
+      padding: EdgeInsets.all(isCompact ? AppSpacing.mdXs : AppSpacing.mdSm),
       child: _buildAiSummarySection(episode, compact: isCompact),
     );
   }

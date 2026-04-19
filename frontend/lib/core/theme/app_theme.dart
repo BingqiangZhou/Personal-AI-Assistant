@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/responsive_helpers.dart';
 
@@ -261,7 +262,7 @@ class AppTheme {
             color: scheme.onSurfaceVariant,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.mdXs),
         border: OutlineInputBorder(
           borderRadius: AppRadius.mdLgRadius,
           borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
@@ -279,8 +280,8 @@ class AppTheme {
       ),
       listTileTheme: ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(
-          horizontal: isIOS ? 20 : 16,
-          vertical: isIOS ? 4 : 0,
+          horizontal: isIOS ? AppSpacing.mdLg : AppSpacing.md,
+          vertical: isIOS ? AppSpacing.xs : 0,
         ),
         iconColor: scheme.onSurfaceVariant,
         textColor: scheme.onSurface,
@@ -295,7 +296,7 @@ class AppTheme {
         secondarySelectedColor: scheme.primary.withValues(alpha: 0.18),
         side: BorderSide(color: scheme.outline.withValues(alpha: 0.15)),
         shape: const StadiumBorder(),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.xs),
         labelStyle: _withBody(
           textTheme.labelMedium?.copyWith(color: scheme.onSurface),
         ),
@@ -388,7 +389,7 @@ class AppTheme {
           scheme.onPrimary,
           radius: extension.buttonRadius,
           elevation: isIOS ? 0 : 0,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.lgXs, vertical: AppSpacing.md),
           textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
@@ -402,7 +403,7 @@ class AppTheme {
           scheme.onPrimary,
           radius: extension.buttonRadius,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.lgXs, vertical: AppSpacing.md),
           textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
@@ -418,7 +419,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.mdLg, vertical: AppSpacing.mdXs),
           textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
@@ -432,7 +433,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smMd),
           textStyle: _withBody(
             textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,

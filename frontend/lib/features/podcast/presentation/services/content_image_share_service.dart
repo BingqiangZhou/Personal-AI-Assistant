@@ -563,8 +563,8 @@ class ContentImageShareService {
                 color: Colors.transparent,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                    horizontal: AppSpacing.mdLg,
+                    vertical: AppSpacing.md,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
@@ -734,7 +734,7 @@ class ContentImageShareService {
     final borderColor = item.isUser ? Colors.black54 : Colors.black38;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.smLg),
       child: Align(
         alignment: item.isUser ? Alignment.centerRight : Alignment.centerLeft,
         child: ConstrainedBox(
@@ -959,8 +959,8 @@ class ContentImageShareService {
                   SizedBox(height: context.spacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                      horizontal: AppSpacing.smLg,
+                      vertical: 5, // single-use share image padding
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,

@@ -232,7 +232,7 @@ class DiscoverChartRowSkeleton extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               const SkeletonCircle(size: 24),
             ],
           ),

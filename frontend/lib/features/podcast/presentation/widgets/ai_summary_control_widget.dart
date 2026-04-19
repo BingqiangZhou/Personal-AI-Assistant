@@ -385,9 +385,9 @@ class _AISummaryControlWidgetState
                   Padding(
                     padding: EdgeInsets.only(left: context.spacing.sm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.xsSm,
+                        vertical: context.spacing.xxs,
                       ),
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.1),

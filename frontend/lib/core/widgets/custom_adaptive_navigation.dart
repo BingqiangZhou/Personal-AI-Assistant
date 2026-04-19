@@ -721,7 +721,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: context.spacing.md,
-                      vertical: 3,
+                      vertical: context.spacing.xxs,
                     ),
                     decoration: BoxDecoration(
                       gradient: isSelected

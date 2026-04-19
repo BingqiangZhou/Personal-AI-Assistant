@@ -614,7 +614,7 @@ class _ExpandedProgressSectionState
         ),
         RepaintBoundary(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.xxs),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

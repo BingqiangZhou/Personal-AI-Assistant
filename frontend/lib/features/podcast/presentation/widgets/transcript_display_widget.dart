@@ -432,9 +432,9 @@ class TranscriptDisplayWidgetState
                           width: 2,
                         ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.md,
+                        vertical: context.spacing.smMd,
                       ),
                     ),
                   ),
@@ -498,7 +498,7 @@ class TranscriptDisplayWidgetState
       cacheExtent: 500,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(bottom: context.spacing.smMd),
           child: RepaintBoundary(
             key: ValueKey('highlight_card_${sortedHighlights[index].id}'),
             child: HighlightCard(
@@ -718,7 +718,7 @@ class TranscriptDisplayWidgetState
     final highlightedText = _highlightSearchText(result, query);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: context.spacing.smMd),
       padding: EdgeInsets.all(context.spacing.smMd),
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -958,7 +958,7 @@ class FormattedTranscriptWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: context.spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -968,9 +968,9 @@ class FormattedTranscriptWidget extends ConsumerWidget {
               children: [
                 if (segment.speaker != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.sm,
+                      vertical: context.spacing.xs,
                     ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.1),
