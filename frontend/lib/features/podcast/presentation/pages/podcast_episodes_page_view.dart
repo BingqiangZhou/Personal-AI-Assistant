@@ -304,7 +304,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
         color: Theme.of(context).colorScheme.secondary,
       ),
       onPressed: () => _showMoreMenu(l10n),
-      tooltip: 'More',
+      tooltip: l10n.more,
     );
   }
 
@@ -312,20 +312,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
     showAdaptiveActionSheet(
       context: context,
       title: Text(l10n.podcast_episodes),
-      actions: [
-        AdaptiveActionSheetAction(
-          child: Text(l10n.podcast_mark_all_played),
-          onPressed: () {
-            // TODO: Implement
-          },
-        ),
-        AdaptiveActionSheetAction(
-          child: Text(l10n.podcast_mark_all_unplayed),
-          onPressed: () {
-            // TODO: Implement
-          },
-        ),
-      ],
+      actions: [],
       cancelWidget: Text(l10n.cancel),
     );
   }
@@ -366,6 +353,8 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
   }
 
   void _showFilterDialog() {
+    final previousFilter = _selectedFilter;
+    final previousShowOnlySummary = _showOnlyWithSummary;
     final l10n = context.l10n;
     showAppDialog(
       context: context,
@@ -424,7 +413,11 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
           actions: [
             AdaptiveButton(
               style: AdaptiveButtonStyle.text,
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                _selectedFilter = previousFilter;
+                _showOnlyWithSummary = previousShowOnlySummary;
+                Navigator.of(context).pop();
+              },
               child: Text(l10n.cancel),
             ),
             AdaptiveButton(
