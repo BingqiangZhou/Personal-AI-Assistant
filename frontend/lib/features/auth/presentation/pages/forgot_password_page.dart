@@ -159,6 +159,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             controller: _emailController,
             label: l10n?.auth_email ?? _fallbackEmailLabel,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
             prefixIcon: const Icon(Icons.email_outlined),
             autofillHints: const [AutofillHints.email],
             validator: (value) {

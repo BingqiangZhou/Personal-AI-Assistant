@@ -186,6 +186,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   controller: _emailController,
                   label: l10n.auth_email,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   prefixIcon: const Icon(Icons.email_outlined),
                   autofillHints: const [AutofillHints.username, AutofillHints.email],
                   validator: (value) {
@@ -205,6 +206,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   controller: _passwordController,
                   label: l10n.auth_password,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.password],
                   onToggleVisibility: () {
                     setState(() {

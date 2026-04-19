@@ -131,6 +131,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 CustomTextField(
                   controller: _usernameController,
                   label: l10n.auth_full_name,
+                  textInputAction: TextInputAction.next,
                   prefixIcon: const Icon(Icons.person_outline),
                   autofillHints: const [AutofillHints.newUsername],
                   onChanged: (value) {
@@ -156,6 +157,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   controller: _emailController,
                   label: l10n.auth_email,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   prefixIcon: const Icon(Icons.email_outlined),
                   autofillHints: const [AutofillHints.email],
                   onChanged: (value) {
@@ -185,6 +187,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       controller: _passwordController,
                       label: l10n.auth_password,
                       obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.newPassword],
                       toggleButtonKey: const Key('password_visibility_toggle'),
                       onToggleVisibility: () {
@@ -270,6 +273,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   controller: _confirmPasswordController,
                   label: l10n.auth_confirm_password,
                   obscureText: _obscureConfirmPassword,
+                  textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.newPassword],
                   onToggleVisibility: () {
                     setState(() {

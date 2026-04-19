@@ -176,6 +176,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             controller: _passwordController,
             label: l10n.auth_new_password,
             obscureText: _obscurePassword,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.newPassword],
             onToggleVisibility: () {
               setState(() {
@@ -200,6 +201,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             controller: _confirmPasswordController,
             label: l10n.auth_confirm_password,
             obscureText: _obscureConfirmPassword,
+            textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.newPassword],
             onToggleVisibility: () {
               setState(() {

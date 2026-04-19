@@ -23,6 +23,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.maxLength,
     this.autofillHints,
+    this.textInputAction,
   });
   final TextEditingController controller;
   final String? label;
@@ -30,6 +31,7 @@ class CustomTextField extends StatefulWidget {
   final String? errorText;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
@@ -83,6 +85,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           controller: widget.controller,
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
           enabled: widget.enabled,
           maxLines: widget.maxLines,
           maxLength: widget.maxLength,
@@ -122,6 +125,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       controller: widget.controller,
       obscureText: widget.obscureText,
       keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
       enabled: widget.enabled,
       maxLines: widget.maxLines,
       onChanged: _handleChanged,
@@ -134,7 +138,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       style: theme.textTheme.bodyMedium,
       prefix: widget.prefixIcon != null
           ? Padding(
-              padding: EdgeInsets.only(left: context.spacing.md),
+              padding: EdgeInsetsDirectional.only(start: context.spacing.md),
               child: IconTheme(
                 data: IconThemeData(
                   color: widget.enabled
@@ -147,7 +151,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           : null,
       suffix: widget.suffixIcon != null
           ? Padding(
-              padding: EdgeInsets.only(right: context.spacing.sm),
+              padding: EdgeInsetsDirectional.only(end: context.spacing.sm),
               child: widget.suffixIcon,
             )
           : null,
@@ -184,8 +188,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   cupertinoField,
                   if (error != null)
                     Padding(
-                      padding: EdgeInsets.only(
-                        left: context.spacing.smMd,
+                      padding: EdgeInsetsDirectional.only(
+                        start: context.spacing.smMd,
                         top: context.spacing.xs,
                       ),
                       child: Text(
@@ -205,8 +209,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           cupertinoField,
           if (widget.errorText != null)
             Padding(
-              padding: EdgeInsets.only(
-                left: context.spacing.smMd,
+              padding: EdgeInsetsDirectional.only(
+                start: context.spacing.smMd,
                 top: context.spacing.xs,
               ),
               child: Text(
