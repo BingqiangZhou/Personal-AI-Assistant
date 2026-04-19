@@ -23,9 +23,21 @@ class ProfileActivityCards extends ConsumerWidget {
     return EdgeInsets.zero;
   }
 
+  Widget _wrapIfTapable({
+    required VoidCallback? onTap,
+    required double borderRadius,
+    required Widget child,
+  }) {
+    if (onTap == null) return child;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isMobile = context.isMobile;
@@ -57,69 +69,23 @@ class ProfileActivityCards extends ConsumerWidget {
         : (stats?.totalHighlights.toString() ?? '0');
 
     if (isMobile) {
+      final cards = _buildCardList(
+        context,
+        subscriptionCount: subscriptionCount,
+        episodeCount: episodeCount,
+        summaryCount: summaryCount,
+        historyCount: historyCount,
+        latestDailyReportDateText: latestDailyReportDateText,
+        highlightsCount: highlightsCount,
+        scheme: scheme,
+      );
       return Column(
-        children: [
-          _buildActivityCard(
-            context,
-            icon: Icons.subscriptions_outlined,
-            label: l10n.profile_subscriptions,
-            value: subscriptionCount,
-            color: scheme.secondary,
-            onTap: () => context.push('/profile/subscriptions'),
-            showChevron: true,
-            cardKey: const Key('profile_subscriptions_card'),
-          ),
-          SizedBox(height: context.spacing.smMd),
-          _buildActivityCard(
-            context,
-            icon: Icons.podcasts,
-            label: l10n.podcast_episodes,
-            value: episodeCount,
-            color: scheme.secondary,
-          ),
-          SizedBox(height: context.spacing.smMd),
-          _buildActivityCard(
-            context,
-            icon: Icons.auto_awesome,
-            label: l10n.profile_ai_summary,
-            value: summaryCount,
-            color: scheme.secondary,
-          ),
-          SizedBox(height: context.spacing.smMd),
-          _buildActivityCard(
-            context,
-            icon: Icons.history,
-            label: l10n.profile_viewed_title,
-            value: historyCount,
-            color: scheme.secondary,
-            onTap: () => context.push('/profile/history'),
-            showChevron: true,
-            chevronKey: const Key('profile_viewed_card_chevron'),
-          ),
-          SizedBox(height: context.spacing.smMd),
-          _buildActivityCard(
-            context,
-            icon: Icons.summarize_outlined,
-            label: l10n.podcast_daily_report_title,
-            value: latestDailyReportDateText,
-            color: scheme.secondary,
-            onTap: () =>
-                PodcastNavigation.goToDailyReport(context, source: 'profile'),
-            showChevron: true,
-            cardKey: const Key('profile_daily_report_card'),
-          ),
-          SizedBox(height: context.spacing.md),
-          _buildActivityCard(
-            context,
-            icon: Icons.lightbulb_outline,
-            label: l10n.podcast_highlights_title,
-            value: highlightsCount,
-            color: scheme.secondary,
-            onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
-            showChevron: true,
-            cardKey: const Key('profile_highlights_card'),
-          ),
-        ],
+        children: cards
+            .expand<Widget>(
+              (card) => [card, SizedBox(height: context.spacing.smMd)],
+            )
+            .toList()
+          ..removeLast(),
       );
     }
 
@@ -129,63 +95,16 @@ class ProfileActivityCards extends ConsumerWidget {
         final columns = maxWidth >= 1000 ? 4 : 2;
         final cardWidth = (maxWidth - (columns - 1) * context.spacing.lg) / columns;
 
-        final cards = <Widget>[
-          _buildActivityCard(
-            context,
-            icon: Icons.subscriptions_outlined,
-            label: l10n.profile_subscriptions,
-            value: subscriptionCount,
-            color: scheme.secondary,
-            onTap: () => context.push('/profile/subscriptions'),
-            showChevron: true,
-            cardKey: const Key('profile_subscriptions_card'),
-          ),
-          _buildActivityCard(
-            context,
-            icon: Icons.podcasts,
-            label: l10n.podcast_episodes,
-            value: episodeCount,
-            color: scheme.secondary,
-          ),
-          _buildActivityCard(
-            context,
-            icon: Icons.auto_awesome,
-            label: l10n.profile_ai_summary,
-            value: summaryCount,
-            color: scheme.secondary,
-          ),
-          _buildActivityCard(
-            context,
-            icon: Icons.history,
-            label: l10n.profile_viewed_title,
-            value: historyCount,
-            color: scheme.secondary,
-            onTap: () => context.push('/profile/history'),
-            showChevron: true,
-            chevronKey: const Key('profile_viewed_card_chevron'),
-          ),
-          _buildActivityCard(
-            context,
-            icon: Icons.summarize_outlined,
-            label: l10n.podcast_daily_report_title,
-            value: latestDailyReportDateText,
-            color: scheme.secondary,
-            onTap: () =>
-                PodcastNavigation.goToDailyReport(context, source: 'profile'),
-            showChevron: true,
-            cardKey: const Key('profile_daily_report_card'),
-          ),
-          _buildActivityCard(
-            context,
-            icon: Icons.lightbulb_outline,
-            label: l10n.podcast_highlights_title,
-            value: highlightsCount,
-            color: scheme.secondary,
-            onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
-            showChevron: true,
-            cardKey: const Key('profile_highlights_card'),
-          ),
-        ];
+        final cards = _buildCardList(
+          context,
+          subscriptionCount: subscriptionCount,
+          episodeCount: episodeCount,
+          summaryCount: summaryCount,
+          historyCount: historyCount,
+          latestDailyReportDateText: latestDailyReportDateText,
+          highlightsCount: highlightsCount,
+          scheme: scheme,
+        );
 
         return Wrap(
           spacing: context.spacing.lg,
@@ -196,6 +115,76 @@ class ProfileActivityCards extends ConsumerWidget {
         );
       },
     );
+  }
+
+  List<Widget> _buildCardList(
+    BuildContext context, {
+    required String subscriptionCount,
+    required String episodeCount,
+    required String summaryCount,
+    required String historyCount,
+    required String latestDailyReportDateText,
+    required String highlightsCount,
+    required ColorScheme scheme,
+  }) {
+    final l10n = context.l10n;
+    return [
+      _buildActivityCard(
+        context,
+        icon: Icons.subscriptions_outlined,
+        label: l10n.profile_subscriptions,
+        value: subscriptionCount,
+        color: scheme.secondary,
+        onTap: () => context.push('/profile/subscriptions'),
+        showChevron: true,
+        cardKey: const Key('profile_subscriptions_card'),
+      ),
+      _buildActivityCard(
+        context,
+        icon: Icons.podcasts,
+        label: l10n.podcast_episodes,
+        value: episodeCount,
+        color: scheme.secondary,
+      ),
+      _buildActivityCard(
+        context,
+        icon: Icons.auto_awesome,
+        label: l10n.profile_ai_summary,
+        value: summaryCount,
+        color: scheme.secondary,
+      ),
+      _buildActivityCard(
+        context,
+        icon: Icons.history,
+        label: l10n.profile_viewed_title,
+        value: historyCount,
+        color: scheme.secondary,
+        onTap: () => context.push('/profile/history'),
+        showChevron: true,
+        chevronKey: const Key('profile_viewed_card_chevron'),
+      ),
+      _buildActivityCard(
+        context,
+        icon: Icons.summarize_outlined,
+        label: l10n.podcast_daily_report_title,
+        value: latestDailyReportDateText,
+        color: scheme.secondary,
+        onTap: () =>
+            PodcastNavigation.goToDailyReport(context, source: 'profile'),
+        showChevron: true,
+        cardKey: const Key('profile_daily_report_card'),
+      ),
+      _buildActivityCard(
+        context,
+        icon: Icons.lightbulb_outline,
+        label: l10n.podcast_highlights_title,
+        value: highlightsCount,
+        color: scheme.secondary,
+        onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
+        showChevron: true,
+        cardKey: const Key('profile_highlights_card'),
+      ),
+    ];
   }
 
   Widget _buildActivityCard(
@@ -215,9 +204,9 @@ class ProfileActivityCards extends ConsumerWidget {
     return Padding(
       key: cardKey,
       padding: _cardMargin(context),
-      child: InkWell(
+      child: _wrapIfTapable(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(extension.cardRadius),
+        borderRadius: extension.cardRadius,
         child: SurfacePanel(
           borderRadius: extension.cardRadius,
           showBorder: false,
