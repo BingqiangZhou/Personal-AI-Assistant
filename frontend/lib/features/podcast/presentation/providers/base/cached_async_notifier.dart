@@ -39,6 +39,7 @@ abstract class CachedAsyncNotifier<T> extends AsyncNotifier<T> {
   DateTime? _lastFetchTime;
   Future<T?>? _inFlightRequest;
   bool _isDisposed = false;
+  bool _onDisposeWired = false;
 
   /// Whether the currently held data is still within the cache window.
   bool get isFresh {
@@ -60,6 +61,10 @@ abstract class CachedAsyncNotifier<T> extends AsyncNotifier<T> {
     required Future<T> Function() fetcher, bool forceRefresh = false,
     void Function(Object error, StackTrace stackTrace)? onError,
   }) async {
+    if (!_onDisposeWired) {
+      _onDisposeWired = true;
+      ref.onDispose(markDisposed);
+    }
     final previousData = state.value;
 
     if (!forceRefresh && previousData != null && isFresh) {
