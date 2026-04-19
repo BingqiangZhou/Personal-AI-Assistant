@@ -163,6 +163,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         tileKey: const Key('profile_version_item'),
         onTap: () => _showAboutDialog(context),
       ),
+      _SettingsItemConfig(
+        icon: Icons.privacy_tip_outlined,
+        title: l10n.profile_privacy_policy,
+        subtitle: l10n.profile_privacy_subtitle,
+        onTap: () => context.push('/profile/privacy'),
+      ),
+      _SettingsItemConfig(
+        icon: Icons.description_outlined,
+        title: l10n.profile_terms_of_service,
+        subtitle: l10n.profile_terms_subtitle,
+        onTap: () => context.push('/profile/terms'),
+      ),
     ];
 
     final preferencesSection = SettingsSectionCard(

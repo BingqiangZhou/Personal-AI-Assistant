@@ -29,9 +29,8 @@ class TermsPage extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                   child: SizedBox(height: context.spacing.smMd)),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: SingleChildScrollView(
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: context.spacing.mdLg,
                     vertical: context.spacing.sm,

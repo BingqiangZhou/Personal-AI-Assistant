@@ -28,6 +28,8 @@ import 'package:personal_ai_assistant/features/profile/presentation/pages/profil
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_history_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_subscriptions_page.dart';
+import 'package:personal_ai_assistant/features/profile/presentation/pages/privacy_page.dart';
+import 'package:personal_ai_assistant/features/profile/presentation/pages/terms_page.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/pages/appearance_page.dart';
 import 'package:personal_ai_assistant/features/splash/presentation/pages/splash_page.dart';
 
@@ -218,6 +220,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       state: state,
                       child: const _PlayerAwareRouteFrame(
                         child: PodcastDownloadsPage(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'privacy',
+                    name: 'profile-privacy',
+                    parentNavigatorKey: appNavigatorKey,
+                    pageBuilder: (context, state) => _buildModalPage(
+                      state: state,
+                      child: const _PlayerAwareRouteFrame(
+                        child: PrivacyPage(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'terms',
+                    name: 'profile-terms',
+                    parentNavigatorKey: appNavigatorKey,
+                    pageBuilder: (context, state) => _buildModalPage(
+                      state: state,
+                      child: const _PlayerAwareRouteFrame(
+                        child: TermsPage(),
                       ),
                     ),
                   ),
