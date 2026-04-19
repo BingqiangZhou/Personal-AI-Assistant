@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/database/app_database.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
@@ -16,9 +17,7 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_segmented_control.dart';
-import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
-import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/html_sanitizer.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
@@ -157,42 +156,6 @@ class _PodcastEpisodeDetailPageState
 
   void _updateHeaderStateForTab() {
     _showScrollToTopButton.value = false;
-  }
-
-  Future<void> _loadAndPlayEpisode() async {
-    logger.AppLogger.debug('[Playback] ===== _loadAndPlayEpisode called =====');
-    logger.AppLogger.debug('[Playback] widget.episodeId: ${widget.episodeId}');
-
-    try {
-      // Wait for episode detail to be loaded
-      final episodeDetailAsync = await ref.read(
-        episodeDetailProvider(widget.episodeId).future,
-      );
-
-      if (!mounted) return;
-
-      logger.AppLogger.debug(
-        '[Playback] Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}',
-      );
-
-      // Debug: Log itemLink from API response
-      if (episodeDetailAsync != null) {
-        logger.AppLogger.debug(
-          '[API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}',
-        );
-      }
-
-      if (episodeDetailAsync != null) {
-        logger.AppLogger.debug(
-          '[Playback] Auto-playing episode: ${episodeDetailAsync.title}',
-        );
-        await ref
-            .read(audioPlayerProvider.notifier)
-            .playManagedEpisode(episodeDetailAsync);
-      }
-    } catch (error) {
-      logger.AppLogger.debug('[Error] Failed to auto-play episode: $error');
-    }
   }
 
   Future<void> _loadTranscriptionStatus() async {

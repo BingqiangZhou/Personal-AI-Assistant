@@ -708,8 +708,6 @@ class _ManualUpdateCheckDialogState
       context,
       desktopMaxWidth: 400,
     );
-    final isMobile = context.isMobile;
-
     return AlertDialog.adaptive(
       backgroundColor: Colors.transparent,
       insetPadding: ResponsiveDialogHelper.insetPadding(),

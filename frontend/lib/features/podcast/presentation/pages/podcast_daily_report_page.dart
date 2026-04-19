@@ -129,7 +129,6 @@ class _PodcastDailyReportPageState
   Widget _buildRegenerateButton(DateTime? targetDate) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final tokens = appThemeOf(context);
     return FilledButton.tonalIcon(
       key: const Key('daily_report_regenerate_button'),
       onPressed: _isGeneratingDailyReport || targetDate == null

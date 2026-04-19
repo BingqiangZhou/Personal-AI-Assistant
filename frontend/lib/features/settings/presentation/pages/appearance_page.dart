@@ -8,7 +8,6 @@ import 'package:personal_ai_assistant/core/localization/app_localizations_extens
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
-import 'package:personal_ai_assistant/core/widgets/responsive_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/widgets/settings_section_card.dart';
 

@@ -10,7 +10,6 @@ import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/linear_section_header.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';

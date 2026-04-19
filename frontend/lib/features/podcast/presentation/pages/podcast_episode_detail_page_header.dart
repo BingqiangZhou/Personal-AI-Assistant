@@ -58,9 +58,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
   }) {
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final theme = Theme.of(context);
-    final title = episode.title.trim().isEmpty
-        ? l10n.episode_unknown_title
-        : episode.title;
     final metadata = <Widget>[
       _buildPodcastTitleChip(episode, l10n),
       _buildDateChip(episode),
@@ -698,7 +695,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
             }
 
             return switch (task.status) {
-              'pending' => HeaderCapsuleActionButton(
+              DownloadStatus.pending => HeaderCapsuleActionButton(
                   tooltip: l10n.download_button_downloading,
                   icon: Icons.downloading,
                   onPressed: () => _cancelDownload(episode.id),
@@ -708,7 +705,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                       : HeaderCapsuleActionButtonDensity.regular,
                   style: HeaderCapsuleActionButtonStyle.primaryTinted,
                 ),
-              'downloading' => HeaderCapsuleActionButton(
+              DownloadStatus.downloading => HeaderCapsuleActionButton(
                   tooltip:
                       '${(task.progress * 100).toStringAsFixed(0)}% — ${l10n.download_button_cancel}',
                   icon: Icons.downloading,
@@ -720,7 +717,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                       : HeaderCapsuleActionButtonDensity.regular,
                   style: HeaderCapsuleActionButtonStyle.primaryTinted,
                 ),
-              'completed' => HeaderCapsuleActionButton(
+              DownloadStatus.completed => HeaderCapsuleActionButton(
                   tooltip: l10n.download_button_delete,
                   icon: Icons.download_done,
                   onPressed: () => _deleteDownload(episode.id),
@@ -730,7 +727,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                       : HeaderCapsuleActionButtonDensity.regular,
                   style: HeaderCapsuleActionButtonStyle.primaryTinted,
                 ),
-              'failed' => HeaderCapsuleActionButton(
+              DownloadStatus.failed => HeaderCapsuleActionButton(
                   tooltip: l10n.download_button_retry,
                   icon: Icons.error_outline,
                   onPressed: () => _startDownload(episode),
