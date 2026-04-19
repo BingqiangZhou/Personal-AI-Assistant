@@ -275,7 +275,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: _PlayerAwareRouteFrame(
               child: PodcastDailyReportPage(
                 initialDate: parsedDate,
-                source: state.uri.queryParameters['source'],
               ),
             ),
           );
@@ -294,7 +293,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: _PlayerAwareRouteFrame(
               child: PodcastHighlightsPage(
                 initialDate: parsedDate,
-                source: state.uri.queryParameters['source'],
               ),
             ),
           );

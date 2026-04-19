@@ -27,10 +27,9 @@ import 'package:table_calendar/table_calendar.dart';
 /// Shows a list of highlight cards with filtering by date and source.
 /// Features a calendar popup for date selection and responsive layout.
 class PodcastHighlightsPage extends ConsumerStatefulWidget {
-  const PodcastHighlightsPage({super.key, this.initialDate, this.source});
+  const PodcastHighlightsPage({super.key, this.initialDate});
 
   final DateTime? initialDate;
-  final String? source;
 
   @override
   ConsumerState<PodcastHighlightsPage> createState() =>

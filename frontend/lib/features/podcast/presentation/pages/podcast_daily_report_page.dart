@@ -23,10 +23,9 @@ import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class PodcastDailyReportPage extends ConsumerStatefulWidget {
-  const PodcastDailyReportPage({super.key, this.initialDate, this.source});
+  const PodcastDailyReportPage({super.key, this.initialDate});
 
   final DateTime? initialDate;
-  final String? source;
 
   @override
   ConsumerState<PodcastDailyReportPage> createState() =>

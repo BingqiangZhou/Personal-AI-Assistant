@@ -152,7 +152,6 @@ class PodcastNavigation {
   static void goToDailyReport(
     BuildContext context, {
     DateTime? date,
-    String? source,
   }) {
     final routingContext = _resolveRoutingContext(context);
     if (routingContext == null) {
@@ -162,7 +161,6 @@ class PodcastNavigation {
       'dailyReport',
       queryParameters: {
         if (date != null) 'date': EpisodeCardUtils.formatDate(date),
-        if (source != null && source.isNotEmpty) 'source': source,
       },
     );
   }
@@ -171,7 +169,6 @@ class PodcastNavigation {
   static void goToHighlights(
     BuildContext context, {
     DateTime? date,
-    String? source,
   }) {
     final routingContext = _resolveRoutingContext(context);
     if (routingContext == null) {
@@ -181,7 +178,6 @@ class PodcastNavigation {
       'highlights',
       queryParameters: {
         if (date != null) 'date': EpisodeCardUtils.formatDate(date),
-        if (source != null && source.isNotEmpty) 'source': source,
       },
     );
   }

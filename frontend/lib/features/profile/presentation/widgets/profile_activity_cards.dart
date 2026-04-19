@@ -170,7 +170,7 @@ class ProfileActivityCards extends ConsumerWidget {
         value: latestDailyReportDateText,
         color: scheme.secondary,
         onTap: () =>
-            PodcastNavigation.goToDailyReport(context, source: 'profile'),
+            PodcastNavigation.goToDailyReport(context),
         showChevron: true,
         cardKey: const Key('profile_daily_report_card'),
       ),
@@ -180,7 +180,7 @@ class ProfileActivityCards extends ConsumerWidget {
         label: l10n.podcast_highlights_title,
         value: highlightsCount,
         color: scheme.secondary,
-        onTap: () => PodcastNavigation.goToHighlights(context, source: 'profile'),
+        onTap: () => PodcastNavigation.goToHighlights(context),
         showChevron: true,
         cardKey: const Key('profile_highlights_card'),
       ),

@@ -170,7 +170,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         label: Text(l10n.podcast_report_label),
         trailingIcon: Icons.chevron_right,
         onPressed: () =>
-            PodcastNavigation.goToDailyReport(context, source: 'library'),
+            PodcastNavigation.goToDailyReport(context),
       );
     }
 
@@ -194,7 +194,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           child: InkWell(
             borderRadius: BorderRadius.circular(borderRadius),
             onTap: () =>
-                PodcastNavigation.goToDailyReport(context, source: 'library'),
+                PodcastNavigation.goToDailyReport(context),
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: compact ? context.spacing.md : context.spacing.md,
