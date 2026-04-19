@@ -320,6 +320,10 @@
     "@podcast_daily_report_generate_failed":  {
                                                   "description":  "生成日报失败提示"
                                               },
+    "podcast_daily_report_error_hint":  "加载报告时发生错误。",
+    "@podcast_daily_report_error_hint":  {
+                                          "description":  "日报加载失败时的提示文字"
+                                      },
     "podcast_daily_report_empty":  "暂无可用日报",
     "@podcast_daily_report_empty":  {
                                         "description":  "日报卡片空状态文案"

@@ -320,6 +320,10 @@
     "@podcast_daily_report_generate_failed":  {
                                                   "description":  "Error message when generating daily report fails"
                                               },
+    "podcast_daily_report_error_hint":  "An error occurred while loading the report.",
+    "@podcast_daily_report_error_hint":  {
+                                          "description":  "Hint shown below the error title when daily report fails to load"
+                                      },
     "podcast_daily_report_empty":  "No daily report available yet",
     "@podcast_daily_report_empty":  {
                                         "description":  "Empty state text for daily report card"

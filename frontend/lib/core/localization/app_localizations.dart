@@ -578,6 +578,12 @@ abstract class AppLocalizations {
   /// **'Failed to generate daily report'**
   String get podcast_daily_report_generate_failed;
 
+  /// Hint shown below the error title when daily report fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while loading the report.'**
+  String get podcast_daily_report_error_hint;
+
   /// Empty state text for daily report card
   ///
   /// In en, this message translates to:

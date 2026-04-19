@@ -210,7 +210,7 @@ class _PodcastDailyReportPageState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              l10n.podcast_failed_to_load_feed,
+              l10n.podcast_daily_report_error_hint,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.error,
               ),

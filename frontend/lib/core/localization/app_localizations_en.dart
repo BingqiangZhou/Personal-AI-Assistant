@@ -253,6 +253,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to generate daily report';
 
   @override
+  String get podcast_daily_report_error_hint =>
+      'An error occurred while loading the report.';
+
+  @override
   String get podcast_daily_report_empty => 'No daily report available yet';
 
   @override

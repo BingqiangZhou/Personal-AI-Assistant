@@ -249,6 +249,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_daily_report_generate_failed => '生成日报失败';
 
   @override
+  String get podcast_daily_report_error_hint => '加载报告时发生错误。';
+
+  @override
   String get podcast_daily_report_empty => '暂无可用日报';
 
   @override
