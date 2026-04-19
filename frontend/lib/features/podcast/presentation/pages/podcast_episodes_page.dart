@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -136,18 +135,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       ),
     );
     final episodesState = ref.watch(podcastEpisodesProvider);
-
-    // Debug helper for first episode image fields.
-    // if (episodesState.episodes.isNotEmpty) {
-    //   final firstEpisode = episodesState.episodes.first;
-    //   logger.AppLogger.debug('[Episodes] First episode image debug:');
-    //   logger.AppLogger.debug('  Episode ID: ${firstEpisode.id}');
-    //   logger.AppLogger.debug('  Episode Title: ${firstEpisode.title}');
-    //   logger.AppLogger.debug('  Image URL: ${firstEpisode.imageUrl}');
-    //   logger.AppLogger.debug('  Subscription Image URL: ${firstEpisode.subscriptionImageUrl}');
-    //   logger.AppLogger.debug('  Has episode image: ${firstEpisode.imageUrl != null}');
-    //   logger.AppLogger.debug('  Has subscription image: ${firstEpisode.subscriptionImageUrl != null}');
-    // }
 
     return AdaptiveScaffold(
       backgroundColor: Colors.transparent,
