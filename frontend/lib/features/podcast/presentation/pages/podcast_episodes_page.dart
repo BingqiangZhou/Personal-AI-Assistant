@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
-import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
@@ -13,6 +13,7 @@ import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
@@ -136,43 +137,101 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     );
     final episodesState = ref.watch(podcastEpisodesProvider);
 
-    return AdaptiveScaffold(
+    return Scaffold(
       backgroundColor: Colors.transparent,
-      child: CustomScrollView(
-        slivers: [
-          AdaptiveSliverAppBar(
-            title: widget.podcastTitle ?? l10n.podcast_episodes,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: _buildHeaderCover(fallbackSubscriptionImageUrl),
-            ),
-            actions: _buildHeaderActions(l10n),
+      body: Material(
+        color: Colors.transparent,
+        child: ResponsiveContainer(
+          maxWidth: 1480,
+          avoidTopSafeArea: true,
+          alignment: Alignment.topCenter,
+          child: AdaptiveRefreshIndicator.sliver(
+            onRefresh: _refreshEpisodes,
+            child: const SizedBox.shrink(),
+            builder: (context, refreshSliver) {
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  if (refreshSliver != null) refreshSliver,
+                  AdaptiveSliverAppBar(
+                    title: widget.podcastTitle ?? l10n.podcast_episodes,
+                    leading: Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: _buildHeaderCover(fallbackSubscriptionImageUrl),
+                    ),
+                    actions: _buildHeaderActions(l10n),
+                  ),
+                  SliverToBoxAdapter(
+                    child: MediaQuery.sizeOf(context).width >= 700
+                        ? Padding(
+                            padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+                            child: _buildFilterChips(),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  SliverToBoxAdapter(child: SizedBox(height: context.spacing.sm)),
+                  ...episodesState.isLoading && episodesState.episodes.isEmpty
+                      ? _buildLoadingSlivers()
+                      : episodesState.error != null
+                          ? _buildErrorSlivers(episodesState.error!)
+                          : episodesState.episodes.isEmpty
+                              ? _buildEmptySlivers()
+                              : _buildDataSlivers(episodesState),
+                ],
+              );
+            },
           ),
-          SliverToBoxAdapter(
-            child: MediaQuery.sizeOf(context).width >= 700
-                ? Padding(
-                    padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-                    child: _buildFilterChips(),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          SliverToBoxAdapter(child: SizedBox(height: context.spacing.sm)),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: episodesState.isLoading && episodesState.episodes.isEmpty
-                ? const SkeletonCardList(itemCount: 6, compact: true, showDescription: false)
-                : episodesState.error != null
-                    ? _buildErrorState(episodesState.error!)
-                    : episodesState.episodes.isEmpty
-                        ? _buildEmptyState()
-                        : AdaptiveRefreshIndicator(
-                            onRefresh: _refreshEpisodes,
-                            child: _buildEpisodesScrollable(episodesState),
-                          ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
+  /// Loading state slivers.
+  List<Widget> _buildLoadingSlivers() {
+    return const [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: SkeletonCardList(
+          itemCount: 6,
+          compact: true,
+          showDescription: false,
+        ),
+      ),
+    ];
+  }
+
+  /// Error state slivers.
+  List<Widget> _buildErrorSlivers(Object error) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildErrorState(error),
+      ),
+    ];
+  }
+
+  /// Empty state slivers.
+  List<Widget> _buildEmptySlivers() {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyState(),
+      ),
+    ];
+  }
+
+  /// Data state slivers with responsive layout.
+  List<Widget> _buildDataSlivers(PodcastEpisodesState episodesState) {
+    return [
+      SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.crossAxisExtent;
+          if (width < Breakpoints.medium) {
+            return _buildMobileSlivers(episodesState);
+          }
+          return _buildDesktopSlivers(episodesState, width);
+        },
+      ),
+    ];
+  }
 }

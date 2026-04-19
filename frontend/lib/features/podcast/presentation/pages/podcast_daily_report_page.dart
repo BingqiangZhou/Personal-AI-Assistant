@@ -94,19 +94,22 @@ class _PodcastDailyReportPageState
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
-          child: CustomScrollView(
-            slivers: [
-              AdaptiveSliverAppBar(
-                title: l10n.podcast_daily_report_title,
-                actions: [_buildCalendarButton(context)],
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: context.spacing.smMd)),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildDailyReportPanel(context),
-              ),
-            ],
+          child: Scrollbar(
+            controller: _reportItemsScrollController,
+            child: CustomScrollView(
+              controller: _reportItemsScrollController,
+              slivers: [
+                AdaptiveSliverAppBar(
+                  title: l10n.podcast_daily_report_title,
+                  actions: [_buildCalendarButton(context)],
+                ),
+                SliverToBoxAdapter(
+                    child: SizedBox(height: context.spacing.smMd)),
+                ..._buildDailyReportSlivers(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -174,7 +177,7 @@ class _PodcastDailyReportPageState
     );
   }
 
-  Widget _buildDailyReportPanel(BuildContext context) {
+  List<Widget> _buildDailyReportSlivers(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final tokens = appThemeOf(context);
@@ -185,129 +188,184 @@ class _PodcastDailyReportPageState
         report?.reportDate ?? selectedDate ?? _focusedCalendarDay;
 
     if (reportAsync.isLoading && report == null) {
-      return _buildBarePanelState(
-        context,
-        title: EpisodeCardUtils.formatDate(headerDate),
-        subtitle: l10n.podcast_daily_report_loading,
-        child: LoadingStatusContent(
-          key: const Key('daily_report_loading_content'),
-          title: l10n.podcast_daily_report_loading,
-          spinnerSize: 28,
-          spinnerColor: theme.colorScheme.primary,
-          gapAfterSpinner: 12,
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildBarePanelState(
+            context,
+            title: EpisodeCardUtils.formatDate(headerDate),
+            subtitle: l10n.podcast_daily_report_loading,
+            child: LoadingStatusContent(
+              key: const Key('daily_report_loading_content'),
+              title: l10n.podcast_daily_report_loading,
+              spinnerSize: 28,
+              spinnerColor: theme.colorScheme.primary,
+              gapAfterSpinner: 12,
+            ),
+          ),
         ),
-      );
+      ];
     }
 
     if (reportAsync.hasError && report == null) {
-      return _buildPanelScaffold(
-        context,
-        title: EpisodeCardUtils.formatDate(headerDate),
-        subtitle: l10n.podcast_failed_to_load_feed,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.podcast_daily_report_error_hint,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
-              ),
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildPanelScaffold(
+            context,
+            title: EpisodeCardUtils.formatDate(headerDate),
+            subtitle: l10n.podcast_failed_to_load_feed,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.podcast_daily_report_error_hint,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                SizedBox(height: context.spacing.md),
+                FilledButton.tonal(
+                  onPressed: () {
+                    ref
+                        .read(dailyReportProvider.notifier)
+                        .load(date: selectedDate, forceRefresh: true);
+                    ref
+                        .read(dailyReportDatesProvider.notifier)
+                        .load(forceRefresh: true);
+                  },
+                  child: Text(l10n.podcast_retry),
+                ),
+              ],
             ),
-            SizedBox(height: context.spacing.md),
-            FilledButton.tonal(
-              onPressed: () {
-                ref
-                    .read(dailyReportProvider.notifier)
-                    .load(date: selectedDate, forceRefresh: true);
-                ref
-                    .read(dailyReportDatesProvider.notifier)
-                    .load(forceRefresh: true);
-              },
-              child: Text(l10n.podcast_retry),
-            ),
-          ],
+          ),
         ),
-      );
+      ];
     }
 
     final currentReport = report;
     if (currentReport == null || !currentReport.available) {
       final targetDate = currentReport?.reportDate ?? headerDate;
-      return _buildPanelScaffold(
-        context,
-        title: EpisodeCardUtils.formatDate(targetDate),
-        subtitle: l10n.podcast_daily_report_empty,
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: AppRadius.xxlCardRadius,
-            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15)),
-          ),
-          padding: EdgeInsets.all(context.spacing.md),
-          child: Text(
-            l10n.podcast_daily_report_empty,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SurfacePanel(
-      padding: EdgeInsets.zero,
-      showBorder: false,
-      borderRadius: tokens.cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
-            child: AppSectionHeader(
-              title: EpisodeCardUtils.formatDate(currentReport.reportDate ?? headerDate),
-              subtitle:
-                  '${l10n.podcast_daily_report_items(currentReport.totalItems)} | ${l10n.podcast_daily_report_generated_prefix} ${currentReport.generatedAt != null ? TimeFormatter.formatTime(currentReport.generatedAt) : '--:--'}',
-              trailing: _buildRegenerateButton(
-                currentReport.reportDate ?? headerDate,
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildPanelScaffold(
+            context,
+            title: EpisodeCardUtils.formatDate(targetDate),
+            subtitle: l10n.podcast_daily_report_empty,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: AppRadius.xxlCardRadius,
+                border: Border.all(
+                    color: theme.colorScheme.outlineVariant
+                        .withValues(alpha: 0.15)),
+              ),
+              padding: EdgeInsets.all(context.spacing.md),
+              child: Text(
+                l10n.podcast_daily_report_empty,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ];
+    }
+
+    // Data state: flat slivers for the panel header, items, and bottom cap.
+    final headerTitle =
+        EpisodeCardUtils.formatDate(currentReport.reportDate ?? headerDate);
+    final headerSubtitle =
+        '${l10n.podcast_daily_report_items(currentReport.totalItems)} | ${l10n.podcast_daily_report_generated_prefix} ${currentReport.generatedAt != null ? TimeFormatter.formatTime(currentReport.generatedAt) : '--:--'}';
+
+    return [
+      // Panel header top with rounded top corners
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
           ),
-          Expanded(
-            child: currentReport.items.isEmpty
-                ? Padding(
-                    padding: EdgeInsets.all(context.spacing.mdLg),
-                    child: Text(
-                      l10n.podcast_daily_report_empty,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                : Scrollbar(
-                    controller: _reportItemsScrollController,
-                    thumbVisibility: currentReport.items.length > 4,
-                    child: ListView.separated(
-                      controller: _reportItemsScrollController,
-                      key: const Key('daily_report_items_scroll'),
-                      padding: EdgeInsets.zero,
-                      itemCount: currentReport.items.length,
-                      separatorBuilder: (_, separatorIndex) =>
-                          const SizedBox.shrink(),
-                      itemBuilder: (itemContext, index) {
-                        final item = currentReport.items[index];
-                        return _buildReportItemCard(itemContext, item);
-                      },
-                    ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg,
+                    context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: headerTitle,
+                  subtitle: headerSubtitle,
+                  trailing: _buildRegenerateButton(
+                    currentReport.reportDate ?? headerDate,
                   ),
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant
+                    .withValues(alpha: 0.45),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    );
+      // Items list or empty text
+      if (currentReport.items.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(context.spacing.mdLg),
+            child: Text(
+              l10n.podcast_daily_report_empty,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        )
+      else
+        SliverList.builder(
+          itemCount: currentReport.items.length,
+          itemBuilder: (itemContext, index) {
+            final item = currentReport.items[index];
+            return _buildReportItemCard(itemContext, item);
+          },
+        ),
+      // Panel bottom cap with rounded bottom corners
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
+          ),
+          height: context.spacing.smMd,
+        ),
+      ),
+      // Bottom buffer
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+      ),
+    ];
   }
 
   Widget _buildPanelScaffold(

@@ -80,57 +80,53 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
     ];
   }
 
-  Widget _buildEpisodesScrollable(PodcastEpisodesState episodesState) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final itemCount =
-            episodesState.episodes.length +
-            (episodesState.isLoadingMore ? 1 : 0);
-
-        if (screenWidth < 600) {
-          return ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.symmetric(vertical: context.spacing.sm, horizontal: context.spacing.smMd),
-            cacheExtent: ScrollConstants.largeListCacheExtent,
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              if (index == episodesState.episodes.length) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(context.spacing.md),
-                    child: const CircularProgressIndicator.adaptive(),
-                  ),
-                );
-              }
-              final episode = episodesState.episodes[index];
-              return _buildEpisodeCard(episode);
-            },
+  /// Mobile layout: SliverList.builder with episode cards.
+  Widget _buildMobileSlivers(PodcastEpisodesState episodesState) {
+    final itemCount =
+        episodesState.episodes.length + (episodesState.isLoadingMore ? 1 : 0);
+    return SliverList.builder(
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        if (index == episodesState.episodes.length) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(context.spacing.md),
+              child: const CircularProgressIndicator.adaptive(),
+            ),
           );
         }
-
-        final crossAxisCount = screenWidth < 900
-            ? 2
-            : (screenWidth < 1200 ? 3 : 4);
-        return GridView.builder(
-          controller: _scrollController,
-          padding: EdgeInsets.all(context.spacing.smMd),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            mainAxisExtent: _PodcastEpisodesPageState._desktopEpisodeCardHeight,
-          ),
-          itemCount: itemCount,
-          itemBuilder: (context, index) {
-            if (index == episodesState.episodes.length) {
-              return const Center(child: CircularProgressIndicator.adaptive());
-            }
-            final episode = episodesState.episodes[index];
-            return _buildEpisodeCard(episode);
-          },
-        );
+        final episode = episodesState.episodes[index];
+        return _buildEpisodeCard(episode);
       },
+    );
+  }
+
+  /// Desktop layout: SliverGrid with episode cards.
+  Widget _buildDesktopSlivers(
+    PodcastEpisodesState episodesState,
+    double width,
+  ) {
+    final itemCount =
+        episodesState.episodes.length + (episodesState.isLoadingMore ? 1 : 0);
+    final crossAxisCount =
+        width < 900 ? 2 : (width < 1200 ? 3 : 4);
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        mainAxisExtent: _PodcastEpisodesPageState._desktopEpisodeCardHeight,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          if (index == episodesState.episodes.length) {
+            return const Center(child: CircularProgressIndicator.adaptive());
+          }
+          final episode = episodesState.episodes[index];
+          return _buildEpisodeCard(episode);
+        },
+        childCount: itemCount,
+      ),
     );
   }
 

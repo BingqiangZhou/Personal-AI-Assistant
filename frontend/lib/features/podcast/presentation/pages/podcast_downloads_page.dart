@@ -45,6 +45,7 @@ class PodcastDownloadsPage extends ConsumerWidget {
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
           child: AdaptiveRefreshIndicator.sliver(
             onRefresh: () async {
@@ -60,51 +61,22 @@ class PodcastDownloadsPage extends ConsumerWidget {
                     actions: [if (deleteButton != null) deleteButton],
                   ),
                   SliverToBoxAdapter(child: SizedBox(height: context.spacing.smMd)),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: asyncDownloads.when(
-                      data: (tasks) {
-                        if (tasks.isEmpty) {
-                          return _buildEmptyState(context, l10n, tokens);
-                        }
-                        return _buildDownloadsPanel(
-                          context,
-                          grouped,
-                          l10n,
-                          theme,
-                          tokens,
-                        );
-                      },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator.adaptive()),
-                      error: (e, _) => Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(context.spacing.lg),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: theme.colorScheme.error,
-                              ),
-                              SizedBox(height: context.spacing.lg),
-                              Text(
-                                l10n.podcast_downloads_load_error,
-                                style: theme.textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: context.spacing.md),
-                              FilledButton.tonal(
-                                onPressed: () => ref.invalidate(downloadsListProvider),
-                                child: Text(l10n.retry),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  ...asyncDownloads.when(
+                    data: (tasks) {
+                      if (tasks.isEmpty) {
+                        return _buildEmptySlivers(context, l10n, tokens);
+                      }
+                      return _buildDataSlivers(
+                        context,
+                        grouped,
+                        l10n,
+                        theme,
+                        tokens,
+                      );
+                    },
+                    loading: () => _buildLoadingSlivers(context, l10n, tokens),
+                    error: (e, _) =>
+                        _buildErrorSlivers(context, ref, l10n, theme, e),
                   ),
                 ],
               );
@@ -136,70 +108,75 @@ class PodcastDownloadsPage extends ConsumerWidget {
     }
   }
 
-  Widget _buildEmptyState(
+  List<Widget> _buildEmptySlivers(
     BuildContext context,
     AppLocalizations l10n,
     AppThemeExtension tokens,
   ) {
     final theme = Theme.of(context);
-    return SurfacePanel(
-      padding: EdgeInsets.zero,
-      showBorder: false,
-      borderRadius: tokens.cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
-            child: AppSectionHeader(
-              title: l10n.downloads_page_title,
-              subtitle: l10n.downloads_empty,
-              hideTitle: true,
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(context.spacing.mdLg),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: AppRadius.xxlCardRadius,
-                  border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15)),
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: SurfacePanel(
+          padding: EdgeInsets.zero,
+          showBorder: false,
+          borderRadius: tokens.cardRadius,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: l10n.downloads_page_title,
+                  subtitle: l10n.downloads_empty,
+                  hideTitle: true,
                 ),
-                padding: EdgeInsets.all(context.spacing.md), // ~mdLg context-specific
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.download_outlined,
-                        size: 48,
-                        color: theme.colorScheme.onSurfaceVariant,
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.all(context.spacing.mdLg),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: AppRadius.xxlCardRadius,
+                      border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                    ),
+                    padding: EdgeInsets.all(context.spacing.md),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.download_outlined,
+                            size: 48,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          SizedBox(height: context.spacing.smMd),
+                          Text(
+                            l10n.downloads_empty_subtitle,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      SizedBox(height: context.spacing.smMd),
-                      Text(
-                        l10n.downloads_empty_subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    );
+    ];
   }
 
-  Widget _buildDownloadsPanel(
+  List<Widget> _buildDataSlivers(
     BuildContext context,
     GroupedDownloads grouped,
     AppLocalizations l10n,
@@ -216,45 +193,177 @@ class PodcastDownloadsPage extends ConsumerWidget {
       ...grouped.completed,
     ];
 
-    return SurfacePanel(
-      padding: EdgeInsets.zero,
-      showBorder: false,
-      borderRadius: tokens.cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
-            child: AppSectionHeader(
-              title: l10n.downloads_page_title,
-              subtitle: l10n.downloads_items(totalDownloads),
-              hideTitle: true,
+    return [
+      // Header panel top
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
           ),
-          Divider(
-            height: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.only(
-                left: context.spacing.sm,
-                right: context.spacing.sm,
-                top: context.spacing.sm,
-                bottom: _bottomBufferForPlayer,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: l10n.downloads_page_title,
+                  subtitle: l10n.downloads_items(totalDownloads),
+                  hideTitle: true,
+                ),
               ),
-              itemCount: allTasks.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(bottom: context.spacing.sm),
-                  child: _DownloadTaskCard(task: allTasks[index]),
-                );
-              },
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // List items
+      SliverList.builder(
+        itemCount: allTasks.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              context.spacing.sm,
+              index == 0 ? context.spacing.sm : 0,
+              context.spacing.sm,
+              context.spacing.sm,
+            ),
+            child: _DownloadTaskCard(task: allTasks[index]),
+          );
+        },
+      ),
+      // Bottom cap
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
           ),
-        ],
+          height: context.spacing.smMd,
+        ),
       ),
-    );
+      // Bottom buffer for player
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: _bottomBufferForPlayer),
+      ),
+    ];
+  }
+
+  List<Widget> _buildLoadingSlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+    AppThemeExtension tokens,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: SurfacePanel(
+          padding: EdgeInsets.zero,
+          showBorder: false,
+          borderRadius: tokens.cardRadius,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: l10n.downloads_page_title,
+                  subtitle: l10n.loading,
+                  hideTitle: true,
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator.adaptive()),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildErrorSlivers(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    ThemeData theme,
+    Object error,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: SurfacePanel(
+          padding: EdgeInsets.zero,
+          showBorder: false,
+          borderRadius: appThemeOf(context).cardRadius,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: l10n.downloads_page_title,
+                  subtitle: l10n.podcast_downloads_load_error,
+                  hideTitle: true,
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(context.spacing.lg),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: theme.colorScheme.error,
+                        ),
+                        SizedBox(height: context.spacing.lg),
+                        Text(
+                          l10n.podcast_downloads_load_error,
+                          style: theme.textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: context.spacing.md),
+                        FilledButton.tonal(
+                          onPressed: () => ref.invalidate(downloadsListProvider),
+                          child: Text(l10n.retry),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
   }
 }
 

@@ -7,7 +7,6 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
-import 'package:personal_ai_assistant/core/constants/scroll_constants.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -135,19 +134,21 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
-          child: CustomScrollView(
-            slivers: [
-              AdaptiveSliverAppBar(
-                title: l10n.podcast_highlights_title,
-                actions: [_buildCalendarButton(context)],
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: context.spacing.xs)),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildHighlightsPanel(context),
-              ),
-            ],
+          child: Scrollbar(
+            controller: _scrollController,
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                AdaptiveSliverAppBar(
+                  title: l10n.podcast_highlights_title,
+                  actions: [_buildCalendarButton(context)],
+                ),
+                SliverToBoxAdapter(child: SizedBox(height: context.spacing.xs)),
+                ..._buildHighlightsSlivers(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -167,7 +168,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     );
   }
 
-  Widget _buildHighlightsPanel(BuildContext context) {
+  List<Widget> _buildHighlightsSlivers(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = appThemeOf(context);
     final l10n = context.l10n;
@@ -177,62 +178,100 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
     final headerDate = selectedDate ?? _focusedCalendarDay;
 
     if (highlightsAsync.isLoading && highlightsAsync.value == null) {
-      return _buildLoadingState(context, headerDate);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildLoadingState(context, headerDate),
+        ),
+      ];
     }
 
     if (highlightsAsync.hasError && highlightsAsync.value == null) {
-      return _buildErrorState(context, headerDate);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildErrorState(context, headerDate),
+        ),
+      ];
     }
 
     final highlightsResponse = highlightsAsync.value;
     final highlights = highlightsResponse?.items ?? [];
 
     if (highlights.isEmpty) {
-      return _buildEmptyState(context, headerDate);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildEmptyState(context, headerDate),
+        ),
+      ];
     }
 
-    return SurfacePanel(
-      padding: EdgeInsets.zero,
-      showBorder: false,
-      borderRadius: tokens.cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
-            child: AppSectionHeader(
-              title: EpisodeCardUtils.formatDate(headerDate),
-              subtitle: l10n.podcast_highlights_items(highlightsResponse?.total ?? 0),
+    // Data state: panel header + divider + list items + bottom cap
+    return [
+      // Panel header with top radius
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
           ),
-          Divider(
-            height: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-          Expanded(
-            child: Scrollbar(
-              controller: _scrollController,
-              thumbVisibility: highlights.length > 4,
-              child: ListView.separated(
-                controller: _scrollController,
-                key: const Key('highlights_scroll'),
-                padding: EdgeInsets.zero,
-                cacheExtent: ScrollConstants.defaultCacheExtent,
-                itemCount: highlights.length + (_isLoadingMore ? 1 : 0),
-                separatorBuilder: (_, index) => const SizedBox.shrink(),
-                itemBuilder: (itemContext, index) {
-                  if (index >= highlights.length) {
-                    return _buildLoadingMoreIndicator(itemContext);
-                  }
-                  final highlight = highlights[index];
-                  return _buildHighlightCard(itemContext, highlight);
-                },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.md, context.spacing.mdLg, context.spacing.smMd),
+                child: AppSectionHeader(
+                  title: EpisodeCardUtils.formatDate(headerDate),
+                  subtitle: l10n.podcast_highlights_items(highlightsResponse?.total ?? 0),
+                ),
               ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // Highlight items
+      SliverList.builder(
+        itemCount: highlights.length + (_isLoadingMore ? 1 : 0),
+        itemBuilder: (itemContext, index) {
+          if (index >= highlights.length) {
+            return _buildLoadingMoreIndicator(itemContext);
+          }
+          final highlight = highlights[index];
+          return _buildHighlightCard(itemContext, highlight);
+        },
+      ),
+      // Panel bottom cap
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
           ),
-        ],
+          height: context.spacing.smMd,
+        ),
       ),
-    );
+      // Bottom buffer
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+      ),
+    ];
   }
 
   Widget _buildHighlightCard(
