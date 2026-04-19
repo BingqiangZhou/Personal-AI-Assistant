@@ -37,6 +37,41 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+      config.build_settings['SWIFT_SUPPRESS_WARNINGS'] = 'YES'
+      config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
+    end
     flutter_additional_macos_build_settings(target)
+  end
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+        config.build_settings['SWIFT_SUPPRESS_WARNINGS'] = 'YES'
+        config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
+      end
+    end
+  end
+  # Patch FVPAVFactory.h to suppress AVKeyValueStatus deprecation warning.
+  # Clang module compilation ignores GCC_WARN_INHIBIT_ALL_WARNINGS and OTHER_CFLAGS,
+  # so we wrap the deprecated API with #pragma at the source level.
+  vpa_header = File.expand_path(File.join(__dir__, 'Flutter', 'ephemeral', '.symlinks', 'plugins', 'video_player_avfoundation', 'darwin', 'video_player_avfoundation', 'Sources', 'video_player_avfoundation', 'include', 'video_player_avfoundation', 'FVPAVFactory.h'))
+  if File.exist?(vpa_header)
+    content = File.read(vpa_header)
+    unless content.include?('deprecated-declarations')
+      patched = content.sub(
+        'NS_ASSUME_NONNULL_BEGIN',
+        "#pragma clang diagnostic push\n" \
+        "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n" \
+        "NS_ASSUME_NONNULL_BEGIN"
+      )
+      patched = patched.sub(
+        'NS_ASSUME_NONNULL_END',
+        "NS_ASSUME_NONNULL_END\n" \
+        "#pragma clang diagnostic pop"
+      )
+      File.write(vpa_header, patched) if patched != content
+    end
   end
 end
