@@ -23,7 +23,7 @@ class AdaptiveListSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return CupertinoListSection.insetGrouped(
         header: header != null ? Text(header!) : null,
         footer: footer != null ? Text(footer!) : null,

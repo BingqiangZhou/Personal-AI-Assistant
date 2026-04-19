@@ -29,7 +29,7 @@ Future<void> showAdaptiveActionSheet({
   Widget? message,
   Widget? cancelWidget,
 }) {
-  if (PlatformHelper.isIOS(context)) {
+  if (PlatformHelper.isApple(context)) {
     return showCupertinoModalPopup<void>(
       context: context,
       builder: (popupContext) => CupertinoActionSheet(

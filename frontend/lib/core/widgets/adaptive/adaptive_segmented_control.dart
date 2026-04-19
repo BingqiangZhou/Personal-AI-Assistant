@@ -20,7 +20,7 @@ class AdaptiveSegmentedControl<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return CupertinoSlidingSegmentedControl<T>(
         groupValue: selected,
         onValueChanged: (val) {

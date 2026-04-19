@@ -32,7 +32,7 @@ class AdaptiveDismissible extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return Dismissible(
         key: key,
         confirmDismiss: confirmDismiss ??

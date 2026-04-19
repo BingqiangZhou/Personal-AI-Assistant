@@ -28,7 +28,7 @@ class AdaptiveListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       final cupertinoTile = CupertinoListTile(
         leading: leading,
         title: DefaultTextStyle(

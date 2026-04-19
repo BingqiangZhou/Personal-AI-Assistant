@@ -35,7 +35,7 @@ class AdaptiveScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       final cupertinoNav = navigationBar is CupertinoNavigationBar
           ? navigationBar as CupertinoNavigationBar?
           : null;

@@ -24,7 +24,7 @@ class AdaptiveCheckboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       final cupertinoTile = CupertinoListTile(
         title: DefaultTextStyle(
           style: CupertinoTheme.of(context).textTheme.textStyle,

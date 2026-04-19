@@ -52,7 +52,7 @@ class _AdaptiveSearchBarState extends State<AdaptiveSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return CupertinoSearchTextField(
         controller: _controller,
         onChanged: widget.onChanged,

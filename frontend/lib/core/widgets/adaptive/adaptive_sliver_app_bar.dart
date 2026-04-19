@@ -47,7 +47,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       Widget? iosLeading = leading;
       bool iosAutoImply = automaticallyImplyLeading;
 

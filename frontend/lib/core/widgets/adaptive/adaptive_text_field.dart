@@ -84,7 +84,7 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       final cupertinoField = CupertinoTextField(
         controller: widget.controller,
         focusNode: widget.focusNode,

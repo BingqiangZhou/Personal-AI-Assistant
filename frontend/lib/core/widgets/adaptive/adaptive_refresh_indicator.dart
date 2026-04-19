@@ -49,7 +49,7 @@ class AdaptiveRefreshIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       if (builder != null) {
         return builder!(
           context,

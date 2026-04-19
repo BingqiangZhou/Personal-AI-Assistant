@@ -22,7 +22,7 @@ class AdaptiveSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return CupertinoSwitch(
         value: value,
         onChanged: onChanged,
