@@ -346,7 +346,7 @@ class _PodcastEpisodeDetailPageState
       );
       logger.AppLogger.debug('[Playback] New Episode ID: ${widget.episodeId}');
       logger.AppLogger.debug(
-        '[Playback] Reloading episode data and auto-playing new episode',
+        '[Playback] Reloading episode data for new episode (no auto-play)',
       );
 
       // Invalidate old episode detail provider to force refresh
@@ -373,10 +373,6 @@ class _PodcastEpisodeDetailPageState
           );
           return;
         }
-        logger.AppLogger.debug(
-          '[Playback] Calling _loadAndPlayEpisode for new episode',
-        );
-        _loadAndPlayEpisode();
         _loadTranscriptionStatus();
       });
       logger.AppLogger.debug('[Playback] ===== didUpdateWidget complete =====');
