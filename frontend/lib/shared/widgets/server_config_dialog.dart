@@ -242,13 +242,6 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       ),
     );
 
-    if (isIOS) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.all(context.spacing.md),
-        child: dialogChild,
-      );
-    }
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.all(context.spacing.md),
@@ -287,7 +280,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.smMd, vertical: context.spacing.sm),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.08),
         borderRadius: AppRadius.smRadius,
