@@ -42,9 +42,6 @@ class ConversationChatWidgetState
   final ValueNotifier<String> _inputTextNotifier = ValueNotifier('');
   SummaryModelInfo? _selectedModel;
   Timer? _pendingScrollTimer;
-  String _lastSelectedChatText = '';
-  String _lastSelectedChatRoleLabel = '';
-  bool _lastSelectedChatIsUser = false;
   bool _isMessageSelectMode = false;
   final Set<int> _selectedMessageIds = <int>{};
   ProviderSubscription<ConversationState>? _conversationSubscription;
@@ -116,6 +113,8 @@ class ConversationChatWidgetState
       _episodeVersion++;
       final currentVersion = _episodeVersion;
 
+      _isMessageSelectMode = false;
+      _selectedMessageIds.clear();
       _conversationSubscription?.close();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -273,39 +272,6 @@ class ConversationChatWidgetState
     }
   }
 
-  Future<void> _shareSelectedChatAsImage() async {
-    final l10n = context.l10n;
-    final roleLabel = _lastSelectedChatRoleLabel.isNotEmpty
-        ? _lastSelectedChatRoleLabel
-        : (_lastSelectedChatIsUser
-              ? l10n.podcast_conversation_user
-              : l10n.podcast_conversation_assistant);
-    try {
-      await ContentImageShareService.shareAsImage(
-        context,
-        ShareImagePayload(
-          episodeTitle: widget.episodeTitle,
-          contentType: ShareContentType.chat,
-          content: _lastSelectedChatText,
-          sourceLabel: l10n.podcast_tab_chat,
-          renderMode: ShareImageRenderMode.conversation,
-          conversationItems: <ShareConversationItem>[
-            ShareConversationItem(
-              roleLabel: roleLabel,
-              content: _lastSelectedChatText,
-              isUser: _lastSelectedChatIsUser,
-            ),
-          ],
-        ),
-      );
-    } on ContentImageShareException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      showTopFloatingNotice(context, message: e.message, isError: true);
-    }
-  }
-
   Future<void> _shareAllChatAsImage(ConversationState state) async {
     await _shareConversationMessagesAsImage(state.messages);
   }
@@ -348,12 +314,7 @@ class ConversationChatWidgetState
   }
 
   void _handleTextSelected(String selectedText, {required bool isUser, required String roleLabel}) {
-    _lastSelectedChatText = selectedText;
-    _lastSelectedChatIsUser = isUser;
-    _lastSelectedChatRoleLabel = roleLabel;
-    if (selectedText.isNotEmpty) {
-      unawaited(_shareSelectedChatAsImage());
-    }
+    // Text selection is tracked by the platform; no additional action needed.
   }
 
   @override
