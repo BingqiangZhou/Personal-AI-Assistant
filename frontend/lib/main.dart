@@ -99,7 +99,8 @@ void main() {
       if (isDesktop) {
         await WindowManager.instance.ensureInitialized();
         await WindowManager.instance.setTitle('Stella');
-        await WindowManager.instance.setMinimumSize(const Size(600, 400));
+        await WindowManager.instance.setSize(const Size(1280, 720));
+        await WindowManager.instance.setMinimumSize(const Size(800, 600));
         // Desktop windows support all orientations natively;
         // no need to call setPreferredOrientations (it is a no-op).
       } else {
