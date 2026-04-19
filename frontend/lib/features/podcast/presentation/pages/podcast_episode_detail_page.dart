@@ -10,6 +10,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_en.dart';
+import 'package:personal_ai_assistant/core/platform/adaptive_app_bar.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
 import 'package:personal_ai_assistant/core/services/adaptive_share.dart';
 import 'package:personal_ai_assistant/core/services/download_provider.dart';
@@ -254,11 +255,9 @@ class _PodcastEpisodeDetailPageState
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: Text(episodeDetail?.title ?? ''),
-            centerTitle: true,
-            scrolledUnderElevation: 0,
-            surfaceTintColor: Colors.transparent,
+          appBar: adaptiveAppBar(
+            context,
+            titleWidget: Text(episodeDetail?.title ?? ''),
             actions: [
               if (episodeDetail != null)
                 IconButton(

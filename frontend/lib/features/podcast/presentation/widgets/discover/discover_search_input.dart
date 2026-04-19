@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
@@ -110,30 +112,45 @@ class _DiscoverSearchInputState extends ConsumerState<DiscoverSearchInput> {
             ),
             SizedBox(width: widget.isDense ? context.spacing.smMd : context.spacing.sm),
             Expanded(
-              child: TextField(
-                key: const Key('podcast_discover_search_input'),
-                controller: widget.searchController,
-                focusNode: widget.searchFocusNode,
-                textInputAction: TextInputAction.search,
-                style: theme.textTheme.bodyMedium,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  errorBorder: InputBorder.none,
-                  focusedErrorBorder: InputBorder.none,
-                  filled: false,
-                  fillColor: Colors.transparent,
-                  hintText: hintText,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onChanged: widget.onSearchChanged,
-              ),
+              child: PlatformHelper.isIOS(context)
+                  ? CupertinoTextField(
+                      key: const Key('podcast_discover_search_input'),
+                      controller: widget.searchController,
+                      focusNode: widget.searchFocusNode,
+                      textInputAction: TextInputAction.search,
+                      style: theme.textTheme.bodyMedium,
+                      placeholder: hintText,
+                      placeholderStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      decoration: const BoxDecoration(),
+                      padding: EdgeInsets.zero,
+                      onChanged: widget.onSearchChanged,
+                    )
+                  : TextField(
+                      key: const Key('podcast_discover_search_input'),
+                      controller: widget.searchController,
+                      focusNode: widget.searchFocusNode,
+                      textInputAction: TextInputAction.search,
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        filled: false,
+                        fillColor: Colors.transparent,
+                        hintText: hintText,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      onChanged: widget.onSearchChanged,
+                    ),
             ),
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: widget.searchController,

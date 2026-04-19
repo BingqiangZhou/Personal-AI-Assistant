@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
@@ -377,38 +379,65 @@ class TranscriptDisplayWidgetState
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: l10n.podcast_transcript_search_hint,
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _isSearching
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clearSearch,
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: AppRadius.xxlRadius,
-                  borderSide: BorderSide(color: scheme.outline),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: AppRadius.xxlRadius,
-                  borderSide: BorderSide(color: scheme.outline),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: AppRadius.xxlRadius,
-                  borderSide: BorderSide(
-                    color: scheme.primary,
-                    width: 2,
+            child: PlatformHelper.isIOS(context)
+                ? CupertinoTextField(
+                    controller: _searchController,
+                    placeholder: l10n.podcast_transcript_search_hint,
+                    prefix: Padding(
+                      padding: EdgeInsets.only(left: context.spacing.sm),
+                      child: Icon(CupertinoIcons.search,
+                          color: scheme.onSurfaceVariant, size: 18),
+                    ),
+                    suffix: _isSearching
+                        ? CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            onPressed: _clearSearch,
+                            child: Icon(CupertinoIcons.clear_thick_circled,
+                                size: 16, color: scheme.onSurfaceVariant),
+                          )
+                        : null,
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.tertiarySystemFill,
+                      borderRadius: AppRadius.xxlRadius,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.md,
+                      vertical: context.spacing.md,
+                    ),
+                  )
+                : TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: l10n.podcast_transcript_search_hint,
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _isSearching
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: _clearSearch,
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.xxlRadius,
+                        borderSide: BorderSide(color: scheme.outline),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.xxlRadius,
+                        borderSide: BorderSide(color: scheme.outline),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.xxlRadius,
+                        borderSide: BorderSide(
+                          color: scheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
           ),
         ],
       ),
