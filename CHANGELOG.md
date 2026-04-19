@@ -4,6 +4,85 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.48.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.47.0...v0.48.0) - 2026-04-19 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.48.0))
+
+### ⚡ Performance
+
+- *(podcast)* Cache hasMore value to avoid provider read on every scroll ([5f34502](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5f345020ceff4b82ee09dbb1ef24de3bbc9bbc2d))
+
+### 🎨 Styling
+
+- *(podcast)* Replace hardcoded section header padding with spacing tokens ([816cad8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/816cad87ca9ae08a41d65a75eecfcb60e9802614))
+- *(podcast)* Extract calendar panel constants to CalendarPanelHelper ([5447f6c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5447f6c5bb4f620a3665334271680b0cb86194f7))
+- *(podcast)* Add responsive handling to add podcast dialog ([4a2650b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4a2650b32b5d74bc257237a97e4dfabe18287054))
+- *(podcast)* Replace hardcoded radii and colors with named constants and theme tokens ([5acaa33](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5acaa33547b646ed12e1cb09e5ef9ba27b4d6624))
+- *(settings)* Standardize error icon size ([48b7115](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/48b71154c966ae9da1d566c0618156517f50b52e))
+- *(podcast)* Replace hardcoded spacing in downloads page ([a9a5420](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a9a54204d4249574245b8f07b4dec6e548a00f32))
+- *(settings)* Replace hardcoded spacing with tokens in dialogs ([55268fa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/55268fa5fd2d6508b6c5f54dd837dde8a2fc5291))
+- *(podcast)* Use CupertinoTextField on iOS for search and transcript widgets ([55f81a1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/55f81a1558a2eeb36b9e8e5a1c08f9138fb72b7c))
+
+### 🐛 Bug Fixes
+
+- *(profile)* Resolve provider crashes and data loading issues in profile sub-pages ([a464a59](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a464a59b0547a6cf5a187b5fb3fffd223475a803))
+- *(profile)* Prevent RangeError on empty displayName ([784a9a8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/784a9a87ffebc701d5b1f3c9bcdb70a7a6459019))
+- *(podcast)* Wire up CachedAsyncNotifier disposal guard ([f0c7e7b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f0c7e7b2f7893bbdd9e5230cb029a926318f4e01))
+- *(profile)* Remove redundant history data fetch in initState ([4fde924](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4fde924a0fe6b4fdc2d1ab42243c0c93cf3b260e))
+- *(i18n)* Use localized strings in ProfileHistoryPage ([a2f03f6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a2f03f65dbdbb11bedb620ecfa368d948e268f9a))
+- *(profile)* Remove hardcoded English strings and fix notification switch flash ([242748c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/242748c9b02bc97411a52c6adc01bdb1ed206d86))
+- *(profile)* Improve cache management page robustness and performance ([f29511c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f29511c190456731c5a115ccf33784057c926a24))
+- *(profile)* Simplify change-password and edit-profile dialogs, remove dead code ([9e0d70f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9e0d70f024564f59d799332b00694a8b4715ad39))
+- *(profile)* Use _objectBytes consistently in cache delete calculation ([7b5bce9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7b5bce9cfa8f5e482be4cda4bee1eeebc32eec8d))
+- *(podcast)* Fix filter cancel bug, remove stub actions, localize 'More' tooltip ([5a04141](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5a041410114da12c99ab48d4c5d86ad2ee3c5c89))
+- *(podcast)* Reset selected text on episode switch, add mounted check ([1cf26f9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1cf26f9d8f935fd4e1e2f5634be2e95cc98ac552))
+- *(i18n)* Localize episode detail header strings ([5852e28](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5852e28ed22ffd34d1b8758587869fe7f9172e87))
+- *(podcast)* Improve downloads page UX and i18n ([0f4c02d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0f4c02d6afd646a68ca54c39ad34cf09c99d491d))
+- *(podcast)* Fix CurvedAnimation memory leak in calendar dialogs ([e8ac4d7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e8ac4d7fd2c1afdd8be42430a78d460722c2bb7e))
+- *(podcast)* Remove empty more menu from episodes page ([9c6762d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9c6762dc49f3375374b25b0b560b1b5073f5d96c))
+- *(podcast)* Add error feedback when loading more highlights fails ([e0aba63](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e0aba63a24e950bcd7bad2fd474df73c9cda28ec))
+- *(podcast)* Prevent duplicate AI summary update callbacks ([b96af5a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b96af5a718b89c48a98597f43aadf4c0f9438354))
+- *(profile)* Prevent notification preference race condition ([368f292](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/368f29260df50a4088f6439040ca3bf7776691c8))
+- *(podcast)* Use distinct error messages in daily report panel ([15421fb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/15421fb4c1de589ed5fdd3e01856b28ee7977823))
+- *(podcast)* Prevent auto-play when navigating between episodes ([84e7b8a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/84e7b8ab54a18ec5487c1c7064d072dada802c7c))
+- *(podcast)* Improve error states with retry buttons in downloads and history ([fcd12d6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/fcd12d684ae6af7eab1578126e269059bc4482b6))
+- *(i18n)* Replace hardcoded fallback strings with localized keys ([f82503f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f82503f3d3f608d0ecd49f6ce43eff535b0709b9))
+- *(podcast)* Reset summary guard on episode switch and remove dead imports ([2e2757e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2e2757ea5d5b0689f98e4d26d412fd4a06af50a7))
+- *(podcast)* Reset chat select mode on episode change and remove auto-share ([df76595](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/df76595ede31d2bb52b58b761127a0037f2d16b6))
+- *(podcast)* Invalidate profile providers on server switch ([5e871b1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5e871b1bcb85173848e7fc48aaa85c22c56054e0))
+- Improve theme notification and add podcast dialog validation ([1f5688e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1f5688e62c516d1c743a99279f0f2627b9e8fea1))
+- *(settings)* Improve update dialog robustness and i18n ([5b54f6f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5b54f6f98072bb5ff4c15dbf30f13e37b431801b))
+- *(profile)* Add mounted checks and fix stale l10n in dialogs ([bc8f2bf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bc8f2bf2edde287c5089ca2caddc115876f939d1))
+- *(podcast)* Restore imports needed by part files ([61dba61](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/61dba613334dd1c997f80e938f8473e5b8afa3bf))
+- Resolve analyzer warnings across podcast and settings modules ([45442e9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/45442e988da2e73db0833f5d3917ad297dbc2e44))
+- *(core)* Improve iOS back button handling in AdaptiveSliverAppBar ([f9858df](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f9858df073242cac279489d301145ab5f4df5345))
+
+### 📚 Documentation
+
+- Add profile sub-pages issue audit design spec ([c74874f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c74874f185beaa26cc797f81cd1bbb945245efaf))
+- Add profile sub-pages fixes implementation plan ([da85838](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/da85838039174423661f389393a850f887677296))
+- Add profile reachable pages issue audit and implementation plan ([c3f5928](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c3f59288d27b83348c976ba33c684c7dc5d67dcb))
+- Add round 3 audit design spec and implementation plan for profile reachable pages ([23a66ce](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/23a66ce3c855b4be15fd67c25cbc9a0499b54dd2))
+- Add round 4 audit design spec and implementation plan ([c11c65e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c11c65e46f1a8c6eae53158c46160c2a27cb6aed))
+
+### 🚀 Features
+
+- *(profile)* Register Privacy and Terms page routes, add navigation entries ([04c6104](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/04c61046a97f6ef4d3963cf7345b45ed03008837))
+
+### 🚜 Refactor
+
+- *(profile)* Deduplicate activity cards and differentiate tappable state ([a8564a7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a8564a7a9dd0849c4933566f9990db3282422a19))
+- *(podcast)* Remove dead code and consolidate tab content methods ([0e4298f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0e4298f394a99c394db1fd4c42916f3cf97b644b))
+- *(profile)* Simplify playback position formatting and fix scroll listener cleanup ([6143e2f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6143e2f0cb967657fbe3b4f2eb3001e74a0170eb))
+- *(podcast)* Extract button density getter in episode detail header ([422e97b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/422e97bb5235886f16be5453b9339bd7335a2528))
+- *(podcast)* Remove unused source parameter from daily report and highlights pages ([3029ba9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3029ba9a8c01723675b9a5d212a364b3362347dd))
+- *(podcast)* Extract shared calendar day cell builder ([c4004de](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c4004de7e6347eb21425721c476b05466f236fa4))
+- *(settings)* Remove dead code and fix spacing in server config dialog ([76faa34](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/76faa3415fbbf7d5afcffe0fa2409a896cd5a784))
+- *(podcast)* Remove dead code from episodes page ([41c12f5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/41c12f54ed87a176e3538d4132d24c094629875a))
+- *(podcast)* Migrate page content from SliverFillRemaining to proper sliver layouts ([cb8c420](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cb8c420a388d29ecbd17dc99497c334d7845e435))
+- *(profile)* Migrate pages to sliver layout, remove privacy/terms pages ([c8df8e8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c8df8e808333b65d3f942720d59229c5de9a40e8))
+- *(shared)* Add iOS CupertinoTextField support to CustomTextField and ServerConfigDialog ([44fa1dc](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/44fa1dc78d8e677a80869ba76d1a6a2c4dfd3ba6))
+
+
+
 ## [0.47.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.46.0...v0.47.0) - 2026-04-18 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.47.0))
 
 ### ⚙️ Miscellaneous Tasks

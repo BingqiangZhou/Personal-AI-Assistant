@@ -9,10 +9,11 @@ plugins {
 
 android {
     namespace = "com.opc.stella"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -97,6 +98,7 @@ flutter {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // StAX API for XML parsing (required by some plugins)
     // StAX API 用于 XML 解析（某些插件需要）
     implementation("javax.xml.stream:stax-api:1.0-2")
