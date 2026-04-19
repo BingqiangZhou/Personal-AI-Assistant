@@ -210,8 +210,11 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
     if (episodeSummary != null &&
         episodeSummary.isNotEmpty &&
         !summaryState.hasSummary &&
-        !summaryState.isLoading) {
+        !summaryState.isLoading &&
+        !_summaryUpdateScheduled) {
+      _summaryUpdateScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _summaryUpdateScheduled = false;
         if (mounted) {
           summaryNotifier.updateSummary(
             episodeSummary,

@@ -65,6 +65,7 @@ class _PodcastEpisodeDetailPageState
   bool _hasTrackedEpisodeView = false;
   bool _isAddingToQueue = false;
   String _selectedSummaryText = '';
+  bool _summaryUpdateScheduled = false;
 
   // Sticky header animation
   final PageController _pageController = PageController();
