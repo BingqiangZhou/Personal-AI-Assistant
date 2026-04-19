@@ -2419,6 +2419,10 @@
     "@downloads_empty_subtitle":  {
                                           "description":  "Subtitle for empty downloads state"
                                       },
+    "podcast_downloads_load_error":  "Failed to load downloads. Please try again.",
+    "@podcast_downloads_load_error":  {
+                                          "description":  "Error message when downloads list fails to load"
+                                      },
     "downloads_delete_all":  "Delete all",
     "@downloads_delete_all":  {
                                       "description":  "Delete all downloads button"
@@ -2826,5 +2830,13 @@
                                             "type":  "int"
                                         }
                                     }
-                                }
+                                },
+    "not_available":  "N/A",
+    "@not_available":  {
+                         "description":  "Placeholder for missing or unavailable data"
+                     },
+    "time_unknown":  "--:--",
+    "@time_unknown":  {
+                        "description":  "Placeholder for unknown time or duration"
+                    }
 }

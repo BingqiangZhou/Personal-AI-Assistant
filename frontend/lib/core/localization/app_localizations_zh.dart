@@ -1776,6 +1776,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloads_empty_subtitle => '下载的剧集将显示在这里';
 
   @override
+  String get podcast_downloads_load_error => '加载下载列表失败，请重试。';
+
+  @override
   String get downloads_delete_all => '全部删除';
 
   @override
@@ -2088,4 +2091,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String podcast_episode_fallback_title(int id) {
     return '播客集 #$id';
   }
+
+  @override
+  String get not_available => '暂无';
+
+  @override
+  String get time_unknown => '--:--';
 }

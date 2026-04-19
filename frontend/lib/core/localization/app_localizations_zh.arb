@@ -2373,6 +2373,10 @@
     "@downloads_empty_subtitle":  {
                                           "description":  "下载列表为空副标题"
                                       },
+    "podcast_downloads_load_error":  "加载下载列表失败，请重试。",
+    "@podcast_downloads_load_error":  {
+                                          "description":  "下载列表加载失败时的错误提示"
+                                      },
     "downloads_delete_all":  "全部删除",
     "@downloads_delete_all":  {
                                       "description":  "删除全部下载按钮"
@@ -2780,5 +2784,13 @@
                                             "type":  "int"
                                         }
                                     }
-                                }
+                                },
+    "not_available":  "暂无",
+    "@not_available":  {
+                         "description":  "数据缺失或不可用时的占位符"
+                     },
+    "time_unknown":  "--:--",
+    "@time_unknown":  {
+                        "description":  "未知时间或时长的占位符"
+                    }
 }

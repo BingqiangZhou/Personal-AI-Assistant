@@ -182,6 +182,11 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                 ).textTheme.bodyMedium,
                                 textAlign: TextAlign.center,
                               ),
+                              SizedBox(height: context.spacing.md),
+                              FilledButton.tonal(
+                                onPressed: () => ref.invalidate(playbackHistoryLiteProvider),
+                                child: Text(l10n.retry),
+                              ),
                             ],
                           ),
                         ),
@@ -369,7 +374,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                     ),
                                     SizedBox(width: context.spacing.xs),
                                     Text(
-                                      _formatPlayedAt(episode.lastPlayedAt),
+                                      _formatPlayedAt(context, episode.lastPlayedAt),
                                       style: AppTheme.metaSmall(
                                             Theme.of(
                                               context,
@@ -411,9 +416,10 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
     );
   }
 
-  String _formatPlayedAt(DateTime? lastPlayedAt) => lastPlayedAt == null
-      ? '--'
-      : TimeFormatter.formatFullDateTime(lastPlayedAt);
+  String _formatPlayedAt(BuildContext context, DateTime? lastPlayedAt) =>
+      lastPlayedAt == null
+          ? context.l10n.not_available
+          : TimeFormatter.formatFullDateTime(lastPlayedAt);
 
   String _buildProgressText(
     BuildContext context,
@@ -422,7 +428,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
     final position = episode.playbackPosition ?? 0;
     final totalDuration = episode.audioDuration != null
         ? episode.formattedDuration
-        : '--:--';
+        : context.l10n.time_unknown;
     return '${_formatPlaybackPosition(context, position)} / $totalDuration';
   }
 

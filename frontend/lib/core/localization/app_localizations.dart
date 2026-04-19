@@ -3428,6 +3428,12 @@ abstract class AppLocalizations {
   /// **'Downloaded episodes will appear here'**
   String get downloads_empty_subtitle;
 
+  /// Error message when downloads list fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load downloads. Please try again.'**
+  String get podcast_downloads_load_error;
+
   /// Delete all downloads button
   ///
   /// In en, this message translates to:
@@ -4003,6 +4009,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Episode #{id}'**
   String podcast_episode_fallback_title(int id);
+
+  /// Placeholder for missing or unavailable data
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get not_available;
+
+  /// Placeholder for unknown time or duration
+  ///
+  /// In en, this message translates to:
+  /// **'--:--'**
+  String get time_unknown;
 }
 
 class _AppLocalizationsDelegate

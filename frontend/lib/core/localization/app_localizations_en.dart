@@ -1851,6 +1851,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloads_empty_subtitle => 'Downloaded episodes will appear here';
 
   @override
+  String get podcast_downloads_load_error =>
+      'Failed to load downloads. Please try again.';
+
+  @override
   String get downloads_delete_all => 'Delete all';
 
   @override
@@ -2184,4 +2188,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String podcast_episode_fallback_title(int id) {
     return 'Episode #$id';
   }
+
+  @override
+  String get not_available => 'N/A';
+
+  @override
+  String get time_unknown => '--:--';
 }

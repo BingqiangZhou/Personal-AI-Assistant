@@ -75,7 +75,33 @@ class PodcastDownloadsPage extends ConsumerWidget {
                       },
                       loading: () =>
                           const Center(child: CircularProgressIndicator.adaptive()),
-                      error: (e, _) => Center(child: Text(e.toString())),
+                      error: (e, _) => Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(context.spacing.lg),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 56,
+                                color: theme.colorScheme.error,
+                              ),
+                              SizedBox(height: context.spacing.lg),
+                              Text(
+                                l10n.podcast_downloads_load_error,
+                                style: theme.textTheme.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: context.spacing.md),
+                              FilledButton.tonal(
+                                onPressed: () => ref.invalidate(downloadsListProvider),
+                                child: Text(l10n.retry),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
