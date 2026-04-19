@@ -5,13 +5,23 @@ import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
-/// Chart row widget for displaying a single discover item with rank and actions
+/// Chart row widget for displaying a single discover item with rank and actions.
+///
+/// Uses card-style container matching [BaseEpisodeCard] visual pattern:
+/// `surfaceContainerLow` background, outline border, corner radius,
+/// and optional identity gradient bar for top-3 ranked items.
 class DiscoverChartRow extends StatelessWidget {
   const DiscoverChartRow({
-    required this.rank, required this.item, required this.onTap, required this.onSubscribe, required this.onPlay, super.key,
+    required this.rank,
+    required this.item,
+    required this.onTap,
+    required this.onSubscribe,
+    required this.onPlay,
+    super.key,
     this.isSubscribing = false,
     this.isSubscribed = false,
     this.isDense = false,
+    this.cardMargin,
   });
 
   final int rank;
@@ -22,6 +32,9 @@ class DiscoverChartRow extends StatelessWidget {
   final bool isSubscribing;
   final bool isSubscribed;
   final bool isDense;
+  final EdgeInsetsGeometry? cardMargin;
+
+  static const double _identityBarWidth = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +42,10 @@ class DiscoverChartRow extends StatelessWidget {
     final extension = appThemeOf(context);
     final showSubscribe = item.isPodcastShow;
     final rankLabel = '$rank';
-    final rankSlotWidth = isDense ? 44.0 : 48.0;
-    final actionSlotWidth = rankSlotWidth;
-    final rowOuterPadding = isDense ? context.spacing.xs - 1 : context.spacing.sm;
-    final rowInnerPadding = isDense ? context.spacing.xs : context.spacing.sm;
-    final imageSize = isDense ? 56.0 : 62.0;
+    final rankSlotWidth = isDense ? 36.0 : 48.0;
+    final actionSlotWidth = isDense ? 32.0 : 48.0;
+    final innerPadding = isDense ? context.spacing.sm : context.spacing.md;
+    final imageSize = isDense ? 48.0 : 62.0;
     final titleStyle =
         (isDense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
             ?.copyWith(fontWeight: FontWeight.w700);
@@ -41,59 +53,35 @@ class DiscoverChartRow extends StatelessWidget {
         (isDense ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
-    // Determine rank colors with gradient accents for top 3
-    Color rankColor;
-    Decoration? rowDecoration;
+    final isTop3 = rank <= 3;
+    final List<Color> identityColors = switch (rank) {
+      1 => AppColors.goldColors,
+      2 => AppColors.coralColors,
+      3 => AppColors.violetColors,
+      _ => const [],
+    };
+    final rankColor = rank <= 3
+        ? identityColors.first
+        : theme.colorScheme.onSurfaceVariant;
 
-    if (rank == 1) {
-      rankColor = AppColors.accentWarm;
-      rowDecoration = BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.goldColors[0].withValues(alpha: 0.12),
-            AppColors.goldColors[1].withValues(alpha: 0.08),
-          ],
+    final cardContent = Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(extension.cardRadius),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
         ),
-        borderRadius: BorderRadius.circular(extension.cardRadius),
-      );
-    } else if (rank == 2) {
-      rankColor = AppColors.coralColors[0];
-      rowDecoration = BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.coralColors[0].withValues(alpha: 0.1),
-            AppColors.coralColors[1].withValues(alpha: 0.06),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(extension.cardRadius),
-      );
-    } else if (rank == 3) {
-      rankColor = AppColors.violetColors[0];
-      rowDecoration = BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.violetColors[0].withValues(alpha: 0.1),
-            AppColors.violetColors[1].withValues(alpha: 0.06),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(extension.cardRadius),
-      );
-    } else {
-      rankColor = theme.colorScheme.onSurfaceVariant;
-      rowDecoration = null;
-    }
-
-    return Padding(
-      key: Key('podcast_discover_chart_row_${item.itemId}'),
-      padding: EdgeInsets.symmetric(vertical: rowOuterPadding),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(extension.cardRadius),
-        onTap: onTap,
-        child: Container(
-          decoration: rowDecoration,
-          padding: EdgeInsets.symmetric(vertical: context.spacing.xs, horizontal: context.spacing.sm),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(extension.cardRadius),
+          onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: rowInnerPadding),
+            padding: EdgeInsets.symmetric(
+              vertical: isDense ? context.spacing.sm : context.spacing.md,
+              horizontal: innerPadding,
+            ),
             child: Row(
               children: [
                 SizedBox(
@@ -102,7 +90,9 @@ class DiscoverChartRow extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        key: Key('podcast_discover_chart_rank_text_${item.itemId}'),
+                        key: Key(
+                          'podcast_discover_chart_rank_text_${item.itemId}',
+                        ),
                         rankLabel,
                         maxLines: 1,
                         textAlign: TextAlign.center,
@@ -114,19 +104,24 @@ class DiscoverChartRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: isDense ? context.spacing.xs : context.spacing.smMd),
+                SizedBox(
+                  width: isDense ? context.spacing.xs - 1 : context.spacing.smMd,
+                ),
                 RepaintBoundary(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(extension.buttonRadius),
+                    borderRadius:
+                        BorderRadius.circular(extension.buttonRadius),
                     child: PodcastImageWidget(
                       imageUrl: item.artworkUrl,
                       width: imageSize,
                       height: imageSize,
-                      iconSize: 24,
+                      iconSize: 20,
                     ),
                   ),
                 ),
-                SizedBox(width: isDense ? context.spacing.smMd : context.spacing.md),
+                SizedBox(
+                  width: isDense ? context.spacing.xs : context.spacing.md,
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +132,9 @@ class DiscoverChartRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: titleStyle,
                       ),
-                      SizedBox(height: context.spacing.xs + context.spacing.xs),
+                      SizedBox(
+                        height: context.spacing.xxs,
+                      ),
                       Text(
                         item.artist,
                         maxLines: 1,
@@ -147,26 +144,33 @@ class DiscoverChartRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: isDense ? context.spacing.smMd : context.spacing.sm),
+                SizedBox(
+                  width: isDense ? context.spacing.xs : context.spacing.sm,
+                ),
                 if (showSubscribe)
                   SizedBox(
                     width: actionSlotWidth,
                     child: Center(
                       child: SizedBox(
-                        width: 36,
-                        height: 36,
+                        width: isDense ? 32 : 36,
+                        height: isDense ? 32 : 36,
                         child: isSubscribing
                             ? Padding(
                                 padding: EdgeInsets.all(context.spacing.sm),
-                                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                                child: CircularProgressIndicator.adaptive(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : IconButton(
-                                key: Key('podcast_discover_subscribe_${item.itemId}'),
+                                key: Key(
+                                  'podcast_discover_subscribe_${item.itemId}',
+                                ),
                                 onPressed: isSubscribed ? null : onSubscribe,
                                 style: IconButton.styleFrom(
-                                  minimumSize: const Size(36, 36),
-                                  maximumSize: const Size(36, 36),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  minimumSize: Size(isDense ? 32 : 36, isDense ? 32 : 36),
+                                  maximumSize: Size(isDense ? 32 : 36, isDense ? 32 : 36),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                   padding: EdgeInsets.zero,
                                 ),
@@ -184,18 +188,21 @@ class DiscoverChartRow extends StatelessWidget {
                     width: actionSlotWidth,
                     child: Center(
                       child: SizedBox(
-                        width: 36,
-                        height: 36,
+                        width: isDense ? 32 : 36,
+                        height: isDense ? 32 : 36,
                         child: IconButton(
-                          key: Key('podcast_discover_play_${item.itemId}'),
+                          key: Key(
+                            'podcast_discover_play_${item.itemId}',
+                          ),
                           onPressed: onPlay,
                           style: IconButton.styleFrom(
-                            minimumSize: const Size(36, 36),
-                            maximumSize: const Size(36, 36),
+                            minimumSize: Size(isDense ? 32 : 36, isDense ? 32 : 36),
+                            maximumSize: Size(isDense ? 32 : 36, isDense ? 32 : 36),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
                             padding: EdgeInsets.zero,
-                            foregroundColor: theme.colorScheme.onSurfaceVariant,
+                            foregroundColor:
+                                theme.colorScheme.onSurfaceVariant,
                           ),
                           icon: const Icon(Icons.play_circle_outline, size: 24),
                         ),
@@ -205,6 +212,40 @@ class DiscoverChartRow extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+
+    final wrappedCard = isTop3
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildIdentityBar(extension.cardRadius, identityColors),
+              Expanded(child: cardContent),
+            ],
+          )
+        : cardContent;
+
+    return Padding(
+      key: Key('podcast_discover_chart_row_${item.itemId}'),
+      padding: cardMargin ??
+          EdgeInsets.symmetric(vertical: isDense ? context.spacing.xxs : context.spacing.sm),
+      child: wrappedCard,
+    );
+  }
+
+  Widget _buildIdentityBar(double cornerRadius, List<Color> colors) {
+    return Container(
+      width: _identityBarWidth,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(cornerRadius),
+          bottomLeft: Radius.circular(cornerRadius),
         ),
       ),
     );
