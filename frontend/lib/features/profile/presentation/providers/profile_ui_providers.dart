@@ -10,7 +10,7 @@ class NotificationPreferenceNotifier extends Notifier<bool> {
   @override
   bool build() {
     _loadFromStorage();
-    return true;
+    return false;
   }
 
   Future<void> _loadFromStorage() async {
@@ -48,7 +48,7 @@ class AppVersionNotifier extends Notifier<String> {
   String build() {
     // Load version asynchronously on first access
     _loadVersion();
-    return 'Loading...';
+    return '';
   }
 
   Future<void> _loadVersion() async {
@@ -57,7 +57,7 @@ class AppVersionNotifier extends Notifier<String> {
       state = 'v${packageInfo.version} (${packageInfo.buildNumber})';
     } catch (e) {
       logger.AppLogger.debug('Error loading version: $e');
-      state = 'Unknown';
+      state = '\u2014';
     }
   }
 }
