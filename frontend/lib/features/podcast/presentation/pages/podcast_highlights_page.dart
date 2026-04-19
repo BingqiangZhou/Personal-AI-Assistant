@@ -424,14 +424,14 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
       transitionDuration: const Duration(milliseconds: 160),
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
         final maxPanelWidth = (screenWidth - horizontalPadding * 2)
-            .clamp(0.0, 400.0)
+            .clamp(0.0, CalendarPanelHelper.maxPanelWidth)
             ;
         return SafeArea(
           child: Align(
             alignment: Alignment.topRight,
             child: Padding(
               padding: EdgeInsets.only(
-                top: 84,
+                top: CalendarPanelHelper.dialogTopOffset,
                 left: horizontalPadding,
                 right: horizontalPadding,
               ),
@@ -442,7 +442,7 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                   child: SurfacePanel(
                     key: const Key('highlights_calendar_panel'),
                     padding: EdgeInsets.all(context.spacing.md),
-                    borderRadius: 26,
+                    borderRadius: CalendarPanelHelper.panelBorderRadius,
                     child: Consumer(
                       builder: (panelContext, panelRef, _) {
                         return _buildCalendarPanelContent(
@@ -504,14 +504,14 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
         SizedBox(height: context.spacing.smMd),
         SizedBox(
           key: const Key('highlights_calendar'),
-          height: 348,
+          height: CalendarPanelHelper.calendarHeight,
           child: TableCalendar<bool>(
             firstDay: DateTime(2000),
             lastDay: now,
             focusedDay: displayFocusedDay,
             availableCalendarFormats: {CalendarFormat.month: context.l10n.calendar_month_format},
-            rowHeight: 42,
-            daysOfWeekHeight: 22,
+            rowHeight: CalendarPanelHelper.calendarRowHeight,
+            daysOfWeekHeight: CalendarPanelHelper.calendarDaysOfWeekHeight,
             headerStyle: HeaderStyle(
               formatButtonVisible: false,
               titleCentered: true,
@@ -610,10 +610,10 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
                 return Positioned(
                   key: Key(
                       'highlights_calendar_marker_${EpisodeCardUtils.formatDate(day)}'),
-                  bottom: 5,
+                  bottom: CalendarPanelHelper.markerBottomOffset,
                   child: Container(
-                    width: 6,
-                    height: 6,
+                    width: CalendarPanelHelper.markerDotSize,
+                    height: CalendarPanelHelper.markerDotSize,
                     decoration: BoxDecoration(
                       color: markerColor,
                       shape: BoxShape.circle,
@@ -629,8 +629,8 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
           Row(
             children: [
               SizedBox(
-                width: 14,
-                height: 14,
+                width: CalendarPanelHelper.loadingSpinnerSize,
+                height: CalendarPanelHelper.loadingSpinnerSize,
                 child: Theme(
                   data: theme.copyWith(
                     colorScheme: theme.colorScheme.copyWith(

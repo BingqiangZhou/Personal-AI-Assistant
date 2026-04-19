@@ -7,6 +7,37 @@ import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shar
 class CalendarPanelHelper {
   CalendarPanelHelper._();
 
+  // --- Calendar panel layout constants ---
+
+  /// Top offset for the calendar dialog panel.
+  static const double dialogTopOffset = 84;
+
+  /// Maximum width of the calendar panel.
+  static const double maxPanelWidth = 400;
+
+  /// Border radius for the calendar panel surface.
+  static const double panelBorderRadius = 26;
+
+  /// Total height of the TableCalendar widget.
+  static const double calendarHeight = 348;
+
+  /// Row height for each calendar week row.
+  static const double calendarRowHeight = 42;
+
+  /// Height of the days-of-week header row.
+  static const double calendarDaysOfWeekHeight = 22;
+
+  /// Bottom offset for the marker dot inside a day cell.
+  static const double markerBottomOffset = 5;
+
+  /// Size (width and height) of the marker dot.
+  static const double markerDotSize = 6;
+
+  /// Size (width and height) of the loading spinner in the panel footer.
+  static const double loadingSpinnerSize = 14;
+
+  // --- Utility methods ---
+
   /// Normalizes a [DateTime] to a date-only value (no time component).
   static DateTime toDateOnly(DateTime value) {
     final local = value.isUtc ? value.toLocal() : value;
