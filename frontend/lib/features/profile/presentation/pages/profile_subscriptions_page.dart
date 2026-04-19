@@ -6,7 +6,6 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
-import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive_sliver_app_bar.dart';
 import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/widgets/app_dialog_helper.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
@@ -89,36 +88,39 @@ class _ProfileSubscriptionsPageState
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
-          child: CustomScrollView(
-            slivers: [
-              AdaptiveSliverAppBar(
-                title: l10n.profile_subscriptions,
-                actions: [
-                  HeaderCapsuleActionButton(
-                    key: const Key('profile_subscriptions_action_add'),
-                    tooltip: l10n.podcast_add_podcast,
-                    onPressed: () {
-                      showAppDialog(
-                        context: context,
-                        builder: (context) => const AddPodcastDialog(),
-                      );
-                    },
-                    icon: Icons.add,
-                    circular: true,
+          child: AdaptiveRefreshIndicator.sliver(
+            onRefresh: () => ref
+                .read(podcastSubscriptionProvider.notifier)
+                .refreshSubscriptions(),
+            child: const SizedBox.shrink(),
+            builder: (context, refreshSliver) {
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  if (refreshSliver != null) refreshSliver,
+                  AdaptiveSliverAppBar(
+                    title: l10n.profile_subscriptions,
+                    actions: [
+                      HeaderCapsuleActionButton(
+                        key: const Key('profile_subscriptions_action_add'),
+                        tooltip: l10n.podcast_add_podcast,
+                        onPressed: () {
+                          showAppDialog(
+                            context: context,
+                            builder: (context) => const AddPodcastDialog(),
+                          );
+                        },
+                        icon: Icons.add,
+                        circular: true,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: SizedBox(height: context.spacing.smMd),
-              ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: AdaptiveRefreshIndicator(
-                  onRefresh: () => ref
-                      .read(podcastSubscriptionProvider.notifier)
-                      .refreshSubscriptions(),
-                  child: _buildBody(
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: context.spacing.smMd),
+                  ),
+                  ..._buildStateSlivers(
                     context,
                     l10n,
                     subscriptions: state.subscriptions,
@@ -128,16 +130,16 @@ class _ProfileSubscriptionsPageState
                     total: state.total,
                     error: state.error,
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBody(
+  List<Widget> _buildStateSlivers(
     BuildContext context,
     AppLocalizations l10n, {
     required List<PodcastSubscriptionModel> subscriptions,
@@ -148,135 +150,231 @@ class _ProfileSubscriptionsPageState
     required String? error,
   }) {
     if (isLoading && subscriptions.isEmpty) {
-      return _buildPanelScaffold(
-        context,
-        title: l10n.profile_subscriptions,
-        subtitle: l10n.profile_subscriptions_subtitle,
-        child: LoadingStatusContent(
-          key: const Key('profile_subscriptions_loading_content'),
-          title: l10n.loading,
-          spinnerSize: 28,
-          gapAfterSpinner: 12,
-        ),
-        bare: true,
-      );
+      return _buildLoadingSlivers(context, l10n);
     }
 
     if (error != null && subscriptions.isEmpty) {
-      return _buildPanelScaffold(
-        context,
-        title: l10n.profile_subscriptions,
-        subtitle: l10n.profile_subscriptions_subtitle,
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(context.spacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 56,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                SizedBox(height: context.spacing.lg),
-                Text(
-                  error,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      return _buildErrorSlivers(context, l10n, error);
     }
 
     if (subscriptions.isEmpty) {
-      return _buildPanelScaffold(
-        context,
-        title: l10n.profile_subscriptions,
-        subtitle: l10n.profile_subscriptions_subtitle,
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(context.spacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.subscriptions_outlined,
-                  size: 56,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+      return _buildEmptySlivers(context, l10n);
+    }
+
+    return _buildDataSlivers(
+      context,
+      l10n,
+      subscriptions: subscriptions,
+      hasMore: hasMore,
+      isLoadingMore: isLoadingMore,
+      total: total,
+    );
+  }
+
+  List<Widget> _buildDataSlivers(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required List<PodcastSubscriptionModel> subscriptions,
+    required bool hasMore,
+    required bool isLoadingMore,
+    required int total,
+  }) {
+    final tokens = appThemeOf(context);
+    return [
+      // Header
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.smMd,
                 ),
-                SizedBox(height: context.spacing.lg),
-                Text(
-                  l10n.podcast_no_subscriptions,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                child: AppSectionHeader(
+                  title: l10n.profile_subscriptions,
+                  subtitle: l10n.profile_subscriptions_count(total),
+                  hideTitle: true,
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // List items
+      SliverList.builder(
+        itemCount: subscriptions.length + 1,
+        itemBuilder: (context, index) {
+          if (index == subscriptions.length) {
+            return _buildLoadingIndicator(
+              context,
+              hasMore,
+              isLoadingMore,
+              total,
+              l10n,
+            );
+          }
+
+          final subscription = subscriptions[index];
+          return _buildSubscriptionCard(context, subscription, l10n);
+        },
+      ),
+      // Bottom cap
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
+          ),
+          height: context.spacing.smMd,
+        ),
+      ),
+      // Bottom buffer
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+      ),
+    ];
+  }
+
+  List<Widget> _buildLoadingSlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_subscriptions,
+          subtitle: l10n.profile_subscriptions_subtitle,
+          child: LoadingStatusContent(
+            key: const Key('profile_subscriptions_loading_content'),
+            title: l10n.loading,
+            spinnerSize: 28,
+            gapAfterSpinner: 12,
+          ),
+          bare: true,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildErrorSlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+    String error,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_subscriptions,
+          subtitle: l10n.profile_subscriptions_subtitle,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(context.spacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 56,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                ),
-                SizedBox(height: context.spacing.sm),
-                Text(
-                  l10n.feed_no_subscriptions_hint,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  SizedBox(height: context.spacing.lg),
+                  Text(
+                    error,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      );
-    }
-
-    return SurfacePanel(
-      padding: EdgeInsets.zero,
-      showBorder: false,
-      borderRadius: appThemeOf(context).cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
-            child: AppSectionHeader(
-              title: l10n.profile_subscriptions,
-              subtitle: l10n.profile_subscriptions_count(total),
-              hideTitle: true,
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: subscriptions.length + 1,
-              itemBuilder: (context, index) {
-                if (index == subscriptions.length) {
-                  return _buildLoadingIndicator(
-                    context,
-                    hasMore,
-                    isLoadingMore,
-                    total,
-                    l10n,
-                  );
-                }
-
-                final subscription = subscriptions[index];
-                return _buildSubscriptionCard(context, subscription, l10n);
-              },
-            ),
-          ),
-        ],
       ),
-    );
+    ];
+  }
+
+  List<Widget> _buildEmptySlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_subscriptions,
+          subtitle: l10n.profile_subscriptions_subtitle,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(context.spacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.subscriptions_outlined,
+                    size: 56,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  SizedBox(height: context.spacing.lg),
+                  Text(
+                    l10n.podcast_no_subscriptions,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  SizedBox(height: context.spacing.sm),
+                  Text(
+                    l10n.feed_no_subscriptions_hint,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   Widget _buildPanelScaffold(
@@ -332,7 +430,6 @@ class _ProfileSubscriptionsPageState
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppRadius.itemValue),
           border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
         ),
         child: Material(

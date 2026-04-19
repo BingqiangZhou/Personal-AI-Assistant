@@ -37,169 +37,239 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
-          child: CustomScrollView(
-            slivers: [
-              AdaptiveSliverAppBar(
-                title: l10n.profile_viewed_title,
-              ),
-              SliverToBoxAdapter(
-                child: SizedBox(height: context.spacing.smMd),
-              ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: AdaptiveRefreshIndicator(
-                  onRefresh: () => ref
-                      .read(playbackHistoryLiteProvider.notifier)
-                      .load(forceRefresh: true),
-                  child: historyAsync.when(
+          child: AdaptiveRefreshIndicator.sliver(
+            onRefresh: () => ref
+                .read(playbackHistoryLiteProvider.notifier)
+                .load(forceRefresh: true),
+            child: const SizedBox.shrink(),
+            builder: (context, refreshSliver) {
+              return CustomScrollView(
+                slivers: [
+                  if (refreshSliver != null) refreshSliver,
+                  AdaptiveSliverAppBar(
+                    title: l10n.profile_viewed_title,
+                  ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: context.spacing.smMd),
+                  ),
+                  ...historyAsync.when(
                     data: (response) {
-                      final episodes =
-                          response?.episodes ??
+                      final episodes = response?.episodes ??
                           const <PlaybackHistoryLiteItem>[];
-
                       if (episodes.isEmpty) {
-                        return _buildPanelScaffold(
-                          context,
-                          title: l10n.profile_viewed_title,
-                          subtitle: l10n.profile_history_subtitle,
-                          child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(context.spacing.lg),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.history,
-                                    size: 56,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                                  SizedBox(height: context.spacing.lg),
-                                  Text(
-                                    l10n.server_history_empty,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                        ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
+                        return _buildEmptySlivers(context, l10n);
                       }
-
-                      return SurfacePanel(
-                        padding: EdgeInsets.zero,
-                        showBorder: false,
-                        borderRadius: appThemeOf(
-                          context,
-                        ).cardRadius,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                context.spacing.mdLg,
-                                context.spacing.mdLg,
-                                context.spacing.mdLg,
-                                context.spacing.smMd,
-                              ),
-                              child: AppSectionHeader(
-                                title: l10n.profile_viewed_title,
-                                subtitle:
-                                    l10n.profile_history_episode_count(episodes.length),
-                                hideTitle: true,
-                              ),
-                            ),
-                            Divider(
-                              height: 1,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.45),
-                            ),
-                            Expanded(
-                              child: ListView.builder(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                itemCount: episodes.length,
-                                itemBuilder: (context, index) {
-                                  final episode = episodes[index];
-                                  return _buildHistoryCard(
-                                    context,
-                                    episode,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                      return _buildDataSlivers(
+                        context,
+                        l10n,
+                        episodes: episodes,
                       );
                     },
-                    loading: () => _buildPanelScaffold(
-                      context,
-                      title: l10n.profile_viewed_title,
-                      subtitle: l10n.profile_history_subtitle,
-                      child: LoadingStatusContent(
-                        key: const Key('profile_history_loading_content'),
-                        title: l10n.loading,
-                        spinnerSize: 28,
-                        gapAfterSpinner: 12,
-                      ),
-                      bare: true,
-                    ),
-                    error: (error, _) => _buildPanelScaffold(
-                      context,
-                      title: l10n.profile_viewed_title,
-                      subtitle: l10n.profile_history_subtitle,
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(context.spacing.lg),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 56,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.error,
-                              ),
-                              SizedBox(height: context.spacing.lg),
-                              Text(
-                                error.toString(),
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: context.spacing.md),
-                              FilledButton.tonal(
-                                onPressed: () => ref.invalidate(playbackHistoryLiteProvider),
-                                child: Text(l10n.retry),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    loading: () => _buildLoadingSlivers(context, l10n),
+                    error: (error, _) =>
+                        _buildErrorSlivers(context, l10n, error),
                   ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDataSlivers(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required List<PlaybackHistoryLiteItem> episodes,
+  }) {
+    final tokens = appThemeOf(context);
+    return [
+      // Header
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.smMd,
                 ),
+                child: AppSectionHeader(
+                  title: context.l10n.profile_viewed_title,
+                  subtitle:
+                      context.l10n.profile_history_episode_count(episodes.length),
+                  hideTitle: true,
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.45),
               ),
             ],
           ),
         ),
+      ),
+      // List items
+      SliverList.builder(
+        itemCount: episodes.length,
+        itemBuilder: (context, index) {
+          final episode = episodes[index];
+          return _buildHistoryCard(context, episode);
+        },
+      ),
+      // Bottom cap
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15),
+            ),
+          ),
+          height: context.spacing.smMd,
         ),
-      );
+      ),
+      // Bottom buffer
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+      ),
+    ];
+  }
+
+  List<Widget> _buildEmptySlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_viewed_title,
+          subtitle: l10n.profile_history_subtitle,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(context.spacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.history,
+                    size: 56,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  SizedBox(height: context.spacing.lg),
+                  Text(
+                    l10n.server_history_empty,
+                    style:
+                        Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildLoadingSlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_viewed_title,
+          subtitle: l10n.profile_history_subtitle,
+          child: LoadingStatusContent(
+            key: const Key('profile_history_loading_content'),
+            title: l10n.loading,
+            spinnerSize: 28,
+            gapAfterSpinner: 12,
+          ),
+          bare: true,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildErrorSlivers(
+    BuildContext context,
+    AppLocalizations l10n,
+    Object error,
+  ) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildPanelScaffold(
+          context,
+          title: l10n.profile_viewed_title,
+          subtitle: l10n.profile_history_subtitle,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(context.spacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 56,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  SizedBox(height: context.spacing.lg),
+                  Text(
+                    error.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: context.spacing.md),
+                  FilledButton.tonal(
+                    onPressed: () =>
+                        ref.invalidate(playbackHistoryLiteProvider),
+                    child: Text(l10n.retry),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   Widget _buildPanelScaffold(
@@ -214,7 +284,8 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg,
+                context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Expanded(child: Center(child: child)),
@@ -230,7 +301,8 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(context.spacing.mdLg, context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
+            padding: EdgeInsets.fromLTRB(context.spacing.mdLg,
+                context.spacing.mdLg, context.spacing.mdLg, context.spacing.smMd),
             child: AppSectionHeader(title: title, subtitle: subtitle),
           ),
           Divider(
@@ -254,16 +326,21 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppRadius.itemValue),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15)),
+          border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.15)),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.push('/podcast/episode/detail/${episode.id}'),
+            onTap: () =>
+                context.push('/podcast/episode/detail/${episode.id}'),
             borderRadius: BorderRadius.circular(AppRadius.itemValue),
             child: SizedBox(
-              key: ValueKey('profile_history_card_content_${episode.id}'),
+              key: ValueKey(
+                  'profile_history_card_content_${episode.id}'),
               height: kPodcastRowCardTargetHeight,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -295,7 +372,9 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                             key: ValueKey(
                               'profile_history_title_box_${episode.id}',
                             ),
-                            height: context.spacing.mdLg + context.spacing.md + context.spacing.xs,
+                            height: context.spacing.mdLg +
+                                context.spacing.md +
+                                context.spacing.xs,
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -310,7 +389,11 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                       height: 1.15,
                                     ),
                                 strutStyle: StrutStyle(
-                                  fontSize: Theme.of(context).textTheme.bodySmall?.fontSize ?? 13,
+                                  fontSize: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.fontSize ??
+                                      13,
                                   height: 1.15,
                                   forceStrutHeight: true,
                                 ),
@@ -374,7 +457,8 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
                                     ),
                                     SizedBox(width: context.spacing.xs),
                                     Text(
-                                      _formatPlayedAt(context, episode.lastPlayedAt),
+                                      _formatPlayedAt(
+                                          context, episode.lastPlayedAt),
                                       style: AppTheme.metaSmall(
                                             Theme.of(
                                               context,

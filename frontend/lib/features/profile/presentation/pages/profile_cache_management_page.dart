@@ -98,7 +98,8 @@ class _ProfileCacheManagementPageState
     objects: <CacheObject>[],
   );
 
-  late Future<_MediaCacheStats> _statsFuture;
+  _MediaCacheStats _stats = _emptyStats;
+  bool _isLoading = true;
 
   double _contentHorizontalInset(BuildContext context) =>
       context.isMobile ? kPodcastRowCardHorizontalMargin : 0;
@@ -109,14 +110,23 @@ class _ProfileCacheManagementPageState
   @override
   void initState() {
     super.initState();
-    _statsFuture = _loadStats();
+    _refresh();
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _statsFuture = _loadStats();
-    });
-    await _statsFuture;
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final stats = await _loadStats();
+      if (!mounted) return;
+      setState(() {
+        _stats = stats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   bool _isImageUrl(String url) {
@@ -616,191 +626,251 @@ class _ProfileCacheManagementPageState
     );
   }
 
-  Widget _buildContentPanel(
+  List<Widget> _buildContentSlivers(
     BuildContext context, {
     required _MediaCacheStats stats,
-    required bool isLoading,
+    required _CachePagePalette palette,
   }) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final palette = _CachePagePalette.of(theme);
+    final tokens = appThemeOf(context);
 
-    return SurfacePanel(
-      key: const Key('cache_manage_content_panel'),
-      padding: EdgeInsets.zero,
-      borderRadius: appThemeOf(context).cardRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isLoading) const LinearProgressIndicator(minHeight: 2),
-          Expanded(
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(context.spacing.lg, context.spacing.mdLg, context.spacing.lg, context.spacing.mdLg),
-              children: [
-                _buildOverviewSection(context, stats: stats, palette: palette),
-                SizedBox(height: context.spacing.smMd),
-                Padding(
-                  padding: _contentHorizontalPadding(context),
-                  child: Text(
-                    l10n.profile_cache_manage_details,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-                SizedBox(height: context.spacing.sm),
-                _buildDetailRow(
-                  context: context,
-                  category: _CacheCategory.images,
-                  icon: Icons.image_outlined,
-                  color: palette.images,
-                  title: l10n.profile_cache_manage_images,
-                  stats: stats.images,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.images),
-                ),
-                _buildDetailRow(
-                  context: context,
-                  category: _CacheCategory.audio,
-                  icon: Icons.headphones,
-                  color: palette.audio,
-                  title: l10n.profile_cache_manage_audio,
-                  stats: stats.audio,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.audio),
-                ),
-                _buildDetailRow(
-                  context: context,
-                  category: _CacheCategory.other,
-                  icon: Icons.folder_outlined,
-                  color: palette.other,
-                  title: l10n.profile_cache_manage_other,
-                  stats: stats.other,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.other),
-                ),
-                SizedBox(height: context.spacing.md),
-                Padding(
-                  padding: _contentHorizontalPadding(context),
-                  child: Container(
-                    key: const Key('cache_manage_notice_box'),
-                    padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.md, context.spacing.md, context.spacing.md),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: theme.brightness == Brightness.dark
-                            ? 0.24
-                            : 0.16,
-                      ),
-                      borderRadius: AppRadius.lgRadius,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          key: const Key('cache_manage_notice_icon'),
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        SizedBox(width: context.spacing.sm),
-                        Expanded(
-                          child: Text(
-                            l10n.profile_cache_manage_notice,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: context.spacing.lg),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    _contentHorizontalInset(context),
-                    0,
-                    _contentHorizontalInset(context),
-                    context.spacing.xs,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      key: const Key('cache_manage_deep_clean_all'),
-                      onPressed: _clearAll,
-                      icon: const Icon(Icons.cleaning_services),
-                      label: Text(
-                        l10n.profile_cache_manage_deep_clean_all(
-                          _formatBytes(stats.totalBytes),
-                        ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: palette.deepCleanBackground,
-                        foregroundColor: palette.deepCleanForeground,
-                        padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
-                        textStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+    return [
+      // Header panel top
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(tokens.cardRadius),
+              topRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
             ),
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.mdLg,
+                  context.spacing.smMd,
+                ),
+                child: AppSectionHeader(
+                  title: l10n.profile_cache_manage_title,
+                  subtitle: l10n.profile_cache_manage_item_count(stats.totalCount),
+                  hideTitle: true,
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+        ),
       ),
-    );
+      // Content
+      SliverToBoxAdapter(
+        child: Container(
+          color: theme.colorScheme.surfaceContainerLow,
+          padding: EdgeInsets.fromLTRB(
+            context.spacing.lg,
+            context.spacing.mdLg,
+            context.spacing.lg,
+            context.spacing.mdLg,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOverviewSection(context, stats: stats, palette: palette),
+              SizedBox(height: context.spacing.smMd),
+              Padding(
+                padding: _contentHorizontalPadding(context),
+                child: Text(
+                  l10n.profile_cache_manage_details,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+              SizedBox(height: context.spacing.sm),
+              _buildDetailRow(
+                context: context,
+                category: _CacheCategory.images,
+                icon: Icons.image_outlined,
+                color: palette.images,
+                title: l10n.profile_cache_manage_images,
+                stats: stats.images,
+                onClean: () => _deleteCategory(stats, _CacheCategory.images),
+              ),
+              _buildDetailRow(
+                context: context,
+                category: _CacheCategory.audio,
+                icon: Icons.headphones,
+                color: palette.audio,
+                title: l10n.profile_cache_manage_audio,
+                stats: stats.audio,
+                onClean: () => _deleteCategory(stats, _CacheCategory.audio),
+              ),
+              _buildDetailRow(
+                context: context,
+                category: _CacheCategory.other,
+                icon: Icons.folder_outlined,
+                color: palette.other,
+                title: l10n.profile_cache_manage_other,
+                stats: stats.other,
+                onClean: () => _deleteCategory(stats, _CacheCategory.other),
+              ),
+              SizedBox(height: context.spacing.md),
+              Padding(
+                padding: _contentHorizontalPadding(context),
+                child: Container(
+                  key: const Key('cache_manage_notice_box'),
+                  padding: EdgeInsets.fromLTRB(context.spacing.md, context.spacing.md, context.spacing.md, context.spacing.md),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: theme.brightness == Brightness.dark
+                          ? 0.24
+                          : 0.16,
+                    ),
+                    borderRadius: AppRadius.lgRadius,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        key: const Key('cache_manage_notice_icon'),
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      SizedBox(width: context.spacing.sm),
+                      Expanded(
+                        child: Text(
+                          l10n.profile_cache_manage_notice,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: context.spacing.lg),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  _contentHorizontalInset(context),
+                  0,
+                  _contentHorizontalInset(context),
+                  context.spacing.xs,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const Key('cache_manage_deep_clean_all'),
+                    onPressed: _clearAll,
+                    icon: const Icon(Icons.cleaning_services),
+                    label: Text(
+                      l10n.profile_cache_manage_deep_clean_all(
+                        _formatBytes(stats.totalBytes),
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: palette.deepCleanBackground,
+                      foregroundColor: palette.deepCleanForeground,
+                      padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
+                      textStyle: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // Bottom cap
+      SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(tokens.cardRadius),
+              bottomRight: Radius.circular(tokens.cardRadius),
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
+            ),
+          ),
+          height: context.spacing.smMd,
+        ),
+      ),
+      // Bottom buffer
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: context.spacing.xl),
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = _CachePagePalette.of(Theme.of(context));
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Material(
         color: Colors.transparent,
         child: ResponsiveContainer(
           maxWidth: 1480,
+          avoidTopSafeArea: true,
           alignment: Alignment.topCenter,
-          child: CustomScrollView(
-            slivers: [
-              AdaptiveSliverAppBar(
-                title: context.l10n.profile_cache_manage_title,
-                actions: [
-                  HeaderCapsuleActionButton(
-                    key: const Key('cache_manage_refresh_action'),
-                    tooltip: context.l10n.refresh,
-                    onPressed: _refresh,
-                    icon: Icons.refresh_rounded,
-                    circular: true,
-                  ),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: SizedBox(height: context.spacing.smMd),
-              ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: FutureBuilder<_MediaCacheStats>(
-                  future: _statsFuture,
-                  builder: (context, snapshot) {
-                    final isLoading =
-                        snapshot.connectionState != ConnectionState.done;
-                    final stats = snapshot.data ?? _emptyStats;
-
-                    return AdaptiveRefreshIndicator(
-                      onRefresh: _refresh,
-                      child: _buildContentPanel(
-                        context,
-                        stats: stats,
-                        isLoading: isLoading,
+          child: AdaptiveRefreshIndicator.sliver(
+            onRefresh: _refresh,
+            child: const SizedBox.shrink(),
+            builder: (context, refreshSliver) {
+              return CustomScrollView(
+                slivers: [
+                  if (refreshSliver != null) refreshSliver,
+                  AdaptiveSliverAppBar(
+                    title: context.l10n.profile_cache_manage_title,
+                    actions: [
+                      HeaderCapsuleActionButton(
+                        key: const Key('cache_manage_refresh_action'),
+                        tooltip: context.l10n.refresh,
+                        onPressed: _refresh,
+                        icon: Icons.refresh_rounded,
+                        circular: true,
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                    ],
+                  ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: context.spacing.smMd),
+                  ),
+                  if (_isLoading)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
+                    )
+                  else
+                    ..._buildContentSlivers(
+                      context,
+                      stats: _stats,
+                      palette: palette,
+                    ),
+                ],
+              );
+            },
           ),
         ),
-        ),
-      );
+      ),
+    );
   }
 }
