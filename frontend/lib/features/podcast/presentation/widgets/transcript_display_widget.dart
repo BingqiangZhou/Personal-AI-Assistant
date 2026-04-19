@@ -379,7 +379,7 @@ class TranscriptDisplayWidgetState
       child: Row(
         children: [
           Expanded(
-            child: PlatformHelper.isIOS(context)
+            child: PlatformHelper.isApple(context)
                 ? CupertinoTextField(
                     controller: _searchController,
                     placeholder: l10n.podcast_transcript_search_hint,

@@ -21,7 +21,7 @@ Future<T?> showAppDialog<T>({
   double borderRadius = 28,
   bool useRootNavigator = false,
 }) {
-  if (PlatformHelper.isIOS(context)) {
+  if (PlatformHelper.isApple(context)) {
     return showCupertinoDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
@@ -68,7 +68,7 @@ Future<bool?> showAppConfirmationDialog({
   bool isDestructive = false,
   double borderRadius = 28,
 }) {
-  if (PlatformHelper.isIOS(context)) {
+  if (PlatformHelper.isApple(context)) {
     return showCupertinoDialog<bool>(
       context: context,
       builder: (dialogCtx) => CupertinoAlertDialog(

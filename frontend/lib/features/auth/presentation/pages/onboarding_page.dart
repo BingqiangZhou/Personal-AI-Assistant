@@ -80,7 +80,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: PlatformHelper.isIOS(context)
+                  physics: PlatformHelper.isApple(context)
                       ? const BouncingScrollPhysics()
                       : null,
                   onPageChanged: (page) {

@@ -10,7 +10,7 @@ PreferredSizeWidget adaptiveAppBar(
   bool? centerTitle,
   Color? backgroundColor,
 }) {
-  final isIOS = PlatformHelper.isIOS(context);
+  final isIOS = PlatformHelper.isApple(context);
   return AppBar(
     title: titleWidget ?? (title != null ? Text(title) : null),
     elevation: 0,

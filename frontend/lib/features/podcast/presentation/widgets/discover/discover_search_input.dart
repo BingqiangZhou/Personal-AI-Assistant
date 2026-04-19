@@ -140,7 +140,7 @@ class _DiscoverSearchInputState extends ConsumerState<DiscoverSearchInput> {
               width: widget.isDense ? context.spacing.smMd : context.spacing.sm,
             ),
             Expanded(
-              child: PlatformHelper.isIOS(context)
+              child: PlatformHelper.isApple(context)
                   ? CupertinoTextField(
                       key: const Key('podcast_discover_search_input'),
                       controller: widget.searchController,

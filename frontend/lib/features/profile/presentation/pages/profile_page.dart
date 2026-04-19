@@ -319,7 +319,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return AdaptiveListTile(
         key: tileKey,
         leading: Icon(icon),
@@ -343,7 +343,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     BuildContext context, {
     required Widget Function(BuildContext dialogContext) builder, bool barrierDismissible = true,
   }) {
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return showCupertinoDialog<T>(
         context: context,
         barrierDismissible: barrierDismissible,
@@ -378,7 +378,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     required Widget content,
     required List<Widget> actions,
   }) {
-    final isIOS = PlatformHelper.isIOS(dialogContext);
+    final isIOS = PlatformHelper.isApple(dialogContext);
     final theme = Theme.of(dialogContext);
 
     return Container(
@@ -484,7 +484,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 leading: Icon(Icons.password, color: iconColor),
                 title: Text(l10n.profile_change_password),
                 trailing: Icon(
-                  PlatformHelper.isIOS(dialogContext)
+                  PlatformHelper.isApple(dialogContext)
                       ? CupertinoIcons.chevron_right
                       : Icons.chevron_right,
                   color: iconColor,

@@ -161,7 +161,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     final isMobile = screenWidth < Breakpoints.medium;
     final dialogWidth = isMobile ? screenWidth - context.spacing.xxl : 500.0;
     final scheme = Theme.of(context).colorScheme;
-    final isIOS = PlatformHelper.isIOS(context);
+    final isIOS = PlatformHelper.isApple(context);
 
     final dialogChild = Material(
       color: isIOS ? scheme.surface : scheme.surfaceContainerHigh,

@@ -180,7 +180,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
 
   Widget _buildFilterChips() {
     final l10n = context.l10n;
-    if (PlatformHelper.isIOS(context)) {
+    if (PlatformHelper.isApple(context)) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -356,7 +356,7 @@ extension _PodcastEpisodesPageView on _PodcastEpisodesPageState {
                 },
               ),
               SizedBox(height: context.spacing.md),
-              if (PlatformHelper.isIOS(context))
+              if (PlatformHelper.isApple(context))
                 AdaptiveListTile(
                   leading: const AdaptiveSwitch(
                     value: false,

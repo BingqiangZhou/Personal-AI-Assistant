@@ -30,7 +30,7 @@ Future<T?> showAdaptiveSheet<T>({
   final screenWidth = MediaQuery.of(resolvedContext).size.width;
 
   // iOS mobile: use Cupertino modal popup
-  if (PlatformHelper.isIOS(resolvedContext) && screenWidth < 600) {
+  if (PlatformHelper.isApple(resolvedContext) && screenWidth < 600) {
     return showCupertinoModalPopup<T>(
       context: resolvedContext,
       builder: (sheetCtx) {
