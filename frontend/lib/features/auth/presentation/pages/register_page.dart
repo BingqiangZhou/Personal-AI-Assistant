@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
@@ -29,6 +29,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _secureStorage = const FlutterSecureStorage();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
@@ -62,14 +63,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     }
 
     if (_rememberMe) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        AppConstants.savedUsernameKey,
-        _emailController.text.trim(),
+      await _secureStorage.write(
+        key: AppConstants.savedUsernameKey,
+        value: _emailController.text.trim(),
       );
     } else {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(AppConstants.savedUsernameKey);
+      await _secureStorage.delete(key: AppConstants.savedUsernameKey);
     }
 
     ref.read(authProvider.notifier).register(
@@ -300,8 +299,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           _rememberMe = value;
                         });
                         if (!_rememberMe) {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.remove(AppConstants.savedUsernameKey);
+                          await _secureStorage.delete(
+                            key: AppConstants.savedUsernameKey,
+                          );
                         }
                       },
                     ),
