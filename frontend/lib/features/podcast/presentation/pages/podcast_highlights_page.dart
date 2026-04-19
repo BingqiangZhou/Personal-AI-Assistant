@@ -82,17 +82,27 @@ class _PodcastHighlightsPageState extends ConsumerState<PodcastHighlightsPage> {
   }
 
   Future<void> _loadInitialHighlightsData(DateTime targetDate) async {
-    await Future.wait([
-      ref
-          .read(highlightsProvider.notifier)
-          .load(date: targetDate, forceRefresh: true),
-      ref.read(highlightDatesProvider.notifier).load(forceRefresh: true),
-    ]);
+    try {
+      await Future.wait([
+        ref
+            .read(highlightsProvider.notifier)
+            .load(date: targetDate, forceRefresh: true),
+        ref.read(highlightDatesProvider.notifier).load(forceRefresh: true),
+      ]);
 
-    if (!mounted) return;
-    await ref
-        .read(highlightDatesProvider.notifier)
-        .ensureMonthCoverage(targetDate);
+      if (!mounted) return;
+      await ref
+          .read(highlightDatesProvider.notifier)
+          .ensureMonthCoverage(targetDate);
+    } catch (error) {
+      if (mounted) {
+        showTopFloatingNotice(
+          context,
+          message: context.l10n.podcast_highlights_cannot_load,
+          isError: true,
+        );
+      }
+    }
   }
 
   Future<void> _loadMoreHighlights() async {

@@ -12,6 +12,7 @@ import 'package:personal_ai_assistant/core/services/download_provider.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
@@ -255,7 +256,7 @@ class QueueListItem extends ConsumerWidget {
     return Material(
       key: Key('queue_item_tile_${item.episodeId}'),
       color: Colors.transparent,
-      child: InkWell(
+      child: AdaptiveInkWell(
         borderRadius: BorderRadius.circular(appThemeOf(context).cardRadius),
         onTap: onTap,
         child: AnimatedContainer(
@@ -390,9 +391,13 @@ class CurrentQueueSubtitle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progress = ref.watch(audioCurrentQueueProgressProvider);
-    final playedSec = progress.currentEpisodeId == item.episodeId
-        ? (progress.positionMs / 1000).round()
+    final isCurrentEpisode = ref.watch(
+      audioCurrentQueueProgressProvider.select((s) => s.currentEpisodeId == item.episodeId),
+    );
+    final playedSec = isCurrentEpisode
+        ? ref.watch(
+            audioCurrentQueueProgressProvider.select((s) => s.positionMs),
+          ) ~/ 1000
         : (item.playbackPosition ?? 0);
     return Text(
       queueFormatSubtitle(

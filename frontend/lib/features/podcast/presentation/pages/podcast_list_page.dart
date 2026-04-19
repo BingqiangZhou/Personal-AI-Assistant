@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
@@ -46,8 +48,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     _discoverListScrollController.addListener(_onDiscoverListScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
-      ref.read(podcastDiscoverProvider.notifier).loadInitialData();
+      unawaited(_loadInitialData());
     });
   }
 
@@ -58,6 +59,21 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      await ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
+      await ref.read(podcastDiscoverProvider.notifier).loadInitialData();
+    } catch (error) {
+      if (mounted) {
+        showTopFloatingNotice(
+          context,
+          message: context.l10n.error,
+          isError: true,
+        );
+      }
+    }
   }
 
   void _handleDiscoverTabSelected(search.PodcastSearchMode mode) {

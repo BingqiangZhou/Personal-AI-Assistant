@@ -4,6 +4,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/download_button.dart';
@@ -188,7 +189,7 @@ class BaseEpisodeCard extends StatelessWidget {
         label: title,
         child: Material(
           color: Colors.transparent,
-          child: InkWell(
+          child: AdaptiveInkWell(
             onTap: () {
               AdaptiveHaptic.lightImpact();
               onTap?.call();

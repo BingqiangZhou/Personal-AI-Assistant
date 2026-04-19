@@ -60,14 +60,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       return;
     }
 
-    if (_rememberMe) {
-      final storage = ref.read(secureStorageProvider);
-      await storage.save(AppConstants.savedUsernameKey, _emailController.text.trim());
-      await storage.save(AppConstants.savedPasswordKey, _passwordController.text);
-    } else {
-      final storage = ref.read(secureStorageProvider);
-      await storage.remove(AppConstants.savedUsernameKey);
-      await storage.remove(AppConstants.savedPasswordKey);
+    try {
+      if (_rememberMe) {
+        final storage = ref.read(secureStorageProvider);
+        await storage.save(AppConstants.savedUsernameKey, _emailController.text.trim());
+        await storage.save(AppConstants.savedPasswordKey, _passwordController.text);
+      } else {
+        final storage = ref.read(secureStorageProvider);
+        await storage.remove(AppConstants.savedUsernameKey);
+        await storage.remove(AppConstants.savedPasswordKey);
+      }
+    } catch (_) {
+      // Storage failure should not block registration.
     }
 
     ref.read(authProvider.notifier).register(

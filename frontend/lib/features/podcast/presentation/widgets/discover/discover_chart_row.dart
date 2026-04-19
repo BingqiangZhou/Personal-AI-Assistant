@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
@@ -74,7 +75,7 @@ class DiscoverChartRow extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
+        child: AdaptiveInkWell(
           borderRadius: BorderRadius.circular(extension.cardRadius),
           onTap: onTap,
           child: Padding(

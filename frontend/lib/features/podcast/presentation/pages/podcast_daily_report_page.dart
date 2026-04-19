@@ -61,18 +61,28 @@ class _PodcastDailyReportPageState
   }
 
   Future<void> _loadInitialDailyReportData(DateTime targetDate) async {
-    await Future.wait([
-      ref
-          .read(dailyReportProvider.notifier)
-          .load(date: targetDate, forceRefresh: true),
-      ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
-    ]);
-    if (!mounted) {
-      return;
+    try {
+      await Future.wait([
+        ref
+            .read(dailyReportProvider.notifier)
+            .load(date: targetDate, forceRefresh: true),
+        ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
+      ]);
+      if (!mounted) {
+        return;
+      }
+      await ref
+          .read(dailyReportDatesProvider.notifier)
+          .ensureMonthCoverage(targetDate);
+    } catch (error) {
+      if (mounted) {
+        showTopFloatingNotice(
+          context,
+          message: context.l10n.podcast_daily_report_error_hint,
+          isError: true,
+        );
+      }
     }
-    await ref
-        .read(dailyReportDatesProvider.notifier)
-        .ensureMonthCoverage(targetDate);
   }
 
   @override

@@ -109,8 +109,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildSettingsContent(BuildContext context) {
     final l10n = context.l10n;
     final isMobile = context.isMobile;
-    final theme = Theme.of(context);
-    final notificationsEnabled = ref.watch(notificationPreferenceProvider);
 
     final accountItems = <_SettingsItemConfig>[
       _SettingsItemConfig(
@@ -123,17 +121,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         icon: Icons.notifications,
         title: l10n.profile_notifications,
         subtitle: l10n.profile_notifications_subtitle,
-        trailing: Switch.adaptive(
-          key: const Key('profile_notifications_switch'),
-          value: notificationsEnabled,
-          activeThumbColor: theme.colorScheme.surface,
-          inactiveThumbColor: theme.colorScheme.surface,
-          activeTrackColor: theme.colorScheme.onSurfaceVariant,
-          inactiveTrackColor: theme.colorScheme.onSurfaceVariant.withValues(
-            alpha: 0.30,
-          ),
-          onChanged: (value) {
-            ref.read(notificationPreferenceProvider.notifier).setEnabled(value);
+        trailing: Consumer(
+          builder: (context, ref, _) {
+            final theme = Theme.of(context);
+            final notificationsEnabled = ref.watch(notificationPreferenceProvider);
+            return Switch.adaptive(
+              key: const Key('profile_notifications_switch'),
+              value: notificationsEnabled,
+              activeThumbColor: theme.colorScheme.surface,
+              inactiveThumbColor: theme.colorScheme.surface,
+              activeTrackColor: theme.colorScheme.onSurfaceVariant,
+              inactiveTrackColor: theme.colorScheme.onSurfaceVariant.withValues(
+                alpha: 0.30,
+              ),
+              onChanged: (value) {
+                ref.read(notificationPreferenceProvider.notifier).setEnabled(value);
+              },
+            );
           },
         ),
       ),
@@ -172,7 +176,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _SettingsItemConfig(
         icon: Icons.info_outline,
         title: l10n.version,
-        subtitle: ref.watch(appVersionProvider),
+        subtitle: ref.read(appVersionProvider),
         trailing: const Icon(Icons.chevron_right),
         tileKey: const Key('profile_version_item'),
         onTap: () => _showAboutDialog(context),

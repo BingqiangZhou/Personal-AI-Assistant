@@ -140,7 +140,7 @@ class ChatHeader extends ConsumerWidget {
                           ),
                         if (isMessageSelectMode)
                           IconButton(
-                            icon: const Icon(Icons.share_outlined),
+                            icon: Icon(Icons.adaptive.share),
                             tooltip: l10n.podcast_share_as_image,
                             onPressed:
                                 isSending || selectedMessageCount == 0
@@ -149,7 +149,7 @@ class ChatHeader extends ConsumerWidget {
                           ),
                         if (hasMessages)
                           IconButton(
-                            icon: const Icon(Icons.ios_share_outlined),
+                            icon: Icon(Icons.adaptive.share),
                             tooltip: l10n.podcast_share_all_content,
                             onPressed:
                                 isSending ? null : onShareAll,

@@ -76,7 +76,7 @@ class _PlaybackSpeedChip extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       borderRadius: AppRadius.lgRadius,
-      child: InkWell(
+      child: AdaptiveInkWell(
         key: const Key('podcast_bottom_player_speed'),
         borderRadius: AppRadius.lgRadius,
         onTap: onTap,

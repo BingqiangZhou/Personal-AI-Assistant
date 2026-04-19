@@ -64,14 +64,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final formState = _formKey.currentState;
     if (formState == null || !formState.validate()) return;
 
-    if (_rememberMe) {
-      final storage = ref.read(secureStorageProvider);
-      await storage.save(AppConstants.savedUsernameKey, _emailController.text.trim());
-      await storage.save(AppConstants.savedPasswordKey, _passwordController.text);
-    } else {
-      final storage = ref.read(secureStorageProvider);
-      await storage.remove(AppConstants.savedUsernameKey);
-      await storage.remove(AppConstants.savedPasswordKey);
+    try {
+      if (_rememberMe) {
+        final storage = ref.read(secureStorageProvider);
+        await storage.save(AppConstants.savedUsernameKey, _emailController.text.trim());
+        await storage.save(AppConstants.savedPasswordKey, _passwordController.text);
+      } else {
+        final storage = ref.read(secureStorageProvider);
+        await storage.remove(AppConstants.savedUsernameKey);
+        await storage.remove(AppConstants.savedPasswordKey);
+      }
+    } catch (_) {
+      // Storage failure should not block login.
     }
 
     if (!mounted) {

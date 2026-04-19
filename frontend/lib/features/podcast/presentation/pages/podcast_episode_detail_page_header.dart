@@ -208,9 +208,10 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
             artwork,
             Consumer(
               builder: (context, ref, _) {
-                final playStateInfo = ref.watch(audioEpisodePlayStateProvider);
-                final isPlaying = playStateInfo.currentEpisodeId == episode.id &&
-                    playStateInfo.isPlaying;
+                final playState = ref.watch(audioEpisodePlayStateProvider.select(
+                  (s) => (s.currentEpisodeId, s.isPlaying),
+                ));
+                final isPlaying = playState.$1 == episode.id && playState.$2;
                 return Container(
                   width: size,
                   height: size,

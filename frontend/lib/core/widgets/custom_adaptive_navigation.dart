@@ -9,6 +9,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/adaptive_haptic.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
@@ -987,7 +988,7 @@ class _CustomAdaptiveNavigationState extends ConsumerState<CustomAdaptiveNavigat
       label: destination.label,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
+        child: AdaptiveInkWell(
           onTap: onTap,
           borderRadius: AppRadius.mdLgRadius,
           splashColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),

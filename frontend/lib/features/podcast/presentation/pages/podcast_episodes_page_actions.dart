@@ -27,14 +27,24 @@ extension _PodcastEpisodesPageActions on _PodcastEpisodesPageState {
     logger.AppLogger.debug(
       '[Episodes] Loading episodes for subscription: ${widget.subscriptionId}',
     );
-    await ref
-        .read(podcastEpisodesProvider.notifier)
-        .loadEpisodesForSubscription(
-          subscriptionId: widget.subscriptionId,
-          status: _statusFilter,
-          hasSummary: _hasSummaryFilter,
-          forceRefresh: forceRefresh,
+    try {
+      await ref
+          .read(podcastEpisodesProvider.notifier)
+          .loadEpisodesForSubscription(
+            subscriptionId: widget.subscriptionId,
+            status: _statusFilter,
+            hasSummary: _hasSummaryFilter,
+            forceRefresh: forceRefresh,
+          );
+    } catch (error) {
+      if (mounted) {
+        showTopFloatingNotice(
+          context,
+          message: context.l10n.podcast_failed_load_episodes,
+          isError: true,
         );
+      }
+    }
   }
 
   Future<void> _refreshEpisodes() async {

@@ -17,3 +17,4 @@ export 'adaptive_checkbox_list_tile.dart';
 export 'adaptive_refresh_indicator.dart';
 export 'adaptive_switch.dart';
 export 'adaptive_action_sheet.dart';
+export 'adaptive_ink_well.dart';

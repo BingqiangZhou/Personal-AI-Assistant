@@ -426,7 +426,6 @@ class _ExpandedHero extends ConsumerWidget {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurfaceVariant;
     const imageSize = 72.0;
-    final currentLocation = ref.watch(currentRouteProvider);
 
     return Row(
       key: const Key('podcast_bottom_player_expanded_hero'),
@@ -450,7 +449,7 @@ class _ExpandedHero extends ConsumerWidget {
               key: const Key('podcast_bottom_player_expanded_title'),
               behavior: HitTestBehavior.opaque,
               onTap: () {
-                var resolvedCurrentLocation = currentLocation;
+                var resolvedCurrentLocation = ref.read(currentRouteProvider);
                 try {
                   resolvedCurrentLocation = GoRouterState.of(context).uri.toString();
                 } catch (e) {

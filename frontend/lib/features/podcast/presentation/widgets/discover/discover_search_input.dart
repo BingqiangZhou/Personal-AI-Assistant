@@ -6,6 +6,7 @@ import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/platform/platform_helper.dart';
+import 'package:personal_ai_assistant/core/widgets/adaptive/adaptive.dart';
 import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/country_selector_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart' as search;
@@ -236,7 +237,7 @@ class _CountryButton extends ConsumerWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: AdaptiveInkWell(
         key: const Key('podcast_discover_country_button'),
         borderRadius: BorderRadius.circular(height / 2),
         onTap: onTap,
