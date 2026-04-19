@@ -241,7 +241,7 @@ class _ProfileCacheManagementPageState
         .toList(growable: false);
     final selectedBytes = selectedObjects.fold<int>(
       0,
-      (acc, obj) => acc + (obj.length ?? 0),
+      (acc, obj) => acc + _objectBytes(obj),
     );
 
     final confirm = await showAppConfirmationDialog(
