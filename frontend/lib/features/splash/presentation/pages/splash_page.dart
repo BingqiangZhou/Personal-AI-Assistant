@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +45,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   /// Request notification permission for audio playback media controls
   Future<void> _requestNotificationPermission() async {
+    // permission_handler doesn't support macOS
+    if (kIsWeb || Platform.isMacOS) return;
+
     try {
       final status = await Permission.notification.status;
 
