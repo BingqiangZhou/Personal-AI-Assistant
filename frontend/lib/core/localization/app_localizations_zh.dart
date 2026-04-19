@@ -1672,6 +1672,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String profile_subscriptions_all_loaded(int count) {
+    return '已加载全部 $count 个订阅';
+  }
+
+  @override
   String podcast_episode_number(int number) {
     return '第 $number 集';
   }
@@ -2026,6 +2031,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_send_reset_link => '发送重置链接';
+
+  @override
+  String profile_password_reset_email_description(String email) {
+    return '密码重置链接将发送到 $email，点击发送后请检查您的收件箱。';
+  }
 
   @override
   String get profile_biometric_not_available => '暂不可用';

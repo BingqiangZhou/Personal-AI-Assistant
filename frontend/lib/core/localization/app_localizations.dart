@@ -3236,6 +3236,12 @@ abstract class AppLocalizations {
   /// **'{count} subscribed shows'**
   String profile_subscriptions_count(int count);
 
+  /// Message shown when all subscriptions have been loaded
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} subscriptions loaded'**
+  String profile_subscriptions_all_loaded(int count);
+
   /// No description provided for @podcast_episode_number.
   ///
   /// In en, this message translates to:
@@ -3895,6 +3901,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send Reset Link'**
   String get profile_send_reset_link;
+
+  /// Description text in the change password dialog explaining the reset email
+  ///
+  /// In en, this message translates to:
+  /// **'A password reset link will be sent to {email}. Check your inbox after clicking Send.'**
+  String profile_password_reset_email_description(String email);
 
   /// Label shown when biometric auth is not available
   ///

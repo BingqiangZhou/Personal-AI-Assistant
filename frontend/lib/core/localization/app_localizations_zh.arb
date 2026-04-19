@@ -2230,6 +2230,15 @@
                                                                         }
                                                             }
                                      },
+    "profile_subscriptions_all_loaded":  "已加载全部 {count} 个订阅",
+    "@profile_subscriptions_all_loaded":  {
+                                              "description":  "所有订阅已加载完成时显示的消息",
+                                              "placeholders":  {
+                                                                   "count":  {
+                                                                                 "type":  "int"
+                                                                             }
+                                                               }
+                                          },
     "podcast_episode_number":  "第 {number} 集",
     "@podcast_episode_number":  {
                                     "placeholders":  {
@@ -2689,6 +2698,15 @@
     "@profile_send_reset_link":  {
                                                "description":  "发送密码重置链接的按钮文本"
                                            },
+    "profile_password_reset_email_description":  "密码重置链接将发送到 {email}，点击发送后请检查您的收件箱。",
+    "@profile_password_reset_email_description":  {
+                                                      "description":  "修改密码对话框中的描述文本，说明重置邮件的发送",
+                                                      "placeholders":  {
+                                                                           "email":  {
+                                                                                         "type":  "String"
+                                                                                     }
+                                                                       }
+                                                  },
     "profile_biometric_not_available":  "暂不可用",
     "@profile_biometric_not_available":  {
                                                        "description":  "生物识别认证不可用时显示的标签"

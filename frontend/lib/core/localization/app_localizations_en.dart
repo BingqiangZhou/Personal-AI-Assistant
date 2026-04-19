@@ -1743,6 +1743,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String profile_subscriptions_all_loaded(int count) {
+    return 'All $count subscriptions loaded';
+  }
+
+  @override
   String podcast_episode_number(int number) {
     return 'EP $number';
   }
@@ -2118,6 +2123,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_send_reset_link => 'Send Reset Link';
+
+  @override
+  String profile_password_reset_email_description(String email) {
+    return 'A password reset link will be sent to $email. Check your inbox after clicking Send.';
+  }
 
   @override
   String get profile_biometric_not_available => 'Not available';

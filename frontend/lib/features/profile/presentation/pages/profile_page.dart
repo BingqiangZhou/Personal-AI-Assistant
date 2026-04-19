@@ -298,10 +298,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  // ignore: unused_element
-  Widget _buildCard(Widget child) =>
-      Card(margin: EdgeInsets.zero, child: child);
-
   Widget _buildSettingsItem(
     BuildContext context, {
     required IconData icon, required String title, required String subtitle, Key? tileKey,
@@ -350,71 +346,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   void _showEditProfileDialog(BuildContext context) {
     final l10n = context.l10n;
-    final authState = ref.read(authProvider);
-    final user = authState.user;
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
         return AlertDialog.adaptive(
           backgroundColor: Colors.transparent,
           insetPadding: ResponsiveDialogHelper.insetPadding(),
-          title: Row(
-            children: [
-              const Icon(Icons.edit_note),
-              SizedBox(width: context.spacing.sm),
-              Text(l10n.profile_edit_profile),
-            ],
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AdaptiveTextField(
-                  controller: TextEditingController(text: user?.displayName ?? ''),
-                  placeholder: l10n.profile_name,
-                  enabled: false,
-                ),
-                SizedBox(height: context.spacing.lg),
-                AdaptiveTextField(
-                  controller: TextEditingController(text: user?.email ?? ''),
-                  placeholder: l10n.profile_email_field,
-                  enabled: false,
-                ),
-                SizedBox(height: context.spacing.lg),
-                Container(
-                  padding: EdgeInsets.all(context.spacing.lg),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: AppRadius.mdLgRadius,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Theme.of(dialogContext)
-                            .colorScheme
-                            .onSurfaceVariant,
-                      ),
-                      SizedBox(width: context.spacing.md),
-                      Expanded(
-                        child: Text(
-                          l10n.profile_edit_coming_soon_subtitle,
-                          style: Theme.of(dialogContext).textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          title: Text(l10n.profile_edit_profile),
+          content: Text(l10n.profile_edit_coming_soon_subtitle),
           actions: [
             AdaptiveButton(
               style: AdaptiveButtonStyle.text,
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.close),
+              child: Text(l10n.ok),
             ),
           ],
         );
@@ -493,173 +437,54 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   void _showChangePasswordDialog(BuildContext context) {
     final l10n = context.l10n;
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    var isChanging = false;
+    final authState = ref.read(authProvider);
+    final userEmail = authState.user?.email;
 
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog.adaptive(
-              backgroundColor: Colors.transparent,
-              insetPadding: ResponsiveDialogHelper.insetPadding(),
-              title: Text(l10n.profile_password_change_title),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AdaptiveTextField(
-                        controller: currentPasswordController,
-                        obscureText: true,
-                        placeholder: l10n.profile_current_password,
-                        decoration: InputDecoration(
-                          labelText: l10n.profile_current_password,
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.lock_outline),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return l10n.profile_password_required;
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: context.spacing.lg),
-                      AdaptiveTextField(
-                        controller: newPasswordController,
-                        obscureText: true,
-                        placeholder: l10n.profile_new_password,
-                        decoration: InputDecoration(
-                          labelText: l10n.profile_new_password,
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.lock),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return l10n.profile_password_required;
-                          }
-                          if (value.length < 8) {
-                            return l10n.profile_password_min_length;
-                          }
-                          if (value == currentPasswordController.text) {
-                            return l10n.profile_password_same_as_old;
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: context.spacing.lg),
-                      AdaptiveTextField(
-                        controller: confirmPasswordController,
-                        obscureText: true,
-                        placeholder: l10n.profile_confirm_new_password,
-                        decoration: InputDecoration(
-                          labelText: l10n.profile_confirm_new_password,
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.lock),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return l10n.profile_password_required;
-                          }
-                          if (value != newPasswordController.text) {
-                            return l10n.profile_password_mismatch;
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+        return AlertDialog.adaptive(
+          backgroundColor: Colors.transparent,
+          insetPadding: ResponsiveDialogHelper.insetPadding(),
+          title: Text(l10n.profile_password_change_title),
+          content: Text(
+            userEmail != null
+                ? l10n.profile_password_reset_email_description(userEmail)
+                : l10n.profile_password_change_failed,
+          ),
+          actions: [
+            AdaptiveButton(
+              style: AdaptiveButtonStyle.text,
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.cancel),
+            ),
+            if (userEmail != null)
+              AdaptiveButton(
+                style: AdaptiveButtonStyle.filled,
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  try {
+                    await ref
+                        .read(authProvider.notifier)
+                        .forgotPassword(userEmail);
+                    if (context.mounted) {
+                      showTopFloatingNotice(
+                        context,
+                        message: l10n.profile_password_reset_email_sent,
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      showTopFloatingNotice(
+                        context,
+                        message: l10n.profile_password_change_failed,
+                      );
+                    }
+                  }
+                },
+                child: Text(l10n.profile_send_reset_link),
               ),
-              actions: [
-                AdaptiveButton(
-                  style: AdaptiveButtonStyle.text,
-                  onPressed:
-                      isChanging ? null : () => Navigator.of(dialogContext).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                AdaptiveButton(
-                  style: AdaptiveButtonStyle.filled,
-                  onPressed: isChanging
-                      ? null
-                      : () async {
-                          if (!formKey.currentState!.validate()) return;
-
-                          setDialogState(() => isChanging = true);
-
-                          try {
-                            // Use the forgot-password flow since the backend
-                            // does not have a dedicated change-password endpoint.
-                            final authState = ref.read(authProvider);
-                            final userEmail = authState.user?.email;
-
-                            if (userEmail == null) {
-                              if (dialogContext.mounted) {
-                                setDialogState(() => isChanging = false);
-                                Navigator.of(dialogContext).pop();
-                                showTopFloatingNotice(
-                                  dialogContext,
-                                  message: l10n.profile_password_change_failed,
-                                );
-                              }
-                              return;
-                            }
-
-                            await ref
-                                .read(authProvider.notifier)
-                                .forgotPassword(userEmail);
-
-                            if (dialogContext.mounted) {
-                              setDialogState(() => isChanging = false);
-                              Navigator.of(dialogContext).pop();
-                              showTopFloatingNotice(
-                                dialogContext,
-                                message: l10n.profile_password_reset_email_sent,
-                              );
-                            }
-                          } catch (e) {
-                            if (dialogContext.mounted) {
-                              setDialogState(() => isChanging = false);
-                              Navigator.of(dialogContext).pop();
-                              showTopFloatingNotice(
-                                dialogContext,
-                                message: l10n.profile_password_change_failed,
-                              );
-                            }
-                          }
-                        },
-                  child: isChanging
-                      ? SizedBox(
-                          width: dialogContext.spacing.mdLg,
-                          height: dialogContext.spacing.mdLg,
-                          child: Builder(
-                            builder: (context) {
-                              final theme = Theme.of(dialogContext);
-                              return Theme(
-                                data: theme.copyWith(
-                                  colorScheme: theme.colorScheme.copyWith(
-                                    primary: theme.colorScheme.onPrimary,
-                                  ),
-                                ),
-                                child: const CircularProgressIndicator.adaptive(
-                                  strokeWidth: 2,
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                      : Text(l10n.profile_send_reset_link),
-                ),
-              ],
-            );
-          },
+          ],
         );
       },
     );
