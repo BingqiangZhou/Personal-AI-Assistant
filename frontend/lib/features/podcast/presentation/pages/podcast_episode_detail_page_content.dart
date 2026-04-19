@@ -33,31 +33,7 @@ extension _PodcastEpisodeDetailPageContent on _PodcastEpisodeDetailPageState {
     );
   }
 
-  Widget _buildTabContent(PodcastEpisodeModel episode) {
-    switch (_selectedTabIndex) {
-      case 0:
-        return ShownotesDisplayWidget(
-          key: _shownotesKey,
-          episode: episode,
-          onAnchorsChanged: _updateShownotesAnchors,
-        );
-      case 1:
-        return _buildTranscriptContent(episode);
-      case 2:
-        return _buildSummaryTabContent(episode);
-      default:
-        return ShownotesDisplayWidget(
-          key: _shownotesKey,
-          episode: episode,
-          onAnchorsChanged: _updateShownotesAnchors,
-        );
-    }
-  }
-
-  Widget _buildSingleTabContent(
-    PodcastEpisodeModel episode,
-    int index,
-  ) {
+  Widget _buildTabWidget(PodcastEpisodeModel episode, int index) {
     switch (index) {
       case 0:
         return ShownotesDisplayWidget(

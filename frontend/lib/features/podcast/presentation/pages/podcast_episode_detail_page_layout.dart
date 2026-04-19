@@ -66,7 +66,7 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                       return false;
                     },
                     child: _buildTabSurface(
-                      _buildTabContent(episode),
+                      _buildTabWidget(episode, _selectedTabIndex),
                       key: const Key('podcast_episode_detail_primary_content'),
                     ),
                   ),
@@ -138,7 +138,7 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
                   },
                   children: List<Widget>.generate(pageCount, (index) {
                     return _buildTabSurface(
-                      _buildSingleTabContent(episode, index),
+                      _buildTabWidget(episode, index),
                       key: Key(
                         'podcast_episode_detail_mobile_content_surface_$index',
                       ),

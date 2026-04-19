@@ -10,11 +10,6 @@ extension _PodcastEpisodeDetailPageTabs on _PodcastEpisodeDetailPageState {
     ];
   }
 
-  Widget _buildTopButtonBar({required bool isWide}) {
-    // Deprecated — kept as compatibility shim during migration.
-    return _buildTabSelector();
-  }
-
   Widget _buildTabSelector() {
     final labels = _episodeDetailTabLabels();
 
