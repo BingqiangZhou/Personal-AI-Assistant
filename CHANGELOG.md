@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.50.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.49.0...v0.50.0) - 2026-04-19 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.50.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(macos)* Add Podfile.lock for reproducible builds ([223890a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/223890a8fde4ccaff60de39839540d4d05ac9f8c))
+- Update notification API to named parameters and rename function ([025f525](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/025f525c6618c9d1bfb0dc82b93876eb3381918c))
+- Update dependencies ([f4e1a18](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f4e1a189125ad7214a8a327be1a4198534eb3573))
+
+### 🎨 Styling
+
+- *(frontend)* Improve adaptive action sheet with rounded top corners ([f2357cf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f2357cf542fc6398f002bdf228952edb25825f92))
+
+### 🐛 Bug Fixes
+
+- *(macos)* Suppress third-party pod build warnings ([d0b41c6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d0b41c6ea550862ffa0594b87d46b44170fcbf82))
+- *(frontend)* Add macOS support to notification service initialization ([d66a616](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d66a616c1e267b5768e77c5ae66004ce10b6dd79))
+- *(frontend)* Skip permission_handler on unsupported macOS platform ([96864d3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/96864d3fe3be136c5e4345d9a7d0085a62ceb7b8))
+- *(frontend)* Add PlatformException handling to SecureStorageServiceImpl ([4de9335](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4de933531c40e4ec08ac79c000526e45a942c6c7))
+- *(frontend)* Add PlatformException handling to token refresh and dio client ([ef98458](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ef98458fbe4de79d68b1d85218dcdabc9079e570))
+- Update navigation tests for Apple Podcasts-style sidebar ([733c91a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/733c91a112db870534f91aeca8c068d1323d8808))
+- *(adaptive)* Set explicit white text color for filled CupertinoButton ([1d11413](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1d11413166d317743ccba90300e3bd570f5a47f0))
+- *(adaptive)* Wrap CupertinoTextField in FormField for Form.validate() support ([309d41e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/309d41eb8c4130b49bb528e7e75b513f4b5a5e93))
+- *(macos)* Add keychain-access-groups entitlement for flutter_secure_storage ([ef84bf3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ef84bf34e54d2f7ffec8dfe19749e3908f4b490a))
+- *(macos)* Use empty keychain-access-groups for local development ([159aa66](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/159aa663b28a61b2690cf582d0b71f407512d1c4))
+- *(auth)* Handle Keychain unavailability on macOS gracefully ([0ff04bf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0ff04bffd0645107a23e048bec1e0da9cba8b88e))
+- *(adaptive)* Sync FormField value with CupertinoTextField input ([642ce35](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/642ce3532ae57fa17da836544106af663db86f2d))
+- *(ui)* Improve RTL support, accessibility, and RepaintBoundary (round 2) ([aa8aa8f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/aa8aa8f510d6873ef69f34bdc732349e35ded46e))
+- *(ui)* Dark-mode colors, deprecated APIs, and notification consistency (round 3) ([27bc166](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/27bc1664abb7de70480ff71efa436e206803a7aa))
+- *(ui)* Replace magic numbers with spacing tokens and add widget tests (round 4) ([36c54cb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/36c54cb52cb445db2d79aa93dec59c88b279cb10))
+- *(auth)* Add TextInputAction for keyboard chaining on auth forms (round 5) ([c3bf9bd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c3bf9bd648e53c12b96914bb7150b2d1e1f745d8))
+- *(ui)* Improve accessibility semantics, dialog constraints, and responsive layout (round 7) ([e0f613f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e0f613fe0cdba996129d68a72aafe01280a3b7c4))
+- Resolve functional bugs in sleep timer and auth validation ([51d8401](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/51d84017274eed2dbf765b198b8624d21cec6ec1))
+
+### 🚀 Features
+
+- *(frontend)* Adjust desktop window size to 1280x720 and increase minimum to 800x600 ([fcb0506](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/fcb0506fa29e5c03dd5d6501bbf17d19a6560ee5))
+- *(frontend)* Add HTTPS/HTTP protocol selector to server config dialog ([04c403a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/04c403a8c509ff8bdaae3a3be0f8d8461d9977e5))
+- *(theme)* MacOS uses iOS theme extensions and Cupertino page transitions ([eb1d495](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eb1d4959784f3f5da88f6dcf2415a1733f407dc9))
+- *(platform)* Add isApple() and isMacOS() to PlatformHelper ([d40f96c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d40f96c6824529cb0d6900301f199628ff6b384f))
+- *(shells)* Sync macOS Cupertino changes to app_shells ([c058211](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c0582116572d4804e942e34d3ff54dc0f80e4666))
+- *(adaptive)* All adaptive widgets use isApple() for macOS Cupertino rendering ([47f7f9b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/47f7f9bb90413d2d87895edc44dd5c6df57cdf51))
+- Replace all isIOS() with isApple() across feature and shared widgets ([764a0c5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/764a0c5f1e10acba9e145c03abc66a6fc9015b5e))
+- *(navigation)* Rewrite macOS sidebar to Apple Podcasts style ([e0f1d7c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e0f1d7c6e84c92504c239597c47ccbded719f61d))
+- *(ui)* Add desktop scrollbars to key scrollable pages ([8cf0839](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8cf08397b8e70fb3a8b15cbb83dae006ce91167e))
+
+### 🚜 Refactor
+
+- *(frontend)* Redesign login page with inline logo and transparent card ([881bf7d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/881bf7d6c351e92e597c39f8739eb5a37a1c5896))
+- *(auth)* Replace FlutterSecureStorage with SharedPreferences for username persistence ([44967d0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/44967d0526b5ffbaa55c00e0d866a757e0eaebb3))
+- *(ui)* Redesign macOS desktop sidebar with native feel ([5946c08](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5946c0812bb0bd8251fb4204c1cd293802c3206e))
+- *(ui)* Introduce design tokens and fix adaptive widgets (round 1) ([d784a77](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d784a779b43a81dd4c745a2d6022af52652d2e82))
+- *(ui)* Replace deprecated APIs, fix text overflow, optimize state management, and extract shared calendar panel (round 8) ([26e9cdc](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/26e9cdc914f9df5a34aabeffe8d542e33f41c5fc))
+- *(ui)* Add AdaptiveInkWell, optimize rebuilds, add error handling, and fix share icons (round 9) ([8a71736](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8a717365b7a3d28d8d7f104472db3d6e8ef8dc57))
+- *(ui)* Convert remaining InkWell to AdaptiveInkWell for cross-platform consistency ([a1042ac](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a1042aca918515814f7e6b3f1defc1a396105db4))
+- *(i18n)* Replace hardcoded strings and colors with l10n/theme tokens ([2908c4f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2908c4f22f9e992401f39936bf6175b3b6c6e36a))
+
+### 🧪 Testing
+
+- Add widget tests for onboarding, reset password, and profile pages (round 6) ([af711d0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/af711d0292bfb845311621198b9ecb1d9c0dd2a2))
+
+
+
 ## [0.49.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.48.0...v0.49.0) - 2026-04-19 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.49.0))
 
 ### ⚙️ Miscellaneous Tasks
