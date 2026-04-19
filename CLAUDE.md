@@ -35,7 +35,7 @@ curl http://localhost:8000/api/v1/health
 backend/app/
   bootstrap/      Lifecycle, middleware, routing, cache warming
   core/           Config, database, redis, security (jwt/encryption/password/2FA), auth, exceptions, celery, ai_client, http_client, middleware
-  shared/         Cross-domain utilities (repository helpers, schemas, retry, time)
+  shared/         Cross-domain utilities (repository helpers, schemas, retry_utils, time_utils, settings_helpers)
   domains/        user, subscription, podcast, ai, media (transcription), content (reports/highlights/conversations)
   http/           Error helpers, route decorators
   admin/          Admin panel (separate auth, 2FA, CSRF, server-rendered HTML templates)
@@ -44,12 +44,14 @@ frontend/lib/
   core/
     database/       Drift ORM (AppDatabase, DownloadDao, PlaybackDao, EpisodeCacheDao)
     theme/          AppTheme, AppColors (design tokens), ThemeProvider, CupertinoTheme for iOS
-    constants/      AppRadius, AppSpacing (4-point grid), Breakpoints, ScrollConstants
-    widgets/        CustomAdaptiveNavigation (NOT flutter_adaptive_scaffold)
-    platform/       Platform-aware page transitions, adaptive widgets (.adaptive())
+    constants/      AppRadius, AppSpacing (4-point grid), AppDurations, Breakpoints, ScrollConstants
+    widgets/        CustomAdaptiveNavigation (NOT flutter_adaptive_scaffold), 14 .adaptive() widgets in adaptive/
+    platform/       Platform-aware page transitions, adaptive haptics, PlatformHelper
     network/        Dio client with ETag caching, token refresh, retry
-    services/       Cache, update check, download management
+    services/       Cache, update check, download management, home widget, macOS Spotlight indexing
     storage/        SharedPreferences + SecureStorage wrappers
+    offline/        ConnectivityProvider for offline-aware UI
+    utils/          AppLogger, Debounce, resource cleanup mixin, URL normalizer
   features/        auth, podcast (largest), profile, settings, splash, home
   shared/          Cross-feature models, widgets
 ```
@@ -61,6 +63,7 @@ frontend/lib/
 - All I/O is async (SQLAlchemy async, aiohttp, redis)
 - Exceptions: Service layer raises `BaseCustomError`. Routes use `HTTPException` from `app.http.errors`
 - DI: FastAPI `Depends()`. Migrations: `backend/alembic/` (23 migrations)
+- Celery queues: `default` (most tasks), `transcription` (Whisper audio transcription)
 
 ### Frontend
 - **Material 3 only** (`useMaterial3: true`)
@@ -92,10 +95,12 @@ frontend/lib/
 | Bare ValueError for errors | `BaseCustomError` (service) or `HTTPException` (route) |
 | `Color.withOpacity()` | `Color.withValues(alpha:)` (former is deprecated) |
 | Skip widget tests | Required for all pages |
+| `admin` is under `domains/` | `admin/` is a separate top-level module at `app/admin/` |
+| Transcription tasks use default queue | Route to `transcription` queue via Celery task_routes |
 
 ## Testing & Completion
 
-- **Backend**: `uv run pytest` (SQLite in-memory via aiosqlite, no Docker needed)
-- **Frontend**: `flutter test` (unit: `test/unit/`, widget: `test/widget/`, integration: `test/integration/`)
+- **Backend**: `uv run pytest` (SQLite in-memory via aiosqlite, 51 test files across core/podcast/tasks/integration/admin)
+- **Frontend**: `flutter test` (unit: ~50 files, widget: ~36 files, integration: 2 files)
 - **Full-stack**: `cd docker && docker compose up -d` then verify health endpoint
 - A task is NOT COMPLETE until: code compiles, tests pass, modified functionality works end-to-end
