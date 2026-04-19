@@ -39,6 +39,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final authState = ref.read(authProvider);
       if (authState.isAuthenticated) {
         // Force refresh after login to ensure fresh data from new server
@@ -480,6 +481,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         .read(authProvider.notifier)
                         .forgotPassword(userEmail);
                     if (context.mounted) {
+                      final l10n = context.l10n;
                       showTopFloatingNotice(
                         context,
                         message: l10n.profile_password_reset_email_sent,
@@ -487,6 +489,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     }
                   } catch (e) {
                     if (context.mounted) {
+                      final l10n = context.l10n;
                       showTopFloatingNotice(
                         context,
                         message: l10n.profile_password_change_failed,
@@ -657,6 +660,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Navigator.of(dialogContext).pop();
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
+                  final l10n = context.l10n;
                   showTopFloatingNotice(
                     context,
                     message: l10n.profile_logged_out,
