@@ -69,7 +69,6 @@ class MainActivity : AudioServiceActivity() {
                 splashScreenView.remove()
             }
         }
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
     }
 
