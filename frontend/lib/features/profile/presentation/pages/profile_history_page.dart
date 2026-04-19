@@ -27,17 +27,6 @@ class ProfileHistoryPage extends ConsumerStatefulWidget {
 
 class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      ref.read(playbackHistoryLiteProvider.notifier).load();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final historyAsync = ref.watch(playbackHistoryLiteProvider);
