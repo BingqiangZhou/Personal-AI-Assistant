@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_ai_assistant/core/constants/app_radius.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shared/base_episode_card.dart' show BaseEpisodeCard;
 
 import 'package:personal_ai_assistant/shared/widgets/loading_widget.dart';
@@ -187,9 +188,121 @@ class SkeletonCardGrid extends StatelessWidget {
         childAspectRatio: childAspectRatio,
       ),
       itemCount: itemCount,
-      itemBuilder: (context, index) => const EpisodeCardSkeleton(
+      itemBuilder: (context, index) => const EpisodeCardSkeleton(),
+    );
+  }
+}
 
+/// Skeleton for a discover chart row card, matching [DiscoverChartRow] layout.
+class DiscoverChartRowSkeleton extends StatelessWidget {
+  const DiscoverChartRowSkeleton({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final extension = appThemeOf(context);
+    final padding = compact ? context.spacing.smMd : context.spacing.md;
+
+    return ShimmerLoading(
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(extension.cardRadius),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child: Row(
+            children: [
+              const SkeletonBox(width: 32, height: 20),
+              SizedBox(width: context.spacing.smMd),
+              const SkeletonBox(width: 48, height: 48, borderRadius: AppRadius.sm),
+              SizedBox(width: context.spacing.smMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SkeletonBox(height: 14, width: double.infinity),
+                    SizedBox(height: context.spacing.xs),
+                    SkeletonBox(height: 12, width: compact ? 100 : 140),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const SkeletonCircle(size: 24),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// A list of discover chart skeleton cards for initial loading state.
+class DiscoverChartSkeletonList extends StatelessWidget {
+  const DiscoverChartSkeletonList({
+    super.key,
+    this.itemCount = 6,
+    this.compact = true,
+  });
+
+  final int itemCount;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+      itemCount: itemCount,
+      itemBuilder: (context, index) => Padding(
+        padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
+        child: DiscoverChartRowSkeleton(compact: compact),
+      ),
+    );
+  }
+}
+
+/// A grid of discover chart skeleton cards for desktop layout.
+class DiscoverChartSkeletonGrid extends StatelessWidget {
+  const DiscoverChartSkeletonGrid({
+    required this.crossAxisCount,
+    super.key,
+    this.itemCount = 8,
+  });
+
+  final int itemCount;
+  final int crossAxisCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = context.spacing.sm;
+        final availableWidth =
+            constraints.maxWidth - (crossAxisCount - 1) * spacing;
+        final cardWidth = availableWidth / crossAxisCount;
+        const cardHeight = 72.0;
+        final childAspectRatio = cardWidth / cardHeight;
+
+        return GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: itemCount,
+          itemBuilder: (context, index) =>
+              const DiscoverChartRowSkeleton(compact: true),
+        );
+      },
     );
   }
 }

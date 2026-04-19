@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
+import 'package:personal_ai_assistant/core/constants/breakpoints.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations_extension.dart';
 import 'package:personal_ai_assistant/core/utils/debounce.dart';
@@ -21,6 +22,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/pages/sectio
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_search_input.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/discover/discover_top_charts_section.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/search/podcast_search_results_list.dart';
+import 'package:personal_ai_assistant/shared/widgets/skeleton_widgets.dart';
 
 /// Podcast list/discover page with search and top charts.
 class PodcastListPage extends ConsumerStatefulWidget {
@@ -242,7 +244,22 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     if (discoverState.isLoading &&
         discoverState.topShows.isEmpty &&
         discoverState.topEpisodes.isEmpty) {
-      return const Center(child: CircularProgressIndicator.adaptive());
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final isMobile = screenWidth < Breakpoints.medium;
+          if (isMobile) {
+            return const DiscoverChartSkeletonList(itemCount: 6, compact: true);
+          }
+          final crossAxisCount = screenWidth < 900
+              ? 2
+              : (screenWidth < 1200 ? 3 : 4);
+          return DiscoverChartSkeletonGrid(
+            crossAxisCount: crossAxisCount,
+            itemCount: crossAxisCount * 2,
+          );
+        },
+      );
     }
 
     final error = discoverState.error;
@@ -288,21 +305,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   Widget _buildErrorView(BuildContext context, AppLocalizations l10n, String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 44),
-          SizedBox(height: context.spacing.md),
-          Text(error),
-          SizedBox(height: context.spacing.md),
-          FilledButton.icon(
-            onPressed: () =>
-                ref.read(podcastDiscoverProvider.notifier).loadInitialData(),
-            icon: const Icon(Icons.refresh),
-            label: Text(l10n.retry),
-          ),
-        ],
+    return AppEmptyState(
+      icon: Icons.error_outline,
+      title: error,
+      action: FilledButton.icon(
+        onPressed: () =>
+            ref.read(podcastDiscoverProvider.notifier).loadInitialData(),
+        icon: const Icon(Icons.refresh),
+        label: Text(l10n.retry),
       ),
     );
   }
