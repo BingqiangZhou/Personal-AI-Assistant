@@ -94,7 +94,7 @@ class DioClient {
   String? _cachedAccessToken;
 
   // Request deduplication: maps GET request keys to their in-flight futures (NW-M3)
-  final Map<String, Completer<Response>> _inFlightRequests = {};
+  final Map<String, Future<Response>> _inFlightRequests = {};
 
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
@@ -514,30 +514,11 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final dedupKey = 'GET:$path:$queryParameters';
-
-    // If an identical request is already in-flight, reuse its result
-    if (_inFlightRequests.containsKey(dedupKey)) {
-      return _inFlightRequests[dedupKey]!.future;
-    }
-
-    final completer = Completer<Response>();
-    _inFlightRequests[dedupKey] = completer;
-
-    try {
-      final response = await _dio.get(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-      );
-      completer.complete(response);
-      return response;
-    } catch (e) {
-      completer.completeError(e);
-      rethrow;
-    } finally {
-      _inFlightRequests.remove(dedupKey);
-    }
+    final key = 'GET:$path:$queryParameters';
+    return _inFlightRequests.putIfAbsent(key, () =>
+      _dio.get(path, queryParameters: queryParameters, options: options)
+          .whenComplete(() => _inFlightRequests.remove(key)),
+    );
   }
 
   Future<Response> get(
@@ -690,17 +671,6 @@ class DioClient {
   void dispose() {
     cancelAllRequests('DioClient disposed');
     clearTokenCache();
-    for (final completer in _inFlightRequests.values) {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          DioException(
-            requestOptions: RequestOptions(),
-            type: DioExceptionType.cancel,
-            error: 'Client disposed',
-          ),
-        );
-      }
-    }
     _inFlightRequests.clear();
     _dio.close(force: true);
     logger.AppLogger.debug('[DioClient] Disposed — all resources released');
