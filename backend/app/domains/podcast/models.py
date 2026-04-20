@@ -835,11 +835,6 @@ class TranscriptionTask(Base):
 # ---------------------------------------------------------------------------
 
 
-def is_podcast_subscription(subscription) -> bool:
-    """Check whether a Subscription is a podcast type."""
-    return subscription.source_type == "podcast-rss"
-
-
 # ---------------------------------------------------------------------------
 # Content domain models (merged from domains/content)
 # ---------------------------------------------------------------------------
