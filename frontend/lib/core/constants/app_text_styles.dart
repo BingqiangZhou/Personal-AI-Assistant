@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:personal_ai_assistant/core/constants/app_text_styles.dart';
 
 /// Named text style helpers for sizes not covered by standard TextTheme slots.
 ///

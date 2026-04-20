@@ -188,7 +188,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _SettingsItemConfig(
         icon: Icons.info_outline,
         title: l10n.version,
-        subtitle: ref.read(appVersionProvider),
+        subtitle: ref.watch(appVersionProvider),
         trailing: const Icon(Icons.chevron_right),
         tileKey: const Key('profile_version_item'),
         onTap: () => _showAboutDialog(context),
