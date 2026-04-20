@@ -15,13 +15,6 @@ def include_application_routers(app: FastAPI) -> None:
         router as podcast_subscription_router,
     )
     from app.domains.subscription.api.routes import router as subscription_router
-    from app.domains.user.api.routes import router as user_router
-
-    app.include_router(
-        user_router,
-        prefix=f"{settings.API_V1_STR}/auth",
-        tags=["authentication"],
-    )
     app.include_router(
         subscription_router,
         prefix=f"{settings.API_V1_STR}/subscriptions",
