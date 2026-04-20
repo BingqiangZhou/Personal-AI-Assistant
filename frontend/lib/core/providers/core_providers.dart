@@ -11,9 +11,8 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_episodes_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_feed_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_highlights_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_stats_providers.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_subscription_providers.dart';
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
