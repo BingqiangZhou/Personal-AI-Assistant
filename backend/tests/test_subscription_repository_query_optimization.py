@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.domains.subscription.repositories import SubscriptionRepository
-from app.domains.user.models import User  # noqa: F401
 
 
 def _build_execute_rows_result(rows):

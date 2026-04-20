@@ -10,12 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 # Import all models to ensure proper registration with SQLAlchemy
 # This is required for tests to work with relationships
-from app.core.security import get_password_hash
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
 )
-from app.domains.user.models import User, UserStatus
 from app.main import app
 
 
@@ -62,15 +60,14 @@ def mock_schedule_service(mock_service_factory):
 @pytest.fixture(autouse=True)
 def override_auth_dependencies():
     """Override authentication for routes requiring auth."""
-    from app.core.auth import get_token_user_id
-    from app.core.security import get_token_from_request
+    from app.core.auth import get_token_user_id, require_api_key
 
-    app.dependency_overrides[get_token_from_request] = lambda: {"sub": "123"}
-    app.dependency_overrides[get_token_user_id] = lambda: 123
+    app.dependency_overrides[require_api_key] = lambda: 1
+    app.dependency_overrides[get_token_user_id] = lambda: 1
     try:
         yield
     finally:
-        app.dependency_overrides.pop(get_token_from_request, None)
+        app.dependency_overrides.pop(require_api_key, None)
         app.dependency_overrides.pop(get_token_user_id, None)
 
 
@@ -119,40 +116,8 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-async def test_user(db_session: AsyncSession) -> User:
-    """Create a test user."""
-    user = User(
-        email="test@example.com",
-        username="testuser",
-        hashed_password=get_password_hash("testpass123"),
-        status=UserStatus.ACTIVE,
-        is_verified=True,
-    )
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
-    return user
-
-
-@pytest.fixture
-async def another_user(db_session: AsyncSession) -> User:
-    """Create another test user for multi-user tests."""
-    user = User(
-        email="another@example.com",
-        username="anotheruser",
-        hashed_password=get_password_hash("testpass123"),
-        status=UserStatus.ACTIVE,
-        is_verified=True,
-    )
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
-    return user
-
-
-@pytest.fixture
 async def active_subscription(
-    db_session: AsyncSession, test_user: User
+    db_session: AsyncSession
 ) -> Subscription:
     """Create an active subscription for testing."""
     from app.domains.subscription.repositories import SubscriptionRepository
@@ -165,12 +130,12 @@ async def active_subscription(
         source_type="rss",
         source_url="https://example.com/feed.xml",
     )
-    sub = await repo.create_subscription(test_user.id, sub_data)
+    sub = await repo.create_subscription(1, sub_data)  # hardcoded user_id=1
     return sub
 
 
 @pytest.fixture
-async def error_subscription(db_session: AsyncSession, test_user: User) -> Subscription:
+async def error_subscription(db_session: AsyncSession) -> Subscription:
     """Create an ERROR status subscription for testing."""
     from app.domains.subscription.repositories import SubscriptionRepository
     from app.shared.schemas import SubscriptionCreate
@@ -182,7 +147,7 @@ async def error_subscription(db_session: AsyncSession, test_user: User) -> Subsc
         source_type="rss",
         source_url="https://error.com/feed.xml",
     )
-    sub = await repo.create_subscription(test_user.id, sub_data)
+    sub = await repo.create_subscription(1, sub_data)  # hardcoded user_id=1
 
     # Set to ERROR status
     sub.status = SubscriptionStatus.ERROR
