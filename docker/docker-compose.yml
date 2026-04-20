@@ -6,12 +6,11 @@
 #   2. 根据需要修.env 配置 / Modify .env as needed
 #   3. 启动服务 / Start services: docker compose up -d
 #
-# 启动的服/ Started Services:
+# 启动的服/ Started Services (5):
 #   - PostgreSQL (数据/ Database)
 #   - Redis (缓存 / Cache)
 #   - Backend API (后端服务)
-#   - Celery Worker (后台任务处理 / Background tasks)
-#   - Celery Beat (定时任务调度 / Scheduled tasks)
+#   - Celery Worker + Beat (后台任务处理+调度 / Background tasks + scheduler)
 #   - Nginx (反向代理 / Reverse proxy)
 
 # Shared logging configuration for all services
@@ -112,13 +111,6 @@ services:
       # Timezone for log timestamps / 日志时区
       - TZ=${TZ:-Asia/Shanghai}
       - PYTHONUTF8=1
-      - OBS_ALERT_API_P95_MS=${OBS_ALERT_API_P95_MS:-800}
-      - OBS_ALERT_API_ERROR_RATE=${OBS_ALERT_API_ERROR_RATE:-0.05}
-      - OBS_ALERT_DB_POOL_OCCUPANCY_RATIO=${OBS_ALERT_DB_POOL_OCCUPANCY_RATIO:-0.9}
-      - OBS_ALERT_REDIS_COMMAND_AVG_MS=${OBS_ALERT_REDIS_COMMAND_AVG_MS:-20}
-      - OBS_ALERT_REDIS_COMMAND_MAX_MS=${OBS_ALERT_REDIS_COMMAND_MAX_MS:-100}
-      - OBS_ALERT_REDIS_CACHE_HIT_RATE_MIN=${OBS_ALERT_REDIS_CACHE_HIT_RATE_MIN:-0.5}
-      - OBS_ALERT_REDIS_CACHE_LOOKUPS_MIN=${OBS_ALERT_REDIS_CACHE_LOOKUPS_MIN:-20}
     ports:
       - "${BACKEND_PUBLISH_PORT:-127.0.0.1:8000}:8000"
     volumes:
@@ -155,7 +147,7 @@ services:
     logging: *default-logging
 
   # =============================================================================
-  # Celery Worker (merged: default + transcription queues)
+  # Celery Worker + Beat (merged: worker + scheduler)
   # =============================================================================
   celery_worker:
     build:
@@ -193,50 +185,8 @@ services:
         reservations:
           cpus: '0.25'
           memory: 128M
-    command: celery -A app.core.celery_app:celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=1 -Q default,transcription
+    command: celery -A app.core.celery_app:celery_app worker -B --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=1 -Q default
     logging: *default-logging
-
-  # =============================================================================
-  # Celery Beat
-  # =============================================================================
-  celery_beat:
-    build:
-      context: ${BACKEND_SRC_DIR:-../backend}
-      dockerfile: Dockerfile
-    container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
-    env_file:
-      - ${BACKEND_ENV_FILE:-../backend/.env}
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/2
-      # Timezone for log timestamps / 日志时区
-      - TZ=${TZ:-Asia/Shanghai}
-      - PYTHONUTF8=1
-    volumes:
-      - backend_data:/app/data
-      - ${LOG_DIR:-./logs}:/app/logs
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      celery_worker:
-        condition: service_started
-    networks:
-      - app_network
-    restart: always
-    logging: *default-logging
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 64M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    command: celery -A app.core.celery_app:celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
 
   # =============================================================================
   # Nginx Reverse Proxy (反向代理)
