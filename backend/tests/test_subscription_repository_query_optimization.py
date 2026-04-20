@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.domains.podcast.repositories.subscription_repository import (
+from app.domains.podcast.repositories.content_repository import (
     SubscriptionRepository,
 )
 

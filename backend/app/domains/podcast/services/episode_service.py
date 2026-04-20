@@ -17,7 +17,7 @@ from app.domains.podcast.repositories import (
     PodcastEpisodeRepository,
     PodcastSubscriptionRepository,
 )
-from app.domains.podcast.repositories.subscription_repository import (
+from app.domains.podcast.repositories.content_repository import (
     SubscriptionRepository,
 )
 from app.domains.podcast.services.content_service import (

@@ -599,7 +599,7 @@ class SubscriptionRepository:
         )
         self.db.add(category)
         await self.db.commit()
-        # No refresh needed - category.id is auto-populated by SQLAlchemy after flush/commit
+        # category.id auto-populated by SQLAlchemy after flush/commit
         return category
 
     async def update_category(
@@ -664,3 +664,25 @@ class SubscriptionRepository:
         await self.db.delete(mapping)
         await self.db.commit()
         return True
+
+
+class ContentRepository:
+    """Alias for content-related repository access (summary, daily report).
+
+    All methods are in PodcastRepository - this exists for semantic clarity.
+    Delegates to PodcastRepository for actual data access.
+    """
+
+    def __init__(self, db, **kwargs):
+        from app.domains.podcast.repositories.podcast_repository import (
+            PodcastRepository,
+        )
+        self._repo = PodcastRepository(db, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._repo, name)
+
+
+# Backward compatibility aliases
+PodcastSummaryRepository = ContentRepository
+PodcastDailyReportRepository = ContentRepository

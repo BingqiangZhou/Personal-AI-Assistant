@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.podcast.models import Subscription
-from app.domains.podcast.repositories.subscription_repository import (
+from app.domains.podcast.repositories.content_repository import (
     SubscriptionRepository,
 )
 from app.domains.podcast.services.episode_service import PodcastSubscriptionService

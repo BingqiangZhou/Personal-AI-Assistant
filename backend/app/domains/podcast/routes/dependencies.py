@@ -12,19 +12,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_db_session_dependency, get_redis_client, get_token_user_id
 from app.core.redis import PodcastRedis
 from app.domains.podcast.conversation_service import ConversationService
-from app.domains.podcast.repositories.subscription_repository import (
+from app.domains.podcast.repositories.content_repository import (
     SubscriptionRepository,
 )
-from app.domains.podcast.services.content_service import DailyReportService
-from app.domains.podcast.services.episode_service import PodcastEpisodeService
-from app.domains.podcast.services.content_service import HighlightService
-from app.domains.podcast.services.playback_service import PodcastPlaybackService
-from app.domains.podcast.services.playback_service import PodcastQueueService
+from app.domains.podcast.services.content_service import (
+    DailyReportService,
+    HighlightService,
+    SummaryWorkflowService,
+)
+from app.domains.podcast.services.episode_service import (
+    PodcastEpisodeService,
+    PodcastSubscriptionService,
+)
+from app.domains.podcast.services.playback_service import (
+    PodcastPlaybackService,
+    PodcastQueueService,
+)
 from app.domains.podcast.services.schedule_service import PodcastScheduleService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.stats_service import PodcastStatsService
-from app.domains.podcast.services.episode_service import PodcastSubscriptionService
-from app.domains.podcast.services.content_service import SummaryWorkflowService
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
 )
