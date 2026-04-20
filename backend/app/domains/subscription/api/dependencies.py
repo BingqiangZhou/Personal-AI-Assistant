@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_active_user, get_db_session_dependency
+from app.core.auth import get_db_session_dependency, get_token_user_id
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.domains.subscription.services import SubscriptionService
 
@@ -19,10 +19,10 @@ def get_subscription_repository(
 
 def get_subscription_service(
     db: AsyncSession = Depends(get_db_session_dependency),
-    current_user=Depends(get_current_active_user),
+    user_id: int = Depends(get_token_user_id),
 ) -> SubscriptionService:
     """Provide request-scoped generic subscription service."""
-    return SubscriptionService(db, current_user.id)
+    return SubscriptionService(db, user_id)
 
 
 __all__ = [

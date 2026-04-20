@@ -1,8 +1,7 @@
-"""Authentication and user-related FastAPI dependencies.
+"""Authentication and request-level FastAPI dependencies.
 
-Consolidates all auth-oriented dependency functions that were previously
-spread across ``app.core.providers.auth_providers`` and
-``app.core.providers.base_providers``.
+Single-user mode: API key authentication via Authorization header or
+X-API-Key header. User ID is hardcoded to 1.
 """
 
 from __future__ import annotations
@@ -11,39 +10,61 @@ import logging
 from collections.abc import AsyncGenerator
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError as JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_db_session
-from app.core.security import get_token_from_request, verify_token
-from app.domains.user.models import User
-from app.domains.user.repositories import UserRepository
 
 
 logger = logging.getLogger(__name__)
 
+# Hardcoded single-user ID
+SINGLE_USER_ID = 1
 
-# Lazy-initialized OAuth2 scheme — avoids calling get_settings() at import time.
-_oauth2_scheme: OAuth2PasswordBearer | None = None
+
+# ── Auth dependency ──────────────────────────────────────────────────────────
 
 
-def _get_oauth2_scheme() -> OAuth2PasswordBearer:
-    """Return a lazily-created OAuth2PasswordBearer singleton."""
-    global _oauth2_scheme
-    if _oauth2_scheme is None:
-        settings = get_settings()
-        _oauth2_scheme = OAuth2PasswordBearer(
-            tokenUrl=f"{settings.API_V1_STR}/auth/login",
+def _extract_api_key(request: Request) -> str | None:
+    """Extract API key from Authorization: Bearer <key> or X-API-Key header."""
+    authorization = request.headers.get("Authorization")
+    if authorization:
+        if authorization.startswith("Bearer "):
+            return authorization[7:]
+        return authorization
+
+    x_api_key = request.headers.get("X-API-Key")
+    if x_api_key:
+        return x_api_key
+
+    return None
+
+
+async def require_api_key(request: Request) -> int:
+    """Validate API key and return the hardcoded single-user ID.
+
+    Raises HTTPException 401 if the key is missing or invalid.
+    """
+    settings = get_settings()
+
+    # If no API_KEY configured (development), allow all requests
+    if not settings.API_KEY:
+        return SINGLE_USER_ID
+
+    api_key = _extract_api_key(request)
+    if api_key is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
         )
-    return _oauth2_scheme
 
+    if api_key != settings.API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key",
+        )
 
-async def _extract_token(request: Request) -> str:
-    """FastAPI dependency that lazily resolves the OAuth2 scheme and extracts the token."""
-    scheme = _get_oauth2_scheme()
-    return await scheme(request)
+    return SINGLE_USER_ID
 
 
 # ── Base dependencies ────────────────────────────────────────────────────────
@@ -56,11 +77,7 @@ async def get_db_session_dependency() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_redis_client():
-    """Provide the shared Redis helper (process-level singleton with connection pooling).
-
-    The shared instance lives for the process lifetime and is closed on shutdown
-    via close_shared_redis() in the application lifecycle.
-    """
+    """Provide the shared Redis helper (process-level singleton)."""
     from app.core.redis import get_shared_redis
 
     return get_shared_redis()
@@ -71,114 +88,18 @@ def get_settings_dependency() -> Settings:
     return get_settings()
 
 
-# ── Auth dependencies ────────────────────────────────────────────────────────
+# ── Compatibility aliases ────────────────────────────────────────────────────
+# These provide backward compatibility during incremental migration.
 
 
-def get_user_repository(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> UserRepository:
-    """Provide a user repository for auth-oriented dependencies."""
-    return UserRepository(db)
+async def get_token_user_id(user_id: int = Depends(require_api_key)) -> int:
+    """Resolve the current user ID for podcast routes.
 
-
-async def get_token_user_id(user=Depends(get_token_from_request)) -> int:
-    """Resolve the authenticated user id for podcast routes."""
-    try:
-        user_id = int(user["sub"])
-    except (KeyError, ValueError, TypeError) as e:
-        raise HTTPException(status_code=401, detail="Invalid token payload") from e
+    Renamed conceptually to get_current_user_id, but keeps the old name
+    so existing route signatures don't break during migration.
+    """
     return user_id
 
 
-async def get_current_user(
-    token: str = Depends(_extract_token),
-    user_repo: UserRepository = Depends(get_user_repository),
-) -> User:
-    """Resolve the current authenticated user."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = await verify_token(token)
-        user_id_str: str | None = payload.get("sub")
-        if user_id_str is None:
-            raise credentials_exception
-        user_id = int(user_id_str)
-    except HTTPException:
-        raise
-    except (JWTError, ValueError) as exc:
-        logger.error("Exception in token verification: %s", exc)
-        raise credentials_exception from exc
-
-    # Try cache first — skip DB lookup when user existence is cached
-    cache_key = f"auth:user:{user_id}"
-    try:
-        from app.core.redis import get_shared_redis
-
-        redis = get_shared_redis()
-        cached = await redis.cache_get_json(cache_key)
-        if cached and cached.get("exists"):
-            user = await user_repo.get_by_id(user_id)
-            if user:
-                return user
-    except Exception:
-        logger.debug("User cache lookup failed, falling back to DB query")
-
-    user = await user_repo.get_by_id(user_id)
-    if user is None:
-        raise credentials_exception
-
-    # Cache user existence for subsequent requests (short TTL)
-    try:
-        from app.core.redis import get_shared_redis
-
-        redis = get_shared_redis()
-        await redis.cache_set_json(
-            cache_key, {"exists": True, "id": user.id}, ttl=60,
-        )
-    except Exception:
-        logger.debug("User cache set failed, continuing without caching")
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
-
-    return user
-
-
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Resolve the current active user."""
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
-    return current_user
-
-
-async def get_current_superuser(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Resolve the current superuser."""
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    return current_user
-
-
-def get_authentication_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-):
-    """Provide request-scoped authentication service."""
-    from app.domains.user.services import AuthenticationService
-
-    return AuthenticationService(db)
+# Alias for clarity in new code
+get_current_user_id = get_token_user_id

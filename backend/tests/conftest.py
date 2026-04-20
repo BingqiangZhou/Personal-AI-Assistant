@@ -95,38 +95,6 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture(scope="session")
-async def auth_headers(async_client: AsyncClient) -> dict[str, str]:
-    """Create a test user and return Authorization headers."""
-    suffix = uuid.uuid4().hex[:10]
-    password = "PerfTestPass1!"
-    register_payload = {
-        "email": f"perf_{suffix}@example.com",
-        "username": f"perf_{suffix}",
-        "password": password,
-    }
-
-    register_response = await async_client.post(
-        "/api/v1/auth/register",
-        json=register_payload,
-    )
-    if register_response.status_code in (200, 201):
-        token_payload = register_response.json()
-    else:
-        login_response = await async_client.post(
-            "/api/v1/auth/login",
-            json={
-                "email_or_username": register_payload["email"],
-                "password": password,
-            },
-        )
-        if login_response.status_code != 200:
-            pytest.skip(
-                "Unable to create/login performance test user: "
-                f"register={register_response.status_code}, login={login_response.status_code}"
-            )
-        token_payload = login_response.json()
-
-    access_token = token_payload.get("access_token")
-    if not access_token:
-        pytest.skip("Performance auth token is missing in auth response payload")
-    return {"Authorization": f"Bearer {access_token}"}
+async def auth_headers() -> dict[str, str]:
+    """Return API key Authorization headers for test requests."""
+    return {"Authorization": "Bearer test-api-key-for-tests"}
