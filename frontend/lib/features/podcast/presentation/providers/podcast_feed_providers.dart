@@ -108,7 +108,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState>
     } catch (error) {
       logger.AppLogger.debug('[Error] Failed to load more feed: $error');
 
-      if (error is AuthenticationException) {
+      if (error is AuthException) {
         logger.AppLogger.debug(
           'Authentication failed while loading more feed, checking auth status.',
         );
