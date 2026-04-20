@@ -119,7 +119,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: isIOS,
+        centerTitle: extension.centerTitle,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
@@ -153,7 +153,7 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(isIOS ? 16 : 24),
+          borderRadius: BorderRadius.circular(extension.dialogRadius),
         ),
         titleTextStyle: _withHeading(textTheme.headlineSmall),
       ),
@@ -165,9 +165,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 22),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isIOS
-            ? scheme.surfaceContainerHighest.withValues(alpha: 0.4)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        fillColor: scheme.surfaceContainerHighest.withValues(alpha: extension.inputFillAlpha),
         hintStyle: _withBody(
           textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -196,13 +194,13 @@ class AppTheme {
       ),
       listTileTheme: ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(
-          horizontal: isIOS ? AppSpacing.mdLg : AppSpacing.md,
-          vertical: isIOS ? AppSpacing.xs : 0,
+          horizontal: extension.listTileHorizontalPadding,
+          vertical: extension.listTileVerticalPadding,
         ),
         iconColor: scheme.onSurfaceVariant,
         textColor: scheme.onSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(isIOS ? 10 : extension.cardRadius),
+          borderRadius: BorderRadius.circular(extension.listTileRadius),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -304,7 +302,7 @@ class AppTheme {
           scheme.primary,
           scheme.onPrimary,
           radius: extension.buttonRadius,
-          elevation: isIOS ? 0 : 0,
+          elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lgXs, vertical: AppSpacing.md),
           textStyle: _withBody(
             textTheme.labelLarge?.copyWith(

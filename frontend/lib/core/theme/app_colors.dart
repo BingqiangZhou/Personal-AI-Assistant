@@ -1,6 +1,7 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/constants/app_spacing.dart';
 
 /// ============================================================
 /// App Design System
@@ -195,6 +196,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.itemRadius,
     required this.sheetRadius,
     required this.pillRadius,
+    required this.dialogRadius,
+    required this.inputFillAlpha,
+    required this.listTileHorizontalPadding,
+    required this.listTileVerticalPadding,
+    required this.listTileRadius,
+    required this.centerTitle,
     required this.warmAccent,
     required this.coralAccent,
     required this.shadowXs,
@@ -216,6 +223,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final double itemRadius;
   final double sheetRadius;
   final double pillRadius;
+  final double dialogRadius;
+  final double inputFillAlpha;
+  final double listTileHorizontalPadding;
+  final double listTileVerticalPadding;
+  final double listTileRadius;
+  final bool centerTitle;
 
   // Accent colors (theme-aware, light/dark variants)
   final Color warmAccent;
@@ -245,6 +258,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     double? itemRadius,
     double? sheetRadius,
     double? pillRadius,
+    double? dialogRadius,
+    double? inputFillAlpha,
+    double? listTileHorizontalPadding,
+    double? listTileVerticalPadding,
+    double? listTileRadius,
+    bool? centerTitle,
     Color? warmAccent,
     Color? coralAccent,
     BoxShadow? shadowXs,
@@ -265,6 +284,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       itemRadius: itemRadius ?? this.itemRadius,
       sheetRadius: sheetRadius ?? this.sheetRadius,
       pillRadius: pillRadius ?? this.pillRadius,
+      dialogRadius: dialogRadius ?? this.dialogRadius,
+      inputFillAlpha: inputFillAlpha ?? this.inputFillAlpha,
+      listTileHorizontalPadding: listTileHorizontalPadding ?? this.listTileHorizontalPadding,
+      listTileVerticalPadding: listTileVerticalPadding ?? this.listTileVerticalPadding,
+      listTileRadius: listTileRadius ?? this.listTileRadius,
+      centerTitle: centerTitle ?? this.centerTitle,
       warmAccent: warmAccent ?? this.warmAccent,
       coralAccent: coralAccent ?? this.coralAccent,
       shadowXs: shadowXs ?? this.shadowXs,
@@ -297,6 +322,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       itemRadius: lerpDouble(itemRadius, other.itemRadius, t)!,
       sheetRadius: lerpDouble(sheetRadius, other.sheetRadius, t)!,
       pillRadius: lerpDouble(pillRadius, other.pillRadius, t)!,
+      dialogRadius: lerpDouble(dialogRadius, other.dialogRadius, t)!,
+      inputFillAlpha: lerpDouble(inputFillAlpha, other.inputFillAlpha, t)!,
+      listTileHorizontalPadding: lerpDouble(listTileHorizontalPadding, other.listTileHorizontalPadding, t)!,
+      listTileVerticalPadding: lerpDouble(listTileVerticalPadding, other.listTileVerticalPadding, t)!,
+      listTileRadius: lerpDouble(listTileRadius, other.listTileRadius, t)!,
+      centerTitle: t < 0.5 ? centerTitle : other.centerTitle,
       warmAccent: Color.lerp(warmAccent, other.warmAccent, t)!,
       coralAccent: Color.lerp(coralAccent, other.coralAccent, t)!,
       shadowXs: BoxShadow.lerp(shadowXs, other.shadowXs, t)!,
@@ -319,6 +350,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     itemRadius: 8,
     sheetRadius: 20,
     pillRadius: 999,
+    dialogRadius: 24,
+    inputFillAlpha: 0.6,
+    listTileHorizontalPadding: AppSpacing.md,
+    listTileVerticalPadding: 0,
+    listTileRadius: 14,
+    centerTitle: false,
     warmAccent: AppColors.accentWarm,
     coralAccent: AppColors.accentCoral,
     shadowXs: BoxShadow(
@@ -390,6 +427,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     buttonRadius: 14,
     navItemRadius: 12,
     itemRadius: 10,
+    dialogRadius: 16,
+    inputFillAlpha: 0.4,
+    listTileHorizontalPadding: AppSpacing.mdLg,
+    listTileVerticalPadding: AppSpacing.xs,
+    listTileRadius: 10,
+    centerTitle: true,
     shadowXs: const BoxShadow(color: Color(0x00000000)),
     shadowSm: const BoxShadow(color: Color(0x00000000)),
     shadowMd: const BoxShadow(color: Color(0x00000000)),
@@ -403,6 +446,12 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     buttonRadius: 14,
     navItemRadius: 12,
     itemRadius: 10,
+    dialogRadius: 16,
+    inputFillAlpha: 0.4,
+    listTileHorizontalPadding: AppSpacing.mdLg,
+    listTileVerticalPadding: AppSpacing.xs,
+    listTileRadius: 10,
+    centerTitle: true,
     shadowXs: const BoxShadow(color: Color(0x00000000)),
     shadowSm: const BoxShadow(color: Color(0x00000000)),
     shadowMd: const BoxShadow(color: Color(0x00000000)),
