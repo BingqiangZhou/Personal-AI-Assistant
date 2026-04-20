@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def validate_password_strength(v: str) -> str:
@@ -44,7 +44,7 @@ class TimestampedSchema(BaseSchema):
 
 # User schemas
 class UserBase(BaseSchema):
-    email: EmailStr
+    email: str
     username: str | None = Field(None, min_length=3, max_length=50)
     account_name: str | None = Field(None, max_length=255)
     is_active: bool = True
@@ -230,7 +230,7 @@ class ConversationResponse(ConversationBase, TimestampedSchema):
 class ForgotPasswordRequest(BaseSchema):
     """Forgot password request schema."""
 
-    email: EmailStr = Field(
+    email: str = Field(
         ..., description="Email address associated with the account"
     )
 

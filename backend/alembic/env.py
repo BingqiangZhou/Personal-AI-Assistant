@@ -4,7 +4,6 @@ import asyncio
 import os
 import sys
 import types
-from datetime import timedelta
 from functools import lru_cache
 from logging.config import fileConfig
 from unittest.mock import AsyncMock
@@ -19,15 +18,6 @@ from alembic import context
 
 # Add the app directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-
-# Mock Header class for security functions
-class Header:
-    def __init__(self, default=None, **kwargs):
-        self.default = default
-
-    def __call__(self, *args, **kwargs):
-        return self.default
 
 
 class MinimalSettings(BaseSettings):
@@ -64,9 +54,7 @@ class MockConfig:
     DATABASE_CONNECT_TIMEOUT = 5
     REDIS_URL = "redis://localhost:6379"
     ALLOWED_HOSTS = ["*"]
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
-    REFRESH_TOKEN_EXPIRE_DAYS = 7
-    ALGORITHM = "HS256"
+    API_KEY = ""
     CELERY_BROKER_URL = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
     MAX_PODCAST_SUBSCRIPTIONS = 50
@@ -102,56 +90,6 @@ class MockSecurity:
         return "migration-secret-key-placeholder"
 
     @staticmethod
-    def verify_password(plain_password, hashed_password):
-        return True
-
-    @staticmethod
-    def get_password_hash(password):
-        return "mock_hash"
-
-    @staticmethod
-    def create_access_token(data: dict, expires_delta: timedelta = None):
-        return "mock_access_token"
-
-    @staticmethod
-    def create_refresh_token(data: dict, expires_delta: timedelta = None):
-        return "mock_refresh_token"
-
-    @staticmethod
-    def verify_token(token: str, token_type: str = "access"):
-        return {"sub": "1", "email": "test@example.com"}
-
-    @staticmethod
-    async def get_current_user(token: str, db):
-        return None
-
-    @staticmethod
-    async def get_current_active_user(token: str, db):
-        return None
-
-    @staticmethod
-    async def get_current_superuser(token: str, db):
-        return None
-
-    @staticmethod
-    def verify_token_optional(token: str, token_type: str = "access"):
-        return {"sub": "1", "email": "test@example.com"} if token else None
-
-    @staticmethod
-    async def get_token_from_request(
-        authorization: str = None, api_key: str = Header(None)
-    ):
-        return "mock_token"
-
-    @staticmethod
-    def generate_password_reset_token(email: str):
-        return "mock_reset_token"
-
-    @staticmethod
-    def verify_password_reset_token(token: str):
-        return "test@example.com"
-
-    @staticmethod
     def generate_api_key():
         return "mock_api_key"
 
@@ -165,42 +103,14 @@ mock_security_module.settings = MockConfig()
 mock_security_module.get_or_generate_secret_key = (
     MockSecurity.get_or_generate_secret_key
 )
-mock_security_module.verify_password = MockSecurity.verify_password
-mock_security_module.get_password_hash = MockSecurity.get_password_hash
-mock_security_module.create_access_token = MockSecurity.create_access_token
-mock_security_module.create_refresh_token = MockSecurity.create_refresh_token
-mock_security_module.verify_token = MockSecurity.verify_token
-mock_security_module.get_current_user = MockSecurity.get_current_user
-mock_security_module.get_current_active_user = MockSecurity.get_current_active_user
-mock_security_module.get_current_superuser = MockSecurity.get_current_superuser
-mock_security_module.verify_token_optional = MockSecurity.verify_token_optional
-mock_security_module.get_token_from_request = MockSecurity.get_token_from_request
-mock_security_module.generate_password_reset_token = (
-    MockSecurity.generate_password_reset_token
-)
-mock_security_module.verify_password_reset_token = (
-    MockSecurity.verify_password_reset_token
-)
 mock_security_module.generate_api_key = MockSecurity.generate_api_key
 mock_security_module.generate_random_string = MockSecurity.generate_random_string
-mock_security_module.OAuth2PasswordBearer = lambda token_url: None
 # Make mock behave like a package so sub-module imports still work
 mock_security_module.__path__ = ["app/core/security"]
 mock_security_module.__package__ = "app.core.security"
 sys.modules["app.core.security"] = mock_security_module
 
-# Mock sub-modules that auth_service imports from
-_mock_jwt = types.ModuleType("app.core.security.jwt")
-_mock_jwt.verify_token = AsyncMock(return_value={"sub": "1"})
-_mock_jwt.create_access_token = AsyncMock(return_value="mock_token")
-_mock_jwt.create_refresh_token = AsyncMock(return_value="mock_refresh")
-sys.modules["app.core.security.jwt"] = _mock_jwt
-
-_mock_password = types.ModuleType("app.core.security.password")
-_mock_password.get_password_hash = MockSecurity.get_password_hash
-_mock_password.verify_password = MockSecurity.verify_password
-sys.modules["app.core.security.password"] = _mock_password
-
+# Mock encryption module
 _mock_encryption = types.ModuleType("app.core.security.encryption")
 _mock_encryption.encrypt_data = AsyncMock(return_value=b"encrypted")
 _mock_encryption.decrypt_data = AsyncMock(return_value=b"decrypted")
