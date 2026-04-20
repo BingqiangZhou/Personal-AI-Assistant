@@ -8,59 +8,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:personal_ai_assistant/core/app/config/app_config.dart' as config;
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
-import 'package:personal_ai_assistant/core/network/retry_interceptor.dart';
 import 'package:personal_ai_assistant/core/network/token_refresh_service.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/utils/url_normalizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 typedef SavedServerBaseUrlLoader = Future<String?> Function();
-
-/// Options for configuring retry behavior on network failures.
-@immutable
-class RetryOptions {
-
-  const RetryOptions({
-    this.maxRetries = 3,
-    this.initialDelay = const Duration(seconds: 1),
-    this.backoffMultiplier = 2.0,
-  });
-  /// Maximum number of retry attempts for transient failures.
-  final int maxRetries;
-
-  /// Initial delay before the first retry.
-  final Duration initialDelay;
-
-  /// Multiplier for exponential backoff (e.g., 2.0 = delay doubles each retry).
-  final double backoffMultiplier;
-
-  /// Calculate delay for a given retry attempt (0-indexed).
-  Duration getDelay(int attempt) {
-    final delayMs = initialDelay.inMilliseconds * pow(backoffMultiplier, attempt);
-    return Duration(milliseconds: delayMs.round());
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is RetryOptions &&
-        other.maxRetries == maxRetries &&
-        other.initialDelay == initialDelay &&
-        other.backoffMultiplier == backoffMultiplier;
-  }
-
-  @override
-  int get hashCode => Object.hash(maxRetries, initialDelay, backoffMultiplier);
-}
-
-double pow(double base, int exponent) {
-  if (exponent == 0) return 1.0;
-  var result = 1.0;
-  for (var i = 0; i < exponent; i++) {
-    result *= base;
-  }
-  return result;
-}
 
 @immutable
 class DioClientInitOptions {
@@ -69,27 +22,26 @@ class DioClientInitOptions {
     this.applySavedBaseUrlOnInit = false,
     this.initialServerBaseUrl,
     this.savedBaseUrlLoader,
-    this.retryOptions = const RetryOptions(),
   });
   final bool applySavedBaseUrlOnInit;
   final String? initialServerBaseUrl;
   final SavedServerBaseUrlLoader? savedBaseUrlLoader;
-  final RetryOptions retryOptions;
 }
 
 /// Simplified HTTP client using Dio.
 ///
 /// Features:
-/// - ETag-based caching (via ETagInterceptor)
+/// - ETag-based caching (via dio_cache_interceptor)
 /// - Token refresh (via TokenRefreshService)
 /// - Automatic base URL management
 /// - Error handling with typed exceptions
 /// - Request cancellation support
+/// - Automatic retry on network errors
 class DioClient {
+  static const int _maxRetries = 3;
 
   DioClient({DioClientInitOptions initOptions = const DioClientInitOptions()})
-    : _initOptions = initOptions,
-      _retryOptions = initOptions.retryOptions {
+    : _initOptions = initOptions {
     // Initialize with default/empty baseUrl first.
     // The actual baseUrl is set by _initializeBaseUrl().
     _dio = Dio(
@@ -122,9 +74,6 @@ class DioClient {
       ),
     );
 
-    // Add retry interceptor after main interceptor
-    _dio.interceptors.add(RetryInterceptor(dio: _dio, options: _retryOptions));
-
     // Apply base URL synchronously before returning.
     _initializeBaseUrl(initialServerBaseUrl: _initOptions.initialServerBaseUrl);
 
@@ -140,9 +89,6 @@ class DioClient {
 
   // Request cancellation support
   final Map<String, CancelToken> _cancelTokens = {};
-
-  // Retry options (passed to RetryInterceptor)
-  final RetryOptions _retryOptions;
 
   // In-memory token cache to avoid secure storage I/O on every request
   String? _cachedAccessToken;
@@ -233,6 +179,16 @@ class DioClient {
       }
       rethrow;
     }
+  }
+
+  /// Simple retry for transient network errors with fixed delay.
+  Future<Response> _retryWithBackoff(RequestOptions options, int attempt) async {
+    if (attempt >= _maxRetries) throw DioException(requestOptions: options);
+
+    final delay = Duration(seconds: attempt + 1);
+    await Future.delayed(delay);
+
+    return _dio.fetch(options);
   }
 
   Future<void> _onRequest(
@@ -341,6 +297,20 @@ class DioClient {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        try {
+          final retryCount = (error.requestOptions.extra['_retryCount'] as int? ?? 0) + 1;
+          if (retryCount <= _maxRetries) {
+            final newOptions = error.requestOptions.copyWith(
+              extra: {...error.requestOptions.extra, '_retryCount': retryCount},
+            );
+            final response = await _retryWithBackoff(newOptions, retryCount - 1);
+            handler.resolve(response);
+            return;
+          }
+        } catch (_) {
+          // Fall through to reject
+        }
         handler.reject(DioException(
           requestOptions: error.requestOptions,
           error: const NetworkException('Connection timeout'),
