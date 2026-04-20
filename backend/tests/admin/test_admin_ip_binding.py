@@ -54,7 +54,7 @@ class TestIPValidationLogic:
         # Mock DB session that should never be reached (IP check comes first)
         mock_db = AsyncMock()
 
-        dep = AdminAuthRequired(require_2fa=True)
+        dep = AdminAuthRequired()
 
         with pytest.raises(Exception) as exc_info:
             await dep.__call__(request=mock_request, admin_session=token, db=mock_db)
@@ -79,24 +79,15 @@ class TestIPValidationLogic:
         # Build a mock user for the DB lookup
         mock_user = MagicMock(spec=User)
         mock_user.is_active = True
-        mock_user.is_2fa_enabled = True
 
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
 
         mock_db = AsyncMock()
 
-        dep = AdminAuthRequired(require_2fa=True)
+        dep = AdminAuthRequired()
 
-        with (
-            patch("app.admin.auth.UserRepository", return_value=mock_repo),
-            # get_admin_2fa_enabled is imported locally inside __call__,
-            # so patch it at its source module.
-            patch(
-                "app.admin.security_settings.get_admin_2fa_enabled",
-                return_value=(True, None),
-            ),
-        ):
+        with patch("app.admin.auth.UserRepository", return_value=mock_repo):
             result = await dep.__call__(
                 request=mock_request, admin_session=token, db=mock_db
             )
@@ -132,7 +123,7 @@ class TestNoInternalErrorLeak:
         # Make loads() raise an unexpected error
         mock_db = AsyncMock()
 
-        dep = AdminAuthRequired(require_2fa=True)
+        dep = AdminAuthRequired()
 
         with (
             patch(

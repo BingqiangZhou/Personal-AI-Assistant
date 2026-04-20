@@ -158,12 +158,13 @@ class TestTimezoneFormatter:
         assert result == "2025-03-10 09:00:00"
 
     def test_known_timezone_new_york(self):
-        """America/New_York resolves to UTC-5."""
+        """America/New_York resolves to UTC-4 (EDT) on March 10, 2025 (post-DST)."""
         fmt = TimezoneFormatter(timezone_str="America/New_York")
         utc_dt = datetime(2025, 3, 10, 10, 0, 0, tzinfo=UTC)
         record = _make_record(created=utc_dt.timestamp())
         result = fmt.formatTime(record)
-        assert result == "2025-03-10 05:00:00"
+        # March 10, 2025 is after DST spring-forward: EDT = UTC-4
+        assert result == "2025-03-10 06:00:00"
 
     def test_utc_plus_offset_string(self):
         """UTC+3 string is parsed correctly."""
@@ -182,11 +183,13 @@ class TestTimezoneFormatter:
         assert result == "2025-07-20 05:00:00"
 
     def test_unknown_timezone_falls_back_to_shanghai(self):
-        """Unknown timezone strings fall back to the Shanghai offset (UTC+8)."""
+        """Unknown timezone strings fall back to Asia/Shanghai via ZoneInfo."""
+        from zoneinfo import ZoneInfo
+
         fmt = TimezoneFormatter(timezone_str="Mars/OlympusMons")
-        # _get_timezone_offset should return SHANGHAI_OFFSET
-        offset = fmt._get_timezone_offset("Mars/OlympusMons")
-        assert offset == SHANGHAI_OFFSET
+        # Unknown timezone falls back to ZoneInfo("Asia/Shanghai")
+        assert isinstance(fmt._tz, ZoneInfo)
+        assert fmt._tz.key == "Asia/Shanghai"
 
     # -- Full format output -------------------------------------------------
 
@@ -397,9 +400,12 @@ class TestSetupLogging:
 
     def test_formatter_timezone_propagated(self, log_dir: Path):
         """The formatter on each handler uses the specified timezone."""
+        from zoneinfo import ZoneInfo
+
         setup_logging(log_dir=str(log_dir), timezone="Asia/Tokyo")
         for handler in logging.getLogger().handlers:
-            assert handler.formatter.timezone_str == "Asia/Tokyo"
+            assert isinstance(handler.formatter._tz, ZoneInfo)
+            assert handler.formatter._tz.key == "Asia/Tokyo"
 
 
 # ===========================================================================
@@ -590,7 +596,7 @@ class TestLogFileContent:
             h.flush()
 
         content = (log_dir / "app.log").read_text(encoding="utf-8")
-        line = [l for l in content.splitlines() if "format-check" in l][0]
+        line = [ln for ln in content.splitlines() if "format-check" in ln][0]
         # Format: [asctime] [levelname] [name:lineno] message
         assert "[INFO]" in line
         assert "[test.formatcheck:" in line

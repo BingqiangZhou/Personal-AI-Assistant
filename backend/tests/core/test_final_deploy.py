@@ -11,7 +11,6 @@ def test_service_files_exist() -> None:
         "app/domains/podcast/models.py",
         "app/domains/podcast/services/__init__.py",
         "app/domains/podcast/routes/routes.py",
-        "app/domains/ai/llm_privacy.py",
         "app/domains/podcast/integration/security.py",
     ]
     for file in required_paths:

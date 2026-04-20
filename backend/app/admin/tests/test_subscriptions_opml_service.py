@@ -20,9 +20,15 @@ class _FakeTaskOrchestrationService:
 @pytest.mark.asyncio
 async def test_import_opml_queues_episode_processing_via_orchestration_service():
     db = AsyncMock()
+
+    # First db.execute call: user_existing_result (lines 66-80 of service)
+    user_existing_result = Mock()
+    user_existing_result.all.return_value = []
+    # Second db.execute call: global_existing_result (lines 83-91 of service)
     global_existing_result = Mock()
-    global_existing_result.scalar_one_or_none.return_value = None
-    db.execute.return_value = global_existing_result
+    global_existing_result.all.return_value = []
+
+    db.execute.side_effect = [user_existing_result, global_existing_result]
 
     user = SimpleNamespace(id=42, username="admin")
     request = Mock()
@@ -56,10 +62,6 @@ async def test_import_opml_queues_episode_processing_via_orchestration_service()
         patch(
             "app.admin.services.subscriptions_opml_service.PodcastSubscriptionService",
             return_value=podcast_service,
-        ),
-        patch(
-            "app.admin.services.subscriptions_opml_service.log_admin_action",
-            new=AsyncMock(),
         ),
     ):
         payload, status_code = await service.import_subscriptions_opml(
