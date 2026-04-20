@@ -3,33 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-
-def validate_password_strength(v: str) -> str:
-    """Validate password complexity.
-
-    Args:
-        v: Password string to validate
-
-    Returns:
-        Validated password string
-
-    Raises:
-        ValueError: If password doesn't meet complexity requirements
-    """
-    errors = []
-    if len(v) < 8:
-        errors.append("Password must be at least 8 characters long")
-    if not any(c.isupper() for c in v):
-        errors.append("Password must contain at least one uppercase letter (A-Z)")
-    if not any(c.islower() for c in v):
-        errors.append("Password must contain at least one lowercase letter (a-z)")
-    if not any(c.isdigit() for c in v):
-        errors.append("Password must contain at least one number (0-9)")
-    if errors:
-        raise ValueError(" | ".join(errors))
-    return v
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Base schemas
@@ -40,61 +14,6 @@ class BaseSchema(BaseModel):
 class TimestampedSchema(BaseSchema):
     created_at: datetime
     updated_at: datetime | None = None
-
-
-# User schemas
-class UserBase(BaseSchema):
-    email: str
-    username: str | None = Field(None, min_length=3, max_length=50)
-    account_name: str | None = Field(None, max_length=255)
-    is_active: bool = True
-    is_superuser: bool = False
-
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, v):
-        """Validate username format."""
-        if v is not None and not v.replace("_", "").replace("-", "").isalnum():
-            raise ValueError(
-                "Username must contain only alphanumeric characters, hyphens, and underscores"
-            )
-        return v
-
-
-class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, max_length=128)
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v):
-        """Validate password strength."""
-        return validate_password_strength(v)
-
-
-class UserUpdate(BaseSchema):
-    account_name: str | None = None
-    avatar_url: str | None = None
-    settings: dict[str, Any] | None = None
-
-
-class UserResponse(UserBase):
-    id: int
-    is_verified: bool
-    avatar_url: str | None = None
-    account_name: str | None = None
-    created_at: datetime
-
-
-# Token schemas
-class Token(BaseSchema):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int
-
-
-class TokenData(BaseSchema):
-    username: str | None = None
 
 
 # Pagination schemas
@@ -224,36 +143,3 @@ class ConversationResponse(ConversationBase, TimestampedSchema):
     user_id: int
     status: str
     message_count: int | None = 0
-
-
-# Password Reset schemas
-class ForgotPasswordRequest(BaseSchema):
-    """Forgot password request schema."""
-
-    email: str = Field(
-        ..., description="Email address associated with the account"
-    )
-
-
-class ResetPasswordRequest(BaseSchema):
-    """Reset password request schema."""
-
-    token: str = Field(..., description="Password reset token received via email")
-    new_password: str = Field(
-        ..., min_length=8, max_length=128, description="New password"
-    )
-
-    @field_validator("new_password")
-    @classmethod
-    def validate_password(cls, v):
-        """Validate password strength."""
-        return validate_password_strength(v)
-
-
-class PasswordResetResponse(BaseSchema):
-    """Password reset response schema."""
-
-    message: str = Field(..., description="Response message")
-    # Include token only in development for testing
-    token: str | None = Field(None, description="Reset token (development only)")
-    expires_at: str | None = Field(None, description="Token expiry time (ISO format)")
