@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.domains.ai.services.model_runtime_service import (
+from app.domains.ai.services.text_generation_service import (
     AIModelRuntimeService,
     _is_retryable_http_status,
 )
@@ -53,7 +53,7 @@ class _InspectingClientSession:
 async def test_call_transcription_model_keeps_file_handle_open(monkeypatch):
     fake_session = _InspectingClientSession()
     monkeypatch.setattr(
-        "app.domains.ai.services.model_runtime_service.get_shared_http_session",
+        "app.domains.ai.services.text_generation_service.get_shared_http_session",
         AsyncMock(return_value=fake_session),
     )
 
