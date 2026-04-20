@@ -1,22 +1,14 @@
-"""Celery route snapshot tests for podcast task queues."""
+"""Celery schedule snapshot tests — single queue mode."""
 
 from app.core.celery_app import celery_app
 
 
-def test_transcription_and_summary_routes_are_explicit():
-    routes = celery_app.conf.task_routes or {}
+def test_all_beat_tasks_use_default_queue():
+    """All beat schedule entries should target the default queue."""
+    beat_schedule = celery_app.conf.beat_schedule
+    assert beat_schedule
 
-    transcription_task = "app.domains.podcast.tasks.tasks_transcription.process_podcast_episode_with_transcription"
-    backlog_task = (
-        "app.domains.podcast.tasks.tasks_transcription.process_pending_transcriptions"
-    )
-    summary_task = "app.domains.podcast.tasks.tasks_summary.generate_pending_summaries"
-
-    assert transcription_task in routes
-    assert routes[transcription_task]["queue"] == "transcription"
-
-    assert backlog_task in routes
-    assert routes[backlog_task]["queue"] == "transcription"
-
-    assert summary_task in routes
-    assert routes[summary_task]["queue"] == "default"
+    for name, entry in beat_schedule.items():
+        assert entry["options"]["queue"] == "default", (
+            f"{name} should use default queue in single-user mode"
+        )

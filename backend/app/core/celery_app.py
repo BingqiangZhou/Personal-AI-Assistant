@@ -20,8 +20,7 @@ _celery_app: Celery | None = None
 
 
 def _build_beat_schedule() -> dict[str, Any]:
-    settings = get_settings()
-    beat_schedule = {
+    return {
         "refresh-podcast-feeds": {
             "task": "app.domains.podcast.tasks.tasks_subscription.refresh_all_podcast_feeds",
             "schedule": crontab(minute=0),
@@ -42,19 +41,7 @@ def _build_beat_schedule() -> dict[str, Any]:
             "schedule": crontab(hour=19, minute=30),
             "options": {"queue": "default"},
         },
-        "extract-pending-highlights": {
-            "task": "app.domains.podcast.tasks.tasks_highlight.extract_pending_highlights",
-            "schedule": crontab(minute=30),
-            "options": {"queue": "default"},
-        },
     }
-    if settings.TRANSCRIPTION_BACKLOG_ENABLED:
-        beat_schedule["process-pending-transcriptions"] = {
-            "task": "app.domains.podcast.tasks.tasks_transcription.process_pending_transcriptions",
-            "schedule": crontab(minute=settings.TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE),
-            "options": {"queue": "transcription"},
-        }
-    return beat_schedule
 
 
 def create_celery_app() -> Celery:
@@ -80,49 +67,6 @@ def create_celery_app() -> Celery:
         task_soft_time_limit=25 * 60,
         worker_prefetch_multiplier=settings.CELERY_WORKER_PREFETCH_MULTIPLIER,
         worker_max_tasks_per_child=settings.CELERY_WORKER_MAX_TASKS_PER_CHILD,
-        task_routes={
-            # Default queue — all tasks except transcription
-            "app.domains.podcast.tasks.tasks_subscription.refresh_all_podcast_feeds": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_maintenance.process_opml_subscription_episodes": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_summary.generate_pending_summaries": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_summary.generate_episode_summary": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_maintenance.cleanup_old_playback_states": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_maintenance.cleanup_old_transcription_temp_files": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_maintenance.auto_cleanup_cache_files": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_daily_report.generate_daily_podcast_reports": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_highlight.extract_episode_highlights": {
-                "queue": "default",
-            },
-            "app.domains.podcast.tasks.tasks_highlight.extract_pending_highlights": {
-                "queue": "default",
-            },
-            # Transcription queue — isolated for heavy I/O work
-            "app.domains.podcast.tasks.tasks_transcription.process_audio_transcription": {
-                "queue": "transcription",
-            },
-            "app.domains.podcast.tasks.tasks_transcription.process_podcast_episode_with_transcription": {
-                "queue": "transcription",
-            },
-            "app.domains.podcast.tasks.tasks_transcription.process_pending_transcriptions": {
-                "queue": "transcription",
-            },
-        },
         beat_schedule=_build_beat_schedule(),
     )
 
@@ -145,9 +89,9 @@ try:
     def _on_worker_process_shutdown(**kwargs):  # type: ignore[misc]
         """Dispose DB engines when a Celery worker child process shuts down."""
         try:
-            from app.core.database import close_worker_db_runtimes
+            from app.core.database import close_db
 
-            asyncio.run(close_worker_db_runtimes())
+            asyncio.run(close_db())
         except Exception:
             _logger.warning(
                 "Failed to dispose worker DB engines during shutdown", exc_info=True

@@ -19,17 +19,11 @@ def test_registered_task_names_snapshot() -> None:
     assert expected_names.issubset(registered_names)
 
 
-def test_task_routes_and_beat_reference_registered_tasks() -> None:
+def test_beat_schedule_references_registered_tasks() -> None:
     registered_names = set(celery_app.tasks.keys())
-    task_routes = celery_app.conf.task_routes
     beat_schedule = celery_app.conf.beat_schedule
 
-    assert task_routes
     assert beat_schedule
-
-    for task_name, route in task_routes.items():
-        assert task_name in registered_names
-        assert "queue" in route
 
     for beat_name, beat_item in beat_schedule.items():
         task_name = beat_item["task"]
