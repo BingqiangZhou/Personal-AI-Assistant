@@ -12,7 +12,7 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.ai_client import call_ai_api_with_retry
-from app.core.database import worker_db_session
+from app.core.database import get_async_session_factory
 from app.core.exceptions import ValidationError
 from app.core.redis import get_shared_redis
 from app.core.utils import filter_thinking_content
@@ -522,9 +522,8 @@ class SummaryWorkflowService:
 
         for episode_id in claimed_episode_ids:
             try:
-                async with worker_db_session(
-                    "celery-summary-episode"
-                ) as episode_session:
+                session_factory = get_async_session_factory()
+                async with session_factory() as episode_session:
                     summary_service = self.summary_service_factory(episode_session)
                     await summary_service.generate_summary(episode_id)
                 processed_count += 1
@@ -543,9 +542,8 @@ class SummaryWorkflowService:
                 logger.exception(
                     "Failed to generate summary for episode %s", episode_id
                 )
-                async with worker_db_session(
-                    "celery-summary-episode"
-                ) as episode_session:
+                session_factory = get_async_session_factory()
+                async with session_factory() as episode_session:
                     repo = self.repo_factory(episode_session)
                     await repo.mark_summary_failed(episode_id, str(exc))
             except Exception as exc:
@@ -553,9 +551,8 @@ class SummaryWorkflowService:
                 logger.exception(
                     "Failed to generate summary for episode %s", episode_id
                 )
-                async with worker_db_session(
-                    "celery-summary-episode"
-                ) as episode_session:
+                session_factory = get_async_session_factory()
+                async with session_factory() as episode_session:
                     repo = self.repo_factory(episode_session)
                     await repo.mark_summary_failed(episode_id, str(exc))
 

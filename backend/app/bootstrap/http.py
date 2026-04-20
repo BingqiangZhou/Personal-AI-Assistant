@@ -29,11 +29,8 @@ def configure_middlewares(app: FastAPI) -> None:
         allow_origins=settings.ALLOWED_HOSTS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With", "X-API-Key"],
     )
-    from app.admin.first_run import first_run_middleware
-
-    app.middleware("http")(first_run_middleware)
 
 
 def configure_exception_handlers(app: FastAPI) -> None:

@@ -25,7 +25,6 @@ from app.domains.podcast.models import (
     PodcastQueue,
     PodcastQueueItem,
 )
-from app.domains.user.models import User
 
 
 # Use TYPE_CHECKING to avoid runtime dependency on subscription domain
@@ -51,10 +50,8 @@ class PodcastPlaybackQueueRepositoryMixin:
     """Playback preference/progress and queue operations."""
 
     async def get_user_default_playback_rate(self, user_id: int) -> float:
-        stmt = select(User.default_playback_rate).where(User.id == user_id)
-        result = await self.db.execute(stmt)
-        value = result.scalar_one_or_none()
-        return float(value) if value is not None else 1.0
+        # Hardcoded default playback rate for single-user mode
+        return 1.0
 
     async def get_subscription_playback_rate_preference(
         self,
@@ -129,28 +126,8 @@ class PodcastPlaybackQueueRepositoryMixin:
             await self.db.commit()
             return await self.get_effective_playback_rate(user_id, subscription_id)
 
-        user_stmt = select(User).where(User.id == user_id)
-        user_result = await self.db.execute(user_stmt)
-        user = user_result.scalar_one_or_none()
-        if user is None:
-            raise ValueError("USER_NOT_FOUND")
-
-        user.default_playback_rate = playback_rate
-
-        if subscription_id is not None:
-            sub_stmt = select(UserSubscription).where(
-                and_(
-                    *self._active_user_subscription_filters(user_id),
-                    UserSubscription.subscription_id == subscription_id,
-                ),
-            )
-            sub_result = await self.db.execute(sub_stmt)
-            user_sub = sub_result.scalar_one_or_none()
-            if user_sub is None:
-                raise SubscriptionNotFoundError("Subscription not found")
-            user_sub.playback_rate_preference = None
-
-        await self.db.commit()
+        # In single-user mode, global playback rate is not stored
+        # Just return the current effective rate
         return await self.get_effective_playback_rate(user_id, subscription_id)
 
     async def get_subscription_episodes_batch(

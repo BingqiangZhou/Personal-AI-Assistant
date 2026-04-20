@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.bootstrap.cache_warming import execute_cache_warmup
 from app.core.config import get_settings
 from app.core.database import (
     check_db_readiness,
@@ -89,11 +88,6 @@ async def application_lifespan(app: FastAPI):
         for issue in config_issues:
             logger.warning("Configuration warning: %s", issue)
 
-    if settings.ENVIRONMENT == "development" and settings.DEBUG:
-        logger.warning(
-            "SECURITY: Mock authentication is ENABLED (ENVIRONMENT=development, DEBUG=true). "
-            "Never use in production!"
-        )
 
     if settings.ENVIRONMENT == "production" and settings.DEBUG:
         logger.warning("DEBUG is enabled in production — set DEBUG=false")
@@ -122,22 +116,6 @@ async def application_lifespan(app: FastAPI):
         logger.info("All critical services are healthy")
         app.state.degraded_services = []
         app.state.service_health = service_health
-
-    # Execute cache warm-up in background (non-blocking)
-    session_factory = get_async_session_factory()
-    warmup_task = asyncio.create_task(_run_cache_warmup_async(session_factory))
-    # Add error callback to prevent silent failures
-    warmup_task.add_done_callback(
-        lambda task: (
-            logger.error(
-                "Cache warmup background task failed: %s",
-                task.exception(),
-                exc_info=task.exception(),
-            )
-            if task.exception()
-            else None
-        )
-    )
 
     startup_lock_acquired = False
     try:
@@ -182,28 +160,3 @@ async def application_lifespan(app: FastAPI):
         await close_shared_http_session()
         await close_shared_redis()
         logger.info("Service shutdown completed")
-
-
-async def _run_cache_warmup_async(session_factory) -> None:
-    """Run cache warm-up asynchronously in the background.
-
-    This function runs independently of the main startup sequence
-    to avoid blocking application startup.
-
-    Args:
-        session_factory: Database session factory for cache warm-up queries.
-    """
-    try:
-        logger.info("Starting background cache warm-up...")
-        stats = await execute_cache_warmup(session_factory)
-        logger.info(
-            "Background cache warm-up completed: users=%d, subscriptions=%d, podcasts=%d, settings=%d",
-            stats.get("users_warmed", 0),
-            stats.get("subscriptions_warmed", 0),
-            stats.get("podcasts_warmed", 0),
-            stats.get("system_settings_warmed", 0),
-        )
-        if stats.get("errors"):
-            logger.warning("Cache warm-up encountered errors: %s", stats["errors"])
-    except Exception as exc:
-        logger.error("Background cache warm-up failed: %s", exc)

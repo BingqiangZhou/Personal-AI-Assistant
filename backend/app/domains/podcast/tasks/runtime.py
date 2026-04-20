@@ -15,9 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 _logger = logging.getLogger(__name__)
 
 from app.core.database import (
-    create_isolated_session_factory,
+    get_async_session_factory,
     register_orm_models,
-    worker_db_session,
 )
 from app.core.redis import get_shared_redis
 from app.domains.podcast.tasks._runlog import _insert_run_async
@@ -28,17 +27,12 @@ def ensure_orm_models_registered() -> None:
     register_orm_models()
 
 
-def _new_session_factory(application_name: str):
-    """Compatibility wrapper around the centralized worker-session runtime."""
-    ensure_orm_models_registered()
-    return create_isolated_session_factory(application_name)
-
-
 @asynccontextmanager
 async def worker_session(application_name: str) -> AsyncIterator[AsyncSession]:
-    """Create an isolated worker DB session and always dispose its engine."""
+    """Create an isolated worker DB session."""
     ensure_orm_models_registered()
-    async with worker_db_session(application_name) as session:
+    session_factory = get_async_session_factory()
+    async with session_factory() as session:
         yield session
 
 

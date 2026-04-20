@@ -25,7 +25,7 @@ from sqlalchemy.orm import joinedload
 from app.admin.storage_service import StorageCleanupService
 from app.core.redis import CacheTTL
 from app.core.config import settings
-from app.core.database import worker_db_session  # noqa: F401
+from app.core.database import get_async_session_factory  # noqa: F401
 from app.core.datetime_utils import ensure_timezone_aware_fetch_time
 from app.core.redis import get_shared_redis
 from app.domains.podcast.integration.secure_rss_parser import (
@@ -252,7 +252,8 @@ class FeedSyncOrchestrator(BaseOrchestrator):
         subscription_id = int(candidate["subscription_id"])
         user_id = int(candidate["user_id"])
 
-        async with worker_db_session("celery-feed-refresh-subscription") as session:
+        session_factory = get_async_session_factory()
+        async with session_factory() as session:
             repo = PodcastSubscriptionRepository(session)
             subscription = await repo.get_subscription_by_id_direct(subscription_id)
             if subscription is None:
@@ -611,7 +612,8 @@ class ReportOrchestrator(BaseOrchestrator):
         async def process_user_report(user_id: int) -> bool:
             async with semaphore:
                 try:
-                    async with worker_db_session("daily-report-user") as session:
+                    session_factory = get_async_session_factory()
+                    async with session_factory() as session:
                         service = DailyReportService(session, user_id=user_id)
                         await service.generate_daily_report(target_date=target_date)
                         return True

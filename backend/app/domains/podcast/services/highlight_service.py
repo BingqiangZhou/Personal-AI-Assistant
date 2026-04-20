@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.ai_client import call_ai_api_with_retry
-from app.core.database import worker_db_session
+from app.core.database import get_async_session_factory
 from app.core.exceptions import ValidationError
 from app.core.redis import get_shared_redis
 from app.domains.ai.models import ModelType
@@ -519,9 +519,8 @@ class HighlightExtractionService:
         async def process_episode(episode_id: int) -> str:
             async with semaphore:
                 try:
-                    async with worker_db_session(
-                        "celery-highlight-episode"
-                    ) as episode_session:
+                    session_factory = get_async_session_factory()
+                    async with session_factory() as episode_session:
                         service = HighlightExtractionService(episode_session)
                         await service.extract_highlights_for_episode(episode_id)
                     return "success"
@@ -697,7 +696,8 @@ class HighlightExtractionService:
 
     async def _reset_claimed_highlight_status_safe(self, episode_id: int) -> None:
         """Reset claimed status using a fresh session."""
-        async with worker_db_session("celery-highlight-reset") as session:
+        session_factory = get_async_session_factory()
+        async with session_factory() as session:
             stmt = (
                 update(HighlightExtractionTask)
                 .where(HighlightExtractionTask.episode_id == episode_id)
@@ -713,7 +713,8 @@ class HighlightExtractionService:
     ) -> None:
         """Mark extraction as failed using a fresh session."""
         failed_at = datetime.now(UTC)
-        async with worker_db_session("celery-highlight-fail") as session:
+        session_factory = get_async_session_factory()
+        async with session_factory() as session:
             stmt = (
                 update(HighlightExtractionTask)
                 .where(HighlightExtractionTask.episode_id == episode_id)
