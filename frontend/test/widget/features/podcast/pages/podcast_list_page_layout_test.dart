@@ -13,6 +13,8 @@ import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcas
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
+    show applePodcastRssServiceProvider;
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 import '../../../../helpers/podcast_list_page_helper.dart';
 

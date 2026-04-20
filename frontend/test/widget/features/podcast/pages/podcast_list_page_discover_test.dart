@@ -14,6 +14,8 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
+    show applePodcastRssServiceProvider;
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/country_selector_dropdown.dart';
 import '../../../../helpers/podcast_list_page_helper.dart';
 

@@ -23,6 +23,7 @@ import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast
 import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/itunes_search_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_daily_report_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';

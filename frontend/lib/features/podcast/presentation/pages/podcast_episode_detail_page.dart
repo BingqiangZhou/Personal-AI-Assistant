@@ -26,6 +26,9 @@ import 'package:personal_ai_assistant/features/podcast/core/utils/html_sanitizer
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_episodes_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_highlights_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_playback_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_service.dart';

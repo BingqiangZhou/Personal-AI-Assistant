@@ -21,6 +21,8 @@ import 'package:personal_ai_assistant/features/podcast/data/services/apple_podca
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_list_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_feed_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_playback_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
