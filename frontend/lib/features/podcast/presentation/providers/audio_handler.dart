@@ -1,10 +1,4 @@
-import 'dart:async';
-
-import 'package:audio_service/audio_service.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
-import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
-import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
+part of 'podcast_playback_providers.dart';
 
 /// AudioHandler for podcast playback with system media controls
 ///
