@@ -17,7 +17,7 @@ from app.core.exceptions import ValidationError
 from app.core.redis import get_shared_redis
 from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
-from app.domains.ai.services.base_model_manager import BaseModelManager
+from app.domains.ai.services.text_generation_service import BaseModelManager
 from app.domains.podcast.models import (
     PodcastEpisode,
     PodcastEpisodeTranscript,

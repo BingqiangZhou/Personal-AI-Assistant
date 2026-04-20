@@ -14,7 +14,7 @@ from app.core.ai_client import AIClientService
 from app.core.exceptions import ValidationError
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.ai.services.model_security_service import AIModelSecurityService
+from app.domains.ai.services.model_config_service import AIModelSecurityService
 from app.domains.podcast.models import (
     ConversationSession,
     PodcastConversation,

@@ -353,8 +353,8 @@ async def call_ai_api_with_retry(
 class AIClientService:
     """Unified AI invocation service with model resolution, retry, and fallback.
 
-    Consolidates the duplicated patterns across model_runtime_service,
-    text_generation_service, and conversation_service into a single
+    Consolidates the duplicated patterns across text_generation_service
+    and conversation_service into a single
     service that handles:
     - Model resolution by name or priority list
     - Per-model retry with exponential backoff (delegates to call_ai_api_with_retry)

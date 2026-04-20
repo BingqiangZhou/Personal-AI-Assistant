@@ -1,7 +1,7 @@
 """Tests for retryable HTTP status classification across the codebase."""
 
 from app.core.ai_client import is_retryable_http_status as unified_retryable
-from app.domains.ai.services.model_runtime_service import (
+from app.domains.ai.services.text_generation_service import (
     _is_retryable_http_status as runtime_retryable,
 )
 
