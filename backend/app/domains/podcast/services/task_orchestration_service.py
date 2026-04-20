@@ -23,11 +23,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.admin.storage_service import StorageCleanupService
-from app.core.redis import CacheTTL
 from app.core.config import settings
 from app.core.database import get_async_session_factory  # noqa: F401
 from app.core.datetime_utils import ensure_timezone_aware_fetch_time
-from app.core.redis import get_shared_redis
+from app.core.redis import CacheTTL, get_shared_redis
 from app.domains.podcast.integration.secure_rss_parser import (
     SecureRSSParser,  # noqa: F401
 )
@@ -35,7 +34,10 @@ from app.domains.podcast.models import (
     PodcastEpisode,
     PodcastEpisodeTranscript,
     PodcastPlaybackState,
+    Subscription,
+    SubscriptionStatus,
     TranscriptionTask,
+    UserSubscription,
 )
 from app.domains.podcast.repositories import PodcastSubscriptionRepository  # noqa: F401
 from app.domains.podcast.services.daily_report_service import DailyReportService
@@ -44,11 +46,6 @@ from app.domains.podcast.services.transcription_workflow_service import (  # noq
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 from app.domains.podcast.utils.status_helpers import status_value
-from app.domains.subscription.models import (
-    Subscription,
-    SubscriptionStatus,
-    UserSubscription,
-)
 
 
 logger = logging.getLogger(__name__)

@@ -37,7 +37,7 @@ class PodcastContentRepositoryMixin:
 
         Uses lazy imports to maintain domain boundary separation.
         """
-        from app.domains.subscription.models import UpdateFrequency
+        from app.domains.podcast.models import UpdateFrequency
 
         Subscription, UserSubscription = _get_subscription_models()
 

@@ -11,9 +11,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.datetime_utils import ensure_timezone_aware_fetch_time
-from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.models import PodcastEpisode, Subscription
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
-from app.domains.subscription.models import Subscription
 
 
 @pytest.mark.asyncio

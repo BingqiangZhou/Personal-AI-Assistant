@@ -16,7 +16,7 @@ from fastapi import HTTPException
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.subscription.models import (
+from app.domains.podcast.models import (
     Subscription,
     SubscriptionStatus,
     UpdateFrequency,

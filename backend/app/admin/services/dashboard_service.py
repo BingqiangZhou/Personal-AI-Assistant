@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.ai.models import AIModelConfig
-from app.domains.subscription.models import Subscription
+from app.domains.podcast.models import Subscription
 
 
 async def get_dashboard_context(db: AsyncSession) -> dict[str, int]:

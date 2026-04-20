@@ -1,7 +1,6 @@
 """Admin authentication service helpers (API key mode)."""
 
 from fastapi import Request, status
-from fastapi.responses import RedirectResponse
 
 
 class AdminSetupAuthService:

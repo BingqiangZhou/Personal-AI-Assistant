@@ -15,8 +15,8 @@ from sqlalchemy import select, update
 
 from app.core.database import get_async_session_factory, init_db
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
+from app.domains.podcast.models import Subscription
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
-from app.domains.subscription.models import Subscription
 
 
 async def main():

@@ -11,11 +11,11 @@ from urllib.parse import urlparse
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.podcast.models import Subscription, UserSubscription
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.podcast.services.task_orchestration_service import (
     PodcastTaskOrchestrationService,
 )
-from app.domains.subscription.models import Subscription, UserSubscription
 from app.domains.subscription.services import SubscriptionService
 from app.shared.schemas import SubscriptionCreate
 

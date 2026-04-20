@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.orm import joinedload
 
-from app.core.redis import CacheTTL
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.podcast.repositories.base import _get_subscription_models
 from app.shared.repository_helpers import resolve_window_total

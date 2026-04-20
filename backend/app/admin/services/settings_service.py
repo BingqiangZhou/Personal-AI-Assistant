@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.models import SystemSettings
 from app.admin.storage_service import StorageCleanupService
-from app.domains.subscription.models import (
+from app.domains.podcast.models import (
     Subscription,
     UpdateFrequency,
     UserSubscription,

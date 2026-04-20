@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.subscription.models import Subscription, UserSubscription
+from app.domains.podcast.models import Subscription, UserSubscription
 
 
 class PodcastScheduleService:

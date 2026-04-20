@@ -25,9 +25,10 @@ from app.domains.podcast.models import (
     HighlightExtractionTask,
     PodcastEpisode,
     PodcastEpisodeTranscript,
+    Subscription,
     TranscriptionTask,
+    UserSubscription,
 )
-from app.domains.subscription.models import Subscription, UserSubscription
 
 
 logger = logging.getLogger(__name__)

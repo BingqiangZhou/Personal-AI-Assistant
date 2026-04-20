@@ -41,7 +41,7 @@ def _get_user_subscription_model():
     Returns:
         UserSubscription model class
     """
-    from app.domains.subscription.models import UserSubscription
+    from app.domains.podcast.models import UserSubscription
 
     return UserSubscription
 

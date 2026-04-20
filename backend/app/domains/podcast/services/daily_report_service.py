@@ -15,8 +15,9 @@ from app.domains.podcast.models import (
     PodcastDailyReport,
     PodcastDailyReportItem,
     PodcastEpisode,
+    Subscription,
+    UserSubscription,
 )
-from app.domains.subscription.models import Subscription, UserSubscription
 
 
 logger = logging.getLogger(__name__)

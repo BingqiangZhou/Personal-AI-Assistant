@@ -16,9 +16,8 @@ from app.core.redis import (
     get_shared_redis,
 )
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
-from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.models import PodcastEpisode, Subscription
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
-from app.domains.subscription.models import Subscription
 from app.domains.subscription.repositories import SubscriptionRepository
 
 
@@ -609,7 +608,7 @@ class PodcastSubscriptionService:
         from sqlalchemy import and_, select
         from sqlalchemy import delete as sa_delete
 
-        from app.domains.subscription.models import UserSubscription
+        from app.domains.podcast.models import UserSubscription
 
         # Batch validate: find which subscriptions belong to this user
         valid_result = await self.db.execute(
@@ -727,7 +726,7 @@ class PodcastSubscriptionService:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
 
-        from app.domains.subscription.models import UserSubscription
+        from app.domains.podcast.models import UserSubscription
 
         stmt = (
             select(Subscription)

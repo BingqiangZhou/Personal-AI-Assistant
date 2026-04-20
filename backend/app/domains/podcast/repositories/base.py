@@ -32,7 +32,7 @@ def _get_subscription_models():
     Returns:
         Tuple of (Subscription, UserSubscription) models
     """
-    from app.domains.subscription.models import Subscription, UserSubscription
+    from app.domains.podcast.models import Subscription, UserSubscription
 
     return Subscription, UserSubscription
 

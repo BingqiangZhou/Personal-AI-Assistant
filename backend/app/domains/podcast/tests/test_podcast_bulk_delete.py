@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.podcast.models import Subscription
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
-from app.domains.subscription.models import Subscription
 from app.domains.subscription.repositories import SubscriptionRepository
 
 

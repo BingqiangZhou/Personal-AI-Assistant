@@ -1,5 +1,4 @@
-from app.domains.podcast.models import PodcastPlaybackState
-from app.domains.subscription.models import UserSubscription
+from app.domains.podcast.models import PodcastPlaybackState, UserSubscription
 
 
 def _constraint_sql_text(table, constraint_name: str) -> str | None:
