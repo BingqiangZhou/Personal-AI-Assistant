@@ -24,7 +24,7 @@ from app.domains.podcast.models import (
     TranscriptionTask,
 )
 from app.domains.podcast.repositories import PodcastSummaryRepository
-from app.domains.subscription.parsers.feed_parser import strip_html_tags
+from app.domains.podcast.parsers.feed_parser import strip_html_tags
 
 
 logger = logging.getLogger(__name__)

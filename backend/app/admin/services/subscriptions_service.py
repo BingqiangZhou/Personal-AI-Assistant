@@ -302,7 +302,7 @@ class AdminSubscriptionsService:
         if source_url is not None:
             subscription.source_url = source_url
 
-        from app.domains.subscription.parsers.feed_parser import (
+        from app.domains.podcast.parsers.feed_parser import (
             FeedParserConfig,
             parse_feed_url,
         )
@@ -343,7 +343,7 @@ class AdminSubscriptionsService:
         source_url: str,
         username: str,
     ) -> tuple[dict, int]:
-        from app.domains.subscription.parsers.feed_parser import (
+        from app.domains.podcast.parsers.feed_parser import (
             FeedParseOptions,
             FeedParser,
             FeedParserConfig,
@@ -394,7 +394,7 @@ class AdminSubscriptionsService:
             await parser.close()
 
     async def test_all_subscriptions(self, *, request, user_id) -> dict:
-        from app.domains.subscription.parsers.feed_parser import (
+        from app.domains.podcast.parsers.feed_parser import (
             FeedParserConfig,
             parse_feed_url,
         )
