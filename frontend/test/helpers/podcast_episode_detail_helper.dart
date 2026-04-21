@@ -17,29 +17,11 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_playback_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
+import 'mock_audio_player_notifier.dart';
 
 // ---------------------------------------------------------------------------
 // Mock Notifiers
 // ---------------------------------------------------------------------------
-
-class MockAudioPlayerNotifier extends AudioPlayerNotifier {
-  MockAudioPlayerNotifier([this._initialState = const AudioPlayerState()]);
-
-  final AudioPlayerState _initialState;
-
-  @override
-  AudioPlayerState build() => _initialState;
-
-  @override
-  Future<void> playEpisode(
-    PodcastEpisodeModel episode, {
-    PlaySource source = PlaySource.direct,
-    int? queueEpisodeId,
-  }) async {}
-
-  @override
-  Future<void> playManagedEpisode(PodcastEpisodeModel episode) async {}
-}
 
 class NoopTranscriptionNotifier extends TranscriptionNotifier {
   NoopTranscriptionNotifier(super.episodeId);
@@ -177,7 +159,7 @@ Widget createEpisodeDetailWidget({
 }) {
   return ProviderScope(
     overrides: [
-      audioPlayerProvider.overrideWith(MockAudioPlayerNotifier.new),
+      audioPlayerProvider.overrideWith(mockAudioPlayerNotifierFactory),
       episodeDetailProvider.overrideWith(
         (ref, episodeId) =>
             episodeLoader != null ? episodeLoader() : Future.value(episode),
