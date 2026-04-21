@@ -60,12 +60,9 @@ class MockConfig:
     MAX_PODCAST_SUBSCRIPTIONS = 50
     MAX_PODCAST_EPISODE_DOWNLOAD_SIZE = 500 * 1024 * 1024
     RSS_POLL_INTERVAL_MINUTES = 60
-    FRONTEND_URL = "http://localhost:3000"
     ALLOWED_AUDIO_SCHEMES = ["http", "https"]
     OPENAI_API_KEY = None
     OPENAI_API_BASE_URL = "https://api.openai.com/v1"
-    MAX_FILE_SIZE = 10 * 1024 * 1024
-    UPLOAD_DIR = "uploads"
     TRANSCRIPTION_API_URL = "https://api.siliconflow.cn/v1/audio/transcriptions"
     TRANSCRIPTION_API_KEY = None
     TRANSCRIPTION_CHUNK_SIZE_MB = 10

@@ -82,18 +82,11 @@ class Settings(BaseSettings):
     MAX_PODCAST_EPISODE_DOWNLOAD_SIZE: int = 500 * 1024 * 1024
     RSS_POLL_INTERVAL_MINUTES: int = 60
 
-    # Frontend URL
-    FRONTEND_URL: str = "http://localhost:3000"
-
     ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
 
     # External APIs
     OPENAI_API_KEY: str | None = None
     OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
-
-    # File storage
-    MAX_FILE_SIZE: int = 10 * 1024 * 1024
-    UPLOAD_DIR: str = "uploads"
 
     # Transcription API Configuration
     TRANSCRIPTION_API_URL: str = "https://api.siliconflow.cn/v1/audio/transcriptions"
