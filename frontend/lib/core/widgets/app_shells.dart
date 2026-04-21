@@ -374,58 +374,6 @@ class _SurfacePanelState extends State<SurfacePanel> {
 }
 
 
-/// CompactHeaderPanel - 紧凑头部面板
-///
-/// @deprecated Use [AdaptiveSliverAppBar] instead.
-/// This widget will be removed in a future version.
-@Deprecated('Use AdaptiveSliverAppBar instead')
-class CompactHeaderPanel extends StatelessWidget {
-  const CompactHeaderPanel({
-    required this.title, super.key,
-    this.leading,
-    this.trailing,
-  });
-
-  final String title;
-  final Widget? leading;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final extension = appThemeOf(context);
-
-    return SurfacePanel(
-      key: key,
-      padding: kCompactHeaderPanelPadding,
-      borderRadius: extension.cardRadius,
-      child: SizedBox(
-        height: kCompactHeaderContentHeight,
-        child: Row(
-          children: [
-            if (leading != null) ...[
-              leading!,
-              const SizedBox(width: kCompactHeaderItemGap),
-            ],
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.headlineMedium,
-              ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: kCompactHeaderItemGap),
-              trailing!,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// HeroHeader - 英雄头部
 ///
 /// Staggered fade-in entrance for eyebrow (0ms), title (50ms), subtitle (100ms).
@@ -461,11 +409,34 @@ class _HeroHeaderState extends State<HeroHeader> {
     final compactHeader = !hasEyebrow && !hasSubtitle && widget.badges.isEmpty;
 
     if (compactHeader) {
-      return CompactHeaderPanel(
+      final extension = appThemeOf(context);
+      return SurfacePanel(
         key: widget.key,
-        title: widget.title,
-        leading: widget.leading,
-        trailing: widget.trailing,
+        padding: kCompactHeaderPanelPadding,
+        borderRadius: extension.cardRadius,
+        child: SizedBox(
+          height: kCompactHeaderContentHeight,
+          child: Row(
+            children: [
+              if (widget.leading != null) ...[
+                widget.leading!,
+                const SizedBox(width: kCompactHeaderItemGap),
+              ],
+              Expanded(
+                child: Text(
+                  widget.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headlineMedium,
+                ),
+              ),
+              if (widget.trailing != null) ...[
+                const SizedBox(width: kCompactHeaderItemGap),
+                widget.trailing!,
+              ],
+            ],
+          ),
+        ),
       );
     }
 

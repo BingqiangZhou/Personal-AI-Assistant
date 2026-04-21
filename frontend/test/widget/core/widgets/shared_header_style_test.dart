@@ -41,7 +41,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        return tester.getSize(find.byType(CompactHeaderPanel)).height;
+        return tester.getSize(find.byType(HeroHeader)).height;
       }
 
       final discoverHeight = await pumpAndMeasure(
