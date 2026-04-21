@@ -29,7 +29,6 @@ dependencies:
 
   # Local Storage
   shared_preferences: ^2.5.4
-  connectivity_plus: ">=7.0.0 <7.1.0"
 
   # Local Database
   drift: ^2.31.0
@@ -69,13 +68,10 @@ dependencies:
   # Logging
   equatable: ^2.0.8
   url_launcher: ^6.3.2
-  meta: ^1.17.0
   window_manager: ^0.5.1
 
   # Build Tools
   share_plus: ^12.0.1
-  screenshot: ^3.0.0
-  image_gallery_saver_plus: ^4.0.1
   flutter_native_splash: ^2.4.7
 
   dio_cache_interceptor: ^4.0.6
@@ -92,10 +88,8 @@ dev_dependencies:
   drift_dev: ^2.20.3
 
   # Linting & Testing
-  flutter_lints: ^6.0.0
   very_good_analysis: ^10.2.0
   mocktail: ^1.0.4
-  mockito: ^5.6.3
   fake_async: ^1.3.3
 
   # Build Tools
