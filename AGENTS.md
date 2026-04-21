@@ -1,11 +1,11 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `backend/`: FastAPI service (DDD layout) with core, shared, and domain modules in `backend/app/`.
-- `backend/alembic/`: database migrations (23 migrations).
+- `backend/`: FastAPI service (DDD layout) with core, shared, admin, and 2 domain modules (`ai`, `podcast`) in `backend/app/`.
+- `backend/alembic/`: database migrations (25 migrations).
 - `backend/tests/` and `backend/app/**/tests/`: backend test suites.
 - `frontend/`: Flutter app with feature modules in `frontend/lib/` and tests in `frontend/test/`.
-- `docker/`: Docker Compose files and deployment assets (6 services: postgres, redis, backend, celery_worker, celery_beat, nginx).
+- `docker/`: Docker Compose files and deployment assets (5 services: postgres, redis, backend, celery_worker, nginx).
 - `docs/` and `specs/`: detailed design notes and active requirements.
 - `scripts/`: Utility scripts (SQL init, API test, optimization verify).
 
@@ -45,5 +45,5 @@
 - Use the health check once running: `curl http://localhost:8000/api/v1/health`.
 
 ## Configuration & Requirements Notes
-- API endpoints are prefixed with `/api/v1/` and errors are bilingual: `{message_en, message_zh}`.
+- API endpoints are prefixed with `/api/v1/` and errors are bilingual: `{message_en, message_zz}`.
 - Check `specs/active/` before implementing new work to avoid duplicating requirements.

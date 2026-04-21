@@ -88,24 +88,20 @@
 - **包管理**: uv
 - **数据库**: PostgreSQL 15 + SQLAlchemy 2.0 (Async)
 - **缓存/消息队列**: Redis 7
-- **异步任务**: Celery 5.x + Celery Beat（default + transcription 双队列）
-- **数据迁移**: Alembic（23 个迁移文件）
+- **异步任务**: Celery 5.x（单 `default` 队列，worker 内嵌 beat）
+- **数据迁移**: Alembic（25 个迁移文件）
 - **架构**: DDD (Domain-Driven Design)
 
 ```
 backend/app/
 ├── bootstrap/      # 应用初始化（路由注册、生命周期、缓存预热）
 ├── core/           # 核心基础设施（配置、安全、数据库、中间件、可观测性）
-├── shared/         # 共享层（repository helpers, schemas, retry_utils, time_utils）
+├── shared/         # 共享层（repository helpers, schemas）
 ├── http/           # HTTP 辅助（错误处理、路由装饰器）
 ├── admin/          # 管理面板（独立认证、2FA、CSRF、服务端渲染）
 └── domains/        # 领域层
-    ├── user/           # 用户认证、会话管理、密码重置
-    ├── subscription/   # 播客订阅管理、OPML 导入导出
-    ├── podcast/        # 播客元数据、剧集、播放队列、转录、摘要
-    ├── ai/             # AI 模型配置、供应商管理、文本生成
-    ├── media/          # 音频转录（Whisper）、任务调度
-    └── content/        # 日报、高亮、摘要、对话（预留）
+    ├── podcast/        # 播客订阅、单集、播放队列、转录、摘要、对话、高亮
+    └── ai/             # AI 模型配置、供应商管理、文本生成
 ```
 
 ### 前端 (Flutter)
@@ -163,7 +159,7 @@ frontend/lib/
 
 ### 1. 启动基础设施
 
-6 个 Docker 服务：postgres (PostgreSQL 15)、redis (Redis 7)、backend (FastAPI)、celery_worker (异步任务)、celery_beat (定时调度)、nginx (反向代理 + SSL)。
+5 个 Docker 服务：postgres (PostgreSQL 15)、redis (Redis 7)、backend (FastAPI)、celery_worker (异步任务 + 内嵌 beat)、nginx (反向代理 + SSL)。
 
 ```bash
 cd docker
@@ -226,32 +222,32 @@ GitHub Actions 自动化发布流程（`.github/workflows/release.yml`）：
 
 ## 测试
 
-### 后端测试（51 个测试文件）
+### 后端测试（36 个测试文件）
 ```bash
 cd docker && docker compose build backend
 cd backend && uv run ruff check .
 uv run pytest
 ```
-测试组织：`tests/core/`（安全、日志、Redis）、`tests/podcast/`（18 文件）、`tests/tasks/`（5 文件）、`tests/integration/`（完整流程）、`tests/admin/`（3 文件）
+测试组织：`tests/core/`（安全、日志、Redis）、`tests/podcast/`、`tests/tasks/`、`tests/integration/`、`tests/admin/`
 
-### 前端测试（95 个测试文件）
+### 前端测试（92 个测试文件）
 ```bash
 flutter test                          # 全部测试
-flutter test test/unit/               # 单元测试（~50 文件）
-flutter test test/widget/             # Widget 测试（~36 文件）
-flutter test test/integration/        # 集成测试（2 文件）
+flutter test test/unit/               # 单元测试
+flutter test test/widget/             # Widget 测试
+flutter test test/integration/        # 集成测试
 ```
 
 ## 项目结构
 
 ```
 personal-ai-assistant/
-├── backend/          # FastAPI 后端（256 Python 源文件，51 测试文件）
-├── frontend/         # Flutter 前端（242 Dart 源文件，95 测试文件）
-├── docker/           # Docker 配置（6 服务 + Nginx + SSL）
-├── docs/             # 详细文档 + superpowers 技能规范
+├── backend/          # FastAPI 后端（121 Python 源文件，36 测试文件）
+├── frontend/         # Flutter 前端（219 Dart 源文件，92 测试文件）
+├── docker/           # Docker 配置（5 服务）
+├── docs/             # 详细文档
 ├── specs/            # 功能规格（completed / active）
-├── scripts/          # 工具脚本（init.sql, test_auth_api.sh, verify-optimizations.sh）
+├── scripts/          # 工具脚本
 ├── data/             # 密钥存储
 ├── .claude/          # Claude Code 配置（agents, commands, skills）
 ├── .github/          # GitHub Actions（release.yml）

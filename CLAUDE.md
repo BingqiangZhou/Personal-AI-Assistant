@@ -25,7 +25,7 @@ flutter gen-l10n                       # After editing both en.arb and zh.arb
 
 ### Docker (full-stack verification)
 ```bash
-cd docker && docker compose up -d      # Start all 6 services
+cd docker && docker compose up -d      # Start all 5 services
 curl http://localhost:8000/api/v1/health
 ```
 
@@ -34,9 +34,9 @@ curl http://localhost:8000/api/v1/health
 ```
 backend/app/
   bootstrap/      Lifecycle, middleware, routing, cache warming
-  core/           Config, database, redis, security (jwt/encryption/password/2FA), auth, exceptions, celery, ai_client, http_client, middleware
-  shared/         Cross-domain utilities (repository helpers, schemas, retry_utils, time_utils, settings_helpers)
-  domains/        user, subscription, podcast, ai, media (transcription), content (reports/highlights/conversations)
+  core/           Config, database, redis, security, auth, exceptions, celery, ai_client, http_client, middleware
+  shared/         Cross-domain utilities (repository helpers, schemas)
+  domains/        podcast (episodes, subscriptions, transcriptions, summaries, conversations, highlights), ai (model config, providers)
   http/           Error helpers, route decorators
   admin/          Admin panel (separate auth, 2FA, CSRF, server-rendered HTML templates)
 
@@ -62,8 +62,8 @@ frontend/lib/
 - **uv only** (NEVER pip). **ruff only** for lint/format (NOT black/isort/flake8)
 - All I/O is async (SQLAlchemy async, aiohttp, redis)
 - Exceptions: Service layer raises `BaseCustomError`. Routes use `HTTPException` from `app.http.errors`
-- DI: FastAPI `Depends()`. Migrations: `backend/alembic/` (23 migrations)
-- Celery queues: `default` (most tasks), `transcription` (Whisper audio transcription)
+- DI: FastAPI `Depends()`. Migrations: `backend/alembic/` (25 migrations)
+- Celery: single `default` queue, worker runs with embedded beat (`-B` flag)
 
 ### Frontend
 - **Material 3 only** (`useMaterial3: true`)
@@ -78,7 +78,7 @@ frontend/lib/
 ### API
 - Endpoints: `/api/v1/` prefix. Standard HTTPException error responses
 - Rate limiting: 60 req/min, 1000 req/hour
-- Health: `GET /health` (liveness), `GET /api/v1/health/ready` (readiness)
+- Health: `GET /health` and `GET /api/v1/health` (liveness), `GET /api/v1/health/ready` (readiness)
 
 ### General
 - Check `specs/active/` before implementing new features
@@ -96,11 +96,10 @@ frontend/lib/
 | `Color.withOpacity()` | `Color.withValues(alpha:)` (former is deprecated) |
 | Skip widget tests | Required for all pages |
 | `admin` is under `domains/` | `admin/` is a separate top-level module at `app/admin/` |
-| Transcription tasks use default queue | Route to `transcription` queue via Celery task_routes |
 
 ## Testing & Completion
 
-- **Backend**: `uv run pytest` (SQLite in-memory via aiosqlite, 51 test files across core/podcast/tasks/integration/admin)
-- **Frontend**: `flutter test` (unit: ~50 files, widget: ~36 files, integration: 2 files)
+- **Backend**: `uv run pytest` (SQLite in-memory via aiosqlite, 36 test files across core/podcast/tasks/integration/admin)
+- **Frontend**: `flutter test` (unit, widget, and integration tests)
 - **Full-stack**: `cd docker && docker compose up -d` then verify health endpoint
 - A task is NOT COMPLETE until: code compiles, tests pass, modified functionality works end-to-end
