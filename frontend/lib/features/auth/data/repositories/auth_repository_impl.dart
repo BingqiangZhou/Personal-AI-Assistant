@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:personal_ai_assistant/core/network/dio_client.dart';
 import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
 import 'package:personal_ai_assistant/core/storage/secure_storage_service.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
-import 'package:personal_ai_assistant/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/auth_request.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/auth_response.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
@@ -11,18 +11,21 @@ import 'package:personal_ai_assistant/features/auth/domain/repositories/auth_rep
 class AuthRepositoryImpl implements AuthRepository {
 
   AuthRepositoryImpl(
-    this._remoteDatasource,
+    this._apiClient,
     this._secureStorage,
   );
-  final AuthRemoteDatasource _remoteDatasource;
+  final DioClient _apiClient;
   final SecureStorageService _secureStorage;
 
   @override
   Future<AuthResponse> login(LoginRequest request) async {
     try {
-      final authResponse = await _remoteDatasource.login(request);
+      final response = await _apiClient.post(
+        '/auth/login',
+        data: request.toJson(),
+      );
+      final authResponse = AuthResponse.fromJson(response.data as Map<String, dynamic>);
 
-      // Save tokens to secure storage
       await _secureStorage.saveAccessToken(authResponse.accessToken);
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
@@ -42,9 +45,24 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
-      final authResponse = await _remoteDatasource.register(request);
+      final response = await _apiClient.post(
+        '/auth/register',
+        data: request.toJson(),
+      );
 
-      // Save tokens to secure storage
+      final responseData = response.data as Map<String, dynamic>;
+
+      AuthResponse authResponse;
+
+      if (responseData.containsKey('id') &&
+          responseData.containsKey('email') &&
+          !responseData.containsKey('access_token')) {
+        logger.AppLogger.debug('Received User object instead of Token, attempting login...');
+        authResponse = await _loginInternal(request.email, request.password);
+      } else {
+        authResponse = AuthResponse.fromJson(responseData);
+      }
+
       await _secureStorage.saveAccessToken(authResponse.accessToken);
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
@@ -54,25 +72,30 @@ class AuthRepositoryImpl implements AuthRepository {
         throw e.error! as AppException;
       }
       throw UnknownException(e.message ?? 'Unknown Dio error');
-    } on AppException catch (e) {
-      logger.AppLogger.debug('=== Repository Accepts AppException ===');
-      logger.AppLogger.debug('Exception type: ${e.runtimeType}');
-      logger.AppLogger.debug('Exception message: ${e.message}');
+    } on AppException {
       rethrow;
     } catch (e) {
-      logger.AppLogger.debug('=== Repository Falls to UnknownException ===');
-      logger.AppLogger.debug('Error type: ${e.runtimeType}');
-      logger.AppLogger.debug('Error: $e');
       throw UnknownException(e.toString());
     }
+  }
+
+  Future<AuthResponse> _loginInternal(String email, String password) async {
+    final response = await _apiClient.post(
+      '/auth/login',
+      data: LoginRequest(username: email, password: password).toJson(),
+    );
+    return AuthResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<RefreshTokenResponse> refreshToken(String refreshToken) async {
     try {
-      final authResponse = await _remoteDatasource.refreshToken(refreshToken);
+      final response = await _apiClient.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
+      final authResponse = AuthResponse.fromJson(response.data as Map<String, dynamic>);
 
-      // Update tokens in secure storage
       await _secureStorage.saveAccessToken(authResponse.accessToken);
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
@@ -99,15 +122,15 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout(String? refreshToken) async {
     try {
-      // Use provided token or get from storage
       final token = refreshToken ?? await _secureStorage.getRefreshToken();
 
-      // Call logout endpoint with refresh token if available
       if (token != null && token.isNotEmpty) {
-        await _remoteDatasource.logout(token);
+        await _apiClient.post(
+          '/auth/logout',
+          data: {'refresh_token': token},
+        );
       }
 
-      // Clear tokens from secure storage
       await _secureStorage.clearTokens();
     } on DioException catch (e) {
       await _secureStorage.clearTokens();
@@ -116,11 +139,9 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       throw UnknownException(e.message ?? 'Unknown Dio error');
     } on AppException {
-      // Even if logout fails, clear local tokens
       await _secureStorage.clearTokens();
       rethrow;
     } catch (e) {
-      // Even if logout fails, clear local tokens
       await _secureStorage.clearTokens();
       throw UnknownException(e.toString());
     }
@@ -129,8 +150,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> getCurrentUser() async {
     try {
-      final user = await _remoteDatasource.getCurrentUser();
-      return user;
+      final response = await _apiClient.get('/auth/me');
+      return User.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.error is AppException) {
         throw e.error! as AppException;
@@ -146,7 +167,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> forgotPassword(ForgotPasswordRequest request) async {
     try {
-      await _remoteDatasource.forgotPassword(request);
+      await _apiClient.post(
+        '/auth/forgot-password',
+        data: request.toJson(),
+      );
     } on DioException catch (e) {
       if (e.error is AppException) {
         throw e.error! as AppException;
@@ -162,7 +186,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> resetPassword(ResetPasswordRequest request) async {
     try {
-      await _remoteDatasource.resetPassword(request);
+      await _apiClient.post(
+        '/auth/reset-password',
+        data: request.toJson(),
+      );
     } on DioException catch (e) {
       if (e.error is AppException) {
         throw e.error! as AppException;

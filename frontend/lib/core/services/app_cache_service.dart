@@ -27,18 +27,6 @@ class _AppCacheConfig {
   static const int maxMemoryCacheEntries = 200;
 }
 
-abstract class AppCacheService {
-  CacheManager get mediaCacheManager;
-  Future<void> clearMediaCache();
-  Future<void> clearMemoryImageCache();
-  Future<void> clearAll();
-  Future<FileInfo?> getCachedFileInfo(String url);
-  Future<void> warmUp(String url);
-
-  /// Gets cache statistics for monitoring
-  Future<Map<String, dynamic>> getCacheStats();
-}
-
 class AppMediaCacheManager extends CacheManager {
 
   AppMediaCacheManager._()
@@ -71,7 +59,7 @@ class AppMediaCacheManager extends CacheManager {
   }
 }
 
-class AppCacheServiceImpl implements AppCacheService {
+class AppCacheService {
   static bool _initialized = false;
 
   /// Initialize the cache service with optimized memory settings.

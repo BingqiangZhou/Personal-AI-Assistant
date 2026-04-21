@@ -23,7 +23,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_card.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/highlight_detail_sheet.dart';
-import 'package:personal_ai_assistant/shared/widgets/empty_state_widget.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 
 /// View mode for transcript display
 enum TranscriptViewMode { highlights, fullTranscript }
@@ -825,7 +825,7 @@ class TranscriptDisplayWidgetState
 
   Widget _buildEmptyState(BuildContext context) {
     final l10n = context.l10n;
-    return EmptyStateWidget(
+    return AppEmptyState(
       icon: Icons.article_outlined,
       title: l10n.podcast_no_transcript,
       subtitle: l10n.podcast_click_to_transcribe,

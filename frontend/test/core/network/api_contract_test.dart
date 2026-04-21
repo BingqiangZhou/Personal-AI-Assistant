@@ -5,7 +5,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
-import 'package:personal_ai_assistant/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:personal_ai_assistant/core/storage/secure_storage_service.dart';
+import 'package:personal_ai_assistant/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/auth_request.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
@@ -15,9 +16,9 @@ void main() {
   group('Frontend API contract', () {
     test('auth login posts to /auth/login with expected body', () async {
       final client = _RecordingDioClient();
-      final datasource = AuthRemoteDatasourceImpl(client);
+      final repo = AuthRepositoryImpl(client, _FakeSecureStorageService());
 
-      await datasource.login(
+      await repo.login(
         const LoginRequest(
           username: 'demo@example.com',
           password: 'Password123',
@@ -223,4 +224,37 @@ class _RecordingDioClient extends DioClient {
       },
     );
   }
+}
+
+class _FakeSecureStorageService implements SecureStorageService {
+  @override
+  Future<void> saveAccessToken(String token) async {}
+  @override
+  Future<void> saveRefreshToken(String token) async {}
+  @override
+  Future<String?> getAccessToken() async => null;
+  @override
+  Future<String?> getRefreshToken() async => null;
+  @override
+  Future<void> saveUserId(String userId) async {}
+  @override
+  Future<String?> getUserId() async => null;
+  @override
+  Future<void> saveTokenExpiry(DateTime expiry) async {}
+  @override
+  Future<DateTime?> getTokenExpiry() async => null;
+  @override
+  Future<void> clearTokenExpiry() async {}
+  @override
+  Future<void> clearTokens() async {}
+  @override
+  Future<void> clearAll() async {}
+  @override
+  Future<void> save(String key, String value) async {}
+  @override
+  Future<String?> get(String key) async => null;
+  @override
+  Future<void> remove(String key) async {}
+  @override
+  Future<bool> containsKey(String key) async => false;
 }

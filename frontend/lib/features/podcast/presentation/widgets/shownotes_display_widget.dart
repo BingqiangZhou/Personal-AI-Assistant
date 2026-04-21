@@ -16,7 +16,7 @@ import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/html_sanitizer.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
-import 'package:personal_ai_assistant/shared/widgets/empty_state_widget.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 @immutable
@@ -613,7 +613,7 @@ class ShownotesDisplayWidgetState
 
   Widget _buildEmptyState(BuildContext context) {
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
-    return EmptyStateWidget(
+    return AppEmptyState(
       icon: Icons.description_outlined,
       title: l10n.podcast_no_shownotes,
     );

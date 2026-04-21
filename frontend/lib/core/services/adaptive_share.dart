@@ -9,9 +9,6 @@ class AdaptiveShare {
   AdaptiveShare._();
 
   /// Share plain text content.
-  ///
-  /// [text] The text content to share.
-  /// [subject] Optional subject line (primarily used on email).
   static Future<void> shareText(
     String text, {
     String? subject,
@@ -20,11 +17,6 @@ class AdaptiveShare {
   }
 
   /// Share a podcast episode.
-  ///
-  /// [title] The episode title.
-  /// [url] The episode URL or deep link.
-  /// [podcastName] Optional podcast/subscription name.
-  /// [description] Optional episode description.
   static Future<void> shareEpisode({
     required String title,
     required String url,
@@ -49,10 +41,6 @@ class AdaptiveShare {
   }
 
   /// Share a podcast/show.
-  ///
-  /// [name] The podcast/show name.
-  /// [url] The podcast URL or deep link.
-  /// [description] Optional description.
   static Future<void> sharePodcast({
     required String name,
     required String url,
@@ -68,20 +56,5 @@ class AdaptiveShare {
     }
 
     return Share.share(buffer.toString().trim(), subject: name);
-  }
-
-  /// Share with multiple files (e.g., images, documents).
-  ///
-  /// [text] Optional text to include with the files.
-  /// [files] List of file paths to share.
-  ///
-  /// Note: share_plus v7+ removed shareFiles. Use shareXFile with ShareResultX.
-  static Future<void> shareFiles(
-    List<String> files, {
-    String? text,
-  }) {
-    // Fallback to sharing text only for now
-    // TODO: Implement proper file sharing with ShareXFile
-    return Share.share(text ?? '', subject: files.join(', '));
   }
 }

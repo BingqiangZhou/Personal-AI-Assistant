@@ -10,7 +10,6 @@ import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/core/storage/secure_storage_service.dart';
 import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
-import 'package:personal_ai_assistant/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:personal_ai_assistant/features/auth/data/events/auth_event.dart';
 import 'package:personal_ai_assistant/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/auth_request.dart';
@@ -36,17 +35,11 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageServiceImpl(const FlutterSecureStorage());
 });
 
-// Remote datasource provider - use shared DioClient
-final authRemoteDatasourceProvider = Provider<AuthRemoteDatasource>((ref) {
-  final dioClient = ref.read(dioClientProvider);
-  return AuthRemoteDatasourceImpl(dioClient);
-});
-
 // Repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final remoteDatasource = ref.read(authRemoteDatasourceProvider);
+  final dioClient = ref.read(dioClientProvider);
   final secureStorage = ref.read(secureStorageProvider);
-  return AuthRepositoryImpl(remoteDatasource, secureStorage);
+  return AuthRepositoryImpl(dioClient, secureStorage);
 });
 
 // Auth state notifier provider
