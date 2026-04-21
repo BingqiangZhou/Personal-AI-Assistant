@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
@@ -13,48 +13,11 @@ import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _MockDioClient extends Mock implements DioClient {
-  @override
-  Future<void> clearCache() =>
-      super.noSuchMethod(
-            Invocation.method(#clearCache, []),
-            returnValue: Future<void>.value(),
-            returnValueForMissingStub: Future<void>.value(),
-          )
-          as Future<void>;
-
-  @override
-  void clearETagCache() => super.noSuchMethod(
-        Invocation.method(#clearETagCache, []),
-        returnValueForMissingStub: null,
-      );
-}
+class _MockDioClient extends Mock implements DioClient {}
 
 class _MockAppCacheService extends Mock implements AppCacheService {
   @override
   CacheManager get mediaCacheManager => AppMediaCacheManager.instance;
-
-  @override
-  Future<void> clearMediaCache() => Future<void>.value();
-
-  @override
-  Future<void> clearMemoryImageCache() => Future<void>.value();
-
-  @override
-  Future<void> clearAll() =>
-      super.noSuchMethod(
-            Invocation.method(#clearAll, []),
-            returnValue: Future<void>.value(),
-            returnValueForMissingStub: Future<void>.value(),
-          )
-          as Future<void>;
-
-  @override
-  Future<void> warmUp(String url) => Future<void>.value();
-
-  @override
-  Future<Map<String, dynamic>> getCacheStats() =>
-      Future<Map<String, dynamic>>.value({});
 }
 
 const MethodChannel _pathProviderChannel =
@@ -81,8 +44,18 @@ void main() {
   });
 
   group('ProfileCacheManagementPage Widget Tests', () {
+    void _stubCacheService(_MockAppCacheService cacheService) {
+      when(() => cacheService.clearAll()).thenAnswer((_) async {});
+      when(() => cacheService.clearMediaCache()).thenAnswer((_) async {});
+      when(() => cacheService.clearMemoryImageCache()).thenAnswer((_) async {});
+      when(() => cacheService.warmUp(any())).thenAnswer((_) async {});
+      when(() => cacheService.getCacheStats()).thenAnswer((_) async => <String, dynamic>{});
+      when(() => cacheService.getCachedFileInfo(any())).thenAnswer((_) async => null);
+    }
+
     testWidgets('renders without crashing', (tester) async {
       final cacheService = _MockAppCacheService();
+      _stubCacheService(cacheService);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -107,6 +80,7 @@ void main() {
     testWidgets('shows overview section with total usage after loading',
         (tester) async {
       final cacheService = _MockAppCacheService();
+      _stubCacheService(cacheService);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -137,6 +111,7 @@ void main() {
     testWidgets('shows cache detail rows for images, audio, and other',
         (tester) async {
       final cacheService = _MockAppCacheService();
+      _stubCacheService(cacheService);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -174,6 +149,7 @@ void main() {
     testWidgets('shows deep clean all button and refresh action',
         (tester) async {
       final cacheService = _MockAppCacheService();
+      _stubCacheService(cacheService);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -204,6 +180,7 @@ void main() {
 
     testWidgets('shows info notice box', (tester) async {
       final cacheService = _MockAppCacheService();
+      _stubCacheService(cacheService);
 
       await tester.pumpWidget(
         ProviderScope(

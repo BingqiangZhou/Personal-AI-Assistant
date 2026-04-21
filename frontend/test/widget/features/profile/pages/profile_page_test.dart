@@ -7,7 +7,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
@@ -111,7 +111,12 @@ class _FixedDailyReportDatesNotifier extends DailyReportDatesNotifier {
   }
 }
 
-class _ThrowingPodcastApiService extends Mock implements PodcastApiService {}
+class _ThrowingPodcastApiService extends Mock implements PodcastApiService {
+  @override
+  Future<ProfileStatsModel> getProfileStats() async {
+    throw Exception('profile stats failed');
+  }
+}
 
 class _ThrowingPodcastRepository extends PodcastRepository {
   _ThrowingPodcastRepository() : super(_ThrowingPodcastApiService());
@@ -144,56 +149,14 @@ class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
   Future<void> refreshSubscriptions({int? categoryId, String? status}) async {}
 }
 
-class _MockDioClient extends Mock implements DioClient {
-  @override
-  Future<void> clearCache() =>
-      super.noSuchMethod(
-            Invocation.method(#clearCache, []),
-            returnValue: Future<void>.value(),
-            returnValueForMissingStub: Future<void>.value(),
-          )
-          as Future<void>;
-
-  @override
-  void clearETagCache() => super.noSuchMethod(
-    Invocation.method(#clearETagCache, []),
-    returnValueForMissingStub: null,
-  );
-}
+class _MockDioClient extends Mock implements DioClient {}
 
 class _MockAppCacheService extends Mock implements AppCacheService {
   @override
   CacheManager get mediaCacheManager => AppMediaCacheManager.instance;
-
-  @override
-  Future<void> clearMediaCache() => Future<void>.value();
-
-  @override
-  Future<void> clearMemoryImageCache() => Future<void>.value();
-
-  @override
-  Future<void> clearAll() =>
-      super.noSuchMethod(
-            Invocation.method(#clearAll, []),
-            returnValue: Future<void>.value(),
-            returnValueForMissingStub: Future<void>.value(),
-          )
-          as Future<void>;
-
-  @override
-  Future<FileInfo?> getCachedFileInfo(String url) => Future<FileInfo?>.value();
-
-  @override
-  Future<void> warmUp(String url) => Future<void>.value();
 }
 
-class _MockITunesSearchService extends Mock implements ITunesSearchService {
-  @override
-  void clearCache() => super.noSuchMethod(
-    Invocation.method(#clearCache, []),
-    returnValueForMissingStub: null,
-  );
-}
+class _MockITunesSearchService extends Mock implements ITunesSearchService {}
 
 class _TrackingApplePodcastRssService extends ApplePodcastRssService {
   int clearCacheCalls = 0;
@@ -694,6 +657,16 @@ void main() {
     final discoverService = _TrackingApplePodcastRssService();
     final prefs = await SharedPreferences.getInstance();
 
+    when(() => dioClient.clearCache()).thenAnswer((_) async {});
+    when(() => dioClient.clearETagCache()).thenReturn(null);
+    when(() => cacheService.clearAll()).thenAnswer((_) async {});
+    when(() => cacheService.clearMediaCache()).thenAnswer((_) async {});
+    when(() => cacheService.clearMemoryImageCache()).thenAnswer((_) async {});
+    when(() => cacheService.warmUp(any())).thenAnswer((_) async {});
+    when(() => cacheService.getCacheStats()).thenAnswer((_) async => {});
+    when(() => cacheService.getCachedFileInfo(any())).thenAnswer((_) async => null);
+    when(() => searchService.clearCache()).thenReturn(null);
+
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -770,10 +743,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    verify(dioClient.clearCache()).called(1);
-    verify(dioClient.clearETagCache()).called(1);
-    verify(cacheService.clearAll()).called(1);
-    verify(searchService.clearCache()).called(1);
+    verify(() => dioClient.clearCache()).called(1);
+    verify(() => dioClient.clearETagCache()).called(1);
+    verify(() => cacheService.clearAll()).called(1);
+    verify(() => searchService.clearCache()).called(1);
     expect(discoverService.clearCacheCalls, 1);
 
     await tester.pump(const Duration(seconds: 4));
