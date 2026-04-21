@@ -98,12 +98,6 @@ class AppSectionHeader extends StatelessWidget {
 
 const double kCompactHeaderContentHeight = 44;
 const double kCompactHeaderItemGap = AppSpacing.md;
-const EdgeInsets kCompactHeaderPanelPadding = EdgeInsets.fromLTRB(
-  AppSpacing.md,
-  AppSpacing.md,
-  AppSpacing.md,
-  AppSpacing.md,
-);
 
 enum HeaderCapsuleActionButtonDensity { regular, compact, iconOnly }
 
@@ -412,7 +406,9 @@ class _HeroHeaderState extends State<HeroHeader> {
       final extension = appThemeOf(context);
       return SurfacePanel(
         key: widget.key,
-        padding: kCompactHeaderPanelPadding,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md,
+        ),
         borderRadius: extension.cardRadius,
         child: SizedBox(
           height: kCompactHeaderContentHeight,
