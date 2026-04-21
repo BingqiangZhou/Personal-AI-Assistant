@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.51.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.51.0...v0.51.1) - 2026-04-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.51.1))
+
+### 🐛 Bug Fixes
+
+- *(android)* Remove orphaned home_widget native code ([34997e4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/34997e4c98e1a0acd89d06ec8ecacff2262c4db6))
+
+
+
 ## [0.51.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.50.0...v0.51.0) - 2026-04-20 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.51.0))
 
 ### ⚙️ Miscellaneous Tasks
