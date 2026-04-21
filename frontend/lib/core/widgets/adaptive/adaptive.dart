@@ -4,7 +4,6 @@
 /// and Material widgets on Android, using PlatformHelper.
 library;
 
-export 'adaptive_list_section.dart';
 export 'adaptive_list_tile.dart';
 export 'adaptive_button.dart';
 export 'adaptive_text_field.dart';

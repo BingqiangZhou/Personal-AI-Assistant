@@ -23,11 +23,9 @@ class AppColors {
   static const Color lightBackground = Color(0xFFF8F9FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightSurfaceVariant = Color(0xFFF2F2F7);
-  static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
   static const Color lightOnBackground = Color(0xFF1a1a2e);
   static const Color lightOnSurface = Color(0x991a1a2e); // rgba 0.6
   static const Color lightOnSurfaceMuted = Color(0x8C1a1a2e); // rgba 0.55
-  static const Color lightBorder = Color(0x0F000000); // rgba 0.06
 
   // Text Colors - 文字色系 (Apple HIG label colors)
   static const Color lightTextPrimary = Color(0xFF000000);
@@ -47,13 +45,10 @@ class AppColors {
   // Background Colors - 背景色系
   static const Color darkBackground = Color(0xFF0f0f1a);
   static const Color darkSurface = Color(0xFF1a1a2e);
-  static const Color darkSurfaceVariant = Color(0xFF2C2C2E);
-  static const Color darkSurfaceElevated = Color(0xFF252540);
   static const Color darkOnBackground = Color(0xE6FFFFFF); // rgba 0.9
   static const Color darkOnSurface = Color(0x80FFFFFF); // rgba 0.5
   static const Color darkOnSurfaceMuted = Color(0x80FFFFFF); // rgba 0.50
   static const Color darkBorder = Color(0x0FFFFFFF); // rgba 0.06
-  static const Color darkBorderHover = Color(0x1FFFFFFF); // rgba 0.12
 
   // Text Colors - 文字色系 (Apple HIG label colors)
   static const Color darkTextPrimary = Color(0xFFFFFFFF);
@@ -71,14 +66,12 @@ class AppColors {
 
   // Primary - System Indigo (Apple HIG)
   static const Color primary = Color(0xFF5856D6); // systemIndigo light
-  static const Color primaryDark = Color(0xFF4F46E5);
   static const Color primaryLight = Color(0xFF5E5CE6); // systemIndigo dark
   static const Color primaryContainer = Color(0xFFE8E8FF);
   static const Color primaryContainerDark = Color(0xFF1E1B4B);
 
   // Warm accents - System Orange (Apple HIG)
   static const Color accentWarm = Color(0xFFFF9500); // systemOrange light
-  static const Color accentWarmLight = Color(0xFFFF9500);
   static const Color accentWarmDark = Color(0xFFFF9F0A); // systemOrange dark
   static const Color accentCoral = Color(0xFFFF2D55); // systemPink light
   static const Color accentCoralLight = Color(0xFFFF375F); // systemPink dark
@@ -87,20 +80,14 @@ class AppColors {
 
   // AI-specific accent tokens - using Apple system colors
   static const Color aiBubbleUser = Color(0xFFFFCC00); // systemYellow light
-  static const Color aiBubbleUserDark = Color(0xFFFFD60A); // systemYellow dark
   static const Color aiBubbleAssistant = Color(0xFFFF2D55); // systemPink light
-  static const Color aiBubbleAssistantDark = Color(0xFFFF375F); // systemPink dark
   static const Color aiChipBackground = Color(0xFFFF9500); // systemOrange light
-  static const Color aiChipBackgroundDark = Color(0xFFFF9F0A); // systemOrange dark
   static const Color aiHighlightSurface = Color(0xFFFFF4D6); // light yellow surface
-  static const Color aiHighlightSurfaceDark = Color(0xFF3D2D00); // dark yellow surface
   static const Color cosmicFilterActive = Color(0xFFFF9500); // systemOrange light
-  static const Color cosmicFilterActiveDark = Color(0xFFFF9F0A); // systemOrange dark
 
   // Tertiary - System Green (Apple HIG)
   static const Color tertiary = Color(0xFF34C759); // systemGreen light
   static const Color tertiaryLight = Color(0xFF30D158); // systemGreen dark
-  static const Color tertiaryDark = Color(0xFF248A3D);
 
   // ============================================================
   // SEMANTIC COLORS - 语义色彩 (Apple HIG system colors)
@@ -109,30 +96,11 @@ class AppColors {
   static const Color success = Color(0xFF34C759); // systemGreen light
   static const Color warning = Color(0xFFFF9500); // systemOrange light
   static const Color error = Color(0xFFFF3B30); // systemRed light
-  static const Color info = Color(0xFF5856D6); // systemIndigo light
 
-  // ============================================================
-  // LEGACY COLORS - 向后兼容
-  // ============================================================
-
-  static const Color riverAccent = Color(0xFF5AC8FA); // systemTeal light
+  // Legacy named colors
   static const Color sunGlow = Color(0xFFFFCC00); // systemYellow light
   static const Color sunRay = Color(0xFFFF3B30); // systemRed light
   static const Color leaf = Color(0xFF34C759); // systemGreen light
-  static const Color indigo = Color(0xFF5856D6); // systemIndigo light
-
-  // Legacy gradients
-  static const LinearGradient darkSubtleGradient = LinearGradient(
-    colors: [Color(0xFF000000), Color(0xFF1C1C1E)],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient softBackgroundGradient = LinearGradient(
-    colors: [Color(0xFFF2F2F7), Color(0xFFFFFFFF)],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
 
   // ============================================================
   // GRADIENT PALETTE - 渐变色板 (Arc-style accents)
@@ -159,24 +127,18 @@ class AppColors {
   /// Using Apple HIG system tint colors
   // ============================================================
 
-  static const Color chart1 = Color(0xFF5856D6); // systemIndigo
-  static const Color chart2 = Color(0xFF5E5CE6); // systemIndigo dark
-  static const Color chart3 = Color(0xFF34C759); // systemGreen
-  static const Color chart4 = Color(0xFFFF9500); // systemOrange
   static const Color chart5 = Color(0xFFAF52DE); // systemPurple
-  static const Color chart6 = Color(0xFFFF2D55); // systemPink
   static const Color chart7 = Color(0xFF5AC8FA); // systemTeal
-  static const Color chart8 = Color(0xFF30D158); // systemGreen dark
 
   static const List<Color> chartColors = [
-    chart1,
-    chart2,
-    chart3,
-    chart4,
+    Color(0xFF5856D6), // systemIndigo
+    Color(0xFF5E5CE6), // systemIndigo dark
+    Color(0xFF34C759), // systemGreen
+    Color(0xFFFF9500), // systemOrange
     chart5,
-    chart6,
+    Color(0xFFFF2D55), // systemPink
     chart7,
-    chart8,
+    Color(0xFF30D158), // systemGreen dark
   ];
 }
 

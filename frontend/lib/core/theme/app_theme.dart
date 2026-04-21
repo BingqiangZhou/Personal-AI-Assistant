@@ -130,12 +130,10 @@ class AppTheme {
               ? Brightness.light
               : Brightness.dark,
         ),
-        titleTextStyle: _withHeading(
-          textTheme.titleLarge?.copyWith(
+        titleTextStyle: textTheme.titleLarge?.copyWith(
             color: scheme.onSurface,
             fontWeight: FontWeight.w600,
-          ),
-        ),
+          ) ?? const TextStyle(),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -155,7 +153,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(extension.dialogRadius),
         ),
-        titleTextStyle: _withHeading(textTheme.headlineSmall),
+        titleTextStyle: textTheme.headlineSmall ?? const TextStyle(),
       ),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant.withValues(alpha: 0.5),
@@ -166,16 +164,12 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHighest.withValues(alpha: extension.inputFillAlpha),
-        hintStyle: _withBody(
-          textTheme.bodyMedium?.copyWith(
+        hintStyle: textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-        ),
-        labelStyle: _withBody(
-          textTheme.labelMedium?.copyWith(
+          ) ?? const TextStyle(),
+        labelStyle: textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
-          ),
-        ),
+          ) ?? const TextStyle(),
         contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.mdXs),
         border: OutlineInputBorder(
           borderRadius: AppRadius.mdLgRadius,
@@ -211,23 +205,17 @@ class AppTheme {
         side: BorderSide(color: scheme.outline.withValues(alpha: 0.15)),
         shape: const StadiumBorder(),
         padding: EdgeInsets.symmetric(horizontal: AppSpacing.smMd, vertical: AppSpacing.xs),
-        labelStyle: _withBody(
-          textTheme.labelMedium?.copyWith(color: scheme.onSurface),
-        ),
-        secondaryLabelStyle: _withBody(
-          textTheme.labelMedium?.copyWith(
+        labelStyle: textTheme.labelMedium?.copyWith(color: scheme.onSurface) ?? const TextStyle(),
+        secondaryLabelStyle: textTheme.labelMedium?.copyWith(
             color: scheme.primary,
             fontWeight: FontWeight.w600,
-          ),
-        ),
+          ) ?? const TextStyle(),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: scheme.surface,
-        contentTextStyle: _withBody(
-          textTheme.bodyMedium?.copyWith(
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
             color: scheme.onSurface,
-          ),
-        ),
+          ) ?? const TextStyle(),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(extension.cardRadius),
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
@@ -254,12 +242,10 @@ class AppTheme {
         height: 72,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return _withBody(
-            textTheme.labelSmall?.copyWith(
+          return textTheme.labelSmall?.copyWith(
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-            ),
-          );
+            ) ?? const TextStyle();
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
@@ -285,17 +271,13 @@ class AppTheme {
         indicatorColor: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
         selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-        selectedLabelTextStyle: _withBody(
-          textTheme.labelMedium?.copyWith(
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
             color: scheme.onSurface,
             fontWeight: FontWeight.w600,
-          ),
-        ),
-        unselectedLabelTextStyle: _withBody(
-          textTheme.labelMedium?.copyWith(
+          ) ?? const TextStyle(),
+        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
-          ),
-        ),
+          ) ?? const TextStyle(),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: _buttonStyle(
@@ -304,11 +286,9 @@ class AppTheme {
           radius: extension.buttonRadius,
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lgXs, vertical: AppSpacing.md),
-          textStyle: _withBody(
-            textTheme.labelLarge?.copyWith(
+          textStyle: textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
-            ),
-          ),
+            ) ?? const TextStyle(),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -318,11 +298,9 @@ class AppTheme {
           radius: extension.buttonRadius,
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lgXs, vertical: AppSpacing.md),
-          textStyle: _withBody(
-            textTheme.labelLarge?.copyWith(
+          textStyle: textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
-            ),
-          ),
+            ) ?? const TextStyle(),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -334,11 +312,9 @@ class AppTheme {
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.mdLg, vertical: AppSpacing.mdXs),
-          textStyle: _withBody(
-            textTheme.labelLarge?.copyWith(
+          textStyle: textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
-            ),
-          ),
+            ) ?? const TextStyle(),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -348,11 +324,9 @@ class AppTheme {
             borderRadius: BorderRadius.circular(extension.buttonRadius),
           ),
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smMd),
-          textStyle: _withBody(
-            textTheme.labelLarge?.copyWith(
+          textStyle: textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
-            ),
-          ),
+            ) ?? const TextStyle(),
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -588,15 +562,5 @@ class AppTheme {
         color: tertiary,
       ),
     );
-  }
-
-  /// Apply heading font to a [TextStyle].
-  static TextStyle _withHeading(TextStyle? base) {
-    return base ?? const TextStyle();
-  }
-
-  /// Apply body font to a [TextStyle].
-  static TextStyle _withBody(TextStyle? base) {
-    return base ?? const TextStyle();
   }
 }
