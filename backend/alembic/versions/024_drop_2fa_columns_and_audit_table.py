@@ -20,12 +20,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Drop 2FA columns from users table
-    op.drop_column('users', 'totp_secret')
-    op.drop_column('users', 'is_2fa_enabled')
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
 
-    # Drop admin_audit_logs table
-    op.drop_table('admin_audit_logs')
+    # Drop 2FA columns from users table (if they exist)
+    user_columns = {col['name'] for col in inspector.get_columns('users')}
+    if 'totp_secret' in user_columns:
+        op.drop_column('users', 'totp_secret')
+    if 'is_2fa_enabled' in user_columns:
+        op.drop_column('users', 'is_2fa_enabled')
+
+    # Drop admin_audit_logs table (if it exists)
+    if inspector.has_table('admin_audit_logs'):
+        op.drop_table('admin_audit_logs')
 
 
 def downgrade() -> None:
