@@ -1,69 +1,170 @@
-'use client';
+"use client";
 
-import { Lightbulb, Sparkles } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Summary } from '@/types';
+import { Loader2, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSummary, useEpisode, useSummarizeEpisode } from "@/lib/queries";
+import { SummaryStatus } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface SummaryCardProps {
-  summary: Summary;
+  episodeId: string;
+  isActive: boolean;
 }
 
-export function SummaryCard({ summary }: SummaryCardProps) {
+const TOPIC_COLORS = [
+  "bg-chart-1/15 text-chart-1",
+  "bg-chart-2/15 text-chart-2",
+  "bg-chart-3/15 text-chart-3",
+  "bg-chart-4/15 text-chart-4",
+  "bg-chart-5/15 text-chart-5",
+];
+
+const HIGHLIGHT_COLORS = [
+  "bg-chart-1",
+  "bg-chart-2",
+  "bg-chart-3",
+  "bg-chart-4",
+  "bg-chart-5",
+];
+
+export function SummaryCard({ episodeId, isActive }: SummaryCardProps) {
+  // Get episode for status
+  const { data: episode } = useEpisode(episodeId);
+
+  // Fetch summary only when active and completed
+  const { data: summary, isLoading, error } = useSummary(episodeId, {
+    enabled: isActive && episode?.summary_status === SummaryStatus.Completed,
+  });
+
+  const summarizeMutation = useSummarizeEpisode();
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">加载 AI 总结...</span>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <p className="text-destructive">加载 AI 总结失败</p>
+        <p className="mt-1 text-sm text-muted-foreground">{(error as Error).message}</p>
+      </div>
+    );
+  }
+
+  // Not completed state
+  if (episode?.summary_status !== SummaryStatus.Completed) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/30 p-8 text-center">
+        <p className="text-muted-foreground">
+          {episode?.summary_status === SummaryStatus.Processing
+            ? "AI 总结生成中..."
+            : episode?.summary_status === SummaryStatus.Failed
+            ? "总结生成失败"
+            : "此内容尚未生成 AI 总结"}
+        </p>
+        {episode?.summary_status !== SummaryStatus.Processing && (
+          <Button
+            onClick={() => summarizeMutation.mutate(episodeId)}
+            disabled={summarizeMutation.isPending}
+            className="mt-4"
+          >
+            {summarizeMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                启动中...
+              </>
+            ) : (
+              "开始总结"
+            )}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // No summary data
+  if (!summary) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/30 p-8 text-center">
+        <p className="text-muted-foreground">暂无 AI 总结</p>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
   return (
-    <Card className="animate-fade-in-up">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-chart-1" />
-            AI 总结
-          </CardTitle>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {summary.provider && <span>提供商: {summary.provider}</span>}
-            {summary.model_used && <span>模型: {summary.model_used}</span>}
+    <div className="space-y-6 animate-fade-in">
+      {/* Provider info */}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        {summary.model_used && <span>模型: {summary.model_used}</span>}
+        {summary.provider && <span>提供商: {summary.provider}</span>}
+        <span>生成于: {formatDate(summary.created_at)}</span>
+      </div>
+
+      {/* Summary content */}
+      <div className="rounded-lg bg-muted/50 p-4">
+        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+          {summary.content}
+        </p>
+      </div>
+
+      {/* Key topics */}
+      {summary.key_topics && summary.key_topics.length > 0 && (
+        <div>
+          <h4 className="mb-3 flex items-center gap-1.5 text-sm font-medium">
+            <Lightbulb className="h-4 w-4 text-chart-4" />
+            关键主题
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {summary.key_topics.map((topic, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                  TOPIC_COLORS[i % TOPIC_COLORS.length]
+                )}
+              >
+                {topic}
+              </span>
+            ))}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Main content */}
-        <div className="rounded-md bg-muted/50 p-4">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">
-            {summary.content}
-          </p>
+      )}
+
+      {/* Highlights */}
+      {summary.highlights && summary.highlights.length > 0 && (
+        <div>
+          <h4 className="mb-3 text-sm font-medium">要点</h4>
+          <ul className="space-y-2">
+            {summary.highlights.map((highlight, i) => (
+              <li key={i} className="flex items-start gap-3 text-sm">
+                <span
+                  className={cn(
+                    "mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full",
+                    HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length]
+                  )}
+                />
+                <span className="flex-1">{highlight}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-
-        {/* Key topics */}
-        {summary.key_topics && summary.key_topics.length > 0 && (
-          <div>
-            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-              <Lightbulb className="h-4 w-4 text-chart-4" />
-              关键主题
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {summary.key_topics.map((topic, i) => (
-                <Badge key={i} variant="secondary">
-                  {topic}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Highlights */}
-        {summary.highlights && summary.highlights.length > 0 && (
-          <div>
-            <h4 className="mb-2 text-sm font-medium">要点</h4>
-            <ul className="space-y-1.5">
-              {summary.highlights.map((highlight, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-chart-2" />
-                  {highlight}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

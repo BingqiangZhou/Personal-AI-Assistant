@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Transcript, TranscriptSegment } from '@/types';
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { Search, Loader2, Globe, BarChart3, Cpu } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useAudioStore } from "@/stores/audio-store";
+import { useTranscript, useEpisode, useTranscribeEpisode } from "@/lib/queries";
+import { TranscriptStatus, type TranscriptSegment } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface TranscriptViewerProps {
-  transcript: Transcript;
+  episodeId: string;
+  isActive: boolean;
 }
 
 function formatTimestamp(seconds: number): string {
@@ -16,53 +19,102 @@ function formatTimestamp(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
   if (h > 0) {
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export function TranscriptViewer({ transcript }: TranscriptViewerProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const hasSegments = transcript.segments && transcript.segments.length > 0;
+const TOPIC_COLORS = [
+  "bg-chart-1/15 text-chart-1",
+  "bg-chart-2/15 text-chart-2",
+  "bg-chart-3/15 text-chart-3",
+  "bg-chart-4/15 text-chart-4",
+  "bg-chart-5/15 text-chart-5",
+];
+
+export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [displayMode, setDisplayMode] = useState<"segments" | "plain">("segments");
+
+  // Get episode for status
+  const { data: episode } = useEpisode(episodeId);
+
+  // Fetch transcript only when active and completed
+  const { data: transcript, isLoading, error } = useTranscript(episodeId, {
+    enabled: isActive && episode?.transcript_status === TranscriptStatus.Completed,
+  });
+
+  const transcribeMutation = useTranscribeEpisode();
+
+  const hasSegments = transcript?.segments && transcript.segments.length > 0;
+
+  // Lock to plain mode if no segments exist
+  useEffect(() => {
+    if (!hasSegments && transcript) {
+      setDisplayMode("plain");
+    }
+  }, [hasSegments, transcript]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const currentTime = useAudioStore((s) => s.currentTime);
+  const seekTo = useAudioStore((s) => s.seekTo);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastUserScrollRef = useRef<number>(0);
+  const segmentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const filteredSegments = useMemo(() => {
     if (!hasSegments) return null;
-    if (!searchTerm.trim()) return transcript.segments!;
+    if (!debouncedSearch.trim()) return transcript.segments!;
 
-    const lowerSearch = searchTerm.toLowerCase();
+    const lowerSearch = debouncedSearch.toLowerCase();
     return transcript.segments!.filter((seg) =>
       seg.text.toLowerCase().includes(lowerSearch)
     );
-  }, [transcript.segments, searchTerm, hasSegments]);
+  }, [transcript?.segments, debouncedSearch, hasSegments]);
 
   const highlightedContent = useMemo(() => {
     if (hasSegments) return null;
-    if (!searchTerm.trim()) return transcript.content;
+    if (!debouncedSearch.trim()) return transcript?.content;
 
-    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escaped})`, 'gi');
-    const parts = transcript.content.split(regex);
+    const escaped = debouncedSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "gi");
+    const parts = transcript!.content.split(regex);
 
     return parts.map((part, i) =>
       regex.test(part) ? (
-        <mark key={i} className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800">
+        <mark
+          key={i}
+          className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800"
+        >
           {part}
         </mark>
       ) : (
         part
       )
     );
-  }, [transcript.content, searchTerm, hasSegments]);
+  }, [transcript?.content, debouncedSearch, hasSegments]);
 
   const highlightText = useCallback(
     (text: string) => {
-      if (!searchTerm.trim()) return text;
-      const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`(${escaped})`, 'gi');
+      if (!debouncedSearch.trim()) return text;
+      const escaped = debouncedSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escaped})`, "gi");
       const parts = text.split(regex);
       return parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800">
+          <mark
+            key={i}
+            className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800"
+          >
             {part}
           </mark>
         ) : (
@@ -70,21 +122,123 @@ export function TranscriptViewer({ transcript }: TranscriptViewerProps) {
         )
       );
     },
-    [searchTerm]
+    [debouncedSearch]
   );
 
+  const isSegmentActive = useCallback(
+    (seg: TranscriptSegment) => {
+      return currentTime >= seg.start && currentTime < seg.end;
+    },
+    [currentTime]
+  );
+
+  // Auto-scroll to active segment
+  useEffect(() => {
+    if (!hasSegments || debouncedSearch.trim()) return;
+    if (Date.now() - lastUserScrollRef.current < 5000) return;
+
+    const activeIdx = transcript!.segments!.findIndex(
+      (seg) => currentTime >= seg.start && currentTime < seg.end
+    );
+    if (activeIdx < 0) return;
+
+    const el = segmentRefs.current.get(activeIdx);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [currentTime, hasSegments, debouncedSearch, transcript?.segments]);
+
+  const handleScroll = useCallback(() => {
+    lastUserScrollRef.current = Date.now();
+  }, []);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">加载转录文本...</span>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <p className="text-destructive">加载转录文本失败</p>
+        <p className="mt-1 text-sm text-muted-foreground">{(error as Error).message}</p>
+      </div>
+    );
+  }
+
+  // Not completed state
+  if (episode?.transcript_status !== TranscriptStatus.Completed) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/30 p-8 text-center">
+        <p className="text-muted-foreground">
+          {episode?.transcript_status === TranscriptStatus.Processing
+            ? "转录处理中..."
+            : episode?.transcript_status === TranscriptStatus.Failed
+            ? "转录失败"
+            : "此内容尚未转录"}
+        </p>
+        {episode?.transcript_status !== TranscriptStatus.Processing && (
+          <Button
+            onClick={() => transcribeMutation.mutate(episodeId)}
+            disabled={transcribeMutation.isPending}
+            className="mt-4"
+          >
+            {transcribeMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                启动中...
+              </>
+            ) : (
+              "开始转录"
+            )}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // No transcript data
+  if (!transcript) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/30 p-8 text-center">
+        <p className="text-muted-foreground">暂无转录文本</p>
+      </div>
+    );
+  }
+
   return (
-    <Card className="animate-fade-in-up">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base">转录文本</CardTitle>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {transcript.language && <span>语言: {transcript.language}</span>}
-          {transcript.word_count && <span>字数: {transcript.word_count.toLocaleString()}</span>}
-          {transcript.model_used && <span>模型: {transcript.model_used}</span>}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="relative mb-3">
+    <div className="space-y-4 animate-fade-in">
+      {/* Metadata bar */}
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        {transcript.language && (
+          <span className="flex items-center gap-1">
+            <Globe className="h-3 w-3" />
+            {transcript.language}
+          </span>
+        )}
+        {transcript.word_count && (
+          <span className="flex items-center gap-1">
+            <BarChart3 className="h-3 w-3" />
+            {transcript.word_count.toLocaleString()} 字
+          </span>
+        )}
+        {transcript.model_used && (
+          <span className="flex items-center gap-1">
+            <Cpu className="h-3 w-3" />
+            {transcript.model_used}
+          </span>
+        )}
+      </div>
+
+      {/* Search bar and mode toggle */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -94,25 +248,74 @@ export function TranscriptViewer({ transcript }: TranscriptViewerProps) {
             className="pl-9"
           />
         </div>
-        <div className="max-h-[500px] overflow-y-auto rounded-md bg-muted/50 p-4">
-          {hasSegments ? (
-            <div className="space-y-2 text-sm leading-relaxed">
-              {filteredSegments?.map((seg, i) => (
-                <div key={i} className="flex gap-3">
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground pt-0.5 select-none">
-                    [{formatTimestamp(seg.start)}]
+        {hasSegments && (
+          <div className="flex gap-1">
+            <Button
+              variant={displayMode === "segments" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setDisplayMode("segments")}
+            >
+              分段
+            </Button>
+            <Button
+              variant={displayMode === "plain" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setDisplayMode("plain")}
+            >
+              纯文本
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Transcript content */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="max-h-[500px] overflow-y-auto rounded-lg bg-muted/50 p-4"
+      >
+        {hasSegments && displayMode === "segments" ? (
+          <div className="space-y-2 text-sm leading-relaxed">
+            {filteredSegments?.map((seg, i) => {
+              const active = isSegmentActive(seg);
+              return (
+                <div
+                  key={i}
+                  ref={(el) => {
+                    if (el) segmentRefs.current.set(i, el);
+                  }}
+                  className={cn(
+                    "flex gap-3 rounded px-2 py-1 transition-colors",
+                    active && "border-l-2 border-l-primary bg-primary/10"
+                  )}
+                >
+                  <div className="flex shrink-0 items-start gap-2">
+                    <button
+                      className="cursor-pointer font-mono text-xs text-primary/70 transition-colors hover:text-primary hover:underline"
+                      onClick={() => seekTo(seg.start)}
+                      aria-label={`跳转到 ${formatTimestamp(seg.start)}`}
+                    >
+                      [{formatTimestamp(seg.start)}]
+                    </button>
+                    {active && (
+                      <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] text-primary">
+                        正在播放
+                      </span>
+                    )}
+                  </div>
+                  <span className="whitespace-pre-wrap">
+                    {highlightText(seg.text)}
                   </span>
-                  <span className="whitespace-pre-wrap">{highlightText(seg.text)}</span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-              {highlightedContent}
-            </pre>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+            {highlightedContent}
+          </pre>
+        )}
+      </div>
+    </div>
   );
 }
