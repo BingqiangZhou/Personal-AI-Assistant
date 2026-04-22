@@ -29,7 +29,7 @@ function EpisodeDetailContent({ id }: { id: string }) {
   }
 
   return (
-    <div className={`space-y-8 ${episode.audio_url ? 'pb-44' : ''}`}>
+    <div className="space-y-8">
       {/* Back link */}
       {episode.podcast && (
         <Link
