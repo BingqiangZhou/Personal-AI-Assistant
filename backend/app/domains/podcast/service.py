@@ -118,25 +118,34 @@ class PodcastService:
                     logger.error(f"Error fetching xyzrank API at offset {offset}: {e}")
                     break
 
-                if not data:
+                # API returns {"items": [...], "total": N}
+                items = data.get("items", []) if isinstance(data, dict) else data
+                if not items:
                     break
 
-                for item in data:
+                for item in items:
                     xyzrank_id = str(item.get("id", ""))
                     if not xyzrank_id:
                         continue
+
+                    # Extract RSS feed URL from links array
+                    rss_feed_url = None
+                    for link in item.get("links", []):
+                        if link.get("name") == "rss":
+                            rss_feed_url = link.get("url")
+                            break
 
                     existing = await self.repo.get_by_xyzrank_id(xyzrank_id)
                     podcast_data = {
                         "name": item.get("name", ""),
                         "rank": item.get("rank", 0),
-                        "logo_url": item.get("logo_url") or item.get("logo"),
-                        "category": item.get("category"),
-                        "author": item.get("author"),
-                        "rss_feed_url": item.get("rss_feed_url") or item.get("feed_url"),
-                        "track_count": item.get("track_count"),
-                        "avg_duration": item.get("avg_duration"),
-                        "avg_play_count": item.get("avg_play_count"),
+                        "logo_url": item.get("logoURL") or item.get("logo_url"),
+                        "category": item.get("primaryGenreName") or item.get("category"),
+                        "author": item.get("authorsText") or item.get("author"),
+                        "rss_feed_url": rss_feed_url or item.get("rss_feed_url") or item.get("feed_url"),
+                        "track_count": item.get("trackCount") or item.get("track_count"),
+                        "avg_duration": item.get("avgDuration") or item.get("avg_duration"),
+                        "avg_play_count": item.get("avgPlayCount") or item.get("avg_play_count"),
                         "last_synced_at": datetime.now(timezone.utc),
                     }
 

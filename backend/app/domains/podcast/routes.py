@@ -1,18 +1,15 @@
 import logging
-from math import ceil
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.domains.podcast.models import ProcessingStatus
 from app.domains.podcast.schemas import (
     EpisodeListResponse,
     PodcastDetail,
     PodcastListResponse,
     PodcastTrackResponse,
-    SyncResponse,
 )
 from app.domains.podcast.service import EpisodeService, PodcastService
 
@@ -71,18 +68,36 @@ async def toggle_track_podcast(
     return result
 
 
-@router.post("/podcasts/sync", response_model=SyncResponse)
+@router.post("/podcasts/sync")
 async def sync_podcasts(
     db: AsyncSession = Depends(get_db),
-) -> SyncResponse:
-    from app.core.celery_app import celery_app
+) -> dict:
+    """Sync podcast rankings from xyzrank.com. Runs inline (no Celery required)."""
+    service = PodcastService(db)
+    try:
+        result = await service.sync_rankings()
+        await db.commit()
+        return {"message": "Ranking sync complete", **result}
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Ranking sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    task = celery_app.send_task("app.domains.podcast.tasks.sync_rankings_task")
-    logger.info(f"Triggered ranking sync task: {task.id}")
-    return SyncResponse(
-        message="Ranking sync triggered",
-        task_id=task.id,
-    )
+
+@router.post("/episodes/sync")
+async def sync_episodes(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Sync episodes from RSS feeds for tracked podcasts. Runs inline."""
+    service = EpisodeService(db)
+    try:
+        result = await service.sync_episodes()
+        await db.commit()
+        return {"message": "Episode sync complete", **result}
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Episode sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/podcasts/{podcast_id}/episodes", response_model=EpisodeListResponse)
