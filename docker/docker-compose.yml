@@ -1,245 +1,147 @@
-# =============================================================================
-# Docker Compose - 统一配置 / Unified Configuration
-# =============================================================================
-# 使用方法 / Usage:
-#   1. 复制 .env.example .env / Copy .env.example to .env
-#   2. 根据需要修.env 配置 / Modify .env as needed
-#   3. 启动服务 / Start services: docker compose up -d
-#
-# 启动的服/ Started Services (5):
-#   - PostgreSQL (数据/ Database)
-#   - Redis (缓存 / Cache)
-#   - Backend API (后端服务)
-#   - Celery Worker + Beat (后台任务处理+调度 / Background tasks + scheduler)
-#   - Nginx (反向代理 / Reverse proxy)
-
-# Shared logging configuration for all services
-x-logging: &default-logging
-  driver: "json-file"
-  options:
-    max-size: "10m"
-    max-file: "3"
+version: "3.9"
 
 services:
-  # =============================================================================
-  # PostgreSQL Database
-  # =============================================================================
+  # ── PostgreSQL ──────────────────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
-    container_name: ${PROJECT_NAME:-personal_ai}_postgres
+    container_name: poddigest-postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-personal_ai}
-      - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    command: postgres -c max_connections=100 -c shared_buffers=128MB -c effective_cache_size=256MB
-    ports:
-      - "${DB_PORT:-127.0.0.1:5432}:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-poddigest}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-personal_ai}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
-    logging: *default-logging
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+    restart: unless-stopped
 
-  # =============================================================================
-  # Redis Cache
-  # =============================================================================
+  # ── Redis ───────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: ${PROJECT_NAME:-personal_ai}_redis
-    command: >
-      sh -c 'if [ -z "$REDIS_PASSWORD" ]; then
-               redis-server --appendonly yes --maxmemory 230mb --maxmemory-policy allkeys-lru;
-             else
-               redis-server --appendonly yes --requirepass "$REDIS_PASSWORD" --maxmemory 230mb --maxmemory-policy allkeys-lru;
-             fi'
-    ports:
-      - "${REDIS_PORT:-127.0.0.1:6379}:6379"
+    container_name: poddigest-redis
     volumes:
       - redis_data:/data
-    networks:
-      - app_network
+    ports:
+      - "6379:6379"
     healthcheck:
-      test: >
-        sh -c 'if [ -z "$REDIS_PASSWORD" ]; then
-                 redis-cli ping;
-               else
-                 redis-cli -a "$REDIS_PASSWORD" ping;
-               fi'
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
-    restart: always
-    logging: *default-logging
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
+    restart: unless-stopped
 
-  # =============================================================================
-  # Backend API
-  # =============================================================================
+  # ── FastAPI Backend ─────────────────────────────────────────────────────
   backend:
     build:
-      context: ${BACKEND_SRC_DIR:-../backend}
+      context: ../backend
       dockerfile: Dockerfile
-    container_name: ${PROJECT_NAME:-personal_ai}_backend
-    env_file:
-      - ${BACKEND_ENV_FILE:-../backend/.env}
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/2
-      # Timezone for log timestamps / 日志时区
-      - TZ=${TZ:-Asia/Shanghai}
-      - PYTHONUTF8=1
-    ports:
-      - "${BACKEND_PUBLISH_PORT:-127.0.0.1:8000}:8000"
-    volumes:
-      - backend_uploads:/app/uploads
-      - backend_data:/app/data
-      - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
-      - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
-      - ${LOG_DIR:-./logs}:/app/logs
+    container_name: poddigest-backend
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - app_network
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    # Health check for backend service
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    # Unified: uvicorn for both local and cloud (local can add --reload via BACKEND_CMD)
-    command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 60 --proxy-headers --forwarded-allow-ips=*}
-    logging: *default-logging
+    environment:
+      APP_NAME: ${APP_NAME:-PodDigest}
+      DEBUG: ${DEBUG:-false}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-poddigest}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-whisper-1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      XYZRANK_API_URL: ${XYZRANK_API_URL:-https://xyzrank.com/api/podcasts}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
 
-  # =============================================================================
-  # Celery Worker + Beat (merged: worker + scheduler)
-  # =============================================================================
-  celery_worker:
+  # ── Celery Worker ───────────────────────────────────────────────────────
+  celery-worker:
     build:
-      context: ${BACKEND_SRC_DIR:-../backend}
+      context: ../backend
       dockerfile: Dockerfile
-    container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
-    env_file:
-      - ${BACKEND_ENV_FILE:-../backend/.env}
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/2
-      # Timezone for log timestamps / 日志时区
-      - TZ=${TZ:-Asia/Shanghai}
-      - PYTHONUTF8=1
-    volumes:
-      - backend_data:/app/data
-      - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
-      - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
-      - ${LOG_DIR:-./logs}:/app/logs
+    container_name: poddigest-celery-worker
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - app_network
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    command: celery -A app.core.celery_app:celery_app worker -B --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=1 -Q default
-    logging: *default-logging
-
-  # =============================================================================
-  # Nginx Reverse Proxy (反向代理)
-  # =============================================================================
-  nginx:
-    image: nginx:stable-alpine
-    container_name: ${PROJECT_NAME:-personal_ai}_nginx
-    restart: always
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-    volumes:
-      - ${NGINX_CONF_DIR:-./nginx}/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ${NGINX_CONF_DIR:-./nginx}/conf.d:/etc/nginx/templates:rw
-      - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
-      - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
-      - /etc/localtime:/etc/localtime:ro
-      - ${NGINX_CONF_DIR:-./nginx}/docker-entrypoint.sh:/auto-config.sh:ro
+      postgres:
+        condition: service_healthy
     environment:
-      # 域名配置 / Domain configuration
-      - DOMAIN=${DOMAIN:-localhost}
-      - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}
-      - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/nginx/cert/privkey.pem}
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        if [ -f /auto-config.sh ]; then
-          echo "=== Running auto-configuration ==="
-          sh /auto-config.sh || echo "Warning: auto-config script failed, continuing..."
-        fi
-        echo "=== Starting Nginx ==="
-        exec /docker-entrypoint.sh nginx -g 'daemon off;'
+      APP_NAME: ${APP_NAME:-PodDigest}
+      DEBUG: ${DEBUG:-false}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-poddigest}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-whisper-1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      XYZRANK_API_URL: ${XYZRANK_API_URL:-https://xyzrank.com/api/podcasts}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+    command: celery -A app.core.celery_app worker -l info -Q default,transcription,summary
+    restart: unless-stopped
+
+  # ── Celery Beat Scheduler ───────────────────────────────────────────────
+  celery-beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: poddigest-celery-beat
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      APP_NAME: ${APP_NAME:-PodDigest}
+      DEBUG: ${DEBUG:-false}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-poddigest}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-whisper-1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      XYZRANK_API_URL: ${XYZRANK_API_URL:-https://xyzrank.com/api/podcasts}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+    command: celery -A app.core.celery_app beat -l info
+    restart: unless-stopped
+
+  # ── Next.js Frontend ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: poddigest-frontend
     depends_on:
       - backend
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  # ── Nginx Reverse Proxy (production only) ──────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: poddigest-nginx
+    profiles:
+      - production
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
-  backend_uploads:
-    driver: local
-  backend_data:
-    driver: local
-
-networks:
-  app_network:
-    driver: bridge

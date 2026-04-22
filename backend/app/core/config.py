@@ -1,238 +1,34 @@
-import os
-import secrets
 from functools import lru_cache
-from pathlib import Path
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def get_or_generate_secret_key() -> str:
-    """Get SECRET_KEY from env, or load/generate from file for persistence."""
-    import logging
-
-    _logger = logging.getLogger(__name__)
-
-    env_key = os.getenv("SECRET_KEY")
-    if env_key:
-        return env_key
-
-    data_dir = Path(os.getenv("DATA_DIR", "data"))
-    key_file = data_dir / ".secret_key"
-
-    if key_file.exists():
-        try:
-            return key_file.read_text(encoding="utf-8").strip()
-        except OSError:
-            pass
-
-    new_key = secrets.token_urlsafe(48)
-    _logger.critical(
-        "SECRET_KEY not found in env/file — generated a new key. "
-        "All existing encrypted data (API keys) is now INVALID. "
-        "Set SECRET_KEY explicitly to prevent this in production."
-    )
-    try:
-        data_dir.mkdir(exist_ok=True, parents=True)
-        key_file.write_text(new_key, encoding="utf-8")
-    except OSError:
-        pass
-    return new_key
-
-
 class Settings(BaseSettings):
-    """Application settings."""
-
-    # Basic
-    PROJECT_NAME: str = "Personal AI Assistant"
-    VERSION: str = "1.0.0"
-    API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str | None = None
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = False
-
-    # Database
-    DATABASE_URL: str | None = None
-    DATABASE_POOL_SIZE: int = 5
-    DATABASE_MAX_OVERFLOW: int = 10
-    DATABASE_POOL_TIMEOUT: int = 30
-    DATABASE_RECYCLE: int = 3600
-    DATABASE_CONNECT_TIMEOUT: int = 5
-    DATABASE_STATEMENT_TIMEOUT: int = 30000
-    DATABASE_ECHO: bool = False
-
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379"
-    REDIS_MAX_CONNECTIONS: int = 10
-
-    # CORS
-    ALLOWED_HOSTS: list[str] = []
-
-    # Authentication
-    API_KEY: str = ""
-
-    # Celery
-    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
-    CELERY_WORKER_PREFETCH_MULTIPLIER: int = 1
-    CELERY_WORKER_MAX_TASKS_PER_CHILD: int = 100
-
-    # Podcast Processing Limits
-    MAX_PODCAST_SUBSCRIPTIONS: int = 0
-    MAX_PODCAST_EPISODE_DOWNLOAD_SIZE: int = 500 * 1024 * 1024
-    RSS_POLL_INTERVAL_MINUTES: int = 60
-
-    ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
-
-    # External APIs
-    OPENAI_API_KEY: str | None = None
-    OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
-
-    # Transcription API Configuration
-    TRANSCRIPTION_API_URL: str = "https://api.siliconflow.cn/v1/audio/transcriptions"
-    TRANSCRIPTION_API_KEY: str | None = None
-
-    # Transcription File Processing Configuration
-    TRANSCRIPTION_CHUNK_SIZE_MB: int = 10
-    TRANSCRIPTION_TARGET_FORMAT: str = "mp3"
-    TRANSCRIPTION_TEMP_DIR: str = "./temp/transcription"
-    TRANSCRIPTION_STORAGE_DIR: str = "./storage/podcasts"
-
-    # Transcription Batch Limits
-    TRANSCRIPTION_BATCH_MAX_EPISODES: int = 50
-
-    # Transcription Concurrency Control
-    TRANSCRIPTION_MAX_THREADS: int = 4
-    TRANSCRIPTION_QUEUE_SIZE: int = 100
-    TRANSCRIPTION_BACKLOG_ENABLED: bool = True
-    TRANSCRIPTION_BACKLOG_BATCH_SIZE: int = 20
-    TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE: int = 5
-    TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS: float = 15.0
-
-    # Logging Configuration
-    LOG_LEVEL: str = "INFO"
-    LOG_DIR: str = "logs"
-    LOG_RETENTION_DAYS: int = 30
-
-    # Assistant and Chat Configuration
-    ASSISTANT_TITLE_TRUNCATION_LENGTH: int = 50
-    ASSISTANT_TEST_PROMPT: str = 'Hello, please respond with "Test successful".'
-
-    # Pagination and Batch Processing
-    PODCAST_EPISODE_BATCH_SIZE: int = 50
-    PODCAST_RECENT_EPISODES_LIMIT: int = 3
-    PODCAST_FEED_LIGHTWEIGHT_ENABLED: bool = True
-    RSS_REFRESH_CONCURRENCY: int = 5
-
-    # AI Client Configuration
-    AI_CLIENT_MAX_RETRIES: int = 3
-    AI_CLIENT_BASE_DELAY: int = 2
-    AI_CLIENT_MAX_PROMPT_LENGTH: int = 1000000
-
     model_config = SettingsConfigDict(
         env_file=".env",
+        env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore",
     )
 
-    @field_validator("ALLOWED_HOSTS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v):
-        if v is None or v == "" or v == []:
-            return []
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str) and v.startswith("["):
-            import json
+    APP_NAME: str = "PodDigest"
+    DEBUG: bool = False
 
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-            except json.JSONDecodeError:
-                pass
-        raise ValueError(f"Invalid ALLOWED_HOSTS format: {v}")
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/poddigest"
 
-    @field_validator("TRANSCRIPTION_BACKLOG_BATCH_SIZE")
-    @classmethod
-    def validate_transcription_backlog_batch_size(cls, v: int) -> int:
-        if v < 1:
-            raise ValueError("TRANSCRIPTION_BACKLOG_BATCH_SIZE must be >= 1")
-        return v
+    REDIS_URL: str = "redis://localhost:6379/0"
 
-    @field_validator("TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE")
-    @classmethod
-    def validate_transcription_backlog_schedule_minute(cls, v: int) -> int:
-        if v < 0 or v > 59:
-            raise ValueError(
-                "TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE must be between 0 and 59",
-            )
-        return v
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
-    @field_validator("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS")
-    @classmethod
-    def validate_transcription_startup_reset_timeout_seconds(cls, v: float) -> float:
-        if v <= 0:
-            raise ValueError("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS must be > 0")
-        return v
+    ENCRYPTION_KEY: str = ""
 
-    def validate_production_config(self) -> list[str]:
-        """Validate configuration for production environment."""
-        issues = []
-        if self.ENVIRONMENT == "production":
-            if not self.SECRET_KEY:
-                issues.append(
-                    "SECRET_KEY should be explicitly set via environment variable in production"
-                )
-            if "*" in self.ALLOWED_HOSTS:
-                issues.append(
-                    "ALLOWED_HOSTS contains '*' which allows all origins. "
-                    "Specify exact domains in production."
-                )
-            if not self.API_KEY:
-                issues.append(
-                    "API_KEY must be set in production for authentication"
-                )
-        return issues
+    WHISPER_MODEL: str = "whisper-1"
 
-    def require_database_url(self) -> str:
-        """Return DATABASE_URL or raise a runtime error when not configured."""
-        if self.DATABASE_URL:
-            return self.DATABASE_URL
-        raise RuntimeError(
-            "DATABASE_URL is not configured. Set backend/.env or environment variables "
-            "before starting the application.",
-        )
+    XYZRANK_API_URL: str = "https://xyzrank.com/api/podcasts"
 
-    def get_secret_key(self) -> str:
-        """Resolve the effective secret key lazily."""
-        if self.SECRET_KEY:
-            return self.SECRET_KEY
-        self.SECRET_KEY = get_or_generate_secret_key()
-        return self.SECRET_KEY
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Get cached settings instance."""
     return Settings()
-
-
-def get_required_database_url() -> str:
-    """Get DATABASE_URL and fail only when the runtime actually needs it."""
-    return get_settings().require_database_url()
-
-
-class _LazySettingsProxy:
-    """Attribute proxy that resolves the cached settings instance on demand."""
-
-    def __getattr__(self, name: str):
-        settings_obj = get_settings()
-        if name == "SECRET_KEY":
-            return settings_obj.get_secret_key()
-        return getattr(settings_obj, name)
-
-
-settings = _LazySettingsProxy()

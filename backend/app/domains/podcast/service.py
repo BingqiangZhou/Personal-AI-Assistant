@@ -1,0 +1,322 @@
+import logging
+from datetime import datetime, timezone
+from math import ceil
+from uuid import UUID
+
+import aiohttp
+import feedparser
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import get_settings
+from app.domains.podcast.models import ProcessingStatus
+from app.domains.podcast.repository import (
+    EpisodeRepository,
+    PodcastRankingHistoryRepository,
+    PodcastRepository,
+)
+from app.domains.podcast.schemas import (
+    EpisodeDetail,
+    EpisodeListResponse,
+    EpisodeResponse,
+    PaginatedResponse,
+    PodcastDetail,
+    PodcastListResponse,
+    PodcastResponse,
+    PodcastTrackResponse,
+    SyncResponse,
+)
+
+logger = logging.getLogger(__name__)
+settings = get_settings()
+
+
+class PodcastService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.repo = PodcastRepository(session)
+        self.history_repo = PodcastRankingHistoryRepository(session)
+
+    async def list_podcasts(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        category: str | None = None,
+        is_tracked: bool | None = None,
+        search: str | None = None,
+    ) -> PodcastListResponse:
+        skip = (page - 1) * page_size
+        podcasts = await self.repo.get_filtered(
+            skip=skip,
+            limit=page_size,
+            category=category,
+            is_tracked=is_tracked,
+            search=search,
+        )
+        total = await self.repo.get_filtered_count(
+            category=category,
+            is_tracked=is_tracked,
+            search=search,
+        )
+        return PodcastListResponse(
+            items=[PodcastResponse.model_validate(p) for p in podcasts],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=ceil(total / page_size) if total > 0 else 0,
+        )
+
+    async def get_podcast(self, podcast_id: UUID) -> PodcastDetail | None:
+        podcast = await self.repo.get(podcast_id)
+        if podcast is None:
+            return None
+        episode_repo = EpisodeRepository(self.session)
+        episode_count = await episode_repo.count_by_podcast(podcast_id)
+        detail = PodcastDetail.model_validate(podcast)
+        detail.episode_count = episode_count
+        return detail
+
+    async def get_rankings(self, page: int = 1, page_size: int = 50) -> PodcastListResponse:
+        skip = (page - 1) * page_size
+        podcasts = await self.repo.get_rankings(skip=skip, limit=page_size)
+        total = await self.repo.count()
+        return PodcastListResponse(
+            items=[PodcastResponse.model_validate(p) for p in podcasts],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=ceil(total / page_size) if total > 0 else 0,
+        )
+
+    async def track_podcast(self, podcast_id: UUID) -> PodcastTrackResponse | None:
+        podcast = await self.repo.update(podcast_id, {"is_tracked": True})
+        if podcast is None:
+            return None
+        return PodcastTrackResponse.model_validate(podcast)
+
+    async def untrack_podcast(self, podcast_id: UUID) -> PodcastTrackResponse | None:
+        podcast = await self.repo.update(podcast_id, {"is_tracked": False})
+        if podcast is None:
+            return None
+        return PodcastTrackResponse.model_validate(podcast)
+
+    async def sync_rankings(self) -> dict:
+        """Fetch podcasts from xyzrank.com API and update database."""
+        fetched_count = 0
+        updated_count = 0
+        created_count = 0
+
+        async with aiohttp.ClientSession() as http_session:
+            for offset in range(0, 1000, 50):
+                url = f"{settings.XYZRANK_API_URL}?offset={offset}&limit=50"
+                try:
+                    async with http_session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                        if resp.status != 200:
+                            logger.warning(f"xyzrank API returned status {resp.status} at offset {offset}")
+                            break
+                        data = await resp.json()
+                except Exception as e:
+                    logger.error(f"Error fetching xyzrank API at offset {offset}: {e}")
+                    break
+
+                if not data:
+                    break
+
+                for item in data:
+                    xyzrank_id = str(item.get("id", ""))
+                    if not xyzrank_id:
+                        continue
+
+                    existing = await self.repo.get_by_xyzrank_id(xyzrank_id)
+                    podcast_data = {
+                        "name": item.get("name", ""),
+                        "rank": item.get("rank", 0),
+                        "logo_url": item.get("logo_url") or item.get("logo"),
+                        "category": item.get("category"),
+                        "author": item.get("author"),
+                        "rss_feed_url": item.get("rss_feed_url") or item.get("feed_url"),
+                        "track_count": item.get("track_count"),
+                        "avg_duration": item.get("avg_duration"),
+                        "avg_play_count": item.get("avg_play_count"),
+                        "last_synced_at": datetime.now(timezone.utc),
+                    }
+
+                    if existing:
+                        await self.repo.update(existing.id, podcast_data)
+                        updated_count += 1
+                    else:
+                        podcast_data["xyzrank_id"] = xyzrank_id
+                        await self.repo.create(podcast_data)
+                        created_count += 1
+
+                    fetched_count += 1
+
+        # Record ranking history
+        podcasts = await self.repo.get_multi(limit=10000)
+        for podcast in podcasts:
+            await self.history_repo.create(
+                {
+                    "podcast_id": podcast.id,
+                    "rank": podcast.rank,
+                    "avg_play_count": podcast.avg_play_count,
+                }
+            )
+
+        await self.session.flush()
+        logger.info(
+            f"Ranking sync complete: fetched={fetched_count}, created={created_count}, updated={updated_count}"
+        )
+        return {
+            "fetched": fetched_count,
+            "created": created_count,
+            "updated": updated_count,
+        }
+
+
+class EpisodeService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.repo = EpisodeRepository(session)
+
+    async def list_episodes(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        podcast_id: UUID | None = None,
+        transcript_status: ProcessingStatus | None = None,
+        summary_status: ProcessingStatus | None = None,
+    ) -> EpisodeListResponse:
+        skip = (page - 1) * page_size
+        episodes = await self.repo.get_filtered(
+            skip=skip,
+            limit=page_size,
+            podcast_id=podcast_id,
+            transcript_status=transcript_status,
+            summary_status=summary_status,
+        )
+        total = await self.repo.get_filtered_count(
+            podcast_id=podcast_id,
+            transcript_status=transcript_status,
+            summary_status=summary_status,
+        )
+        return EpisodeListResponse(
+            items=[EpisodeResponse.model_validate(e) for e in episodes],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=ceil(total / page_size) if total > 0 else 0,
+        )
+
+    async def get_episode(self, episode_id: UUID) -> EpisodeDetail | None:
+        episode = await self.repo.get_with_relations(episode_id)
+        if episode is None:
+            return None
+        detail = EpisodeDetail.model_validate(episode)
+        if episode.podcast:
+            detail.podcast_name = episode.podcast.name
+            detail.podcast_logo_url = episode.podcast.logo_url
+        return detail
+
+    async def sync_episodes(self) -> dict:
+        """Parse RSS feeds for tracked podcasts and create new episodes."""
+        podcast_repo = PodcastRepository(self.session)
+        tracked_podcasts = await podcast_repo.get_tracked(limit=1000)
+
+        total_created = 0
+        total_updated = 0
+
+        for podcast in tracked_podcasts:
+            if not podcast.rss_feed_url:
+                logger.warning(f"Podcast {podcast.name} has no RSS feed URL, skipping")
+                continue
+
+            try:
+                async with aiohttp.ClientSession() as http_session:
+                    async with http_session.get(
+                        podcast.rss_feed_url, timeout=aiohttp.ClientTimeout(total=30)
+                    ) as resp:
+                        if resp.status != 200:
+                            logger.warning(
+                                f"RSS feed for {podcast.name} returned status {resp.status}"
+                            )
+                            continue
+                        content = await resp.text()
+
+                feed = feedparser.parse(content)
+
+                for entry in feed.entries:
+                    audio_url = None
+                    duration = None
+
+                    # Try to find audio enclosure
+                    for link in getattr(entry, "links", []):
+                        if link.get("type", "").startswith("audio/"):
+                            audio_url = link.get("href")
+                            duration = int(link.get("length", 0)) // 1000  # approximate seconds
+                            break
+
+                    if not audio_url:
+                        # Fallback to enclosure
+                        enclosures = getattr(entry, "enclosures", [])
+                        if enclosures:
+                            audio_url = enclosures[0].get("href") or enclosures[0].get("url")
+                            try:
+                                duration = int(enclosures[0].get("length", 0)) // 1000
+                            except (ValueError, TypeError):
+                                duration = None
+
+                    if not audio_url:
+                        continue
+
+                    # Check if episode already exists
+                    existing = await self.repo.get_by_audio_url(audio_url)
+                    if existing:
+                        total_updated += 1
+                        continue
+
+                    # Parse published date
+                    published_at = None
+                    if hasattr(entry, "published_parsed") and entry.published_parsed:
+                        from time import mktime
+
+                        published_at = datetime.fromtimestamp(mktime(entry.published_parsed), tz=timezone.utc)
+                    elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
+                        from time import mktime
+
+                        published_at = datetime.fromtimestamp(mktime(entry.updated_parsed), tz=timezone.utc)
+
+                    # Parse duration from itunes duration tag
+                    itunes_duration = getattr(entry, "itunes_duration", None)
+                    if itunes_duration:
+                        try:
+                            parts = itunes_duration.split(":")
+                            if len(parts) == 3:
+                                duration = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+                            elif len(parts) == 2:
+                                duration = int(parts[0]) * 60 + int(parts[1])
+                            else:
+                                duration = int(itunes_duration)
+                        except (ValueError, TypeError):
+                            duration = duration
+
+                    await self.repo.create(
+                        {
+                            "podcast_id": podcast.id,
+                            "title": entry.get("title", "Untitled"),
+                            "description": entry.get("summary") or entry.get("description"),
+                            "audio_url": audio_url,
+                            "duration": duration,
+                            "published_at": published_at,
+                        }
+                    )
+                    total_created += 1
+
+            except Exception as e:
+                logger.error(f"Error syncing episodes for podcast {podcast.name}: {e}")
+                continue
+
+        await self.session.flush()
+        logger.info(f"Episode sync complete: created={total_created}, updated={total_updated}")
+        return {
+            "created": total_created,
+            "updated": total_updated,
+        }
