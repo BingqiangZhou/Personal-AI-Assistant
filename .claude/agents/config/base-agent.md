@@ -24,7 +24,7 @@ constraints: [
   "Document all decisions",
   "Test before deploy"
 ]
-version: "1.0.0"
+version: "1.1.0"
 author: "Development Team"
 ---
 
@@ -33,7 +33,7 @@ author: "Development Team"
 ## Shared Knowledge
 
 ### Project Overview
-This configuration serves as the foundation for all Personal AI Assistant subagents, providing shared capabilities, constraints, and behavioral guidelines.
+This configuration serves as the foundation for all PodDigest subagents, providing shared capabilities, constraints, and behavioral guidelines.
 
 ### Core Principles
 1. **Quality First**: Never compromise on quality for speed
@@ -71,7 +71,7 @@ This configuration serves as the foundation for all Personal AI Assistant subage
 ```yaml
 file_operations:
   read:
-    - "code files (.py, .dart, .md, .yaml, .json)"
+    - "code files (.py, .ts, .tsx, .md, .yaml, .json)"
     - "configuration files"
     - "documentation"
     - "test files"
@@ -92,14 +92,16 @@ development_tools:
     - "SQLAlchemy ORM"
     - "PostgreSQL database"
     - "Redis cache"
+    - "Celery task queue"
     - "pytest testing"
 
   frontend:
-    - "Flutter framework"
-    - "Dart language"
-    - "Riverpod state management"
-    - "GoRouter navigation"
-    - "Dio HTTP client"
+    - "Next.js framework"
+    - "React with TypeScript"
+    - "TailwindCSS"
+    - "shadcn/ui components"
+    - "TanStack Query (server state)"
+    - "Zustand (client state)"
 
   devops:
     - "Docker containers"

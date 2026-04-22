@@ -1,11 +1,11 @@
 ---
 name: "Base Agent Prompt"
 description: "Shared knowledge base and project context for all agents"
-version: "1.0.0"
+version: "1.1.0"
 language_policy: "bilingual"
 ---
 
-# Personal AI Assistant - Base Agent Prompt
+# PodDigest — Base Agent Prompt
 
 ## 🌐 Language Policy / 语言政策
 
@@ -50,56 +50,42 @@ class ErrorResponse(BaseModel):
     detail: Optional[str] = None
 ```
 
-#### Frontend i18n Requirements
-```dart
-// All UI text must be externalized / 所有 UI 文本必须外部化
-class AppLocalizations {
-  static const Map<String, Map<String, String>> _translations = {
-    'en': { /* English translations */ },
-    'zh': { /* Chinese translations */ },
-  };
-}
-```
-
-### Validation Checklist / 验证清单
-- [ ] Response language matches user input language
-- [ ] 回复语言与用户输入语言匹配
-- [ ] Error messages include both English and Chinese
-- [ ] 错误消息包含中英文
-- [ ] User-facing text supports language switching
-- [ ] 面向用户的文本支持语言切换
-
 ---
 
 ## Project Overview
 
-You are working on the **Personal AI Assistant** project, a comprehensive personal knowledge management and AI assistant platform. This project aims to create an intelligent system that helps users organize, retrieve, and interact with their personal knowledge base through natural language conversations and multimedia content.
+You are working on the **PodDigest** project, a podcast ranking monitor + transcription + AI summarization web platform. The system fetches podcast rankings from xyzrank.com, monitors RSS feeds for new episodes, transcribes audio via Whisper, and generates AI-powered summaries.
 
 ## Tech Stack Summary
 
 ### Backend
 - **Framework**: FastAPI (Python 3.11+)
 - **Database**: PostgreSQL 15+
-- **Caching**: Redis 7+
-- **Authentication**: JWT with refresh tokens
+- **Caching**: Redis 7+ (cache + Celery broker)
+- **Task Queue**: Celery 5 (background tasks)
+- **ORM**: SQLAlchemy 2.0 async (asyncpg driver)
 - **API Documentation**: OpenAPI/Swagger
+- **Package Manager**: uv (NEVER pip)
 
 ### Frontend
-- **Framework**: Flutter 3.x
-- **State Management**: Provider/Bloc
-- **Navigation**: GoRouter
-- **Local Storage**: Hive/SQLite
+- **Framework**: Next.js 15 (App Router)
+- **Language**: React 19 + TypeScript 5
+- **Styling**: TailwindCSS 4
+- **Components**: shadcn/ui
+- **Server State**: TanStack Query v5
+- **Client State**: Zustand
+- **Icons**: Lucide
+- **Toasts**: Sonner
 
 ### Infrastructure
-- **Deployment**: Docker containers
-- **Message Queue**: Redis Pub/Sub
-- **File Storage**: Local filesystem (with cloud storage abstraction)
+- **Deployment**: Docker Compose (5 services)
+- **Reverse Proxy**: nginx (optional, for production)
 - **Monitoring**: Structured logging with correlation IDs
 
 ### AI/ML
-- **Embeddings**: OpenAI/Sentence Transformers
-- **Vector Database**: pgvector (PostgreSQL extension)
-- **LLM Integration**: OpenAI API
+- **Transcription**: OpenAI Whisper API / faster-whisper
+- **Summarization**: OpenAI / DeepSeek / OpenRouter (configurable)
+- **RSS Parsing**: feedparser
 
 ## Architecture: Domain-Driven Design (DDD)
 
@@ -110,20 +96,22 @@ You are working on the **Personal AI Assistant** project, a comprehensive person
 4. **Application Services**: Coordinate use cases between domains
 5. **Infrastructure Concerns**: Separated from business logic
 
-### Layer Structure
-```
-├── domain/           # Business logic, entities, value objects
-├── application/      # Use cases, application services
-├── infrastructure/   # External dependencies, persistence
-└── presentation/     # API controllers, DTOs
-```
-
 ### Domain Boundaries
-- **User Management**: Authentication, profiles, preferences
-- **Subscription**: Billing, plans, access control
-- **Knowledge**: Documents, folders, categorization
-- **Assistant**: Conversations, AI interactions, context
-- **Multimedia**: Images, videos, audio processing
+- **Podcast**: Fetching, ranking, episode monitoring from xyzrank.com + RSS feeds
+- **Transcription**: Audio transcription via Whisper
+- **Summary**: AI summarization with configurable LLM providers
+- **Settings**: API key management, provider configuration
+
+### Layer Structure (per domain)
+```
+domains/{domain}/
+├── models.py       # SQLAlchemy models
+├── schemas.py      # Pydantic schemas
+├── repository.py   # Data access layer
+├── service.py      # Business logic
+├── routes.py       # API endpoints
+└── tasks.py        # Celery background tasks
+```
 
 ## Collaboration Principles
 
@@ -143,7 +131,7 @@ You are working on the **Personal AI Assistant** project, a comprehensive person
 
 ### Design Philosophy
 - **API-first**: Design interfaces before implementations
-- **Event-driven**: Use events for cross-domain communication
+- **Event-driven**: Use Celery tasks for async processing
 - **Fail gracefully**: Handle errors without leaking details
 - **Optimize for maintainability**: Clear code over clever code
 
@@ -152,17 +140,35 @@ You are working on the **Personal AI Assistant** project, a comprehensive person
 ### Python Standards
 ```python
 # Use type hints consistently
-def process_document(document_id: UUID) -> Result[Document, ProcessingError]:
-    """Process a document and return enhanced version."""
+async def process_episode(episode_id: UUID) -> Result[Episode, ProcessingError]:
+    """Process an episode for transcription."""
     pass
 
 # Follow PEP 8 naming conventions
-class DocumentService:
-    def __init__(self, repository: DocumentRepository):
+class PodcastService:
+    def __init__(self, repository: PodcastRepository):
         self._repository = repository
 
-    async def create_document(self, data: CreateDocumentDto) -> Document:
-        return await self._repository.save(data.to_entity())
+    async def sync_rankings(self) -> List[Podcast]:
+        return await self._repository.save_all(rankings)
+```
+
+### TypeScript Standards
+```typescript
+// Use strict TypeScript
+interface Podcast {
+  id: string;
+  name: string;
+  rank: number;
+  logoUrl: string;
+  category: string;
+}
+
+// Use TanStack Query for server state
+const { data, isLoading } = useQuery({
+  queryKey: ['podcasts', page],
+  queryFn: () => api.getPodcasts(page),
+});
 ```
 
 ### API Design Standards
@@ -176,7 +182,6 @@ class DocumentService:
 - **Naming**: snake_case for tables/columns, plural for tables
 - **Primary Keys**: UUID for all entities
 - **Timestamps**: created_at, updated_at on all tables
-- **Soft Deletes**: deleted_at instead of physical deletion where appropriate
 - **Indexes**: Add based on query patterns
 
 ### Testing Standards
@@ -188,10 +193,9 @@ class DocumentService:
 
 ### Security Standards
 - **Input validation**: Always validate/sanitize inputs
-- **SQL injection**: Use parameterized queries
-- **Authentication**: JWT tokens with proper expiration
-- **Authorization**: Check permissions at domain boundaries
-- **Sensitive data**: Never log passwords, tokens, or PII
+- **SQL injection**: Use parameterized queries (SQLAlchemy ORM)
+- **API keys**: Encrypted at rest using Fernet
+- **Sensitive data**: Never log API keys, tokens, or credentials
 
 ## Development Workflow
 
@@ -219,41 +223,40 @@ class DocumentService:
 
 ### Repository Pattern
 ```python
-class DocumentRepository(ABC):
-    async def save(self, document: Document) -> Document:
+class PodcastRepository:
+    async def save(self, podcast: Podcast) -> Podcast:
         pass
 
-    async def find_by_id(self, id: UUID) -> Optional[Document]:
+    async def find_by_id(self, id: UUID) -> Optional[Podcast]:
         pass
 
-    async def find_by_user(self, user_id: UUID) -> List[Document]:
+    async def find_tracked(self) -> List[Podcast]:
         pass
 ```
 
 ### Service Layer Pattern
 ```python
-class DocumentService:
-    def __init__(self, repository: DocumentRepository, event_bus: EventBus):
+class PodcastService:
+    def __init__(self, repository: PodcastRepository, celery_app: Celery):
         self._repository = repository
-        self._event_bus = event_bus
+        self._celery = celery_app
 
-    async def create_document(self, data: CreateDocumentDto) -> Document:
-        document = Document.create(data)
-        saved = await self._repository.save(document)
-        await self._event_bus.publish(DocumentCreated(saved))
-        return saved
+    async def sync_rankings(self) -> int:
+        rankings = await fetch_xyzrank_rankings()
+        saved = await self._repository.save_all(rankings)
+        return len(saved)
 ```
 
-### Error Handling Pattern
+### Celery Task Pattern
 ```python
-class DocumentNotFoundError(Exception):
-    pass
-
-async def get_document(document_id: UUID) -> Document:
-    document = await repository.find_by_id(document_id)
-    if not document:
-        raise DocumentNotFoundError(f"Document {document_id} not found")
-    return document
+@celery_app.task(bind=True, max_retries=3)
+def transcribe_episode(self, episode_id: str):
+    """Background task for audio transcription."""
+    try:
+        result = transcribe_audio(episode_id)
+        update_transcript(episode_id, result)
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60)
 ```
 
 Remember: You are part of a team of specialized agents. Always consider how your work affects other domains and communicates with other agents through well-defined interfaces.

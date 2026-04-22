@@ -18,6 +18,7 @@
 - 使用 `ruff` 进行格式化和检查
 - 遵循 async/await 模式处理 I/O
 - API端点前缀: `/api/v1/`
+- 使用 `uv` 管理依赖（NEVER pip）
 
 ```bash
 # 格式化
@@ -27,17 +28,18 @@ ruff format .
 ruff check .
 ```
 
-#### 前端 (Flutter)
-- Material 3 必需: `useMaterial3: true`
-- 使用 AdaptiveScaffoldWrapper
-- Widget 测试必需
+#### 前端 (Next.js/React)
+- 使用 shadcn/ui 组件（NOT 自定义 UI）
+- 使用 TanStack Query 管理服务端状态
+- TailwindCSS 工具优先样式
+- 支持暗色/亮色模式
 
 ```bash
-# 格式化
-dart format .
+# 格式化 & 检查
+pnpm lint
 
 # 测试
-flutter test test/widget/
+pnpm test
 ```
 
 ### 国际化实现
@@ -58,19 +60,6 @@ raise HTTPException(
         "message_zh": "输入参数无效"
     }
 )
-```
-
-#### 前端国际化
-```dart
-// 使用arb文件管理文本
-class AppLocalizations {
-  static String helloWorld(BuildContext context) {
-    return AppLocalizations.of(context)!.helloWorld;
-  }
-}
-
-// 无硬编码文本
-Text(AppLocalizations.helloWorld(context))
 ```
 
 ---
@@ -128,12 +117,13 @@ Todo → In Progress → Review → Done
 - [ ] 无SQL注入风险
 - [ ] 无XSS漏洞
 - [ ] 输入已验证
-- [ ] 敏感数据已加密
+- [ ] API密钥已加密存储（Fernet）
 
 #### 性能
 - [ ] 无N+1查询
 - [ ] 适当使用缓存
 - [ ] 异步处理正确
+- [ ] 长时任务使用Celery
 
 #### 测试
 - [ ] 单元测试覆盖关键逻辑
@@ -164,11 +154,14 @@ Todo → In Progress → Review → Done
 - 使用测试数据库
 - 验证API契约
 
-#### Widget测试 (前端必需)
-```dart
-testWidgets('Page displays correctly', (WidgetTester tester) async {
-  await tester.pumpWidget(MyApp());
-  expect(find.text('Hello'), findsOneWidget);
+#### 前端组件测试 (Vitest)
+```typescript
+import { render, screen } from '@testing-library/react';
+import { PodcastCard } from './podcast-card';
+
+test('renders podcast name', () => {
+  render(<PodcastCard podcast={mockPodcast} />);
+  expect(screen.getByText('Test Podcast')).toBeInTheDocument();
 });
 ```
 
@@ -177,8 +170,8 @@ testWidgets('Page displays correctly', (WidgetTester tester) async {
 ## 质量门检查清单
 
 ### 代码质量
-- [ ] 代码格式化通过 (ruff format)
-- [ ] 代码检查无错误 (ruff check)
+- [ ] 代码格式化通过 (ruff format / pnpm lint)
+- [ ] 代码检查无错误 (ruff check / tsc --noEmit)
 - [ ] 测试覆盖率达标
 
 ### 功能质量

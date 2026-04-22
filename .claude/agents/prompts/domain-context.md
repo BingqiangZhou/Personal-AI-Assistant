@@ -1,281 +1,191 @@
 ---
 name: "Domain Context"
-description: "Domain-specific context for all agents in the Personal AI Assistant project"
-version: "1.0.0"
+description: "Domain-specific context for all agents in the PodDigest project"
+version: "1.1.0"
 ---
 
-# Personal AI Assistant - Domain Context
+# PodDigest — Domain Context
 
 ## Domain Overview
 
-The Personal AI Assistant is organized into five core domains following Domain-Driven Design principles. Each domain represents a distinct business area with its own models, rules, and boundaries.
+PodDigest is organized into four core domains following Domain-Driven Design principles. Each domain represents a distinct business area with its own models, rules, and boundaries.
 
-## 1. User Management Domain
+## 1. Podcast Domain
 
 ### Purpose
-Handles user authentication, profiles, preferences, and access control. This domain is foundational as all other domains depend on user identity.
+Fetches podcast rankings from xyzrank.com, monitors RSS feeds for new episodes, and manages podcast/episode data.
 
 ### Core Entities
-- **User**: Primary entity representing system users
-  - Attributes: id, email, username, hashed_password, profile
-  - Invariants: Email must be unique, username must be unique
-- **UserProfile**: Optional detailed user information
-  - Attributes: first_name, last_name, avatar_url, timezone, language
-- **UserPreferences**: User-specific settings
-  - Attributes: theme, notification_settings, privacy_settings
+- **Podcast**: Podcast synced from xyzrank.com
+  - Attributes: id, xyzrank_id, name, rank, logo_url, category, author, rss_feed_url, track_count, avg_duration, avg_play_count, is_tracked
+  - Invariants: xyzrank_id must be unique
+- **Episode**: Episode parsed from RSS feed
+  - Attributes: id, podcast_id, title, description, audio_url, duration, published_at, transcript_status, summary_status
+  - Statuses: pending, processing, completed, failed
+- **PodcastRankingHistory**: Historical ranking data
+  - Attributes: id, podcast_id, rank, avg_play_count, recorded_at
 
 ### Key Business Rules
-1. Users must authenticate with email/password or OAuth
-2. Passwords must meet complexity requirements (min 8 chars, special char, number)
-3. Email verification required before full access
-4. Users can update profiles but not email (requires verification)
-5. Soft delete: Users marked as deleted but保留 data for 30 days
+1. Rankings synced daily from xyzrank.com API (top 1000)
+2. Episodes checked every 6 hours for tracked podcasts
+3. Only tracked podcasts trigger episode monitoring
+4. Ranking history preserved for trend analysis
 
 ### Domain Services
-- AuthenticationService: Login, logout, token management
-- ProfileService: Profile CRUD operations
-- PreferenceService: User preferences management
+- PodcastService: Ranking sync, podcast CRUD
+- EpisodeService: Episode sync from RSS, episode CRUD
+
+### Celery Tasks
+- sync_rankings: Daily ranking sync from xyzrank.com
+- sync_episodes: Periodic episode discovery from RSS feeds
 
 ### Current Implementation Status
-- ✅ User entity with basic fields
-- ✅ JWT authentication flow
-- ⏳ OAuth integration (Google, GitHub) pending
-- ⏳ Email verification service pending
-- ⏳ Password reset flow pending
+- ✅ xyzrank.com ranking sync (top 1000)
+- ✅ RSS feed parsing with feedparser
+- ✅ Episode monitoring for tracked podcasts
+- ✅ Ranking history tracking
 
-## 2. Subscription Domain
+## 2. Transcription Domain
 
 ### Purpose
-Manages subscription plans, billing, and feature access control. Integrates with payment providers for real billing.
+Handles audio transcription using Whisper (API or local GPU-accelerated).
 
 ### Core Entities
-- **SubscriptionPlan**: Available subscription tiers
-  - Attributes: id, name, price, interval, feature_limits
-  - Examples: Free, Pro, Enterprise
-- **Subscription**: User's active subscription
-  - Attributes: id, user_id, plan_id, status, current_period_end
-- **Payment**: Individual payment records
-  - Attributes: id, subscription_id, amount, payment_method, status
+- **Transcript**: Transcription result
+  - Attributes: id, episode_id, content, language, word_count, model_used
 
 ### Key Business Rules
-1. Free tier has limited storage (100MB) and 500 messages/month
-2. Pro tier unlimited storage, 5000 messages/month
-3. Enterprise tier: custom limits, priority support
-4. Downgrades take effect at period end
-5. Overages: Users notified but not blocked (grace period)
+1. Audio downloaded → ffmpeg chunking → Whisper transcription
+2. Status tracking: pending → processing → completed/failed
+3. Retry logic with exponential backoff (max 3 retries)
+4. Configurable Whisper model via settings
 
-### Integration Points
-- **User Domain**: Subscription tied to user
-- **Knowledge Domain**: Storage limits affect document uploads
-- **Assistant Domain**: Message limits affect AI interactions
+### Domain Services
+- TranscriptionService: Orchestrates transcription pipeline
+
+### Celery Tasks
+- transcribe_episode: Background transcription task
 
 ### Current Implementation Status
-- ✅ Subscription plan entities
-- ✅ Basic subscription tracking
-- ⏳ Stripe integration pending
-- ⏳ Webhook handlers for payment events pending
-- ⏳ Usage tracking service pending
+- ✅ Whisper API integration
+- ✅ faster-whisper local GPU support
+- ✅ Status tracking and retry logic
+- ✅ Audio download and chunking
 
-## 3. Knowledge Domain
+## 3. Summary Domain
 
 ### Purpose
-Manages user's personal knowledge base including documents, folders, categorization, and search functionality.
+Generates AI-powered episode summaries using configurable LLM providers.
 
 ### Core Entities
-- **Document**: Primary knowledge storage unit
-  - Attributes: id, user_id, title, content, type, metadata
-  - Types: Note, Bookmark, File, WebPage
-- **Folder**: Hierarchical organization
-  - Attributes: id, user_id, name, parent_id, path
-- **Tag**: Flexible categorization
-  - Attributes: id, user_id, name, color
-- **DocumentTag**: Many-to-many relationship
-- **KnowledgeGraph**: Connections between documents
+- **Summary**: AI-generated summary
+  - Attributes: id, episode_id, content, key_topics, highlights, model_used, provider
 
 ### Key Business Rules
-1. Folder depth limited to 10 levels
-2. Document size limited by subscription tier
-3. Tags are user-specific (no shared tags)
-4. Full-text search across title, content, and tags
-5. Automatic entity extraction from documents
-6. Vector embeddings for semantic search
+1. Support multiple providers: OpenAI, DeepSeek, OpenRouter, custom endpoints
+2. Summary includes: key topics, highlights, takeaways
+3. Background processing with status tracking
+4. Provider configured via Settings domain
 
-### Subdomains
-- **Document Storage**: Raw document management
-- **Organization**: Folders, tags, categorization
-- **Search**: Full-text and semantic search
-- **Knowledge Graph**: Document relationships
+### Domain Services
+- SummaryService: Orchestrates summarization pipeline
+
+### Celery Tasks
+- summarize_episode: Background summarization task
 
 ### Current Implementation Status
-- ✅ Document entity with metadata
-- ✅ Folder hierarchy support
-- ✅ Tag system
-- ⏳ Full-text search implementation
-- ⏳ Vector embeddings integration
-- ⏳ Knowledge graph visualization
+- ✅ Multi-provider support (OpenAI, DeepSeek, OpenRouter)
+- ✅ Custom OpenAI-compatible endpoint support
+- ✅ Key topics and highlights extraction
+- ✅ Background processing with status tracking
 
-## 4. Assistant Domain
+## 4. Settings Domain
 
 ### Purpose
-Manages AI-powered conversations, context management, and intelligent interactions with user's knowledge base.
+Manages AI provider API keys (encrypted at rest) and model configurations.
 
 ### Core Entities
-- **Conversation**: Chat session with the AI
-  - Attributes: id, user_id, title, created_at, updated_at
-- **Message**: Individual chat messages
-  - Attributes: id, conversation_id, role, content, metadata
-  - Roles: user, assistant, system
-- **ContextWindow**: Current conversation context
-  - Attributes: conversation_id, relevant_documents, tokens_used
-- **AIResponse**: Generated response with citations
-  - Attributes: message_id, model, response_time, citations
+- **AIProviderConfig**: Provider configuration
+  - Attributes: id, provider_name, base_url, encrypted_api_key, is_default
+- **AIModelConfig**: Model configuration per provider
+  - Attributes: id, provider_id, model_name, temperature, max_tokens, is_default
 
 ### Key Business Rules
-1. Context window limited to 4000 tokens
-2. Messages rate limited by subscription tier
-3. Conversations automatically summarize after 50 messages
-4. Citations required when referencing documents
-5. Context includes: recent messages, relevant documents, user preferences
+1. API keys encrypted at rest using Fernet
+2. Support multiple providers simultaneously
+3. One default provider and model at a time
+4. Connectivity test endpoint available
 
-### Features
-- **Contextual Search**: Searches knowledge base based on conversation
-- **Summarization**: Automatic conversation summarization
-- **Citations**: Links responses to source documents
-- **Follow-up Suggestions**: AI suggests relevant questions
-- **Memory**: Remembers user preferences and conversation history
-
-### Integration Points
-- **Knowledge Domain**: Retrieves relevant documents for context
-- **User Domain**: Uses user preferences for personalization
-- **Multimedia Domain**: Processes images/documents in messages
+### Domain Services
+- SettingsService: Provider CRUD, encryption, connectivity testing
 
 ### Current Implementation Status
-- ✅ Conversation and message entities
-- ✅ Basic chat functionality
-- ⏳ Context-aware search pending
-- ⏳ Citation system pending
-- ⏳ Conversation summarization pending
-- ⏳ OpenAI integration optimization
-
-## 5. Multimedia Domain
-
-### Purpose
-Handles all non-text content including images, videos, audio files, and their processing for AI consumption.
-
-### Core Entities
-- **MediaFile**: Stored multimedia content
-  - Attributes: id, user_id, filename, mime_type, size, url
-- **MediaProcessing**: Processing job status
-  - Attributes: id, media_id, job_type, status, result
-  - Job types: OCR, transcription, thumbnail, extraction
-- **MediaMetadata**: Extracted information
-  - Attributes: id, media_id, extracted_text, duration, dimensions
-
-### Key Business Rules
-1. File size limited to 100MB per file
-2. Total storage limited by subscription tier
-3. Images auto-compressed to max 2MB
-4. Videos processed for thumbnail generation
-5. Audio files transcribed to text for search
-
-### Processing Pipeline
-1. **Upload**: File validation and storage
-2. **Extraction**: Metadata, thumbnails, OCR
-3. **Indexing**: Make searchable via Knowledge domain
-4. **Embedding**: Generate vector representations
-5. **Cleanup**: Remove temporary files
-
-### Supported Formats
-- **Images**: PNG, JPG, WebP, GIF
-- **Videos**: MP4, WebM, MOV
-- **Audio**: MP3, WAV, M4A
-- **Documents**: PDF, DOCX (for extraction)
-
-### Current Implementation Status
-- ✅ Media file storage
-- ✅ Basic metadata extraction
-- ⏳ OCR implementation (Tesseract/PaddleOCR)
-- ⏳ Audio transcription (Whisper)
-- ⏳ Video thumbnail generation
-- ⏳ AI vision model integration
+- ✅ Fernet encryption for API keys
+- ✅ Multi-provider CRUD
+- ✅ Model configuration per provider
+- ✅ Connectivity testing
 
 ## Cross-Domain Relationships
 
 ```mermaid
 graph TD
-    User -->|owns| Subscription
-    User -->|creates| Document
-    User -->|participates| Conversation
-    User -->|uploads| MediaFile
+    Podcast -->|has many| Episode
+    Episode -->|has one| Transcript
+    Episode -->|has one| Summary
+    Settings -->|configures| Transcription
+    Settings -->|configures| Summary
 
-    Subscription -->|limits| Document
-    Subscription -->|limits| Conversation
-    Subscription -->|limits| MediaFile
-
-    Document -->|referenced_by| Message
-    Document -->|contains| MediaFile
-    Document -->|tagged_with| Tag
-
-    Conversation -->|contains| Message
-    Message -->|references| Document
-    Message -->|includes| MediaFile
-
-    MediaFile -->|processed_to| Document
+    Podcast -->|synced from| xyzrank.com
+    Podcast -->|RSS feeds| Episode
+    Episode -->|audio_url| Transcription
+    Transcription -->|content| Summary
 ```
 
 ## Domain Events
 
-### User Events
-- UserCreated
-- UserEmailVerified
-- UserUpdated
-- UserDeleted
+### Podcast Events
+- RankingsSynced
+- PodcastTracked
+- PodcastUntracked
+- EpisodesDiscovered
 
-### Subscription Events
-- SubscriptionCreated
-- SubscriptionPlanChanged
-- SubscriptionCancelled
-- PaymentProcessed
+### Transcription Events
+- TranscriptionStarted
+- TranscriptionCompleted
+- TranscriptionFailed
 
-### Knowledge Events
-- DocumentCreated
-- DocumentUpdated
-- DocumentDeleted
-- FolderCreated
-- TagCreated
+### Summary Events
+- SummaryStarted
+- SummaryCompleted
+- SummaryFailed
 
-### Assistant Events
-- ConversationStarted
-- MessageAdded
-- ContextUpdated
-- ResponseGenerated
-
-### Multimedia Events
-- MediaUploaded
-- MediaProcessed
-- MediaExtracted
+### Settings Events
+- ProviderCreated
+- ProviderUpdated
+- ProviderDeleted
+- ConnectivityTested
 
 ## Shared Kernel
 
 ### Value Objects (shared across domains)
-- Email
-- UserId
+- PodcastId
+- EpisodeId
+- ProviderId
 - Timestamp
-- Money
-- StorageSize
+- ProcessingStatus (pending, processing, completed, failed)
 
 ### Common Services
-- EventBus: Cross-domain event communication
-- FileStorageService: Centralized file handling
-- SearchService: Unified search interface
-- NotificationService: User notifications
+- CeleryTaskManager: Background task coordination
+- EncryptionService: Fernet encryption/decryption
+- AudioProcessor: Audio download and chunking
+- RSSParser: RSS feed parsing
 
 ## Implementation Guidelines
 
 1. **Respect Domain Boundaries**: Never directly access another domain's repositories
-2. **Use Events for Communication**: Domains communicate through domain events
+2. **Use Celery Tasks for Async**: Long-running operations go through Celery
 3. **Maintain Invariants**: Each domain enforces its own business rules
-4. **Avoid Anemic Models**: Include behavior in domain entities
-5. **Test Domain Logic**: Unit test all business rules and invariants
+4. **Test Domain Logic**: Unit test all business rules and invariants
+5. **Encrypted at Rest**: All API keys must use Fernet encryption
 
 Remember: Each domain has its own expert. When working on features spanning multiple domains, collaborate with the appropriate domain specialists.

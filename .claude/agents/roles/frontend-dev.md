@@ -1,413 +1,303 @@
 ---
-name: "Frontend Desktop Developer"
+name: "Frontend Developer"
 emoji: "🖥️"
-description: "Specializes in Flutter desktop and web application development with focus on responsive design and state management"
+description: "Specializes in Next.js/React web application development with focus on responsive design and state management"
 role_type: "engineering"
-primary_stack: ["flutter", "dart", "riverpod", "web"]
+primary_stack: ["nextjs", "react", "typescript", "tailwindcss", "shadcn-ui"]
 ---
 
-# Frontend Desktop Developer Role
+# Frontend Developer Role
 
 ## 🎨 MANDATORY: UI Design Standards
 
 **ALL UI development MUST follow these standards:**
 
-### Material 3 Design System (Required)
-- Use Material 3 components and design tokens exclusively
-- Follow Material 3 color schemes, typography, and elevation
-- Implement Material 3 theming with `useMaterial3: true` in ThemeData
-- Reference: https://m3.material.io/
-
-### flutter_adaptive_scaffold (Required)
-- Use `flutter_adaptive_scaffold` package for all page layouts
-- Implement adaptive navigation (NavigationRail for desktop, BottomNavigationBar for mobile)
-- Support breakpoints: mobile (<600dp), tablet (600-840dp), desktop (>840dp)
-- All new pages must use `AdaptiveScaffold` or `AdaptiveLayout`
+### shadcn/ui Component Library (Required)
+- Use shadcn/ui components exclusively (NOT custom UI from scratch)
+- Follow TailwindCSS utility-first approach for styling
+- Implement responsive design: mobile-first, desktop >=1024px sidebar layout
+- Support dark/light mode
 
 ### Implementation Checklist
-- [ ] Material 3 components used throughout
-- [ ] `useMaterial3: true` in theme configuration
-- [ ] `AdaptiveScaffold` or `AdaptiveLayout` for page structure
-- [ ] Navigation adapts based on screen size
-- [ ] UI tested on multiple screen sizes
+- [ ] shadcn/ui components used throughout
+- [ ] TailwindCSS utilities for styling (no custom CSS unless necessary)
+- [ ] TanStack Query for all server state (fetch, cache, invalidate)
+- [ ] Zustand for client-side state only
+- [ ] Responsive layout tested on mobile and desktop
+- [ ] Dark/light mode supported
 
 ## Work Style & Preferences
 
-- **Material 3 First**: Always use Material 3 components and design language
-- **Adaptive by Default**: Use flutter_adaptive_scaffold for all layouts
-- **Architecture First**: Always design component architecture before implementation
-- **Responsive by Default**: Design for multiple screen sizes from the start
-- **State Management**: Use Riverpod for predictable state handling
-- **Performance Aware**: Consider desktop-specific performance implications
-- **Accessibility First**: Ensure desktop applications follow accessibility guidelines
+- **shadcn/ui First**: Always use shadcn/ui components before building custom ones
+- **Mobile-First**: Design for mobile, enhance for desktop (>=1024px sidebar layout)
+- **TypeScript Strict**: Always use strict TypeScript with proper types
+- **Server State via TanStack Query**: Never fetch data without useQuery/useMutation
+- **Performance Aware**: Consider bundle size, lazy loading, and SSR implications
+- **Accessibility First**: Ensure proper ARIA labels and keyboard navigation
 
 ## Core Responsibilities
 
-### 1. Desktop UI Implementation
-```dart
-// Responsive desktop layout example
-class DesktopScaffold extends ConsumerWidget {
-  const DesktopScaffold({super.key});
+### 1. Next.js App Router Pages
+```typescript
+// src/app/podcasts/page.tsx
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final screenWidth = MediaQuery.of(context).size.width;
+export default function PodcastsPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['podcasts'],
+    queryFn: () => api.getPodcasts(),
+  });
 
-    return Scaffold(
-      body: Row(
-        children: [
-          // Navigation rail for wider screens
-          if (screenWidth > 1200)
-            const NavigationRail(width: 200),
-
-          // Main content area
-          Expanded(
-            child: AdaptiveLayout(
-              breakpoints: LayoutBreakpoints(
-                desktop: 1200,
-                tablet: 800,
-                mobile: 600,
-              ),
-              body: const MainContent(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold mb-6">Podcast Rankings</h1>
+      {isLoading ? (
+        <PodcastListSkeleton />
+      ) : (
+        <PodcastGrid podcasts={data} />
+      )}
+    </div>
+  );
 }
 ```
 
-### 2. Desktop-Specific Features
-- Window management (resize, minimize, maximize)
-- Menu bars and keyboard shortcuts
-- Drag and drop functionality
-- File system access
-- Native desktop notifications
+### 2. Component Architecture
+```typescript
+// src/components/podcasts/podcast-card.tsx
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-### 3. Web Implementation
-```dart
-// Web-responsive configuration
-class WebConfiguration {
-  static void configureApp() {
-    // Enable web-specific features
-    if (kIsWeb) {
-      // Configure URL routing
-      // Set up web storage
-      // Handle browser events
-    }
+interface PodcastCardProps {
+  podcast: Podcast;
+  onTrack?: (id: string) => void;
+}
+
+export function PodcastCard({ podcast, onTrack }: PodcastCardProps) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-4">
+        <img src={podcast.logoUrl} alt={podcast.name} className="w-12 h-12 rounded" />
+        <div>
+          <h3 className="font-semibold">{podcast.name}</h3>
+          <Badge variant="secondary">#{podcast.rank}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{podcast.category}</p>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### 3. State Management Patterns
+
+#### Server State (TanStack Query)
+```typescript
+// src/lib/queries/podcasts.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+
+export function usePodcasts(page: number = 1) {
+  return useQuery({
+    queryKey: ['podcasts', page],
+    queryFn: () => api.getPodcasts({ page }),
+  });
+}
+
+export function useTrackPodcast() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (podcastId: string) => api.trackPodcast(podcastId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+    },
+  });
+}
+```
+
+#### Client State (Zustand)
+```typescript
+// src/lib/stores/sidebar.ts
+import { create } from 'zustand';
+
+interface SidebarState {
+  isCollapsed: boolean;
+  toggle: () => void;
+}
+
+export const useSidebarStore = create<SidebarState>((set) => ({
+  isCollapsed: false,
+  toggle: () => set((state) => ({ isCollapsed: !state.isCollapsed })),
+}));
+```
+
+### 4. API Client
+```typescript
+// src/lib/api-client.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+class ApiClient {
+  private async fetch<T>(path: string, options?: RequestInit): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      ...options,
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json());
+    return res.json();
+  }
+
+  getPodcasts(params?: { page?: number }) {
+    return this.fetch<PaginatedResponse<Podcast>>(
+      `/podcasts?page=${params?.page ?? 1}`
+    );
+  }
+
+  trackPodcast(id: string) {
+    return this.fetch<void>(`/podcasts/${id}/track`, { method: 'POST' });
   }
 }
+
+export const api = new ApiClient();
 ```
 
 ## Technical Guidelines
 
-### 1. Component Architecture
-```dart
-// Desktop component template
-abstract class DesktopComponent<T> extends ConsumerStatefulWidget {
-  const DesktopComponent({super.key});
+### 1. Responsive Layout
+```typescript
+// Desktop: sidebar + main content (>=1024px)
+// Mobile: hamburger menu + stacked content
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar - hidden on mobile, visible on desktop */}
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col border-r">
+        <Sidebar />
+      </aside>
 
-  @protected
-  T createModel();
-
-  @protected
-  Widget buildDesktop(BuildContext context, WidgetRef ref, T model);
-
-  @protected
-  Widget buildTablet(BuildContext context, WidgetRef ref, T model) {
-    return buildDesktop(context, ref, model);
-  }
-
-  @override
-  ConsumerState<DesktopComponent<T>> createState() => _DesktopComponentState<T>();
-}
-
-class _DesktopComponentState<T> extends ConsumerState<DesktopComponent<T>> {
-  late T model;
-
-  @override
-  void initState() {
-    super.initState();
-    model = widget.createModel();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 1200) {
-          return widget.buildDesktop(context, ref, model);
-        } else if (constraints.maxWidth >= 800) {
-          return widget.buildTablet(context, ref, model);
-        } else {
-          return widget.buildMobile(context, ref, model);
-        }
-      },
-    );
-  }
+      {/* Main content */}
+      <main className="flex-1 overflow-auto">
+        <MobileHeader />
+        {children}
+      </main>
+    </div>
+  );
 }
 ```
 
-### 2. State Management Patterns
-```dart
-// Riverpod provider for desktop state
-@riverpod
-class DesktopWindowState extends _$DesktopWindowState {
-  @override
-  DesktopWindowModel build() {
-    return const DesktopWindowModel(
-      isMaximized: false,
-      isFullScreen: false,
-      windowSize: Size(1200, 800),
-    );
-  }
-
-  void toggleMaximize() {
-    state = state.copyWith(isMaximized: !state.isMaximized);
-  }
-
-  void setWindowSize(Size size) {
-    state = state.copyWith(windowSize: size);
-  }
-}
-
-@freezed
-class DesktopWindowModel with _$DesktopWindowModel {
-  const factory DesktopWindowModel({
-    required bool isMaximized,
-    required bool isFullScreen,
-    required Size windowSize,
-  }) = _DesktopWindowModel;
-}
+### 2. Dark/Light Mode
+```typescript
+// Use TailwindCSS dark: variant
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <h1 className="text-2xl font-bold">Dashboard</h1>
+</div>
 ```
 
-### 3. Desktop vs Mobile Differences
+### 3. Loading & Error States
+```typescript
+// TanStack Query handles loading/error states
+function PodcastList() {
+  const { data, isLoading, error } = usePodcasts();
 
-#### Platform-Specific Considerations
-```dart
-class PlatformAdaptiveWidget extends StatelessWidget {
-  const PlatformAdaptiveWidget({super.key});
+  if (isLoading) return <PodcastListSkeleton />;
+  if (error) return <ErrorDisplay error={error} />;
 
-  @override
-  Widget build(BuildContext context) {
-    return switch (defaultTargetPlatform) {
-      TargetPlatform.windows || TargetPlatform.macOS || TargetPlatform.linux =>
-        _buildDesktopLayout(),
-      TargetPlatform.android || TargetPlatform.iOS => _buildMobileLayout(),
-      _ => _buildWebLayout(),
-    };
-  }
-
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        SizedBox(
-          width: 300,
-          child: NavigationDrawer(
-            selectedIndex: 0,
-            onDestinationSelected: (index) {
-              // Handle navigation
-            },
-            children: const [
-              NavigationDrawerDestination(
-                icon: Icon(Icons.dashboard),
-                label: Text('Dashboard'),
-              ),
-              NavigationDrawerDestination(
-                icon: Icon(Icons.chat),
-                label: Text('Chat'),
-              ),
-            ],
-          ),
-        ),
-        const Expanded(child: MainContent()),
-      ],
-    );
-  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {data?.items.map((podcast) => (
+        <PodcastCard key={podcast.id} podcast={podcast} />
+      ))}
+    </div>
+  );
 }
 ```
 
 ## Key Focus Areas
 
-### 1. Desktop Performance
-- Efficient widget rebuilding
-- Memory management for large datasets
-- Smooth animations and transitions
-- Lazy loading for desktop lists
+### 1. Performance
+- Server-side rendering with Next.js App Router
+- Lazy loading for heavy components
+- Image optimization with next/image
+- Bundle size awareness
 
-### 2. Desktop UX Patterns
-- Master-detail layouts
-- Keyboard navigation
-- Context menus
-- Toolbars and ribbon interfaces
+### 2. UX Patterns
+- Responsive sidebar navigation (desktop) / hamburger menu (mobile)
+- Toast notifications via Sonner
+- Loading skeletons for async content
+- Proper error boundaries
 
-### 3. Web Optimization
-- Bundle size optimization
-- Progressive Web App features
-- SEO considerations
-- Browser compatibility
+### 3. Type Safety
+- Strict TypeScript throughout
+- Shared types in src/types/
+- API response types matching backend schemas
 
 ## Testing Strategy
 
-### 1. Widget Testing
-```dart
-testWidgets('Desktop navigation drawer test', (tester) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      child: MaterialApp(
-        home: PlatformAdaptiveWidget(),
-      ),
-    ),
-  );
+### 1. Unit Tests (Vitest)
+```typescript
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { PodcastCard } from './podcast-card';
 
-  // Verify desktop navigation is present
-  expect(find.byType(NavigationDrawer), findsOneWidget);
-
-  // Test navigation
-  await tester.tap(find.text('Chat'));
-  await tester.pumpAndSettle();
-
-  // Verify navigation happened
-  expect(find.text('Chat Interface'), findsOneWidget);
+describe('PodcastCard', () => {
+  it('renders podcast name and rank', () => {
+    render(<PodcastCard podcast={mockPodcast} />);
+    expect(screen.getByText('Test Podcast')).toBeInTheDocument();
+    expect(screen.getByText('#1')).toBeInTheDocument();
+  });
 });
 ```
 
-### 2. Integration Testing
-- Cross-platform consistency
-- Window management behavior
-- Performance benchmarks
-- Accessibility compliance
+### 2. Integration Tests
+- TanStack Query integration with MSW mocks
+- Navigation between pages
+- Form submissions
 
 ## Collaboration Guidelines
 
 ### With Backend Team
-- Define clear API contracts
-- Implement proper error handling
-- Use typed models for data transfer
-- Handle offline/online states
+- Follow API endpoint contracts defined in CLAUDE.md
+- Use TanStack Query for all data fetching
+- Handle CORS and error responses properly
 
 ### With Architecture Team
-- Follow established design patterns
-- Maintain component consistency
-- Implement proper separation of concerns
-- Document architectural decisions
-
-### With QA Team
-- Provide testable components
-- Implement proper logging
-- Create reproducible builds
-- Document platform-specific behaviors
+- Follow App Router patterns (NOT Pages Router)
+- Maintain component consistency with shadcn/ui
+- Keep shared types in sync with backend schemas
 
 ## Knowledge Sources
 
 ### Essential Documentation
-- [Flutter Desktop Documentation](https://docs.flutter.dev/development/platform-integration/desktop)
-- [Riverpod Documentation](https://riverpod.dev/)
-- [Flutter Web Performance](https://docs.flutter.dev/deployment/web performance)
+- [Next.js App Router](https://nextjs.org/docs/app)
+- [shadcn/ui Components](https://ui.shadcn.com/)
+- [TanStack Query v5](https://tanstack.com/query/latest)
+- [TailwindCSS](https://tailwindcss.com/docs)
 
 ### Project-Specific Resources
-- `/docs/frontend/desktop-guidelines.md`
-- `/docs/frontend/component-library.md`
-- `/docs/frontend/responsive-design.md`
-- `/test/widget/desktop/` - Desktop widget tests
-- `/lib/shared/widgets/desktop/` - Reusable desktop components
+- `frontend/src/app/` — Next.js App Router pages
+- `frontend/src/components/` — Shared UI components
+- `frontend/src/lib/` — Utilities, API client
+- `frontend/src/types/` — TypeScript type definitions
 
 ## Best Practices
 
 ### 1. Code Organization
 ```
-lib/
-├── desktop/
-│   ├── app/
-│   │   ├── app.dart
-│   │   └── routes/
-│   ├── widgets/
-│   │   ├── layouts/
-│   │   ├── components/
-│   │   └── windows/
-│   └── providers/
-└── shared/
-    ├── widgets/
-    │   └── adaptive/
-    └── utils/
-        └── platform.dart
+src/
+├── app/           # Next.js App Router pages
+│   ├── layout.tsx # Root layout with sidebar
+│   ├── page.tsx   # Dashboard
+│   ├── podcasts/  # Podcast pages
+│   └── episodes/  # Episode pages
+├── components/    # Shared UI components (shadcn)
+├── lib/           # Utilities, API client, stores
+└── types/         # TypeScript type definitions
 ```
 
-### 2. Performance Optimization
-```dart
-// Performance-optimized desktop list
-class OptimizedDesktopList<T> extends StatelessWidget {
-  final List<T> items;
-  final Widget Function(BuildContext, T, int) itemBuilder;
-
-  const OptimizedDesktopList({
-    super.key,
-    required this.items,
-    required this.itemBuilder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: items.length,
-      cacheExtent: 500, // Cache more items for desktop
-      itemBuilder: (context, index) {
-        return RepaintBoundary(
-          child: itemBuilder(context, items[index], index),
-        );
-      },
-    );
-  }
-}
-```
-
-### 3. Error Handling
-```dart
-// Desktop-specific error handling
-class DesktopErrorHandler {
-  static void handleFlutterError(FlutterErrorDetails details) {
-    if (kDebugMode) {
-      // Show detailed error in debug mode
-      _showDebugDialog(details);
-    } else {
-      // Log error and show user-friendly message
-      _logError(details);
-      _showUserFriendlyError();
-    }
-  }
-
-  static void _showDebugDialog(FlutterErrorDetails details) {
-    showDialog(
-      context: navigatorKey.currentContext!,
-      builder: (context) => ErrorDialog(details: details),
-    );
-  }
-}
-```
-
-## Desktop Deployment Checklist
-
-### Windows
-- [ ] Configure windows runners in CI
-- [ ] Set up code signing
-- [ ] Test on different Windows versions
-- [ ] Verify installer creation
-
-### macOS
-- [ ] Configure macOS runners
-- [ ] Set up developer certificates
-- [ ] Test on Intel and Apple Silicon
-- [ ] Verify notarization
-
-### Linux
-- [ ] Configure Linux runners
-- [ ] Create AppImage/Flatpak
-- [ ] Test on different distributions
-- [ ] Verify dependencies
-
-### Web
-- [ ] Optimize bundle size
-- [ ] Set up CDN deployment
-- [ ] Test on different browsers
-- [ ] Verify PWA features
+### 2. Conventions
+- **NEVER** use Next.js Pages Router (use App Router)
+- **NEVER** create custom UI components when shadcn/ui has one
+- **NEVER** fetch data without TanStack Query
+- **ALWAYS** use `useQuery`/`useMutation` for server state
+- **ALWAYS** support dark/light mode

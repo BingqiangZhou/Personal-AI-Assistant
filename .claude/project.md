@@ -1,18 +1,18 @@
-# Personal AI Assistant Project
+# PodDigest — Podcast Knowledge Hub
 
-A personal AI assistant tool with information stream management, knowledge base, and multimedia capabilities.
+Podcast ranking monitor + transcription + AI summarization web platform.
 
 ## Tech Stack
-- **Backend**: FastAPI (Python async) - managed with `uv`
-- **Frontend**: Flutter (cross-platform)
-- **Database**: PostgreSQL + Redis
-- **AI**: OpenAI API / local model integration
+- **Backend**: FastAPI (Python 3.11+) — managed with `uv`
+- **Frontend**: Next.js 15 / React 19 / TypeScript / TailwindCSS / shadcn-ui
+- **Database**: PostgreSQL 15 + Redis 7
+- **Task Queue**: Celery 5
+- **AI**: OpenAI Whisper + configurable LLM providers (OpenAI/DeepSeek/OpenRouter)
 
 ## Key Directories
-- `backend/`: FastAPI backend API
-- `frontend/`: Flutter application
-- `docs/`: Project documentation
-- `specs/`: Requirements and specifications
+- `backend/`: FastAPI backend (DDD layout)
+- `frontend/`: Next.js web frontend
+- `docker/`: Docker Compose deployment
 
 ## Development Commands
 See `CLAUDE.md` for detailed commands and project rules.

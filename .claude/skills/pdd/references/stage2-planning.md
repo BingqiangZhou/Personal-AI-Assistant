@@ -49,7 +49,7 @@
 
 ```markdown
 ### [TASK-ID] 任务名称
-- **类型**: 后端/前端/移动端/架构/测试/DevOps
+- **类型**: 后端/前端/架构/测试/DevOps
 - **优先级**: P0/P1/P2/P3
 - **预计工时**: Xh
 - **依赖**: [TASK-XXX]
@@ -99,10 +99,9 @@
 | 任务类型 | 分配角色 | 技能要求 |
 |----------|----------|----------|
 | 后端开发 | @backend-dev | FastAPI, Python, 异步编程 |
-| 前端开发 | @frontend-dev | Flutter, Material 3, 状态管理 |
-| 移动端 | @mobile-dev | Flutter, iOS/Android适配 |
+| 前端开发 | @frontend-dev | Next.js, React, TypeScript, shadcn/ui |
 | 架构设计 | @architect | 系统设计, DDD, 微服务 |
-| 测试 | @test-engineer | 自动化测试, 性能测试 |
+| 测试 | @test-engineer | pytest, Vitest, 自动化测试 |
 | DevOps | @devops-engineer | Docker, CI/CD, 监控 |
 
 ### 依赖管理
