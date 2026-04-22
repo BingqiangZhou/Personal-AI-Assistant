@@ -53,7 +53,7 @@ jobs:
 
           awk -v version="$VERSION" '
             BEGIN { found = 0; printing = 0 }
-            /^## \[' version '\]/ { found = 1; printing = 1; next }
+            $0 ~ "^## \\[" version "\\]" { found = 1; printing = 1; next }
             /^## \[/ && found { printing = 0; exit }
             printing { print }
           ' CHANGELOG.md > changelog_content.md
