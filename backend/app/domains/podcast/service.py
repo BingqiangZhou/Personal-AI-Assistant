@@ -232,6 +232,7 @@ class EpisodeService:
 
         total_created = 0
         total_updated = 0
+        new_episode_ids: list[str] = []
 
         for podcast in tracked_podcasts:
             if not podcast.rss_feed_url:
@@ -307,7 +308,7 @@ class EpisodeService:
                         except (ValueError, TypeError):
                             duration = duration
 
-                    await self.repo.create(
+                    episode = await self.repo.create(
                         {
                             "podcast_id": podcast.id,
                             "title": entry.get("title", "Untitled"),
@@ -318,6 +319,7 @@ class EpisodeService:
                         }
                     )
                     total_created += 1
+                    new_episode_ids.append(str(episode.id))
 
             except Exception as e:
                 logger.error(f"Error syncing episodes for podcast {podcast.name}: {e}")
@@ -328,4 +330,5 @@ class EpisodeService:
         return {
             "created": total_created,
             "updated": total_updated,
+            "new_episode_ids": new_episode_ids,
         }

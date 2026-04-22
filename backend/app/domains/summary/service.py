@@ -56,7 +56,7 @@ class SummaryService:
 
         url = f"{base_url.rstrip('/')}/chat/completions"
 
-        prompt = SUMMARY_PROMPT.format(transcript=transcript[:30000])  # Limit to avoid token overflow
+        prompt = SUMMARY_PROMPT.format(transcript=transcript)
 
         payload = {
             "model": model,

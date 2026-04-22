@@ -30,9 +30,13 @@ celery_app.conf.update(
             "task": "app.domains.podcast.tasks.sync_rankings_task",
             "schedule": 86400.0,  # 24 hours
         },
-        "sync-episodes-every-6-hours": {
+        "sync-episodes-hourly": {
             "task": "app.domains.podcast.tasks.sync_episodes_task",
-            "schedule": 21600.0,  # 6 hours
+            "schedule": 3600.0,  # 1 hour
+        },
+        "cleanup-old-audio-files": {
+            "task": "app.domains.transcription.tasks.cleanup_audio_task",
+            "schedule": 86400.0,  # daily
         },
     },
 )

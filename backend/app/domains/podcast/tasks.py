@@ -35,6 +35,8 @@ def sync_rankings_task(self) -> dict:
 def sync_episodes_task(self, podcast_id: str | None = None) -> dict:
     """Celery task: sync episodes from RSS feeds.
 
+    After syncing, automatically dispatch transcription tasks for new episodes.
+
     Args:
         podcast_id: If provided, sync only this podcast. Otherwise sync all tracked.
     """
@@ -61,10 +63,21 @@ def sync_episodes_task(self, podcast_id: str | None = None) -> dict:
                 raise
 
     try:
-        return asyncio.run(_run())
+        result = asyncio.run(_run())
     except Exception as exc:
         logger.error(f"Episode sync failed: {exc}")
         raise self.retry(exc=exc, countdown=60)
+
+    # Dispatch transcription tasks for new episodes
+    new_episode_ids = result.get("new_episode_ids", [])
+    for episode_id in new_episode_ids:
+        celery_app.send_task(
+            "app.domains.transcription.tasks.transcribe_episode_task",
+            args=[episode_id],
+        )
+        logger.info(f"Dispatched transcription task for episode {episode_id}")
+
+    return result
 
 
 @celery_app.task(name="app.domains.podcast.tasks.sync_podcast_episodes_task", bind=True, max_retries=3)
