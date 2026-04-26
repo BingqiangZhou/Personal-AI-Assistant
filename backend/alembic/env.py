@@ -13,7 +13,7 @@ from app.core.database import Base
 from app.domains.podcast.models import Episode, Podcast, PodcastRankingHistory  # noqa: F401
 from app.domains.transcription.models import Transcript  # noqa: F401
 from app.domains.summary.models import Summary  # noqa: F401
-from app.domains.settings.models import AIModelConfig, AIProviderConfig  # noqa: F401
+from app.domains.settings.models import AIModelConfig, AIProviderConfig, PromptTemplate  # noqa: F401
 
 config = context.config
 

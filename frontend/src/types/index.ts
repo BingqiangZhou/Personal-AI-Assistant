@@ -30,6 +30,7 @@ export interface Podcast {
   avg_play_count: number | null;
   last_synced_at: string | null;
   is_tracked: boolean;
+  priority: number;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +71,9 @@ export interface Transcript {
   content: string;
   language: string | null;
   word_count: number | null;
+  char_count: number | null;
+  processing_duration_sec: number | null;
+  rating: number | null;
   model_used: string | null;
   segments: TranscriptSegment[] | null;
   created_at: string;
@@ -83,6 +87,11 @@ export interface Summary {
   highlights: string[];
   model_used: string | null;
   provider: string | null;
+  prompt_version_id: string | null;
+  quality_score: number | null;
+  rating: number | null;
+  feedback: string | null;
+  processing_duration_sec: number | null;
   created_at: string;
 }
 
@@ -107,6 +116,16 @@ export interface AIModel {
   max_tokens: number;
   is_default: boolean;
   created_at: string;
+}
+
+export interface PromptTemplate {
+  id: string;
+  name: string;
+  content: string;
+  version: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // ===== API Types =====
@@ -183,6 +202,22 @@ export interface SyncResponse {
   task_id?: string;
 }
 
+export interface FeedbackRequest {
+  rating: number;
+  feedback?: string;
+}
+
+export interface BatchRequest {
+  episode_ids?: string[];
+  filter_status?: string;
+  force?: boolean;
+}
+
+export interface CreatePromptRequest {
+  name: string;
+  content: string;
+}
+
 // ===== Dashboard Types =====
 
 export interface DashboardStats {
@@ -190,4 +225,21 @@ export interface DashboardStats {
   tracked_podcasts: number;
   total_episodes: number;
   transcribed_episodes: number;
+}
+
+export interface ProductionDayTrend {
+  date: string;
+  transcribed: number;
+  summarized: number;
+}
+
+export interface ProductionStats {
+  total_episodes: number;
+  transcribed: number;
+  summarized: number;
+  transcription_success_rate: number | null;
+  summary_success_rate: number | null;
+  avg_transcription_duration_sec: number | null;
+  avg_summary_duration_sec: number | null;
+  last_7_days: ProductionDayTrend[];
 }

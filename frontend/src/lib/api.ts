@@ -11,6 +11,7 @@ import type {
   Summary,
   AIProvider,
   AIModel,
+  PromptTemplate,
   PaginatedResponse,
   PodcastListParams,
   EpisodeListParams,
@@ -21,6 +22,10 @@ import type {
   TestProviderResponse,
   SyncResponse,
   DashboardStats,
+  ProductionStats,
+  FeedbackRequest,
+  BatchRequest,
+  CreatePromptRequest,
 } from "@/types";
 
 // ===== Base Config =====
@@ -199,6 +204,77 @@ async function syncEpisodes(): Promise<SyncResponse> {
   return fetcher("/episodes/sync", { method: "POST" });
 }
 
+// ===== Batch API =====
+
+async function batchTranscribe(data: BatchRequest): Promise<SyncResponse> {
+  return fetcher("/episodes/batch/transcribe", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async function batchSummarize(data: BatchRequest): Promise<SyncResponse> {
+  return fetcher("/episodes/batch/summarize", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ===== Feedback API =====
+
+async function submitTranscriptFeedback(
+  transcriptId: string,
+  data: FeedbackRequest
+): Promise<Transcript> {
+  return fetcher(`/transcripts/${transcriptId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async function submitSummaryFeedback(
+  summaryId: string,
+  data: FeedbackRequest
+): Promise<Summary> {
+  return fetcher(`/summaries/${summaryId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ===== Priority API =====
+
+async function setPodcastPriority(
+  podcastId: string,
+  priority: number
+): Promise<{ message: string; priority: number }> {
+  return fetcher(`/podcasts/${podcastId}/priority`, {
+    method: "PATCH",
+    body: JSON.stringify({ priority }),
+  });
+}
+
+// ===== Prompt Template API =====
+
+async function listPromptTemplates(): Promise<{ items: PromptTemplate[]; total: number }> {
+  return fetcher("/settings/prompts");
+}
+
+async function getActivePrompt(): Promise<PromptTemplate> {
+  return fetcher("/settings/prompts/active");
+}
+
+async function createPromptTemplate(data: CreatePromptRequest): Promise<PromptTemplate> {
+  return fetcher("/settings/prompts", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async function activatePromptTemplate(id: string): Promise<PromptTemplate> {
+  return fetcher(`/settings/prompts/${id}/activate`, { method: "PUT" });
+}
+
 // ===== Dashboard API (composite) =====
 
 async function getDashboardStats(): Promise<DashboardStats> {
@@ -216,6 +292,10 @@ async function getDashboardStats(): Promise<DashboardStats> {
     total_episodes: episodesData.total,
     transcribed_episodes: transcribedData.total,
   };
+}
+
+async function getProductionStats(): Promise<ProductionStats> {
+  return fetcher("/stats/production");
 }
 
 // ===== TanStack Query Hooks =====
@@ -465,5 +545,106 @@ export function useDashboardStats() {
     queryKey: ["dashboard-stats"],
     queryFn: getDashboardStats,
     refetchInterval: 30000,
+  });
+}
+
+// -- Production Stats --
+
+export function useProductionStats() {
+  return useQuery({
+    queryKey: ["production-stats"],
+    queryFn: getProductionStats,
+    refetchInterval: 60000,
+  });
+}
+
+// -- Batch Operations --
+
+export function useBatchTranscribe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: batchTranscribe,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["episodes"] });
+      queryClient.invalidateQueries({ queryKey: ["production-stats"] });
+    },
+  });
+}
+
+export function useBatchSummarize() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: batchSummarize,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["episodes"] });
+      queryClient.invalidateQueries({ queryKey: ["production-stats"] });
+    },
+  });
+}
+
+// -- Feedback --
+
+export function useSubmitTranscriptFeedback() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: FeedbackRequest }) =>
+      submitTranscriptFeedback(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transcript"] });
+    },
+  });
+}
+
+export function useSubmitSummaryFeedback() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: FeedbackRequest }) =>
+      submitSummaryFeedback(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+    },
+  });
+}
+
+// -- Priority --
+
+export function useSetPodcastPriority() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, priority }: { id: string; priority: number }) =>
+      setPodcastPriority(id, priority),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["podcasts"] });
+      queryClient.invalidateQueries({ queryKey: ["podcast"] });
+    },
+  });
+}
+
+// -- Prompt Templates --
+
+export function usePromptTemplates() {
+  return useQuery({
+    queryKey: ["prompt-templates"],
+    queryFn: listPromptTemplates,
+  });
+}
+
+export function useCreatePromptTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPromptTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prompt-templates"] });
+    },
+  });
+}
+
+export function useActivatePromptTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: activatePromptTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prompt-templates"] });
+    },
   });
 }

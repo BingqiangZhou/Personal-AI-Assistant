@@ -5,15 +5,19 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decrypt_api_key, encrypt_api_key
-from app.domains.settings.models import AIModelConfig, AIProviderConfig
+from app.domains.settings.models import AIModelConfig, AIProviderConfig, PromptTemplate
 from app.domains.settings.repository import (
     AIModelRepository,
     AIProviderRepository,
+    PromptTemplateRepository,
     SettingsRepository,
 )
 from app.domains.settings.schemas import (
     ModelCreate,
     ModelResponse,
+    PromptTemplateCreate,
+    PromptTemplateListResponse,
+    PromptTemplateResponse,
     ProviderCreate,
     ProviderResponse,
     ProviderUpdate,
@@ -29,6 +33,7 @@ class SettingsService:
         self.provider_repo = AIProviderRepository(session)
         self.model_repo = AIModelRepository(session)
         self.settings_repo = SettingsRepository(session)
+        self.prompt_repo = PromptTemplateRepository(session)
 
     # ---- Provider CRUD ----
 
@@ -208,3 +213,46 @@ class SettingsService:
                 success=False,
                 message=f"Unexpected error: {str(e)}",
             )
+
+    # ---- Prompt Template CRUD ----
+
+    async def list_prompt_templates(self) -> PromptTemplateListResponse:
+        templates = await self.prompt_repo.get_multi(limit=100)
+        items = [PromptTemplateResponse.model_validate(t) for t in templates]
+        return PromptTemplateListResponse(items=items, total=len(items))
+
+    async def create_prompt_template(self, data: PromptTemplateCreate) -> PromptTemplateResponse:
+        latest_version = await self.prompt_repo.get_latest_version()
+        template = await self.prompt_repo.create({
+            "name": data.name,
+            "content": data.content,
+            "version": latest_version + 1,
+            "is_active": True,
+        })
+        # Deactivate all other templates
+        all_templates = await self.prompt_repo.get_multi(limit=100)
+        for t in all_templates:
+            if t.id != template.id and t.is_active:
+                await self.prompt_repo.update(t.id, {"is_active": False})
+        await self.session.flush()
+        return PromptTemplateResponse.model_validate(template)
+
+    async def activate_prompt_template(self, template_id: UUID) -> PromptTemplateResponse | None:
+        template = await self.prompt_repo.get(template_id)
+        if template is None:
+            return None
+        # Deactivate all
+        all_templates = await self.prompt_repo.get_multi(limit=100)
+        for t in all_templates:
+            if t.is_active:
+                await self.prompt_repo.update(t.id, {"is_active": False})
+        # Activate selected
+        template = await self.prompt_repo.update(template_id, {"is_active": True})
+        await self.session.flush()
+        return PromptTemplateResponse.model_validate(template)
+
+    async def get_active_prompt(self) -> PromptTemplateResponse | None:
+        template = await self.prompt_repo.get_active()
+        if template is None:
+            return None
+        return PromptTemplateResponse.model_validate(template)

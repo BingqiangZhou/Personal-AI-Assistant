@@ -10,6 +10,9 @@ from app.domains.settings.schemas import (
     ModelCreate,
     ModelListResponse,
     ModelResponse,
+    PromptTemplateCreate,
+    PromptTemplateListResponse,
+    PromptTemplateResponse,
     ProviderCreate,
     ProviderListResponse,
     ProviderResponse,
@@ -155,3 +158,48 @@ async def delete_model(
     deleted = await service.delete_model(model_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Model not found")
+
+
+# ---- Prompt Templates ----
+
+@router.get("/settings/prompts", response_model=PromptTemplateListResponse)
+async def list_prompt_templates(
+    db: AsyncSession = Depends(get_db),
+) -> PromptTemplateListResponse:
+    service = SettingsService(db)
+    return await service.list_prompt_templates()
+
+
+@router.get("/settings/prompts/active", response_model=PromptTemplateResponse)
+async def get_active_prompt(
+    db: AsyncSession = Depends(get_db),
+) -> PromptTemplateResponse:
+    service = SettingsService(db)
+    template = await service.get_active_prompt()
+    if template is None:
+        raise HTTPException(status_code=404, detail="No active prompt template")
+    return template
+
+
+@router.post("/settings/prompts", response_model=PromptTemplateResponse, status_code=201)
+async def create_prompt_template(
+    data: PromptTemplateCreate,
+    db: AsyncSession = Depends(get_db),
+) -> PromptTemplateResponse:
+    service = SettingsService(db)
+    try:
+        return await service.create_prompt_template(data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/settings/prompts/{template_id}/activate", response_model=PromptTemplateResponse)
+async def activate_prompt_template(
+    template_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> PromptTemplateResponse:
+    service = SettingsService(db)
+    template = await service.activate_prompt_template(template_id)
+    if template is None:
+        raise HTTPException(status_code=404, detail="Prompt template not found")
+    return template

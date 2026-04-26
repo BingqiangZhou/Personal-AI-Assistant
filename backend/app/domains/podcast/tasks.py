@@ -1,5 +1,8 @@
+import asyncio
 import logging
 from uuid import UUID
+
+from sqlalchemy import select
 
 from app.core.celery_app import celery_app
 from app.core.database import async_session_factory
@@ -65,14 +68,34 @@ def sync_episodes_task(self, podcast_id: str | None = None) -> dict:
         logger.error(f"Episode sync failed: {exc}")
         raise self.retry(exc=exc, countdown=60)
 
-    # Dispatch transcription tasks for new episodes
+    # Dispatch transcription tasks for new episodes with priority
     new_episode_ids = result.get("new_episode_ids", [])
+
+    # Fetch priorities for podcasts in a separate session
+    if new_episode_ids:
+        async def _get_priorities():
+            async with async_session_factory() as session:
+                from app.domains.podcast.models import Episode, Podcast
+                stmt = (
+                    select(Episode.id, Podcast.priority)
+                    .join(Podcast, Episode.podcast_id == Podcast.id)
+                    .where(Episode.id.in_([UUID(eid) for eid in new_episode_ids]))
+                )
+                res = await session.execute(stmt)
+                return {str(row[0]): row[1] for row in res.all()}
+
+        priorities = asyncio.run(_get_priorities())
+    else:
+        priorities = {}
+
     for episode_id in new_episode_ids:
+        priority = priorities.get(episode_id, 0)
         celery_app.send_task(
             "app.domains.transcription.tasks.transcribe_episode_task",
             args=[episode_id],
+            priority=priority,
         )
-        logger.info(f"Dispatched transcription task for episode {episode_id}")
+        logger.info(f"Dispatched transcription task for episode {episode_id} (priority={priority})")
 
     return result
 

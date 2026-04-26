@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from uuid import UUID
 
 import aiohttp
@@ -14,7 +15,7 @@ from app.domains.summary.repository import SummaryRepository
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-SUMMARY_PROMPT = """You are an expert podcast summarizer. Given the following transcript of a podcast episode, generate a comprehensive summary.
+DEFAULT_SUMMARY_PROMPT = """You are an expert podcast summarizer. Given the following transcript of a podcast episode, generate a comprehensive summary.
 
 Please provide:
 1. A detailed summary of the episode content
@@ -34,16 +35,40 @@ class SummaryService:
         self.repo = SummaryRepository(session)
         self.episode_repo = EpisodeRepository(session)
 
+    def _validate_summary_output(self, parsed: dict) -> dict:
+        """Validate and sanitize LLM summary output."""
+        summary_text = parsed.get("summary", "")
+        key_topics = parsed.get("key_topics", [])
+        highlights = parsed.get("highlights", [])
+
+        if not isinstance(summary_text, str) or len(summary_text.strip()) < 50:
+            raise ValueError(f"Summary too short or invalid: {len(summary_text)} chars")
+        if not isinstance(key_topics, list) or len(key_topics) == 0:
+            raise ValueError("key_topics is empty or not a list")
+        if not isinstance(highlights, list) or len(highlights) == 0:
+            raise ValueError("highlights is empty or not a list")
+
+        key_topics = [str(t) for t in key_topics if t]
+        highlights = [str(h) for h in highlights if h]
+
+        return {
+            "content": summary_text.strip(),
+            "key_topics": key_topics,
+            "highlights": highlights,
+        }
+
     async def generate_summary(
         self,
         transcript: str,
         provider_config: dict | None = None,
+        prompt_template: str | None = None,
     ) -> dict:
         """Generate a summary from transcript text using configured LLM.
 
         Args:
             transcript: The transcript text.
             provider_config: Provider configuration with api_key, base_url, model.
+            prompt_template: Custom prompt template. Uses DEFAULT_SUMMARY_PROMPT if None.
 
         Returns:
             Dict with 'content', 'key_topics', 'highlights'.
@@ -56,7 +81,8 @@ class SummaryService:
 
         url = f"{base_url.rstrip('/')}/chat/completions"
 
-        prompt = SUMMARY_PROMPT.format(transcript=transcript)
+        prompt_text = prompt_template or DEFAULT_SUMMARY_PROMPT
+        prompt = prompt_text.format(transcript=transcript)
 
         payload = {
             "model": model,
@@ -66,6 +92,7 @@ class SummaryService:
             ],
             "temperature": temperature,
             "max_tokens": max_tokens,
+            "response_format": {"type": "json_object"},
         }
 
         headers = {
@@ -73,34 +100,35 @@ class SummaryService:
             "Content-Type": "application/json",
         }
 
-        async with aiohttp.ClientSession() as http_session:
-            async with http_session.post(
-                url, json=payload, headers=headers,
-                timeout=aiohttp.ClientTimeout(total=120),
-            ) as resp:
-                if resp.status != 200:
-                    error_text = await resp.text()
-                    raise RuntimeError(f"LLM API error ({resp.status}): {error_text}")
-                result = await resp.json()
+        max_retries = 2
+        content = None
 
-        content = result["choices"][0]["message"]["content"]
+        for attempt in range(max_retries + 1):
+            async with aiohttp.ClientSession() as http_session:
+                async with http_session.post(
+                    url, json=payload, headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=120),
+                ) as resp:
+                    if resp.status != 200:
+                        error_text = await resp.text()
+                        raise RuntimeError(f"LLM API error ({resp.status}): {error_text}")
+                    result = await resp.json()
 
-        # Try to parse as JSON
-        try:
-            parsed = json.loads(content)
-            summary_text = parsed.get("summary", content)
-            key_topics = parsed.get("key_topics", [])
-            highlights = parsed.get("highlights", [])
-        except (json.JSONDecodeError, AttributeError):
-            summary_text = content
-            key_topics = []
-            highlights = []
+            content = result["choices"][0]["message"]["content"]
 
-        return {
-            "content": summary_text,
-            "key_topics": key_topics,
-            "highlights": highlights,
-        }
+            try:
+                parsed = json.loads(content)
+                return self._validate_summary_output(parsed)
+            except (json.JSONDecodeError, ValueError) as e:
+                if attempt < max_retries:
+                    logger.warning(f"LLM output validation failed (attempt {attempt+1}): {e}. Retrying...")
+                else:
+                    logger.error(f"LLM output validation failed after {max_retries} retries: {e}")
+                    return {
+                        "content": content if content else "Summary generation failed.",
+                        "key_topics": [],
+                        "highlights": [],
+                    }
 
     async def summarize_episode(self, episode_id: UUID) -> Summary:
         """Full pipeline: get transcript, generate summary, save.
@@ -139,18 +167,30 @@ class SummaryService:
         try:
             # Get provider config
             provider_config = await self._get_provider_config()
+            if provider_config is None:
+                raise ValueError("No active AI provider configured. Please configure one in Settings.")
 
-            # Generate summary
-            result = await self.generate_summary(transcript.content, provider_config)
+            # Get active prompt template
+            prompt_template = await self._get_active_prompt_template()
+
+            # Generate summary with timing
+            started_at = time.monotonic()
+            result = await self.generate_summary(transcript.content, provider_config, prompt_template)
+            duration_sec = int(time.monotonic() - started_at)
+
+            # Compute quality score
+            quality_score = len(result["key_topics"]) * 10 + len(result["content"]) / 100
 
             # Update summary
             summary = await self.repo.update(summary.id, {
                 "content": result["content"],
                 "key_topics": result["key_topics"],
                 "highlights": result["highlights"],
-                "model_used": (provider_config or {}).get("model"),
-                "provider": (provider_config or {}).get("provider_name"),
+                "model_used": provider_config.get("model"),
+                "provider": provider_config.get("provider_name"),
                 "status": ProcessingStatus.COMPLETED,
+                "processing_duration_sec": duration_sec,
+                "quality_score": round(quality_score, 1),
             })
 
             # Update episode status
@@ -189,6 +229,21 @@ class SummaryService:
             "max_tokens": model_config.max_tokens if model_config else 4096,
             "provider_name": provider.name,
         }
+
+    async def _get_active_prompt_template(self) -> str | None:
+        """Get the active prompt template content, or None to use default."""
+        try:
+            from app.domains.settings.models import PromptTemplate
+            from sqlalchemy import select
+
+            result = await self.session.execute(
+                select(PromptTemplate).where(PromptTemplate.is_active == True).limit(1)  # noqa: E712
+            )
+            template = result.scalars().first()
+            return template.content if template else None
+        except Exception:
+            # Table might not exist yet (before migration)
+            return None
 
     async def get_summary(self, episode_id: UUID) -> Summary | None:
         """Get summary for an episode."""

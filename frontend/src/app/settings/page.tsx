@@ -10,10 +10,30 @@ import {
   CheckCircle2,
   XCircle,
   BrainCircuit,
+  FileText,
+  Power,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { ProviderForm } from '@/components/provider-form';
 import { ProviderCardSkeleton } from '@/components/skeletons';
 import {
@@ -22,8 +42,11 @@ import {
   useUpdateProvider,
   useDeleteProvider,
   useTestProvider,
+  usePromptTemplates,
+  useCreatePromptTemplate,
+  useActivatePromptTemplate,
 } from '@/lib/api';
-import type { AIProvider, CreateProviderRequest, UpdateProviderRequest } from '@/types';
+import type { AIProvider, CreateProviderRequest, UpdateProviderRequest, PromptTemplate } from '@/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -93,6 +116,43 @@ export default function SettingsPage() {
     });
   };
 
+  // ===== Prompt Templates =====
+  const { data: promptData, isLoading: promptsLoading } = usePromptTemplates();
+  const createPromptMut = useCreatePromptTemplate();
+  const activatePromptMut = useActivatePromptTemplate();
+
+  const [promptDialogOpen, setPromptDialogOpen] = useState(false);
+  const [promptName, setPromptName] = useState('');
+  const [promptContent, setPromptContent] = useState('');
+
+  const handleOpenPromptDialog = () => {
+    setPromptName('');
+    setPromptContent('');
+    setPromptDialogOpen(true);
+  };
+
+  const handleCreatePrompt = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promptName.trim() || !promptContent.trim()) return;
+    createPromptMut.mutate(
+      { name: promptName.trim(), content: promptContent.trim() },
+      {
+        onSuccess: () => {
+          toast.success('Prompt 模板已创建');
+          setPromptDialogOpen(false);
+        },
+        onError: (err) => toast.error(`创建失败: ${err.message}`),
+      }
+    );
+  };
+
+  const handleActivate = (id: string) => {
+    activatePromptMut.mutate(id, {
+      onSuccess: () => toast.success('已激活该 Prompt 模板'),
+      onError: (err) => toast.error(`激活失败: ${err.message}`),
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -100,7 +160,7 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">设置</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            管理 AI 提供商和模型配置
+            管理 AI 提供商、模型配置和 Prompt 模板
           </p>
         </div>
         <Button size="sm" onClick={handleCreate}>
@@ -258,6 +318,159 @@ export default function SettingsPage() {
         onSubmit={handleFormSubmit}
         isSubmitting={createMut.isPending || updateMut.isPending}
       />
+
+      {/* Prompt Templates Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Prompt 模板</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              管理智能总结使用的 Prompt 模板版本
+            </p>
+          </div>
+          <Button size="sm" onClick={handleOpenPromptDialog}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            新建 Prompt
+          </Button>
+        </div>
+
+        {promptsLoading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </CardContent>
+          </Card>
+        ) : promptData?.items && promptData.items.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[240px]">名称</TableHead>
+                    <TableHead className="w-[100px] text-center">版本</TableHead>
+                    <TableHead className="w-[100px] text-center">状态</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {promptData.items.map((tpl: PromptTemplate) => (
+                    <TableRow key={tpl.id}>
+                      <TableCell className="font-medium">{tpl.name}</TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        v{tpl.version}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {tpl.is_active ? (
+                          <Badge variant="default" className="text-[11px]">
+                            使用中
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[11px]">
+                            未激活
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {!tpl.is_active && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={
+                              activatePromptMut.isPending &&
+                              activatePromptMut.variables === tpl.id
+                            }
+                            onClick={() => handleActivate(tpl.id)}
+                          >
+                            {activatePromptMut.isPending &&
+                            activatePromptMut.variables === tpl.id ? (
+                              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                            ) : (
+                              <Power className="mr-1.5 h-3 w-3" />
+                            )}
+                            激活
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <FileText className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <h3 className="mt-4 text-sm font-medium">暂无 Prompt 模板</h3>
+              <p className="mt-1 text-xs text-muted-foreground text-center max-w-[260px]">
+                创建 Prompt 模板以自定义智能总结的内容生成方式
+              </p>
+              <Button className="mt-5" size="sm" onClick={handleOpenPromptDialog}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                新建 Prompt
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Create Prompt Dialog */}
+      <Dialog open={promptDialogOpen} onOpenChange={setPromptDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>新建 Prompt 模板</DialogTitle>
+            <DialogDescription>
+              创建新的 Prompt 模板，将作为新版本保存
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreatePrompt} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">模板名称</label>
+              <Input
+                value={promptName}
+                onChange={(e) => setPromptName(e.target.value)}
+                placeholder="例如: 默认总结模板"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Prompt 内容</label>
+              <Textarea
+                value={promptContent}
+                onChange={(e) => setPromptContent(e.target.value)}
+                placeholder="请输入 Prompt 模板内容..."
+                className="min-h-[200px] font-mono text-sm"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPromptDialogOpen(false)}
+              >
+                取消
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  createPromptMut.isPending ||
+                  !promptName.trim() ||
+                  !promptContent.trim()
+                }
+              >
+                {createPromptMut.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                创建
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

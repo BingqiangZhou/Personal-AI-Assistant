@@ -76,3 +76,26 @@ class TestConnectionResponse(BaseModel):
     success: bool
     message: str
     model: str | None = None
+
+
+# ---- Prompt Template Schemas ----
+class PromptTemplateCreate(BaseModel):
+    name: str
+    content: str
+
+
+class PromptTemplateResponse(BaseModel):
+    id: UUID
+    name: str
+    content: str
+    version: int
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PromptTemplateListResponse(BaseModel):
+    items: list[PromptTemplateResponse]
+    total: int

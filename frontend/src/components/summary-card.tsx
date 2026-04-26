@@ -1,8 +1,10 @@
 "use client";
 
-import { Loader2, Lightbulb } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Lightbulb, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSummary, useEpisode, useSummarizeEpisode } from "@/lib/queries";
+import { useSubmitSummaryFeedback } from "@/lib/api";
 import { SummaryStatus } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +29,53 @@ const HIGHLIGHT_COLORS = [
   "bg-chart-5",
 ];
 
+function StarRating({
+  rating,
+  onRate,
+  disabled,
+}: {
+  rating: number | null;
+  onRate: (rating: number) => void;
+  disabled?: boolean;
+}) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => {
+        const starIndex = i + 1;
+        const filled = hovered !== null ? starIndex <= hovered : starIndex <= (rating ?? 0);
+        return (
+          <button
+            key={i}
+            type="button"
+            disabled={disabled}
+            onClick={() => onRate(starIndex)}
+            onMouseEnter={() => setHovered(starIndex)}
+            onMouseLeave={() => setHovered(null)}
+            className={cn(
+              "rounded-sm p-0.5 transition-colors",
+              disabled
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer hover:bg-muted"
+            )}
+            aria-label={`Rate ${starIndex} star${starIndex > 1 ? "s" : ""}`}
+          >
+            <Star
+              className={cn(
+                "h-3.5 w-3.5 transition-colors",
+                filled
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "fill-transparent text-muted-foreground/40"
+              )}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function SummaryCard({ episodeId, isActive }: SummaryCardProps) {
   // Get episode for status
   const { data: episode } = useEpisode(episodeId);
@@ -37,6 +86,12 @@ export function SummaryCard({ episodeId, isActive }: SummaryCardProps) {
   });
 
   const summarizeMutation = useSummarizeEpisode();
+  const feedbackMutation = useSubmitSummaryFeedback();
+
+  const handleRate = (rating: number) => {
+    if (!summary) return;
+    feedbackMutation.mutate({ id: summary.id, data: { rating } });
+  };
 
   // Loading state
   if (isLoading) {
@@ -165,6 +220,16 @@ export function SummaryCard({ episodeId, isActive }: SummaryCardProps) {
           </ul>
         </div>
       )}
+
+      {/* Star rating feedback */}
+      <div className="flex items-center gap-2 border-t pt-4">
+        <span className="text-xs text-muted-foreground">评价此总结</span>
+        <StarRating
+          rating={summary.rating}
+          onRate={handleRate}
+          disabled={feedbackMutation.isPending}
+        />
+      </div>
     </div>
   );
 }

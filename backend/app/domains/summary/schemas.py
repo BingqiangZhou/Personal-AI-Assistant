@@ -23,6 +23,11 @@ class SummaryResponse(BaseModel):
     highlights: list[str] | dict | None = None
     model_used: str | None = None
     provider: str | None = None
+    prompt_version_id: UUID | None = None
+    quality_score: float | None = None
+    rating: int | None = None
+    feedback: str | None = None
+    processing_duration_sec: int | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -33,3 +38,13 @@ class SummaryDetail(SummaryResponse):
     content: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FeedbackRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    feedback: str | None = None
+
+
+class BatchSummarizeRequest(BaseModel):
+    episode_ids: list[UUID] | None = None
+    filter_status: ProcessingStatus | None = ProcessingStatus.PENDING

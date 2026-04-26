@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from pathlib import Path
 from uuid import UUID
 
@@ -59,11 +60,12 @@ class TranscriptionService:
         logger.info(f"Downloaded audio to {dest_path}")
         return str(dest_path)
 
-    async def transcribe_episode(self, episode_id: UUID) -> Transcript:
+    async def transcribe_episode(self, episode_id: UUID, force: bool = False) -> Transcript:
         """Full pipeline: download audio, transcribe with faster-whisper, save.
 
         Args:
             episode_id: The episode ID to transcribe.
+            force: If True, re-transcribe even if already completed.
 
         Returns:
             The Transcript record.
@@ -77,6 +79,12 @@ class TranscriptionService:
 
         # Get or create transcript record
         transcript = await self.repo.get_by_episode(episode_id)
+
+        # Idempotency: skip if already completed unless forced
+        if transcript is not None and transcript.status == ProcessingStatus.COMPLETED and not force:
+            logger.info(f"Transcript for episode {episode_id} already completed, skipping")
+            return transcript
+
         if transcript is None:
             transcript = await self.repo.create({
                 "episode_id": episode_id,
@@ -93,6 +101,8 @@ class TranscriptionService:
         )
 
         try:
+            started_at = time.monotonic()
+
             # Download audio
             audio_path = await self.download_audio(
                 episode.audio_url, episode_id
@@ -103,6 +113,9 @@ class TranscriptionService:
                 self._transcribe_sync, audio_path
             )
 
+            duration_sec = int(time.monotonic() - started_at)
+            char_count = len(result["text"]) if result["text"] else 0
+
             # Update transcript
             transcript = await self.repo.update(transcript.id, {
                 "content": result["text"],
@@ -110,7 +123,9 @@ class TranscriptionService:
                 "language": result["language"],
                 "duration": result["duration"],
                 "word_count": result["word_count"],
+                "char_count": char_count,
                 "model_used": settings.WHISPER_MODEL_SIZE,
+                "processing_duration_sec": duration_sec,
                 "status": ProcessingStatus.COMPLETED,
             })
 
@@ -160,7 +175,7 @@ class TranscriptionService:
         segment_list = list(segments)
 
         full_text = "".join(seg.text for seg in segment_list).strip()
-        word_count = len(full_text) if full_text else 0
+        word_count = len(full_text.split()) if full_text else 0
 
         segment_data = [
             {"start": seg.start, "end": seg.end, "text": seg.text}

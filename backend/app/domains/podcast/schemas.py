@@ -34,6 +34,7 @@ class PodcastResponse(PodcastBase):
     id: UUID
     xyzrank_id: str
     is_tracked: bool
+    priority: int = 0
     last_synced_at: datetime | None = None
     created_at: datetime
     updated_at: datetime

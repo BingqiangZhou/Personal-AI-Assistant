@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { RefreshCw, SlidersHorizontal, Inbox } from 'lucide-react';
+import { RefreshCw, SlidersHorizontal, Inbox, Play, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { EpisodeCard } from '@/components/episode-card';
 import { EpisodeRowSkeleton } from '@/components/skeletons';
-import { useEpisodes, useSyncEpisodes } from '@/lib/api';
+import { useEpisodes, useSyncEpisodes, useBatchTranscribe, useBatchSummarize } from '@/lib/api';
 import { toast } from 'sonner';
 import type { TranscriptStatus, SummaryStatus } from '@/types';
 
@@ -49,6 +49,8 @@ function EpisodesContent() {
   });
 
   const syncMut = useSyncEpisodes();
+  const batchTranscribeMut = useBatchTranscribe();
+  const batchSummarizeMut = useBatchSummarize();
 
   const handleFilterChange = (setter: (val: string) => void, val: string) => {
     setter(val === '全部' ? '' : val);
@@ -114,6 +116,42 @@ function EpisodesContent() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={() =>
+            batchTranscribeMut.mutate(
+              { filter_status: 'pending' },
+              {
+                onSuccess: (res) => toast.success(res.message || '批量转录已触发'),
+                onError: (err) => toast.error(`批量转录失败: ${err.message}`),
+              },
+            )
+          }
+          disabled={batchTranscribeMut.isPending || batchSummarizeMut.isPending}
+        >
+          <Play className="mr-1.5 h-3.5 w-3.5" />
+          批量转录
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={() =>
+            batchSummarizeMut.mutate(
+              { filter_status: 'pending' },
+              {
+                onSuccess: (res) => toast.success(res.message || '批量摘要已触发'),
+                onError: (err) => toast.error(`批量摘要失败: ${err.message}`),
+              },
+            )
+          }
+          disabled={batchTranscribeMut.isPending || batchSummarizeMut.isPending}
+        >
+          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+          批量摘要
+        </Button>
         <span className="ml-auto text-sm tabular-nums text-muted-foreground">
           {data?.total ?? 0} 集
         </span>

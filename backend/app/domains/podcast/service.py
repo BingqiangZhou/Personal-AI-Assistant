@@ -1,14 +1,15 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from math import ceil
 from uuid import UUID
 
 import aiohttp
 import feedparser
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.domains.podcast.models import ProcessingStatus
+from app.domains.podcast.models import Episode, ProcessingStatus
 from app.domains.podcast.repository import (
     EpisodeRepository,
     PodcastRankingHistoryRepository,
@@ -98,6 +99,108 @@ class PodcastService:
         if podcast is None:
             return None
         return PodcastTrackResponse.model_validate(podcast)
+
+    async def get_production_stats(self) -> dict:
+        """Compute content production statistics."""
+        from app.domains.transcription.models import Transcript
+        from app.domains.summary.models import Summary
+
+        now = datetime.now(timezone.utc)
+        seven_days_ago = now - timedelta(days=7)
+
+        # Total counts
+        total_episodes = await self.session.scalar(
+            select(func.count()).select_from(Episode)
+        )
+
+        transcribed = await self.session.scalar(
+            select(func.count()).select_from(Episode).where(
+                Episode.transcript_status == ProcessingStatus.COMPLETED
+            )
+        )
+        summarized = await self.session.scalar(
+            select(func.count()).select_from(Episode).where(
+                Episode.summary_status == ProcessingStatus.COMPLETED
+            )
+        )
+
+        # Success rates
+        trans_completed = await self.session.scalar(
+            select(func.count()).select_from(Transcript).where(
+                Transcript.status == ProcessingStatus.COMPLETED
+            )
+        )
+        trans_failed = await self.session.scalar(
+            select(func.count()).select_from(Transcript).where(
+                Transcript.status == ProcessingStatus.FAILED
+            )
+        )
+        sum_completed = await self.session.scalar(
+            select(func.count()).select_from(Summary).where(
+                Summary.status == ProcessingStatus.COMPLETED
+            )
+        )
+        sum_failed = await self.session.scalar(
+            select(func.count()).select_from(Summary).where(
+                Summary.status == ProcessingStatus.FAILED
+            )
+        )
+
+        trans_total = (trans_completed or 0) + (trans_failed or 0)
+        sum_total = (sum_completed or 0) + (sum_failed or 0)
+
+        # Average processing duration
+        avg_trans_duration = await self.session.scalar(
+            select(func.avg(Transcript.processing_duration_sec)).where(
+                Transcript.processing_duration_sec != None,  # noqa: E711
+                Transcript.status == ProcessingStatus.COMPLETED,
+            )
+        )
+        avg_sum_duration = await self.session.scalar(
+            select(func.avg(Summary.processing_duration_sec)).where(
+                Summary.processing_duration_sec != None,  # noqa: E711
+                Summary.status == ProcessingStatus.COMPLETED,
+            )
+        )
+
+        # 7-day trend
+        trend = []
+        for i in range(7):
+            day = (now - timedelta(days=6 - i)).date()
+            next_day = day + timedelta(days=1)
+            day_start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+            day_end = datetime(next_day.year, next_day.month, next_day.day, tzinfo=timezone.utc)
+
+            trans_count = await self.session.scalar(
+                select(func.count()).select_from(Transcript).where(
+                    Transcript.status == ProcessingStatus.COMPLETED,
+                    Transcript.updated_at >= day_start,
+                    Transcript.updated_at < day_end,
+                )
+            )
+            sum_count = await self.session.scalar(
+                select(func.count()).select_from(Summary).where(
+                    Summary.status == ProcessingStatus.COMPLETED,
+                    Summary.updated_at >= day_start,
+                    Summary.updated_at < day_end,
+                )
+            )
+            trend.append({
+                "date": day.isoformat(),
+                "transcribed": trans_count or 0,
+                "summarized": sum_count or 0,
+            })
+
+        return {
+            "total_episodes": total_episodes or 0,
+            "transcribed": transcribed or 0,
+            "summarized": summarized or 0,
+            "transcription_success_rate": round(trans_completed / trans_total, 3) if trans_total > 0 else None,
+            "summary_success_rate": round(sum_completed / sum_total, 3) if sum_total > 0 else None,
+            "avg_transcription_duration_sec": round(avg_trans_duration, 1) if avg_trans_duration else None,
+            "avg_summary_duration_sec": round(avg_sum_duration, 1) if avg_sum_duration else None,
+            "last_7_days": trend,
+        }
 
     async def sync_rankings(self) -> dict:
         """Fetch podcasts from xyzrank.com API and update database."""

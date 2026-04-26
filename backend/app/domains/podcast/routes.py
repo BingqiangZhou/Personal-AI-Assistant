@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -70,6 +71,29 @@ async def toggle_track_podcast(
     return result
 
 
+class PriorityRequest(BaseModel):
+    priority: int
+
+
+@router.patch("/podcasts/{podcast_id}/priority")
+async def set_podcast_priority(
+    podcast_id: UUID,
+    data: PriorityRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Set priority for a podcast (0=normal, 5=high, 9=urgent)."""
+    service = PodcastService(db)
+    from app.domains.podcast.repository import PodcastRepository
+    repo = PodcastRepository(db)
+    podcast = await repo.get(podcast_id)
+    if podcast is None:
+        raise HTTPException(status_code=404, detail="Podcast not found")
+
+    await repo.update(podcast_id, {"priority": max(0, min(9, data.priority))})
+    await db.commit()
+    return {"message": "Priority updated", "priority": data.priority}
+
+
 @router.post("/podcasts/sync")
 async def sync_podcasts(
     db: AsyncSession = Depends(get_db),
@@ -95,11 +119,33 @@ async def sync_episodes(
     try:
         result = await service.sync_episodes()
         await db.commit()
+
+        # Dispatch transcription tasks for new episodes (matching Celery beat behavior)
+        new_episode_ids = result.get("new_episode_ids", [])
+        if new_episode_ids:
+            from app.core.celery_app import celery_app
+
+            for episode_id in new_episode_ids:
+                celery_app.send_task(
+                    "app.domains.transcription.tasks.transcribe_episode_task",
+                    args=[episode_id],
+                )
+            logger.info(f"Dispatched transcription for {len(new_episode_ids)} new episodes")
+
         return {"message": "Episode sync complete", **result}
     except Exception as e:
         await db.rollback()
         logger.error(f"Episode sync failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats/production")
+async def get_production_stats(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Get content production statistics."""
+    service = PodcastService(db)
+    return await service.get_production_stats()
 
 
 @router.get("/episodes", response_model=EpisodeListResponse)

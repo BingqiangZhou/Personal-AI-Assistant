@@ -22,6 +22,9 @@ class TranscriptResponse(BaseModel):
     language: str | None = None
     duration: int | None = None
     word_count: int | None = None
+    char_count: int | None = None
+    processing_duration_sec: int | None = None
+    rating: int | None = None
     model_used: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -40,3 +43,14 @@ class TranscriptDetail(TranscriptResponse):
     segments: list[TranscriptSegment] | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FeedbackRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    feedback: str | None = None
+
+
+class BatchTranscribeRequest(BaseModel):
+    episode_ids: list[UUID] | None = None
+    filter_status: ProcessingStatus | None = None
+    force: bool = False

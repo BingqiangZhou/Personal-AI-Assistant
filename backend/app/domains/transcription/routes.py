@@ -1,14 +1,22 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.domains.podcast.models import ProcessingStatus
+from app.domains.podcast.models import Episode, ProcessingStatus
 from app.domains.podcast.repository import EpisodeRepository
 from app.domains.podcast.schemas import SyncResponse
-from app.domains.transcription.schemas import TranscriptDetail
+from app.domains.transcription.models import Transcript
+from app.domains.transcription.schemas import (
+    BatchTranscribeRequest,
+    FeedbackRequest,
+    TranscriptDetail,
+    TranscriptResponse,
+)
+from app.domains.transcription.repository import TranscriptRepository
 from app.domains.transcription.service import TranscriptionService
 
 router = APIRouter(tags=["transcription"])
@@ -18,6 +26,7 @@ logger = logging.getLogger(__name__)
 @router.post("/episodes/{episode_id}/transcribe", response_model=SyncResponse)
 async def transcribe_episode(
     episode_id: UUID,
+    force: bool = Query(False, description="Force re-transcription even if completed"),
     db: AsyncSession = Depends(get_db),
 ) -> SyncResponse:
     """Transcribe an episode. Runs inline (no Celery required)."""
@@ -36,7 +45,7 @@ async def transcribe_episode(
 
     service = TranscriptionService(db)
     try:
-        await service.transcribe_episode(episode_id)
+        await service.transcribe_episode(episode_id, force=force)
         await db.commit()
         return SyncResponse(message="Transcription complete", task_id=None)
     except Exception as e:
@@ -77,10 +86,70 @@ async def retry_transcription(
 
     service = TranscriptionService(db)
     try:
-        await service.transcribe_episode(episode_id)
+        await service.transcribe_episode(episode_id, force=True)
         await db.commit()
         return SyncResponse(message="Transcription retry complete", task_id=None)
     except Exception as e:
         await db.rollback()
         logger.error(f"Transcription retry failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/episodes/batch/transcribe", response_model=SyncResponse)
+async def batch_transcribe(
+    request: BatchTranscribeRequest,
+    db: AsyncSession = Depends(get_db),
+) -> SyncResponse:
+    """Batch transcribe episodes by IDs or filter status."""
+    episode_repo = EpisodeRepository(db)
+
+    if request.episode_ids:
+        episode_ids = [str(eid) for eid in request.episode_ids]
+    else:
+        # Query episodes by status
+        status = request.filter_status or ProcessingStatus.PENDING
+        result = await db.execute(
+            select(Episode.id).where(
+                Episode.transcript_status == status,
+                Episode.audio_url != None,  # noqa: E711
+            ).limit(100)
+        )
+        episode_ids = [str(row[0]) for row in result.all()]
+
+    if not episode_ids:
+        return SyncResponse(message="No episodes to transcribe", task_id=None)
+
+    from app.core.celery_app import celery_app
+
+    dispatched = 0
+    for eid in episode_ids:
+        celery_app.send_task(
+            "app.domains.transcription.tasks.transcribe_episode_task",
+            args=[eid],
+        )
+        dispatched += 1
+
+    return SyncResponse(
+        message=f"Dispatched {dispatched} transcription tasks",
+        task_id=None,
+    )
+
+
+@router.post("/transcripts/{transcript_id}/feedback", response_model=TranscriptResponse)
+async def submit_transcript_feedback(
+    transcript_id: UUID,
+    data: FeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+) -> TranscriptResponse:
+    """Submit feedback for a transcript."""
+    repo = TranscriptRepository(db)
+    transcript = await repo.get(transcript_id)
+    if transcript is None:
+        raise HTTPException(status_code=404, detail="Transcript not found")
+
+    transcript = await repo.update(transcript_id, {
+        "rating": data.rating,
+        "feedback": data.feedback,
+    })
+    await db.commit()
+    return TranscriptResponse.model_validate(transcript)

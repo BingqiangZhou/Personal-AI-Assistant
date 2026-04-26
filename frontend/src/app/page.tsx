@@ -8,6 +8,9 @@ import {
   RefreshCw,
   ArrowRight,
   TrendingUp,
+  CheckCircle,
+  Clock,
+  BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +26,7 @@ import {
   useSyncEpisodes,
   useTrackPodcast,
   useUntrackPodcast,
+  useProductionStats,
 } from '@/lib/api';
 import { formatDate, formatDuration } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -32,6 +36,7 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: rankings, isLoading: rankingsLoading } = useRankings(1, 6);
   const { data: recentEpisodes, isLoading: episodesLoading } = useEpisodes({ page_size: 5, page: 1 });
+  const { data: productionStats } = useProductionStats();
   const syncRankings = useSyncRankings();
   const syncEpisodes = useSyncEpisodes();
   const trackMut = useTrackPodcast();
@@ -254,6 +259,158 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Production Stats */}
+      <div className="space-y-4">
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          生产统计
+        </h2>
+
+        {/* Stat Cards */}
+        {(() => {
+          const formatSeconds = (sec: number | null | undefined): string => {
+            if (sec == null) return '--';
+            if (sec < 60) return `${Math.round(sec)}s`;
+            const m = Math.floor(sec / 60);
+            const s = Math.round(sec % 60);
+            return s > 0 ? `${m}m ${s}s` : `${m}m`;
+          };
+
+          const formatRate = (rate: number | null | undefined): string => {
+            if (rate == null) return '--';
+            return `${(rate * 100).toFixed(1)}%`;
+          };
+
+          const productionCards = [
+            {
+              title: '转录成功率',
+              value: formatRate(productionStats?.transcription_success_rate),
+              icon: CheckCircle,
+              accent: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+            },
+            {
+              title: '摘要成功率',
+              value: formatRate(productionStats?.summary_success_rate),
+              icon: CheckCircle,
+              accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+            },
+            {
+              title: '平均转录耗时',
+              value: formatSeconds(productionStats?.avg_transcription_duration_sec),
+              icon: Clock,
+              accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+            },
+            {
+              title: '平均摘要耗时',
+              value: formatSeconds(productionStats?.avg_summary_duration_sec),
+              icon: Clock,
+              accent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+            },
+          ];
+
+          return (
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {productionCards.map((card) => (
+                <Card key={card.title} className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          {card.title}
+                        </p>
+                        <p className="mt-2 text-3xl font-bold tabular-nums tracking-tight">
+                          {card.value}
+                        </p>
+                      </div>
+                      <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', card.accent)}>
+                        <card.icon className="h-5 w-5" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* 7-Day Trend Chart */}
+        {(() => {
+          const trend = productionStats?.last_7_days ?? [];
+          const maxCount = Math.max(
+            ...trend.map((d) => Math.max(d.transcribed, d.summarized)),
+            1,
+          );
+
+          const formatDateLabel = (dateStr: string): string => {
+            const d = new Date(dateStr);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+          };
+
+          return (
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  近 7 天处理趋势
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {trend.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <span className="inline-block h-2.5 w-2.5 rounded-sm bg-chart-1" />
+                        转录
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="inline-block h-2.5 w-2.5 rounded-sm bg-chart-2" />
+                        摘要
+                      </span>
+                    </div>
+                    {/* Bars */}
+                    <div className="flex items-end gap-2 h-40">
+                      {trend.map((day) => {
+                        const transcribedH = (day.transcribed / maxCount) * 100;
+                        const summarizedH = (day.summarized / maxCount) * 100;
+                        return (
+                          <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                            <div className="flex items-end gap-0.5 w-full h-32">
+                              <div className="flex-1 flex flex-col justify-end">
+                                <div
+                                  className="w-full rounded-t-sm bg-chart-1/80 transition-all duration-300"
+                                  style={{ height: `${Math.max(transcribedH, 2)}%` }}
+                                  title={`转录: ${day.transcribed}`}
+                                />
+                              </div>
+                              <div className="flex-1 flex flex-col justify-end">
+                                <div
+                                  className="w-full rounded-t-sm bg-chart-2/80 transition-all duration-300"
+                                  style={{ height: `${Math.max(summarizedH, 2)}%` }}
+                                  title={`摘要: ${day.summarized}`}
+                                />
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">
+                              {formatDateLabel(day.date)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <BarChart3 className="h-10 w-10 text-muted-foreground/40" />
+                    <p className="mt-3 text-sm text-muted-foreground">暂无趋势数据</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
       </div>
     </div>
   );

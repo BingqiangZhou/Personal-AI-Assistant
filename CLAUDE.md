@@ -99,7 +99,7 @@ curl http://localhost:8000/api/v1/health
 ### 2. Episode Monitoring
 - Parse RSS feeds via feedparser to get new episodes
 - Store: title, audio_url, duration, published date, description
-- Periodic check (every 6 hours) for new episodes across all tracked podcasts
+- Periodic check (every 1 hour) for new episodes across all tracked podcasts
 - User can configure which podcasts to track (subscribe/favorite)
 
 ### 3. Audio Transcription

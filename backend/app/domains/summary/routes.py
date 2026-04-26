@@ -2,13 +2,20 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.domains.podcast.models import ProcessingStatus
+from app.domains.podcast.models import Episode, ProcessingStatus
 from app.domains.podcast.repository import EpisodeRepository
 from app.domains.podcast.schemas import SyncResponse
-from app.domains.summary.schemas import SummaryDetail, SummaryResponse
+from app.domains.summary.schemas import (
+    BatchSummarizeRequest,
+    FeedbackRequest,
+    SummaryDetail,
+    SummaryResponse,
+)
+from app.domains.summary.repository import SummaryRepository
 from app.domains.summary.service import SummaryService
 
 router = APIRouter(tags=["summary"])
@@ -21,6 +28,17 @@ async def summarize_episode(
     db: AsyncSession = Depends(get_db),
 ) -> SyncResponse:
     """Trigger summarization for an episode."""
+    # Pre-check: verify an active AI provider is configured
+    from app.domains.settings.repository import SettingsRepository
+
+    settings_repo = SettingsRepository(db)
+    active_provider = await settings_repo.get_active_provider()
+    if active_provider is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No active AI provider configured. Please configure one in Settings.",
+        )
+
     # Verify episode exists
     episode_repo = EpisodeRepository(db)
     episode = await episode_repo.get(episode_id)
@@ -63,3 +81,71 @@ async def get_summary(
     if summary is None:
         raise HTTPException(status_code=404, detail="Summary not found")
     return SummaryDetail.model_validate(summary)
+
+
+@router.post("/episodes/batch/summarize", response_model=SyncResponse)
+async def batch_summarize(
+    request: BatchSummarizeRequest,
+    db: AsyncSession = Depends(get_db),
+) -> SyncResponse:
+    """Batch summarize episodes by IDs or filter status."""
+    # Pre-check: verify provider configured
+    from app.domains.settings.repository import SettingsRepository
+
+    settings_repo = SettingsRepository(db)
+    active_provider = await settings_repo.get_active_provider()
+    if active_provider is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No active AI provider configured. Please configure one in Settings.",
+        )
+
+    if request.episode_ids:
+        episode_ids = [str(eid) for eid in request.episode_ids]
+    else:
+        status = request.filter_status or ProcessingStatus.PENDING
+        result = await db.execute(
+            select(Episode.id).where(
+                Episode.summary_status == status,
+                Episode.transcript_status == ProcessingStatus.COMPLETED,
+            ).limit(100)
+        )
+        episode_ids = [str(row[0]) for row in result.all()]
+
+    if not episode_ids:
+        return SyncResponse(message="No episodes to summarize", task_id=None)
+
+    from app.core.celery_app import celery_app
+
+    dispatched = 0
+    for eid in episode_ids:
+        celery_app.send_task(
+            "app.domains.summary.tasks.summarize_episode_task",
+            args=[eid],
+        )
+        dispatched += 1
+
+    return SyncResponse(
+        message=f"Dispatched {dispatched} summarization tasks",
+        task_id=None,
+    )
+
+
+@router.post("/summaries/{summary_id}/feedback", response_model=SummaryResponse)
+async def submit_summary_feedback(
+    summary_id: UUID,
+    data: FeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+) -> SummaryResponse:
+    """Submit feedback for a summary."""
+    repo = SummaryRepository(db)
+    summary = await repo.get(summary_id)
+    if summary is None:
+        raise HTTPException(status_code=404, detail="Summary not found")
+
+    summary = await repo.update(summary_id, {
+        "rating": data.rating,
+        "feedback": data.feedback,
+    })
+    await db.commit()
+    return SummaryResponse.model_validate(summary)

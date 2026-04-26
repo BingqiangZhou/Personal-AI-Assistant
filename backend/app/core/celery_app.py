@@ -25,6 +25,10 @@ celery_app.conf.update(
         "app.domains.transcription.tasks.transcribe_episode_task": {"queue": "transcription"},
         "app.domains.summary.tasks.summarize_episode_task": {"queue": "summary"},
     },
+    task_queue_max_priority={
+        "transcription": 9,
+        "summary": 9,
+    },
     beat_schedule={
         "sync-rankings-daily": {
             "task": "app.domains.podcast.tasks.sync_rankings_task",

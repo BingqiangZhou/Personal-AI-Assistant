@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { Search, Loader2, Globe, BarChart3, Cpu } from "lucide-react";
+import { Search, Loader2, Globe, BarChart3, Cpu, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAudioStore } from "@/stores/audio-store";
 import { useTranscript, useEpisode, useTranscribeEpisode } from "@/lib/queries";
+import { useSubmitTranscriptFeedback } from "@/lib/api";
 import { TranscriptStatus, type TranscriptSegment } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,53 @@ const TOPIC_COLORS = [
   "bg-chart-5/15 text-chart-5",
 ];
 
+function StarRating({
+  rating,
+  onRate,
+  disabled,
+}: {
+  rating: number | null;
+  onRate: (rating: number) => void;
+  disabled?: boolean;
+}) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => {
+        const starIndex = i + 1;
+        const filled = hovered !== null ? starIndex <= hovered : starIndex <= (rating ?? 0);
+        return (
+          <button
+            key={i}
+            type="button"
+            disabled={disabled}
+            onClick={() => onRate(starIndex)}
+            onMouseEnter={() => setHovered(starIndex)}
+            onMouseLeave={() => setHovered(null)}
+            className={cn(
+              "rounded-sm p-0.5 transition-colors",
+              disabled
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer hover:bg-muted"
+            )}
+            aria-label={`Rate ${starIndex} star${starIndex > 1 ? "s" : ""}`}
+          >
+            <Star
+              className={cn(
+                "h-3 w-3 transition-colors",
+                filled
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "fill-transparent text-muted-foreground/40"
+              )}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -46,6 +94,12 @@ export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps)
   });
 
   const transcribeMutation = useTranscribeEpisode();
+  const feedbackMutation = useSubmitTranscriptFeedback();
+
+  const handleRate = (rating: number) => {
+    if (!transcript) return;
+    feedbackMutation.mutate({ id: transcript.id, data: { rating } });
+  };
 
   const hasSegments = transcript?.segments && transcript.segments.length > 0;
 
@@ -215,7 +269,7 @@ export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps)
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Metadata bar */}
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         {transcript.language && (
           <span className="flex items-center gap-1">
             <Globe className="h-3 w-3" />
@@ -225,7 +279,7 @@ export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps)
         {transcript.word_count && (
           <span className="flex items-center gap-1">
             <BarChart3 className="h-3 w-3" />
-            {transcript.word_count.toLocaleString()} 字
+            {transcript.word_count.toLocaleString()} 词
           </span>
         )}
         {transcript.model_used && (
@@ -234,6 +288,15 @@ export function TranscriptViewer({ episodeId, isActive }: TranscriptViewerProps)
             {transcript.model_used}
           </span>
         )}
+        <span className="mx-0.5 text-muted-foreground/30">|</span>
+        <span className="flex items-center gap-1">
+          评价此转录
+          <StarRating
+            rating={transcript.rating}
+            onRate={handleRate}
+            disabled={feedbackMutation.isPending}
+          />
+        </span>
       </div>
 
       {/* Search bar and mode toggle */}

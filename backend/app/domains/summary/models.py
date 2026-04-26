@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -21,6 +21,13 @@ class Summary(Base):
     highlights: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     model_used: Mapped[str | None] = mapped_column(String(100), nullable=True)
     provider: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("prompt_templates.id", ondelete="SET NULL"), nullable=True
+    )
+    quality_score: Mapped[float | None] = mapped_column(nullable=True)
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_duration_sec: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[ProcessingStatus] = mapped_column(
         Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.PENDING
     )
@@ -32,3 +39,4 @@ class Summary(Base):
     )
 
     episode: Mapped["app.domains.podcast.models.Episode"] = relationship(back_populates="summary")
+    prompt_template: Mapped["PromptTemplate | None"] = relationship()
